@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Judge the Judge</title>
+<!--
+  PROTOTYPE v6 (see Constitution, Principle I). Reflects the spec updates of 2026-11-10: one metric per evaluation (judge set), matching by label + quoted place, detection per injected error, unexpected findings, final answer with thresholds, LLM second opinion that needs your approval. Question this answers: does the guided
+  Judge -> Cases -> Run -> Results -> Compare flow, including bulk import/export, feel modern,
+  clear and simple? Reflects specs 001-003: multi-field scenarios, free-label expected errors with metric packs (Accuracy, Completeness), paste-in of LLM-generated scenarios, free-text outputs with manual verification, linked result tables, JSON/HTML export. Not production code. Nothing is stored between
+  sessions (by design).
+-->
+<style>
+:root{
+  --bg:#f5f5f7; --surface:#ffffff; --surface2:#f2f2f4; --text:#1d1d1f; --muted:#6e6e73;
+  --border:#d8d8dd; --accent:#0071e3; --accent2:#0071e3; --accent-ink:#ffffff;
+  --good:#1e7e34; --good-bg:#e6f4ea; --bad:#c5221f; --bad-bg:#fce8e6; --warn:#8a5a00; --warn-bg:#fdf3dc;
+  --shadow:0 1px 2px rgba(0,0,0,.05); --r:12px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#000000; --surface:#1c1c1e; --surface2:#2c2c2e; --text:#f5f5f7; --muted:#98989d;
+    --border:#38383a; --accent:#0a84ff; --accent2:#0a84ff; --accent-ink:#ffffff;
+    --good:#30d158; --good-bg:#0f2f1a; --bad:#ff6961; --bad-bg:#3a1513; --warn:#ffb340; --warn-bg:#33260a;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#1c1c1e; --surface2:#2c2c2e; --text:#f5f5f7; --muted:#98989d;
+  --border:#38383a; --accent:#0a84ff; --accent2:#0a84ff; --accent-ink:#ffffff;
+  --good:#30d158; --good-bg:#0f2f1a; --bad:#ff6961; --bad-bg:#3a1513; --warn:#ffb340; --warn-bg:#33260a;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.glow{display:none}
+.wrap{position:relative;max-width:1080px;margin:0 auto;padding:0 16px 64px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;margin-bottom:0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px;letter-spacing:-.01em}
+.logo{width:28px;height:28px;border-radius:7px;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:15px;font-weight:700}
+.hdr-actions{display:flex;gap:8px;align-items:center}
+nav{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--border);margin-bottom:28px;scrollbar-width:none}
+nav button{border:0;background:none;color:var(--muted);font:inherit;font-weight:500;font-size:14px;padding:12px 16px;cursor:pointer;display:flex;gap:8px;align-items:center;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
+nav button:hover{color:var(--text)}
+nav button .n{width:18px;height:18px;border-radius:50%;border:1px solid var(--border);font-size:11px;display:grid;place-items:center;color:var(--muted)}
+nav button.active{color:var(--accent);border-bottom-color:var(--accent)}
+nav button.active .n{background:var(--accent);border-color:var(--accent);color:#fff}
+nav button.done .n{background:var(--good-bg);border-color:transparent;color:var(--good)}
+nav .grow{flex:1}
+button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,label.btn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+h1{font-size:28px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px}
+h2{font-size:17px;font-weight:600;margin:0 0 12px;letter-spacing:-.01em}
+h3{font-size:14px;font-weight:600;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.btn{border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit;font-weight:500;font-size:14px;padding:8px 14px;border-radius:8px;cursor:pointer;display:inline-block}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.spread{justify-content:space-between}
+label{font-weight:500;font-size:13px;display:block;margin-bottom:6px;color:var(--muted)}
+textarea,input[type=text],input[type=search],select{width:100%;font:13px/1.5 ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+select{font-family:inherit;font-size:14px;padding:8px 10px}
+textarea{min-height:150px;resize:vertical}
+textarea[readonly]{background:var(--surface2);color:var(--muted)}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:6px;background:var(--surface2);color:var(--muted)}
+.pill.good{background:var(--good-bg);color:var(--good)} .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.warn{background:var(--warn-bg);color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr.clickable{cursor:pointer} tbody tr.clickable:hover{background:var(--surface2)}
+.tablewrap{overflow-x:auto}
+.empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.empty .big{font-size:34px;opacity:.6}
+.empty h2{color:var(--text)}
+.metric .val{font-size:42px;font-weight:600;letter-spacing:-.03em;line-height:1.1}
+.metric .ci{color:var(--muted);font-size:13px}
+.bar{position:relative;height:8px;background:var(--surface2);border-radius:99px;margin:18px 0 6px}
+.bar .range{position:absolute;top:0;bottom:0;border-radius:99px;background:color-mix(in srgb,var(--accent) 30%,transparent)}
+.bar .dot{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);transform:translateX(-50%)}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.prompt{white-space:pre-wrap;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;max-height:320px;overflow:auto}
+.msg{border-radius:8px;padding:10px 14px;font-size:14px;margin-top:10px}
+.msg.ok{background:var(--good-bg);color:var(--good)} .msg.err{background:var(--bad-bg);color:var(--bad)} .msg.info{background:var(--warn-bg);color:var(--warn)}
+.msg ul{margin:6px 0 0;padding-left:20px}
+.progress{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.cmp{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;text-align:center}
+.cmp .arrow{font-size:20px;font-weight:700}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.stat{background:var(--surface2);border-radius:8px;padding:10px 16px;min-width:100px}
+.stat b{display:block;font-size:20px;font-weight:600;letter-spacing:-.01em}
+.stat span{font-size:12px;color:var(--muted)}
+.lock{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:14px}
+.help details{border-bottom:1px solid var(--border);padding:12px 0}
+.help summary{cursor:pointer;font-weight:600}
+.help p,.help li{color:var(--muted)}
+.help code,.sub code{background:var(--surface2);padding:1px 6px;border-radius:5px;font-size:12.5px}
+.shape{font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;white-space:pre-wrap}
+.view{display:none;animation:in .2s ease} .view.active{display:block}
+.casetext{color:var(--muted);font-size:13px;margin-top:2px}
+@keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.view{animation:none}.progress i{transition:none}}
+@media (max-width:560px){h1{font-size:24px}.metric .val{font-size:34px}.cmp{grid-template-columns:1fr}}
+dialog{border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);max-width:600px;width:calc(100% - 32px);box-shadow:0 20px 50px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+</style>
+<style>
+.demo{display:grid;gap:10px;margin-top:8px}
+.demo button{text-align:left;padding:14px 16px}
+.demo b{display:block;font-size:15px}
+.demo span{font-weight:400;color:var(--muted);font-size:13px}
+.sbs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.sbs{grid-template-columns:1fr}}
+.sbs textarea{min-height:100px}
+mark{background:var(--warn-bg);color:var(--warn);border-radius:4px;padding:0 3px}
+.shelfitem{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;background:var(--surface2)}
+.shelfitem small{color:var(--muted)}
+.warnbox{margin-top:8px}
+tr.sel{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+
+table.det td{vertical-align:top}
+table.det textarea{font-size:12.5px}
+.cc{margin-bottom:14px}
+.cc summary{cursor:pointer}
+tr.clickable.sel,tr.sel{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+
+.errrow{display:grid;grid-template-columns:120px 1fr 1fr 1.4fr auto;gap:6px;margin-bottom:6px;align-items:center}
+@media (max-width:720px){.errrow{grid-template-columns:1fr 1fr}}
+.pack summary{cursor:pointer}
+</style>
+</head>
+<body>
+<div class="glow" aria-hidden="true"></div>
+<datalist id="dlLabels"></datalist>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="logo" aria-hidden="true">J</span> Judge the Judge</div>
+    <div class="hdr-actions">
+      <button class="btn primary" id="demoBtn">Demo scenarios</button>
+      <button class="btn" id="themeBtn" aria-label="Toggle light or dark theme">◐</button>
+    </div>
+  </header>
+  <nav id="nav" aria-label="Workflow steps"></nav>
+  <div id="lockBar"></div>
+
+  <!-- 1 JUDGE -->
+  <section class="view" id="v-judge">
+    <h1>Your judge</h1>
+    <p class="sub">The prompt you are testing. The tool uses it exactly as written and adds nothing to it. The placeholders you use decide what you enter for each scenario: <code>{{output}}</code> alone for a judge that only reads the answer (e.g. a bias check), <code>{{input}}</code> and <code>{{output}}</code> for a judge that compares the answer with the question (e.g. accuracy, completeness).</p>
+    <div class="card" id="popBar" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div><h2 style="margin:0 0 2px">Start from a ready set</h2><span class="sub" style="margin:0">Fills the judge prompt <b>and</b> the error catalog below in one step, or saves and loads the whole set (prompt plus error catalog) as one file.</span></div>
+      <div class="row"><button class="btn primary" id="popAcc">Populate for accuracy</button><button class="btn primary" id="popCmp">Populate for completeness</button><span style="width:1px;align-self:stretch;background:var(--border)"></span><label class="btn" style="margin:0;cursor:pointer" title="Loads a saved judge set: the prompt and its error catalog">Load judge set<input type="file" id="judgeFile" accept=".json,.txt" hidden></label><button class="btn" id="saveJudge" title="Saves the prompt and the error catalog together in one file">Save judge set</button></div>
+    </div>
+    <div class="card">
+      <h2 style="margin:0 0 12px">Judge prompt</h2>
+      <textarea id="tpl" aria-label="Judge prompt" style="min-height:220px" placeholder="Write or paste your judge prompt. Use {{output}} (the answer to judge) and, if your judge needs it, {{input}} (what the model was asked). Press a Populate button above or write your own."></textarea>
+      <div class="row spread" style="margin-top:8px"><span class="sub" style="margin:0" id="phInfo"></span><span class="row"><button class="btn" id="insJson" title="Appends the JSON reply block so the tool can match findings to expected errors automatically">Insert JSON reply block</button><span class="pill" id="verPill"></span></span></div>
+      <div id="jsonWarn"></div>
+    </div>
+    <div class="card" id="packCard">
+      <div class="row spread" style="margin-bottom:8px"><h2 style="margin:0">Error catalog</h2>
+        </div>
+      <p class="sub" style="margin:0 0 8px">One list of the errors your judge looks for. One per line, optionally with a description after a dash, e.g. <code>wrong-number - a figure that is incorrect</code>. Type, paste or edit it freely. It is offered when you write expected errors and sent to your LLM when you generate test data. New kinds of errors you type later, while writing test cases, are added to this list automatically.</p>
+      <textarea id="catText" aria-label="Error catalog" style="min-height:150px" placeholder="bias - words that stereotype a group&#10;toxicity&#10;unsupported-claim - a claim with no source"></textarea>
+      <div id="packMsg" role="status" aria-live="polite"></div>
+    </div>
+    <div class="row" style="justify-content:flex-end"><button class="btn primary" data-go="cases">Next: Test cases →</button></div>
+  </section>
+
+  <!-- 2 CASES -->
+  <section class="view" id="v-cases">
+    <h1>Test cases</h1>
+    <p class="sub">A scenario has a name, named input fields (matching the placeholders in your prompt) and expected errors. Inputs stay fixed; you adjust the expected errors.</p>
+
+    <div class="card" id="loadCard">
+      <div class="row spread">
+        <div><h2 style="margin:0 0 4px">Load or save scenarios</h2><span class="sub" style="margin:0">CSV (Excel) or JSON, up to 500. Save to JSON and load again later.</span></div>
+        <div class="row">
+          <label class="btn primary" style="margin:0;cursor:pointer">Load file (CSV or JSON)<input type="file" id="caseFile" accept=".csv,.json" hidden></label>
+          <button class="btn" id="exportDs">Save scenarios to JSON</button>
+          <button class="btn" id="tplCsv">CSV template</button>
+          <button class="btn" id="tplJson">JSON template</button>
+        </div>
+      </div>
+      <div id="importSummary"></div>
+    </div>
+
+    <div class="card" id="catBar">
+      <div class="row spread" style="margin-bottom:6px"><h2 style="margin:0">Error catalog <span class="pill" id="catCount"></span></h2><button class="btn" id="saveJudge2" title="Saves the judge prompt together with the current error catalog">Save judge set</button></div>
+      <p class="sub" style="margin:0 0 8px">A new kind of error you type as a label below is added to the catalog automatically. Save the judge set to keep the latest catalog with the prompt.</p>
+      <div id="catChips"></div><div id="catNote" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="card" id="authorCard">
+      <div class="row spread" style="margin-bottom:10px"><h2 style="margin:0">Add a scenario by hand</h2><button class="btn" id="injectBtn">Suggest a built-in change…</button></div>
+      <div class="grid">
+        <div><label for="nName">Name</label><input type="text" id="nName" placeholder="e.g. Revenue vs table" style="margin-bottom:10px"><div id="nFields"></div></div>
+        <div><label>Expected errors <span class="casetext">(none = a clean scenario)</span></label><div id="nErrors"></div><div class="row" style="margin-top:8px"><button class="btn" id="nAddErr">+ Add expected error</button></div></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="btn primary" id="addCase">Add scenario</button></div>
+      <div id="addMsg" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="card" id="genCard">
+      <h2 style="margin-bottom:4px">Generate test data with your LLM</h2>
+      <p class="sub" style="margin:0 0 12px">Two steps. The prompts are already filled in with your judge prompt, your error catalog and your scenarios. Adjust the options or write your own changes, copy the prompt into your LLM and paste its answer in “Paste scenarios from your LLM” below.</p>
+      <div class="card" style="box-shadow:none;margin:0 0 12px">
+        <h3>Step 1 · Clean scenarios first</h3>
+        <p class="sub" style="margin:0 0 8px">A few scenarios with no errors. They are the base for step 2 and they measure false alarms.</p>
+        <div class="row" style="margin-bottom:8px"><label style="margin:0">How many</label><input type="text" id="g1n" style="width:60px"><label style="margin:0">Topic (optional)</label><input type="text" id="g1t" style="flex:1;min-width:180px" placeholder="e.g. customer support answers about invoices"></div>
+        <label for="g1x">Your own changes to the prompt (optional)</label><textarea id="g1x" style="min-height:56px;margin-bottom:8px" placeholder="e.g. Write in Polish. Keep each text under 80 words."></textarea>
+        <label for="g1Prompt">Prompt (you can edit it directly; changing an option above rebuilds it)</label><textarea id="g1Prompt" style="min-height:200px;font-family:var(--mono,monospace);font-size:12.5px"></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn primary" id="g1Copy">Copy prompt</button><button class="btn" id="g1Reset">Rebuild</button></div>
+      </div>
+      <div class="card" style="box-shadow:none;margin:0">
+        <h3>Step 2 · Add errors to the clean scenarios</h3>
+        <p class="sub" style="margin:0 0 8px" id="g2Info"></p>
+        <div class="row" style="margin-bottom:8px"><label style="margin:0">Variants per scenario</label><input type="text" id="g2k" style="width:60px"><label style="margin:0">Errors per variant</label><input type="text" id="g2e" style="width:60px"></div>
+        <label for="g2x">Your own changes to the prompt (optional)</label><textarea id="g2x" style="min-height:56px;margin-bottom:8px" placeholder="e.g. Prefer errors in numbers and dates. Never put an error in the first sentence."></textarea>
+        <label for="g2Prompt">Prompt (you can edit it directly; changing an option above rebuilds it)</label><textarea id="g2Prompt" style="min-height:200px;font-family:var(--mono,monospace);font-size:12.5px"></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn primary" id="g2Copy">Copy prompt</button><button class="btn" id="g2Reset">Rebuild</button></div>
+      </div>
+    </div>
+
+    <div class="card" id="pasteCard">
+      <h2 style="margin-bottom:4px">Paste scenarios from your LLM</h2>
+      <p class="sub" style="margin:0 0 10px">Use the prompts in “Generate test data with your LLM” above, run them in your LLM, and paste the answer here. It is checked like a file import and you review every scenario before it is added.</p>
+      <textarea id="pasteBox" style="min-height:110px" placeholder='{"scenarios":[{"name":"…","fields":{"input":"…"},"expected_errors":[{"field":"input","label":"…","fragment":"…","description":"…"}]}]}'></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn primary" id="pasteRead">Read pasted scenarios</button><button class="btn" id="pasteDemo">Insert example</button></div>
+      <div id="pasteOut"></div>
+    </div>
+
+    <div id="casesEmpty" class="card empty"><h2>No test cases yet</h2><p>Load a file, add a scenario by hand, generate scenarios with your LLM (start with a few clean ones), or generate a ready-made mock set.</p><button class="btn primary" id="mockBtn2">Generate mock scenarios</button></div>
+
+    <div id="casesFull" hidden>
+      <div class="card">
+        <div class="row spread" style="margin-bottom:6px">
+          <div><h2 style="margin:0">Dataset <span id="dsName"></span></h2><span class="pill" id="dsVer"></span> <span class="pill warn" id="dsDirty" hidden>unsaved changes</span></div>
+          <button class="btn primary" id="finalizeBtn">Finalize dataset</button>
+        </div>
+        <div class="stats" id="dsStats"></div>
+        <div id="dsWarn"></div>
+        <div class="row" style="margin-top:8px">
+          <input type="search" id="q" placeholder="Search name or text…" aria-label="Search" style="flex:1;min-width:160px">
+          <select id="fKind" aria-label="Filter by kind" style="width:auto"><option value="">All kinds</option><option value="defect">With expected errors</option><option value="clean">Clean</option></select>
+        </div>
+      </div>
+      <div id="caseList"></div>
+      <div class="row spread" style="margin:8px 0 16px"><span class="sub" style="margin:0" id="caseCount"></span><div class="row"><button class="btn" id="pgPrev">‹ Prev</button><button class="btn" id="pgNext">Next ›</button></div></div>
+    </div>
+    <div class="row" style="justify-content:flex-end"><button class="btn primary" data-go="run">Next: Run →</button></div>
+  </section>
+
+  <!-- 3 RUN & RESULTS -->
+  <section class="view" id="v-run">
+    <h1>Run</h1>
+    <p class="sub">For each scenario: copy the prompt, run it in your LLM, paste what you received (any format). The tool never calls an LLM itself. Verdicts appear on the next step.</p>
+    <div id="runEmpty" class="card empty"><h2 id="runEmptyT">Nothing to run yet</h2><p id="runEmptyP">Load test cases and finalize the dataset first.</p><button class="btn primary" data-go="cases">Go to Test cases</button></div>
+    <div id="runFull" hidden>
+      <div class="card">
+        <div class="row spread" style="margin-bottom:10px"><strong id="progTxt"></strong><span><span class="pill" id="runJ"></span> <span class="pill" id="runVer"></span></span></div>
+        <div class="progress"><i id="progBar" style="width:0"></i></div>
+      </div>
+      <div class="card">
+        <div class="row spread" style="margin-bottom:14px">
+          <div class="row"><button class="btn" id="prevCase">‹ Prev</button><select id="caseSel" aria-label="Scenario" style="width:auto;max-width:340px"></select><button class="btn" id="nextCase">Next ›</button></div>
+          <span class="pill" id="caseState"></span>
+        </div>
+        <div class="row" style="margin-bottom:4px"><h2 style="margin:0" id="runName"></h2><span id="runPills"></span></div>
+        <h3 style="margin-top:16px">Scenario data</h3>
+        <div id="runData"></div>
+        <h3 style="margin-top:20px">Prompt to paste into your LLM</h3>
+        <details open><summary class="casetext" style="cursor:pointer">Show or hide the full prompt</summary><div class="prompt" id="composed" style="margin-top:8px"></div></details>
+        <div class="row" style="margin:10px 0 18px"><button class="btn primary" id="copyBtn">Copy prompt</button></div>
+        <h3>What you received (any format)</h3>
+        <textarea id="ans" aria-label="Received output" placeholder="Paste the LLM's output here…"></textarea>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="accept">Save output</button></div>
+        <div id="ansMsg" role="status" aria-live="polite"></div>
+      </div>
+      <details class="card" id="sugDet" style="padding:14px 20px"><summary style="cursor:pointer;font-weight:600">Optional: automatic verdicts from a JSON reply</summary><div style="margin-top:12px">
+      <p class="sub" style="margin:0 0 10px">Your judge may answer in any format and you can always verify by hand. If the judge replies in the JSON shape below (the Populate buttons and “Insert JSON reply block” on the Judge step write such a prompt), the tool matches each finding to the expected errors by <b>label and quoted place</b>. A clear result becomes an automatic Pass or Fail at once; anything unclear (unreadable, other label, other place, or something you did not expect) waits for your verification.</p>
+      <div class="shape">{ "findings": [ { "label": "contradiction", "field": "output", "fragment": "grew 12%", "description": "short text" } ], "confident": true }</div>
+    </div></details>
+      <details class="card" id="bulkDet" style="padding:14px 20px">
+        <summary style="cursor:pointer;font-weight:600">Many scenarios at once: export all prompts, import all outputs</summary>
+        <div style="margin-top:14px"><div class="grid g2">
+          <div class="card"><h2>① Export all prompts</h2><p class="sub" style="margin-bottom:12px">One file with a prompt for every scenario, labeled with its ID.</p>
+            <div class="row"><select id="expScope" style="width:auto" aria-label="Which prompts"><option value="all">All scenarios</option><option value="un">Only without output</option></select><button class="btn primary" id="expPrompts">Export prompts</button></div></div>
+          <div class="card"><h2>② Import all outputs</h2><p class="sub" style="margin-bottom:12px">One JSON file: a list of entries with an <code>id</code> and the <code>output</code> text.</p>
+            <div class="row"><label class="btn primary" style="margin:0;cursor:pointer">Choose outputs file<input type="file" id="ansFile" accept=".json" hidden></label><button class="btn" id="loadSample">Load sample outputs</button></div></div>
+        </div></div>
+      </details>
+      <div id="bulkMsg" role="status" aria-live="polite"></div>
+      <div class="row" style="justify-content:flex-end"><button class="btn primary" data-go="results">Next: Results →</button></div>
+    </div>
+  </section>
+
+  <!-- 4 RESULTS -->
+  <section class="view" id="v-results">
+    <h1>Results</h1>
+    <p class="sub">The final answer first, then the evidence behind it: overall measures, a breakdown per kind of error, every scenario, and the detail you verify by hand.</p>
+    <div id="resGate" class="card empty"><h2>Finalize the dataset and run it first</h2><p>Results appear after the dataset is finalized and outputs are received.</p><button class="btn primary" data-go="cases">Go to Test cases</button></div>
+    <div id="resEmpty" class="card empty"><h2>Results appear here</h2><p>Paste at least one output on the Run step.</p><button class="btn primary" data-go="run">Go to Run</button></div>
+    <div id="resFull" hidden>
+      <div id="resNote"></div>
+      <div class="card" id="finalCard"></div>
+      <div class="card"><div class="tablewrap"><table><thead><tr><th>Overall measure</th><th>Result</th><th>Count</th><th>95% interval</th><th>Threshold</th><th>Status</th></tr></thead><tbody id="measRows"></tbody></table></div></div>
+      <div class="card">
+        <h2 style="margin:0 0 4px">Per kind of error</h2><p class="sub" style="margin:0 0 8px">Which kinds of injected errors the judge finds, and which it misses or invents.</p>
+        <div class="tablewrap"><table><thead><tr><th>Label</th><th>Expected</th><th>Found</th><th>Missed</th><th>Detection</th><th>Unexpected</th></tr></thead><tbody id="labRows"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="row spread" style="margin-bottom:8px"><h2 style="margin:0">Scenarios <span class="pill" id="sumFilter"></span></h2><div class="row" id="chips"></div></div>
+        <div class="tablewrap"><table><thead><tr><th>Scenario</th><th>Kind</th><th>Status</th><th>Errors found</th><th>Unexpected</th><th>Verdict source</th><th>Reported</th></tr></thead><tbody id="sumRows"></tbody></table></div>
+      </div>
+      <div class="card" id="llmCard">
+        <div class="row spread" style="margin-bottom:4px"><h2 style="margin:0">Second opinion from an LLM</h2><span class="pill warn" id="llmCount"></span></div>
+        <p class="sub" style="margin:0 0 10px">Hard to decide, for example in long narrative texts? Copy one prompt for every scenario that awaits verification into your own LLM and paste its JSON answer back. The answer only fills in the marks below as a <b>proposal</b>: you approve it, one scenario at a time or all at once.</p>
+        <div class="row"><button class="btn primary" id="llmCopyAll">Copy verification prompt (all awaiting)</button><button class="btn" id="llmExample">Insert example opinion</button><button class="btn" id="llmApproveAll">Approve all proposals</button></div>
+        <details id="llmPromptDet" style="margin-top:10px"><summary class="casetext" style="cursor:pointer">Show the verification prompt</summary><div class="prompt" id="llmPrompt" style="margin-top:8px">Press “Copy verification prompt” to build it.</div></details>
+        <textarea id="llmPaste" aria-label="LLM opinion" style="min-height:90px;margin-top:10px" placeholder='Paste the LLM answer here: {"opinions":[{"id":"4","expected":[{"index":1,"found":true,"reason":"…"}],"unexpected":[]}]}'></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn primary" id="llmRead">Read opinion</button></div>
+        <div id="llmMsg" role="status" aria-live="polite"></div>
+      </div>
+      <div class="card" id="detCard">
+        <div class="row spread" style="margin-bottom:8px"><h2 style="margin:0">Details and manual verification</h2><span class="casetext" style="margin:0">Clear results already have an automatic verdict. Mark each expected error found or not, and decide on unexpected findings.</span></div>
+        <div class="tablewrap"><table class="det"><thead><tr><th style="width:26%">Prompt tested (full)</th><th style="width:18%">Expected errors</th><th style="width:26%">Received output</th><th style="width:30%">Verification</th></tr></thead><tbody id="detRows"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="row spread"><h2 style="margin:0">Save and export</h2><span class="pill" id="savedPill"></span></div>
+        <p class="casetext" style="margin:6px 0 0">Saved results and the HTML report contain your full prompts, input data and received outputs. The report opens with the final answer and prints cleanly to PDF.</p>
+        <div class="row" style="margin-top:10px"><input type="text" id="resLabel" aria-label="Result name" placeholder="Name, e.g. prompt v2, shorter" style="flex:1;min-width:200px"><button class="btn primary" id="saveRes">Save to shelf</button><button class="btn" id="saveJson">Save result to JSON</button><button class="btn" id="exportHtml">Export HTML report</button><button class="btn" id="reviseBtn">Change the judge, keep the cases</button></div>
+      </div>
+      <div class="row" style="justify-content:flex-end"><button class="btn primary" data-go="compare">Compare results →</button></div>
+    </div>
+  </section>
+
+  <!-- 4 COMPARE -->
+  <section class="view" id="v-compare">
+    <h1>Compare results</h1>
+    <p class="sub">Pick any two saved results. "Worse" means a worse value; "clearly worse" means the confidence intervals do not overlap.</p>
+    <div class="card">
+      <div class="row spread" style="margin-bottom:10px"><h2 style="margin:0">Result shelf <span class="pill" id="shelfCount"></span></h2>
+        <label class="btn" style="margin:0;cursor:pointer">Import result file<input type="file" id="resFile" accept=".json" hidden></label></div>
+      <p class="sub" style="margin-bottom:10px">The shelf lives only in this session. Export results you want to keep.</p>
+      <div id="shelf"></div><div id="shelfMsg" role="status" aria-live="polite"></div>
+    </div>
+    <div id="cmpPick" class="card" hidden>
+      <div class="grid g2"><div><label for="cmpA">Result A (previous)</label><select id="cmpA"></select></div><div><label for="cmpB">Result B (new)</label><select id="cmpB"></select></div></div>
+      <div id="cmpWarn"></div>
+    </div>
+    <div id="cmpRows"></div>
+  </section>
+
+  <!-- HELP -->
+  <section class="view help" id="v-help">
+    <h1>Help</h1>
+    <p class="sub">How to use Judge the Judge.</p>
+    <div class="card">
+      <details open><summary>What does this tool do?</summary><p>It tests an LLM-as-judge prompt. You write scenarios (input fields plus the errors the judge should find), run the final prompts in your LLM, paste what you receive, and decide Pass or Fail for each scenario. The tool counts, compares and reports.</p></details>
+      <details><summary>The whole flow</summary><ol><li>Paste your judge prompt (the tool never changes it). Mark where each scenario field goes with placeholders such as <code>{{input}}</code>.</li><li>Fill the error catalog (or press Populate for accuracy / completeness), load or write scenarios, then finalize the dataset.</li><li>For each scenario copy the final prompt, run it in your LLM and paste the output.</li><li>Results: clear outputs get an automatic verdict; you verify the rest (optionally with a second opinion from your LLM). The tool then gives a final answer: Works, Does not work or Inconclusive.</li><li>Save the result to JSON or export an HTML report. To try another prompt, use “Change the judge, keep the cases”, then compare.</li></ol></details>
+      <details><summary>Scenarios, fields and expected errors</summary><p>A scenario has a name and any number of named input fields, for example <code>prompt_under_review</code> and <code>input</code>. Your judge prompt refers to them with placeholders like <code>{{input}}</code>. Each expected error has a description and optionally a field, a label and a fragment. No expected errors means a clean scenario. After finalizing, inputs stay fixed but you can still adjust the expected errors.</p></details>
+      <details><summary>Error catalog</summary><p>The error catalog is one list of the kinds of errors your judge looks for, one per line, optionally with a description after a dash. Type it, paste it, load it from a JSON file (<code>{"name":"Tone","labels":[{"name":"too-formal","description":"…"}]}</code>) or press <b>Populate for accuracy</b> / <b>Populate for completeness</b>, which writes a ready judge prompt and the matching list. The list feeds the label choices for expected errors and the prompt that asks your LLM to generate test data.</p></details>
+      <details><summary>Writing errors in one line</summary><p>Format: <code>field | label | "fragment" | description</code>. Shorter forms work too: <code>label | description</code> or just a description. In CSV put several errors in one cell separated by <code> ;; </code>. CSV columns: <code>id</code> (optional), <code>name</code>, one <code>field:&lt;name&gt;</code> column per input field (or a single <code>text</code> column), and <code>expected_errors</code>.</p></details>
+      <details><summary>Generating test data with your LLM</summary><p>Each scenario card has a “Prompt for generating test data”. It contains your judge prompt, the labels with their definitions and the base scenario. Run it in your LLM and paste the answer in “Paste scenarios from your LLM”: it is read like a file and you review every scenario before it is added. No prompt guarantees an exact result.</p></details>
+      <details><summary>Verification and measures</summary><p>An expected error is <b>found</b> when the judge reports the same label and its quote overlaps the expected fragment (the label alone counts when the expected error has no fragment). The <b>detection rate</b> is expected errors found divided by all expected errors. An <b>unexpected finding</b> is something the judge reports that was not expected; the <b>false-alarm rate</b> is the share of scenarios (clean or not) with at least one. A scenario passes only when every expected error is found and nothing unexpected is reported. Intervals are 95%. Results are provisional while scenarios await verification.</p></details>
+      <details><summary>Final answer and thresholds</summary><p>Works: detection at least 80% and false alarms at most 10% (both editable on the Results step). Does not work: either threshold missed. Inconclusive: scenarios are not run or still await verification, or the sample is below the minimum (30 expected errors and 10 clean scenarios by default). The values used are stored with the result and printed in the report.</p></details>
+      <details><summary>Second opinion from an LLM</summary><p>On the Results step, copy the verification prompt for the scenarios that await verification, run it in your own LLM and paste the JSON answer back. It only fills in the marks as a proposal; nothing counts until you approve it, and the report shows the source of every verdict.</p></details>
+      <details><summary>Saving your work</summary><p>The tool remembers nothing after you close the page. Save scenarios to JSON, results to JSON, or export an HTML report. You are warned before leaving with unsaved work. Saved results and reports always contain your full prompts, input data and received outputs, so handle those files like the data itself.</p></details>
+    </div>
+  </section>
+</div>
+
+<dialog id="dlg"><h2 id="dlgT"></h2><div id="dlgB"></div><div class="row" style="justify-content:flex-end;margin-top:16px" id="dlgA"></div></dialog>
+
+<script>
+const STEPS=[["judge","Judge"],["cases","Test cases"],["run","Run"],["results","Results"],["compare","Compare"]];
+const MAX=500, PAGE=20;
+const PACKS={
+ Accuracy:{description:"Is what the text says true and consistent?",labels:{
+  "factual-error":["A statement that is simply untrue.","“Paris is the capital of Germany.”"],
+  "contradiction":["Two parts of the text say opposite things.","“Sales rose 12%” while the table shows a drop."],
+  "wrong-number":["A number, date or quantity that does not match another or the facts.","“200 participants” but results for 250."],
+  "unsupported-claim":["A claim presented as fact with no basis.","“Guarantees 100% uptime.”"],
+  "misattribution":["A statement credited to the wrong source or person.","A quote attributed to the wrong author."]}},
+ Completeness:{description:"Does the text contain everything it should?",labels:{
+  "missing-information":["Required content is absent.","A report with no conclusion."],
+  "missing-step":["An important step is left out.","“Install it, then run it.” (install steps omitted)"],
+  "omitted-requirement":["A stated requirement is not addressed.","Asked for three options, gave two."],
+  "partial-answer":["The question is only partly answered.","Answers only the first of two questions."],
+  "missing-caveat":["An important limit or warning is left out.","No mention that the offer expires."]}}};
+const TPL_JSON=`You are a strict reviewer. A model received the INPUT below and produced the OUTPUT. Find every defect in the OUTPUT (accuracy against the INPUT and the facts, and completeness).
+Possible labels: factual-error, contradiction, wrong-number, unsupported-claim, misattribution, missing-information, missing-step, omitted-requirement, partial-answer, missing-caveat.
+Reply ONLY with JSON in this shape:
+{"findings":[{"label":"<label>","field":"output","fragment":"<exact quote from the OUTPUT>","description":"<short text>"}],"confident":true}
+Use an empty findings list if the OUTPUT has no defect.
+
+INPUT:
+{{input}}
+
+OUTPUT:
+{{output}}`;
+const E=(label,description,field="output",fragment="")=>({field,label,fragment,description});
+const MOCK=[
+ ["Revenue vs table","The report says revenue grew 12% in Q2, yet the table shows a 4% decline.",[E("contradiction","Text and table disagree","output","grew 12%"),E("wrong-number","12% growth vs 4% decline","output","12%")]],
+ ["Uptime guarantee","Our service is available 24/7 and guarantees 100% uptime.",[E("unsupported-claim","No service can guarantee 100% uptime","output","guarantees 100% uptime")]],
+ ["Capital of Germany","Paris is the capital of Germany, and it hosts the Bundestag.",[E("factual-error","Berlin is the capital","output","Paris is the capital")]],
+ ["Meeting day","The meeting is on Monday. We will therefore meet on Friday.",[E("contradiction","Friday does not follow from Monday","output","therefore meet on Friday")]],
+ ["Missing install steps","Install the tool, then run it. (Installation steps are omitted.)",[E("missing-step","Installation steps are missing","output","")]],
+ ["Password rules","All users must reset passwords, but passwords never expire.",[E("contradiction","Reset required vs never expire","output","")]],
+ ["Boiling point","Water boils at 100 °C at sea level.",[]],
+ ["Invoice dates","The invoice was issued on 3 March and paid on 10 March.",[]],
+ ["Team release","Our team of five shipped the release on time.",[]],
+ ["Sorted list function","The function returns a sorted list of unique values.",[]],
+ ["Participant count","The study had 200 participants, but results are given for 250.",[E("wrong-number","200 vs 250","output","250")]],
+ ["Server regions","Both servers are in the same region; data is replicated across regions.",[E("contradiction","Same region vs across regions","output","")]],
+];
+const state={step:"judge",name:"",cases:[],final:false,revising:false,outputs:{},verdicts:{},sel:"1",dirty:false,ver:"",shelf:[],rev:1,saved:null,custom:{},loaded:{},packs:[],resFilter:"",page:0,gen:{},draft:[],draftF:{},cmpA:null,cmpB:null,pasted:null,marks:{},props:{},notes:{},th:{det:80,fa:10,minErr:30,minClean:10}};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hasCases=()=>state.cases.length>0;
+const kindOf=c=>c.errors.length?"defect":"clean";
+const dname=c=>c.name||("Case "+c.id);
+const allPacks=()=>({...PACKS,...state.loaded});
+function mergePacks(names,defs){const all={...PACKS,...(defs||{})};(names||[]).forEach(n=>{const pk=all[n];if(pk)Object.entries(pk.labels).forEach(([k,v])=>{if(!(k in state.custom))state.custom[k]=v;});});}
+function labelMap(){const m={};state.packs.forEach(p=>{const pk=allPacks()[p];if(pk)Object.assign(m,pk.labels);});Object.assign(m,state.custom);return m;}
+const ftext=c=>Object.values(c.fields).join(" · ");
+const firstField=c=>Object.keys(c.fields)[0]||"text";
+function placeholders(){const out=[];$("#tpl").value.replace(/\{\{\s*([\w-]+)\s*\}\}/g,(_,n)=>{if(!out.includes(n))out.push(n);});return out;}
+const fieldNames=()=>{const p=placeholders();return p.length?p:["input","output"];};
+const errField=()=>{const f=fieldNames();return f.includes("output")?"output":f[f.length-1];};
+function composed(c){return $("#tpl").value.replace(/\{\{\s*([\w-]+)\s*\}\}/g,(m,n)=>{if(n in c.fields)return c.fields[n];if(n==="document"||n==="text"||n==="input")return c.fields[firstField(c)]??"";return m;});}
+const serErr=e=>({field:e.field,label:e.label,fragment:e.fragment,description:e.description});
+const serCase=c=>({id:c.id,name:c.name,fields:c.fields,expected_errors:c.errors.map(serErr)});
+const lineOf=e=>[e.field,e.label,e.fragment?'"'+e.fragment+'"':"",e.description].join(" | ");
+
+/* ---------- helpers ---------- */
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(16).padStart(8,"0").slice(0,6);}
+const dsVersion=cs=>"v-"+hash(JSON.stringify(cs.map(c=>[c.id,c.name,c.fields,c.errors.map(e=>[e.label,e.field])])));
+const judgeVer=()=>"j-"+hash($("#tpl").value);
+function download(name,text,type="text/plain"){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();}
+function dialog(title,body,buttons){return new Promise(res=>{
+  $("#dlgT").textContent=title;$("#dlgB").innerHTML=body;
+  $("#dlgA").innerHTML=buttons.map((b,i)=>`<button class="btn ${b.cls||""}" data-i="${i}">${b.label}</button>`).join("");
+  const d=$("#dlg");d.showModal();
+  $("#dlgA").onclick=e=>{const b=e.target.closest("button");if(!b)return;d.close();res(+b.dataset.i);};
+  d.oncancel=()=>res(-1);});}
+const unsavedShelf=()=>state.shelf.some(r=>!r.exported&&!r.imported);
+window.addEventListener("beforeunload",e=>{if(state.dirty||unsavedShelf()){e.preventDefault();e.returnValue="";}});
+function touch(){state.dirty=true;state.ver=dsVersion(state.cases);}
+
+/* ---------- nav ---------- */
+function buildNav(){
+  $("#nav").innerHTML=STEPS.map(([k,l],i)=>{
+    const done=(k==="cases"&&state.final)||(k==="run"&&Object.keys(state.outputs).length)||(k==="results"&&state.final&&state.cases.length&&state.cases.every(c=>state.verdicts[c.id]))||(k==="compare"&&state.shelf.length>1);
+    return `<button data-go="${k}" class="${state.step===k?"active":""} ${done?"done":""}" ${state.step===k?'aria-current="step"':""}><span class="n">${i+1}</span>${l}</button>`;}).join("")
+   +`<span class="grow"></span><button data-go="help" class="${state.step==="help"?"active":""}">Help</button>`;
+}
+function go(step){state.step=step;document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="v-"+step));render();window.scrollTo({top:0});}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(b)go(b.dataset.go);});
+
+/* ---------- discard ---------- */
+async function confirmDiscard(){
+  if(!hasCases()||(!state.dirty&&!Object.keys(state.outputs).length)) return true;
+  const n=Object.keys(state.outputs).length;
+  const i=await dialog("Replace the current work?",`<p>This replaces the current dataset${n?" and its outputs":""}.</p>${state.dirty?`<div class="msg err">There are unsaved changes. Save the scenarios first if you need them.</div>`:""}${n?`<div class="msg info">${n} output(s) will be discarded.</div>`:""}`,[{label:"Cancel"},{label:"Save scenarios first"},{label:"Replace",cls:"primary"}]);
+  if(i===1){saveDataset();return false;} return i===2;
+}
+function resetEval(keepShelf=true){Object.assign(state,{cases:[],final:false,revising:false,outputs:{},verdicts:{},name:"",ver:"",sel:"1",dirty:false,saved:null,custom:{},loaded:{},packs:[],resFilter:"",page:0,gen:{},draft:[],draftF:{},pasted:null,marks:{},props:{},notes:{}});$("#importSummary").innerHTML="";$("#bulkMsg").innerHTML="";$("#pasteOut").innerHTML="";if(!keepShelf)state.shelf=[];}
+
+/* ---------- reading scenarios (files, saves, pasted LLM answers) ---------- */
+function parseCSV(text){
+  text=text.replace(/^﻿/,"");const rows=[];let row=[],cur="",q=false;const first=text.split("\n")[0];
+  const d=(first.match(/;/g)||[]).length>(first.match(/,/g)||[]).length?";":",";
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c=='"'){if(text[i+1]=='"'){cur+='"';i++;}else q=false;}else cur+=c;}
+    else if(c=='"')q=true; else if(c===d){row.push(cur);cur="";}
+    else if(c=="\n"||c=="\r"){if(c=="\r"&&text[i+1]=="\n")i++;row.push(cur);cur="";if(row.some(x=>x!==""))rows.push(row);row=[];}
+    else cur+=c;}
+  row.push(cur);if(row.some(x=>x!==""))rows.push(row);return rows;}
+function splitBar(s){const parts=[];let cur="",q=false;for(const ch of s){if(ch==='"')q=!q;if(ch==="|"&&!q){parts.push(cur.trim());cur="";}else cur+=ch;}parts.push(cur.trim());return parts.map(p=>p.replace(/^"(.*)"$/,"$1"));}
+function parseLine(line,defField){ // field | label | "fragment" | description   (shorter forms allowed)
+  const p=splitBar(line.trim());if(!p[0]&&p.length===1)return null;
+  if(p.length>=4)return E(p[1],p.slice(3).join(" | "),p[0]||defField,p[2]);
+  if(p.length===3)return E(p[1],p[2],p[0]||defField,"");
+  if(p.length===2)return E(p[0],p[1],defField,"");
+  return E("",p[0],defField,"");}
+function parseErrs(v,defField){
+  if(Array.isArray(v))return v.map(x=>typeof x==="string"?parseLine(x,defField):(x&&(x.description||x.label||x.spec||x.type)?E(String(x.label||x.type||"").trim(),String(x.description||x.spec||"").trim(),String(x.field||defField),String(x.fragment||"").trim()):null)).filter(Boolean);
+  return String(v||"").split(/\s*;;\s*|\n/).map(x=>x.trim()).filter(Boolean).map(x=>parseLine(x,defField)).filter(Boolean);}
+function readCases(text,fname){
+  let raw=[],custom={},nm="",packs=null,loadedPacks={};
+  const isJson=fname.toLowerCase().endsWith(".json");
+  if(isJson){
+    let j;try{j=JSON.parse(text);}catch{return{fatal:"This is not valid JSON. Check for missing quotes, commas or brackets."};}
+    raw=Array.isArray(j)?j:(Array.isArray(j.scenarios)?j.scenarios:(Array.isArray(j.cases)?j.cases:null));
+    if(!raw)return{fatal:'Expected a list of scenarios, or an object with a "scenarios" (or "cases") list.'};
+    custom=j.custom_labels||j.custom_types||{};nm=j.name||"";packs=j.packs||null;loadedPacks=j.pack_definitions||{};
+  } else {
+    const rows=parseCSV(text);if(rows.length<2)return{fatal:"The file has no data rows (only a header or nothing)."};
+    const h=rows[0].map(x=>x.trim());
+    if(!h.some(x=>x.toLowerCase()==="text"||x.toLowerCase().startsWith("field:")))return{fatal:'The header needs at least one input column: "text" or "field:<name>".'};
+    raw=rows.slice(1).map(r=>{const o={fields:{}};h.forEach((k,i)=>{const v=(r[i]??"").trim(),lk=k.toLowerCase();if(lk.startsWith("field:"))o.fields[k.slice(6).trim()]=v;else if(lk==="text")o.fields.text=v;else o[lk]=v;});return o;});
+  }
+  if(raw.length>MAX)return{fatal:`The file has ${raw.length} scenarios. The limit is ${MAX}. Split the file and try again.`};
+  if(!raw.length)return{fatal:"The file contains no scenarios."};
+  const withId=raw.filter(r=>String(r.id??"").trim()!=="").length;
+  if(withId&&withId<raw.length)return{fatal:"Only some scenarios have an id. Give an id to all, or to none."};
+  const valid=[],invalid=[],seen=new Set();
+  raw.forEach((r,i)=>{const pos=i+1,id=withId?String(r.id).trim():String(pos);
+    let fields=r.fields&&typeof r.fields==="object"&&!Array.isArray(r.fields)?Object.fromEntries(Object.entries(r.fields).map(([k,v])=>[k,String(v??"")])):{};
+    if(!Object.keys(fields).length&&typeof r.text==="string")fields={text:r.text};
+    const dField=Object.keys(fields)[0]||"text";
+    let errors=parseErrs(r.expected_errors!==undefined?r.expected_errors:(r.errors!==undefined?r.errors:(r.defect_type?[{label:r.defect_type,description:r.expected||""}]:"")),dField);
+    let why="";
+    if(!Object.values(fields).some(v=>v.trim()))why="no input field has text";
+    else if(seen.has(id))why=`duplicate id "${id}"`;
+    else if(errors.some(e=>!e.description&&!e.label))why="an expected error has neither a label nor a description";
+    if(why)invalid.push({pos,why});else{seen.add(id);errors.forEach(e=>{if(!e.description)e.description=e.label;});valid.push({id,name:String(r.name||"").trim(),fields,errors});}});
+  return{valid,invalid,total:raw.length,autoIds:!withId,custom,name:nm,packs,loadedPacks};
+}
+function showSummary(res,fname,box,onOk,okLabel){
+  if(res.fatal){box.innerHTML=`<div class="msg err"><b>Cannot read this.</b> ${esc(res.fatal)} Your text is kept.</div>`;return;}
+  const d=res.valid.filter(c=>c.errors.length).length;
+  box.innerHTML=`<div class="msg ${res.invalid.length?"info":"ok"}" style="margin-top:14px"><b>${esc(fname)}</b>: ${res.total} entries · ${res.valid.length} valid (${d} with expected errors, ${res.valid.length-d} clean)${res.autoIds?" · ids by row order":""}
+    ${res.invalid.length?`<ul>${res.invalid.slice(0,10).map(x=>`<li>Entry ${x.pos}: ${esc(x.why)}</li>`).join("")}${res.invalid.length>10?`<li>…and ${res.invalid.length-10} more</li>`:""}</ul>`:""}</div>
+    ${onOk.preview?`<div id="pvList" style="margin-top:10px">${res.valid.map((c,i)=>`<label style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);color:var(--text);font-weight:400"><input type="checkbox" data-pv="${i}" checked style="width:auto;margin-top:4px"><span><b>${esc(dname(c))}</b> <span class="casetext">${esc(ftext(c).slice(0,100))}</span><br>${c.errors.length?c.errors.map(e=>`<span class="pill bad">${esc(e.label||"error")}</span> <span class="casetext">${esc(e.fragment?"“"+e.fragment+"” · ":"")}${esc(e.description)}</span>`).join("<br>"):'<span class="pill good">clean</span>'}</span></label>`).join("")}</div>`:""}
+    <div class="row" style="margin-top:10px"><button class="btn primary" id="impOk" ${res.valid.length?"":"disabled"}>${okLabel}</button><button class="btn" id="impNo">Cancel</button></div>`;
+  $("#impNo").onclick=()=>{box.innerHTML="";};
+  $("#impOk").onclick=()=>onOk(res,[...box.querySelectorAll("[data-pv]")].map(x=>x.checked));
+}
+$("#caseFile").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const res=readCases(await f.text(),f.name);
+  showSummary(res,f.name,$("#importSummary"),async(r)=>{if(!(await confirmDiscard()))return;resetEval();state.cases=r.valid;state.custom=r.custom;
+    mergePacks(r.packs,r.loadedPacks);
+    state.name=r.name||f.name.replace(/\.(csv|json)$/i,"");state.ver=dsVersion(state.cases);$("#importSummary").innerHTML="";render();},res.valid&&res.valid.length&&res.invalid.length?`Import ${res.valid.length} valid entries`:"Import scenarios");};
+$("#tplCsv").onclick=()=>download("scenarios-template.csv",'id,name,field:prompt_under_review,field:input,expected_errors\n1,Revenue vs table,"Summarize the report.","The report says revenue grew 12%, but the table shows a 4% decline.","input | contradiction | ""grew 12%"" | text and table disagree ;; input | wrong-number | | 12% vs 4%"\n2,Boiling point,"Summarize the report.","Water boils at 100 °C at sea level.",\n',"text/csv");
+$("#tplJson").onclick=()=>download("scenarios-template.json",JSON.stringify({name:"my-scenarios",custom_labels:{"contradiction":["Two parts say opposite things.",""],"wrong-number":["A figure that does not match.",""]},cases:[{id:"1",name:"Revenue vs table",fields:{prompt_under_review:"Summarize the report.",input:"The report says revenue grew 12%, but the table shows a 4% decline."},expected_errors:[{field:"input",label:"contradiction",fragment:"grew 12%",description:"Text and table disagree"},{field:"input",label:"wrong-number",fragment:"",description:"12% vs 4%"}]},{id:"2",name:"Boiling point",fields:{prompt_under_review:"Summarize the report.",input:"Water boils at 100 °C at sea level."},expected_errors:[]}]},null,2),"application/json");
+function saveDataset(){if(!hasCases())return dialog("Nothing to save","<p>Add at least one scenario first.</p>",[{label:"OK",cls:"primary"}]);
+  
+  download((state.name||"scenarios")+".json",JSON.stringify({name:state.name,version:state.ver,custom_labels:state.custom,cases:state.cases.map(serCase)},null,2),"application/json");state.dirty=false;render();}
+$("#exportDs").onclick=saveDataset;
+
+/* ---------- metric packs ---------- */
+const catToText=()=>Object.entries(state.custom).map(([k,v])=>v&&v[0]&&v[0]!=="Custom label."?k+" - "+v[0]:k).join("\n");
+function parseCat(t){const o={};t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(l=>{const m=l.match(/^(.+?)\s*(?:\s[-–—]\s|:|\|)\s*(.*)$/),nm=(m?m[1]:l).trim().toLowerCase().replace(/\s+/g,"-");if(nm)o[nm]=[m&&m[2].trim()||"Custom label.",""];});return o;}
+function renderPacks(){const t=$("#catText");if(document.activeElement!==t)t.value=catToText();
+  const ks=Object.keys(state.custom);$("#catCount").textContent=ks.length;$("#catChips").innerHTML=ks.length?ks.map(k=>`<span class="pill" title="${esc((state.custom[k]||[""])[0])}">${esc(k)}</span>`).join(" "):`<span class="casetext">Empty. Add labels on the Judge screen or type them below.</span>`;
+  $("#dlLabels").innerHTML=Object.keys(labelMap()).map(l=>`<option value="${esc(l)}">`).join("");}
+$("#catText").addEventListener("input",()=>{state.custom=parseCat($("#catText").value);state.dirty=true;$("#dlLabels").innerHTML=Object.keys(labelMap()).map(l=>`<option value="${esc(l)}">`).join("");});
+document.addEventListener("change",e=>{const t=e.target;if(!t||t.tagName!=="INPUT"||t.getAttribute("list")!=="dlLabels")return;
+  const raw=t.value.trim();if(!raw)return;const n=raw.toLowerCase().replace(/\s+/g,"-");
+  if(n!==t.value){t.value=n;t.dispatchEvent(new Event("input",{bubbles:true}));}
+  if(!labelMap()[n]){state.custom[n]=["Custom label.",""];state.dirty=true;renderPacks();renderGen();$("#catNote").innerHTML=`<div class="msg ok">Added “${esc(n)}” to the error catalog.</div>`;}});
+function syncGenControls(){const b=bulk(),set=(id,v)=>{const el=$(id);if(el&&document.activeElement!==el)el.value=v;};
+  set("#g1n",b.n);set("#g1t",b.topic);set("#g1x",b.x1);set("#g2k",b.k);set("#g2e",b.e);set("#g2x",b.x2);}
+const num=(v,d)=>Math.max(1,Math.min(50,parseInt(v)||d));
+$("#genCard").addEventListener("input",e=>{const b=bulk(),id=e.target.id;
+  if(id==="g1n"){b.n=num(e.target.value,5);b.touched1=false;renderGen(false);}
+  else if(id==="g1t"){b.topic=e.target.value;b.touched1=false;renderGen(false);}
+  else if(id==="g1x"){b.x1=e.target.value;b.touched1=false;renderGen(false);}
+  else if(id==="g2k"){b.k=num(e.target.value,1);b.touched2=false;renderGen(false);}
+  else if(id==="g2e"){b.e=num(e.target.value,1);b.touched2=false;renderGen(false);}
+  else if(id==="g2x"){b.x2=e.target.value;b.touched2=false;renderGen(false);}
+  else if(id==="g1Prompt")b.touched1=true;
+  else if(id==="g2Prompt")b.touched2=true;});
+$("#g1Reset").onclick=()=>{bulk().touched1=false;renderGen(true);};$("#g2Reset").onclick=()=>{bulk().touched2=false;renderGen(true);};
+const copyTo=(btn,src)=>async()=>{try{await navigator.clipboard.writeText($(src).value);const o=btn.textContent;btn.textContent="Copied";setTimeout(()=>btn.textContent=o,1500);}catch{}};
+$("#g1Copy").onclick=copyTo($("#g1Copy"),"#g1Prompt");$("#g2Copy").onclick=copyTo($("#g2Copy"),"#g2Prompt");
+function setCatalog(labels){state.custom={};Object.entries(labels).forEach(([k,v])=>state.custom[k]=[v[0],v[1]||""]);}
+function populate(kind){
+  const pk=PACKS[kind];if(($("#tpl").value.trim()||Object.keys(state.custom).length)&&!confirm("Replace the current judge prompt and error list with the "+kind.toLowerCase()+" set?"))return;
+  const lines=Object.entries(pk.labels).map(([k,v])=>"- "+k+": "+v[0]).join("\n");
+  const ask=kind==="Accuracy"?"Check the OUTPUT for accuracy: is everything it states true, and consistent with the INPUT?":"Check the OUTPUT for completeness: does it contain everything the INPUT asks for or requires?";
+  $("#tpl").value=`You are a strict reviewer. A model received the INPUT below and produced the OUTPUT. ${ask}
+Look for these kinds of errors and use exactly these labels:
+${lines}
+Reply ONLY with JSON in this shape:
+{"findings":[{"label":"<label>","field":"output","fragment":"<exact quote from the OUTPUT>","description":"<short text>"}],"confident":true}
+Use an empty findings list if the OUTPUT has no error.
+
+INPUT:
+{{input}}
+
+OUTPUT:
+{{output}}`;
+  setCatalog(pk.labels);state.dirty=true;$("#packMsg").innerHTML=`<div class="msg ok">Filled the judge prompt and ${Object.keys(pk.labels).length} error kinds for ${kind.toLowerCase()}.</div>`;render();}
+$("#popAcc").onclick=()=>populate("Accuracy");$("#popCmp").onclick=()=>populate("Completeness");
+
+/* ---------- authoring ---------- */
+const errRow=(e,i,fields,dat)=>`<div class="errrow"><select ${dat}f="${i}" aria-label="Field">${fields.map(f=>`<option ${f===e.field?"selected":""}>${esc(f)}</option>`).join("")}</select><input type="text" list="dlLabels" ${dat}l="${i}" value="${esc(e.label)}" placeholder="Label" aria-label="Label"><input type="text" ${dat}g="${i}" value="${esc(e.fragment)}" placeholder="Fragment (optional)" aria-label="Fragment"><input type="text" ${dat}d="${i}" value="${esc(e.description)}" placeholder="What is wrong" aria-label="Description"><button class="btn danger" ${dat}r="${i}" aria-label="Remove error">✕</button></div>`;
+function renderDraft(){
+  const fs=fieldNames();
+  $("#nFields").innerHTML=fs.map(f=>`<label for="nf-${esc(f)}">Field: ${esc(f)}</label><textarea id="nf-${esc(f)}" data-df="${esc(f)}" style="min-height:70px;margin-bottom:8px">${esc(state.draftF[f]||"")}</textarea>`).join("");
+  $("#nErrors").innerHTML=state.draft.map((e,i)=>errRow(e,i,fs,"data-d")).join("")||`<div class="casetext">No expected errors: this will be a clean scenario.</div>`;
+}
+$("#nFields").addEventListener("input",e=>{if(e.target.dataset.df)state.draftF[e.target.dataset.df]=e.target.value;});
+$("#nAddErr").onclick=()=>{state.draft.push(E("","",errField()));renderDraft();};
+$("#nErrors").addEventListener("input",e=>{const t=e.target,i=t.dataset.df!==undefined?null:null;const k=Object.keys(t.dataset)[0];if(!k)return;const idx=+t.dataset[k];const m={df:"field",dl:"label",dg:"fragment",dd:"description"}[k];if(m&&state.draft[idx])state.draft[idx][m]=t.value;});
+$("#nErrors").addEventListener("click",e=>{const b=e.target.closest("[data-dr]");if(b){state.draft.splice(+b.dataset.dr,1);renderDraft();}});
+function nextId(){const n=state.cases.map(c=>+c.id).filter(x=>!isNaN(x));return String((n.length?Math.max(...n):0)+1);}
+function addCase(c){
+  if(state.cases.length>=MAX)return"The dataset is full (500 scenarios).";
+  if(!Object.values(c.fields).some(v=>v.trim()))return"Fill in at least one input field.";
+  if(c.errors.some(e=>!e.description.trim()))return"Every expected error needs a description.";
+  state.cases.push({id:nextId(),name:(c.name||"").trim(),fields:Object.fromEntries(Object.entries(c.fields).map(([k,v])=>[k,v.trim()])),errors:c.errors.map(e=>({...e}))});
+  if(!state.name)state.name="my-scenarios";touch();return"";}
+$("#addCase").onclick=()=>{const fields={};fieldNames().forEach(f=>fields[f]=state.draftF[f]||"");
+  const err=addCase({name:$("#nName").value,fields,errors:state.draft});
+  $("#addMsg").innerHTML=err?`<div class="msg err">${esc(err)}</div>`:`<div class="msg ok">Scenario added.</div>`;
+  if(!err){$("#nName").value="";state.draftF={};state.draft=[];}render();};
+
+/* built-in suggestion (rules) */
+function ruleInject(text,label){
+  if(label==="wrong-number"){const m=text.match(/\d+(?:[.,]\d+)?/);if(!m)return null;const n=parseFloat(m[0].replace(",","."));const nn=n===0?7:Math.round(n*1.25+1);return{text:text.replace(m[0],String(nn)),fragment:String(nn),description:`Changed ${m[0]} to ${nn}`};}
+  if(label==="contradiction"){const r=text.replace(/\b(is|are|was|were|can|will|must)\b/,"$1 not");return r!==text?{text:r,fragment:"not",description:"Negated a statement"}:null;}
+  if(label==="missing-step"||label==="missing-information"){const p=text.split(/(?<=[.!?])\s+/);if(p.length<3)return null;const i=Math.floor(p.length/2),g=p[i];p.splice(i,1);return{text:p.join(" "),fragment:"",description:`Removed: "${g}"`};}
+  return null;}
+$("#injectBtn").onclick=()=>{
+  const fs=fieldNames();
+  $("#dlgT").textContent="Suggest a built-in change";
+  $("#dlgB").innerHTML=`<p class="sub" style="margin-bottom:10px">Built-in rules can change a number, negate a statement or remove a step. For anything else use the LLM prompt on a scenario card.</p><label for="ijF">Field</label><select id="ijF">${fs.map(f=>`<option>${esc(f)}</option>`).join("")}</select><label for="ijT" style="margin-top:10px">Clean text</label><textarea id="ijT" style="min-height:90px"></textarea><label for="ijY" style="margin-top:10px">Label</label><select id="ijY">${["wrong-number","contradiction","missing-step"].map(l=>`<option>${l}</option>`).join("")}</select>
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="ijRule">Suggest a change</button></div><div id="ijOut"></div>`;
+  $("#ijT").value=state.draftF[fs[0]]||"";$("#dlgA").innerHTML=`<button class="btn" data-i="0">Close</button>`;
+  const d=$("#dlg");d.showModal();$("#dlgA").onclick=()=>{d.close();render();};
+  $("#ijRule").onclick=()=>{const t=$("#ijT").value.trim(),f=$("#ijF").value,lab=$("#ijY").value;if(!t)return $("#ijOut").innerHTML=`<div class="msg err">Enter a clean text first.</div>`;
+    const r=ruleInject(t,lab);if(!r)return $("#ijOut").innerHTML=`<div class="msg info">The built-in rules cannot do this on this text. Use the LLM prompt on a scenario card.</div>`;
+    $("#ijOut").innerHTML=`<div class="card" style="margin:12px 0 0;box-shadow:none"><div class="sbs"><div><label>Original</label><textarea readonly>${esc(t)}</textarea></div><div><label>Modified (editable)</label><textarea id="ijM">${esc(r.text)}</textarea></div></div><p class="casetext">${esc(lab)} · ${esc(r.description)}</p><div class="row"><button class="btn primary" id="ijSave">Add as scenario</button></div></div>`;
+    $("#ijSave").onclick=()=>{const mod=$("#ijM").value.trim();if(!mod||mod===t){$("#ijOut").insertAdjacentHTML("afterbegin",`<div class="msg err">No defect was introduced: the modified text equals the original.</div>`);return;}
+      const flds=Object.fromEntries(fs.map(x=>[x,x===f?mod:(state.draftF[x]||"")]));const err=addCase({name:"Injected: "+lab,fields:flds,errors:[{field:f,label:lab,fragment:r.fragment,description:r.description}]});
+      $("#ijOut").insertAdjacentHTML("afterbegin",`<div class="msg ${err?"err":"ok"}">${err?esc(err):"Added to the dataset."}</div>`);render();};};};
+
+/* generation prompt for the user's LLM */
+const JSON_SHAPE=c=>`{"scenarios":[{"name":"<short name>","fields":{${Object.keys(c.fields).map(k=>`"${k}":"<text>"`).join(",")}},"expected_errors":[{"field":"<field>","label":"<label from the list>","fragment":"<exact words copied from the field that contain the error>","description":"<what is wrong and why>"}]}]}`;
+const SHAPE_FIELDS=fs=>`{"scenarios":[{"name":"<short name>","fields":{${fs.map(k=>`"${k}":"<text>"`).join(",")}},"expected_errors":[{"field":"<field>","label":"<label from the list>","fragment":"<exact words copied from the field that contain the error>","description":"<what is wrong and why>"}]}]}`;
+const judgeBlock=()=>{const j=$("#tpl").value.trim();return j?`THE JUDGE'S PROMPT (so you know exactly what it checks):\n---\n${j}\n---\n`:"(The judge prompt has not been written yet.)\n";};
+const labelBlock=()=>{const l=Object.entries(labelMap());return l.length?l.map(([k,v])=>`- ${k}: ${v[0]}${v[1]?" Example: "+v[1]:""}`).join("\n"):"(No error categories defined yet. Invent clear ones and name them in lower-case-with-dashes.)";};
+const fieldRoles=fs=>fs.map(f=>f==="input"?`- "input": what the evaluated model was asked or given. It stays as written.`:f==="output"?`- "output": the answer the evaluated model produced. This is the text the judge examines, and where errors are placed.`:`- "${f}": a scenario field used in the judge prompt.`).join("\n");
+const extraBlock=x=>x&&x.trim()?`\nADDITIONAL INSTRUCTIONS FROM ME (they take priority):\n${x.trim()}\n`:"";
+/* ---- step-by-step generation: 1) clean scenarios, 2) add errors ---- */
+const bulk=()=>state.bulk||(state.bulk={n:5,topic:"",x1:"",k:1,e:1,x2:"",touched1:false,touched2:false});
+function cleanPrompt(){const b=bulk(),fs=fieldNames();
+  return `You are helping me build test data for an LLM judge: a prompt that reviews a text and reports errors in it. This is step 1 of 2: I first need a set of CLEAN scenarios, with no errors at all. Later I will ask you to add errors to them.
+
+${judgeBlock()}
+ERROR CATEGORIES the judge looks for (the clean scenarios must contain none of these):
+${labelBlock()}
+
+THE FIELDS OF A SCENARIO:
+${fieldRoles(fs)}
+
+YOUR TASK
+Write ${b.n} realistic, different scenarios${b.topic.trim()?` about: ${b.topic.trim()}`:""}. Every field must be correct, complete and consistent, so that a careful judge would find nothing to report.
+
+RULES
+- Vary topic, length, structure and difficulty between the scenarios.
+- Write them the way a real model would, natural and plausible rather than artificially perfect.
+- Use the same language as the judge prompt.
+- Do not mention the test or the error categories inside the text.
+- Give each scenario a short, descriptive "name".
+${extraBlock(b.x1)}
+Reply ONLY with JSON in exactly this shape, nothing before or after it. "expected_errors" must be an empty list in every scenario:
+${SHAPE_FIELDS(fs)}`;}
+const cleanCases=()=>state.cases.filter(c=>!c.errors.length).slice(0,20);
+function errorsPrompt(){const b=bulk(),fs=fieldNames(),cc=cleanCases(),f=fs.includes("output")?"output":fs[fs.length-1];
+  return `You are helping me build test data for an LLM judge: a prompt that reviews a text and reports errors in it. This is step 2 of 2: below are CLEAN scenarios. Create variants of them in which I know exactly which errors are present.
+
+${judgeBlock()}
+ERROR CATEGORIES (use these exact names as "label"):
+${labelBlock()}
+
+THE FIELDS OF A SCENARIO:
+${fieldRoles(fs)}
+
+YOUR TASK
+For each clean scenario below, create ${b.k} variant${b.k>1?"s":""}. In each variant the field "${f}" contains exactly ${b.e} error${b.e>1?"s":""}. Spread the categories evenly: across all variants use every category from the list about equally often, and in one variant never repeat a category.
+
+RULES
+- Copy every field except "${f}" word for word from the clean scenario.
+- Change as little as possible: the error must be a small, realistic edit of the clean text, not a rewrite.
+- Make the errors subtle, the kind a careful reader could still miss. No absurd or obviously wrong statements.
+- Do not mark, hint at or mention the errors inside the text.
+- "fragment" must be copied exactly from the edited field, so it can be found with a search. Use "" only when the error is something missing.
+- "name": the original name followed by " + " and the label of the (first) error.
+- Each error gets exactly one label from the list above and a short description of what is wrong and why.
+${extraBlock(b.x2)}
+Reply ONLY with JSON in exactly this shape, nothing before or after it:
+${SHAPE_FIELDS(fs)}
+
+CLEAN SCENARIOS (${cc.length}):
+${cc.length?JSON.stringify(cc.map(c=>({name:dname(c),fields:c.fields,expected_errors:[]})),null,2):"(There are no clean scenarios in the dataset yet. Do step 1 first, add the result to the dataset, and then copy this prompt again.)"}`;}
+function renderGen(force){const b=bulk(),n=cleanCases().length;
+  if(force||!b.touched1)$("#g1Prompt").value=cleanPrompt();
+  if(force||!b.touched2)$("#g2Prompt").value=errorsPrompt();
+  $("#g2Info").innerHTML=n?`Uses the <b>${n}</b> clean scenario${n>1?"s":""} now in the dataset (up to 20).`:`<span style="color:var(--warn,#b45309)">There are no clean scenarios in the dataset yet. Do step 1 first and add the result.</span>`;}
+/* pasted LLM answer */
+$("#pasteDemo").onclick=()=>{const c=state.cases[0]||{fields:{text:"Our team of five shipped the release on time."}},f=Object.keys(c.fields)[0];
+  $("#pasteBox").value=JSON.stringify({scenarios:[{name:"Generated example",fields:Object.fromEntries(Object.keys(c.fields).map(k=>[k,k===f?"Our team of fifteen shipped the release on time, after five days.":c.fields[k]])),expected_errors:[{field:f,label:"wrong-number",fragment:"fifteen",description:"Team size changed"}]}]},null,2);};
+$("#pasteRead").onclick=()=>{const t=$("#pasteBox").value;if(!t.trim())return $("#pasteOut").innerHTML=`<div class="msg err">Paste the LLM's answer first.</div>`;
+  const res=readCases(t.trim(),"pasted.json");
+  showSummary(res,"Pasted answer",$("#pasteOut"),Object.assign((r,checks)=>{let n=0;r.valid.forEach((c,i)=>{if(checks[i]&&state.cases.length<MAX){state.cases.push({...c,id:nextId()});n++;}});if(n){if(!state.name)state.name="my-scenarios";touch();}$("#pasteOut").innerHTML=`<div class="msg ok">Added ${n} scenario(s).</div>`;$("#pasteBox").value="";render();},{preview:true}),"Add selected scenarios");};
+
+/* ---------- finalize ---------- */
+function dsWarnings(){const w=[],d=state.cases.filter(c=>c.errors.length).length,n=state.cases.length;
+  if(!n)w.push("The dataset is empty."); else{if(!d)w.push("No scenario has expected errors, so detection cannot be measured.");if(d===n)w.push("There are no clean scenarios, so false alarms cannot be measured.");}
+  if(n&&n<30)w.push(`Only ${n} scenarios: results will have wide uncertainty.`);
+  if(n&&$("#tpl").value.trim()&&!hasShape())w.push("Your judge prompt does not ask for the JSON reply shape, so every scenario will need manual or LLM-assisted verification.");
+  const ph=placeholders();if(n&&!ph.length)w.push("Your judge prompt has no placeholders like {{input}}, so scenario fields will not appear in the prompts.");
+  const miss=ph.filter(p=>!["document","text","input"].includes(p)&&state.cases.some(c=>!(p in c.fields)));if(miss.length)w.push("Some scenarios lack fields used in your prompt: "+miss.join(", ")+".");
+  const seen={},dup=[];state.cases.forEach(c=>{const k=ftext(c).trim().toLowerCase();if(seen[k])dup.push(c.id);seen[k]=1;});if(dup.length)w.push(`Duplicate input: scenarios ${dup.slice(0,5).join(", ")}.`);return w;}
+$("#finalizeBtn").onclick=async()=>{const d=state.cases.filter(c=>c.errors.length).length,n=state.cases.length,w=dsWarnings();
+  const i=await dialog("Finalize the dataset?",`<p><b>${n}</b> scenarios: ${d} with expected errors, ${n-d} clean.</p>${w.map(x=>`<div class="msg info">${esc(x)}</div>`).join("")}<p class="sub" style="margin-top:12px">After finalizing, the judge prompt and input fields are fixed. You can still adjust expected errors.</p>`,[{label:"Keep editing"},{label:"Finalize",cls:"primary"}]);
+  if(i===1){state.final=true;state.ver=dsVersion(state.cases);render();}};
+
+/* ---------- mock and demos ---------- */
+function loadMock(){if(!Object.keys(state.custom).length)Object.assign(state.custom,PACKS.Accuracy.labels,PACKS.Completeness.labels);state.cases=MOCK.map((m,i)=>({id:String(i+1),name:m[0],fields:{input:"Write one or two sentences about: "+m[0]+".",output:m[1]},errors:m[2].map(e=>({...e}))}));state.name="mock-scenarios";state.ver=dsVersion(state.cases);state.dirty=false;state.final=false;state.outputs={};state.verdicts={};if(!$("#tpl").value)$("#tpl").value=TPL_JSON;}
+$("#mockBtn2").onclick=async()=>{if(!(await confirmDiscard()))return;resetEval();loadMock();render();};
+function sampleOutput(c,p){
+  const F=(ls,conf=true)=>JSON.stringify({findings:ls.map(l=>typeof l==="string"?{label:l,field:"output",fragment:"",description:"Possible problem"}:{field:"output",description:"Possible problem",...l}),confident:conf});
+  const n=+c.id;
+  if(n===3)return"The statement about Germany is factually wrong; Berlin is the capital.";
+  if(p===1){if(n===2||n===12)return F([]);if(n===4)return F([{label:"contradiction",fragment:"We will therefore"}]);if(n===5)return F([{label:"factual-error",fragment:"Installation steps are omitted"}]);if(n===9)return F([{label:"unsupported-claim",fragment:"sorted list"}]);if(n===10)return F([{label:"unsupported-claim",fragment:"unique values"}],false);}
+  if(p===2){if(n===5)return F([{label:"factual-error",fragment:"Installation steps"}]);}
+  if(p===3){if([2,6,12].includes(n))return F([]);if([8,9].includes(n))return F([{label:"unsupported-claim",fragment:"paid on 10 March"}]);if(n===1)return F([{label:"contradiction",fragment:"grew 12%"}]);}
+  return F(c.errors.map(e=>({label:e.label,fragment:e.fragment})));}
+const PNAMES={1:"Prompt v1 · baseline",2:"Prompt v2 · clearer rules",3:"Prompt v3 · shorter"};
+function simVerdict(c,outputs){const m=matchCase(c,outputs);if(!m)return null;if(m.clear)return autoVerdict(c,m);
+  return{by:"you",found:m.found.map(x=>x===null?true:x),unx:m.unexpected.map(u=>u.label)};}
+function runProfile(p){const outputs={};state.cases.forEach(c=>outputs[c.id]=sampleOutput(c,p));
+  const verdicts={};state.cases.forEach(c=>{verdicts[c.id]=simVerdict(c,outputs);});return{outputs,verdicts};}
+function addShelf(label,m,x={}){state.shelf.push({id:"r"+Date.now()+Math.random().toString(16).slice(2,6),label,judgeVer:x.judgeVer||judgeVer(),dsVer:x.dsVer||state.ver,dsName:x.dsName||state.name,date:x.date||new Date().toISOString().slice(0,10),det:m.det,fa:m.fa,pending:m.pending,answer:x.answer||finalAnswer(m,0).a,exported:!!x.exported,imported:!!x.imported});}
+async function demo(n){
+  resetEval(false);$("#tpl").value=TPL_JSON;state.th.minErr=8;state.th.minClean=4;
+  if(n===3){loadMock();const ds=state.ver,nm=state.name;[1,2].forEach(p=>{const r=runProfile(p);addShelf(`results-${p===1?"2026-11-01":"2026-11-05"}.json · ${PNAMES[p]}`,measures(state.cases,r.outputs,r.verdicts),{dsVer:ds,dsName:nm,date:p===1?"2026-11-01":"2026-11-05",judgeVer:"j-"+hash("p"+p),imported:true,exported:true});});resetEval();state.step="compare";render();go("compare");return;}
+  loadMock();state.final=true;
+  if(n===1){const r=runProfile(1);state.outputs=r.outputs;state.verdicts={};render();go("results");return;}
+  [1,2,3].forEach(p=>{const r=runProfile(p);addShelf(PNAMES[p],measures(state.cases,r.outputs,r.verdicts),{judgeVer:"j-"+hash("prompt"+p),exported:true});});
+  const r=runProfile(3);state.outputs=r.outputs;state.verdicts=r.verdicts;state.rev=3;state.saved=true;state.cmpA=state.shelf[0].id;state.cmpB=state.shelf[1].id;state.step="compare";render();go("compare");}
+$("#demoBtn").onclick=()=>{dialog("Demo scenarios",`<p class="sub">Each scenario sets up the tool so you can try it. It replaces the current work. The demos lower the minimum sample to 8 expected errors and 4 clean scenarios because the mock set is small; you can change this on the Results step.</p><div class="demo">
+  <button class="btn" data-s="1"><b>1 · One run</b><span>A finalized dataset with outputs received. Opens on Results: some scenarios are decided automatically, the rest await your verification.</span></button>
+  <button class="btn" data-s="2"><b>2 · One run + two more prompts to compare</b><span>Three prompt versions are saved on the shelf. Opens on Compare: pick any two.</span></button>
+  <button class="btn" data-s="3"><b>3 · Comparison only</b><span>No dataset or judge: two results imported from files, ready to compare.</span></button></div>`,[{label:"Close"}]);};
+$("#dlgB").addEventListener("click",async e=>{const b=e.target.closest("[data-s]");if(!b)return;$("#dlg").close();await demo(+b.dataset.s);});
+
+/* ---------- outputs, matching, verdicts, measures ---------- */
+const pc=x=>Math.round(x*100);
+const JSON_BLOCK=`Reply ONLY with JSON in this shape:
+{"findings":[{"label":"<label>","field":"output","fragment":"<exact quote from the OUTPUT>","description":"<short text>"}],"confident":true}
+Use an empty findings list if the OUTPUT has no error.`;
+const hasShape=()=>/"findings"/.test($("#tpl").value);
+const norm=s=>String(s||"").toLowerCase().replace(/\s+/g," ").trim();
+const overlap=(a,b)=>{a=norm(a);b=norm(b);if(!a||!b)return false;if(a.includes(b)||b.includes(a))return true;
+  const ta=new Set(a.split(" ").filter(w=>w.length>3)),tb=b.split(" ").filter(w=>w.length>3),hit=tb.filter(w=>ta.has(w)).length;return tb.length>0&&hit>=2&&hit/tb.length>=.6;};
+function parseFindings(t){let j;try{j=JSON.parse(t);}catch{return null;}
+  if(!j||!Array.isArray(j.findings))return null;const lab=f=>f&&(f.label||f.type);if(j.findings.some(f=>typeof lab(f)!=="string"))return null;
+  return{list:j.findings.map(f=>({label:norm(lab(f)).replace(/\s+/g,"-"),fragment:String(f.fragment||""),description:String(f.description||"")})),unsure:j.confident===false};}
+/* An expected error is found when the same label is reported and its quote overlaps the expected fragment
+   (label alone when the expected error has no fragment). Anything unclear goes to manual verification. */
+function matchCase(c,outputs=state.outputs){
+  const t=outputs[c.id];if(!t)return null;const p=parseFindings(t);
+  if(!p)return{readable:false,reasons:["The output is not in the JSON reply shape, so it cannot be matched automatically."],found:c.errors.map(()=>null),unexpected:[],clear:false};
+  const used=new Set(),found=[],reasons=[];let unclear=false;
+  c.errors.forEach((e,i)=>{
+    const same=p.list.map((f,k)=>[f,k]).filter(([f,k])=>!used.has(k)&&f.label===e.label);
+    const hit=!e.fragment?(same[0]||null):(same.find(([f])=>overlap(f.fragment,e.fragment))||null);
+    if(hit){used.add(hit[1]);found[i]=true;return;}
+    if(same.length&&e.fragment){found[i]=null;unclear=true;used.add(same[0][1]);reasons.push(`“${e.label}” was reported, but its quote points at a different place than “${e.fragment}”.`);return;}
+    const other=e.fragment?p.list.map((f,k)=>[f,k]).find(([f,k])=>!used.has(k)&&f.label!==e.label&&overlap(f.fragment,e.fragment)):null;
+    if(other){found[i]=null;unclear=true;used.add(other[1]);reasons.push(`The error at “${e.fragment}” was reported as “${other[0].label}” instead of “${e.label}”.`);return;}
+    found[i]=false;});
+  const unexpected=p.list.filter((f,k)=>!used.has(k));
+  if(unexpected.length){unclear=true;reasons.push(`${unexpected.length} finding(s) match no expected error: ${unexpected.map(u=>u.label).join(", ")}.`);}
+  return{readable:true,found,unexpected,reasons,clear:!unclear,unsure:p.unsure};}
+const autoVerdict=(c,m)=>({by:"auto",found:m.found.map(Boolean),unx:[]});
+const vPass=v=>v.found.every(Boolean)&&!v.unx.length;
+function syncAuto(){state.cases.forEach(c=>{if(!state.outputs[c.id])return;const v=state.verdicts[c.id];if(v&&v.by!=="auto")return;const m=matchCase(c);if(m&&m.clear)state.verdicts[c.id]=autoVerdict(c,m);else delete state.verdicts[c.id];});}
+const status=(c,outputs=state.outputs,verdicts=state.verdicts)=>{if(!outputs[c.id])return"Not run";const v=verdicts[c.id];return v?(vPass(v)?"Pass":"Fail"):"Awaiting verification";};
+function measures(cases,outputs,verdicts){let k=0,n=0,fa=0,nc=0,faC=0,ncC=0,pend=0,unx=0;const L={};
+  const lb=l=>(L[l]=L[l]||{n:0,k:0,u:0});
+  cases.forEach(c=>{if(!outputs[c.id])return;const v=verdicts[c.id];if(!v){pend++;return;}
+    nc++;unx+=v.unx.length;if(v.unx.length)fa++;if(!c.errors.length){ncC++;if(v.unx.length)faC++;}
+    c.errors.forEach((e,i)=>{n++;const f=!!v.found[i];if(f)k++;const x=lb(e.label||"(no label)");x.n++;if(f)x.k++;});
+    v.unx.forEach(l=>{lb(l||"(no label)").u++;});});
+  return{det:[k,n],fa:[fa,nc],faClean:[faC,ncC],unx,pending:pend,byLabel:L};}
+function wilson(k,n){if(!n)return[0,0,1];const z=1.96,p=k/n,d=1+z*z/n,c=p+z*z/(2*n),m=z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n));return[p,Math.max(0,(c-m)/d),Math.min(1,(c+m)/d)];}
+function finalAnswer(m,notRun){const th=state.th,why=[];
+  if(notRun)why.push(`${notRun} scenario(s) have no output yet.`);if(m.pending)why.push(`${m.pending} scenario(s) await verification.`);
+  if(m.det[1]<th.minErr)why.push(`Only ${m.det[1]} expected errors judged so far; at least ${th.minErr} are needed.`);
+  if(m.faClean[1]<th.minClean)why.push(`Only ${m.faClean[1]} clean scenarios judged so far; at least ${th.minClean} are needed.`);
+  if(why.length)return{a:"Inconclusive",why,border:[]};
+  const rd=wilson(...m.det),rf=wilson(...m.fa),dOk=rd[0]*100>=th.det,fOk=rf[0]*100<=th.fa,border=[];
+  if(rd[1]*100<=th.det&&th.det<=rd[2]*100)border.push("detection");if(rf[1]*100<=th.fa&&th.fa<=rf[2]*100)border.push("false alarms");
+  return{a:dOk&&fOk?"Works":"Does not work",why:[`Detection ${pc(rd[0])}% (needs ≥ ${th.det}%): ${dOk?"met":"not met"}.`,`False alarms ${pc(rf[0])}% (needs ≤ ${th.fa}%): ${fOk?"met":"not met"}.`],border};}
+function saveOutput(id,text){if(text.trim()===""){delete state.outputs[id];delete state.verdicts[id];}else state.outputs[id]=text;delete state.marks[id];delete state.props[id];state.saved=null;state.dirty=true;syncAuto();}
+$("#accept").onclick=()=>{const t=$("#ans").value;if(!t.trim())return msg("err","Paste the output first.");saveOutput(state.sel,t);
+  const c=state.cases.find(x=>x.id===state.sel),v=state.verdicts[c.id];
+  msg("ok","Output saved."+(v?` Automatic verdict: <b>${vPass(v)?"Pass":"Fail"}</b>.`:" It could not be matched clearly, so you verify it on the Results step."));
+  const next=state.cases.find(x=>!state.outputs[x.id]);if(next)state.sel=next.id;$("#ans").value="";render();};
+function msg(k,t){$("#ansMsg").innerHTML=`<div class="msg ${k}">${t}</div>`;}
+$("#copyBtn").onclick=async()=>{try{await navigator.clipboard.writeText(composed(state.cases.find(c=>c.id===state.sel)));msg("ok","Prompt copied.");}catch{msg("info","Select the prompt and copy it manually.");}};
+$("#caseSel").onchange=e=>{state.sel=e.target.value;$("#ansMsg").innerHTML="";$("#ans").value=state.outputs[state.sel]||"";render();};
+const stepCase=d=>{const i=state.cases.findIndex(x=>x.id===state.sel),j=i+d;if(j>=0&&j<state.cases.length){state.sel=state.cases[j].id;$("#ansMsg").innerHTML="";$("#ans").value=state.outputs[state.sel]||"";render();}};
+$("#prevCase").onclick=()=>stepCase(-1);$("#nextCase").onclick=()=>stepCase(1);
+$("#expPrompts").onclick=()=>{const list=state.cases.filter(c=>$("#expScope").value==="all"||!state.outputs[c.id]);if(!list.length)return bulkMsg("info","Nothing to export: every scenario has an output.");
+  download("prompts-"+state.ver+".txt",`# Judge the Judge · prompts · dataset ${state.ver} · ${list.length} prompts\n# Collect outputs as JSON: {"dataset_version":"${state.ver}","answers":[{"id":1,"output":"..."}]}\n\n`+list.map(c=>`===== SCENARIO ${c.id} · ${dname(c)} =====\n${composed(c)}\n`).join("\n"));bulkMsg("ok",`Exported ${list.length} prompts.`);};
+const bulkMsg=(k,t)=>{$("#bulkMsg").innerHTML=`<div class="msg ${k}">${t}</div>`;};
+async function importOutputs(text){
+  let j;try{j=JSON.parse(text);}catch{return bulkMsg("err","This is not valid JSON. Nothing was imported.");}
+  const list=Array.isArray(j)?j:j.answers;if(!Array.isArray(list))return bulkMsg("err",'Expected a list, or an object with an "answers" list.');
+  const warn=(!Array.isArray(j)&&j.dataset_version&&j.dataset_version!==state.ver)?`<div class="msg info">This file was made for dataset ${esc(j.dataset_version)}, but ${esc(state.ver)} is loaded.</div>`:"";
+  const ok={},rej=[],unm=[],dup=[],seen={};
+  list.forEach((a,i)=>{const id=String(a?.id??"");if(!state.cases.find(c=>c.id===id)){unm.push(id||"#"+(i+1));return;}if(seen[id]){dup.push(id);return;}seen[id]=1;
+    const out=typeof a.output==="string"?a.output:(a.output!=null?JSON.stringify(a.output):"");
+    if(!out.trim()){rej.push(`Scenario ${id}: the output is empty`);return;}ok[id]=out;});
+  dup.forEach(id=>delete ok[id]);
+  const overlap=Object.keys(ok).filter(id=>state.outputs[id]);let replace=true;
+  if(overlap.length){const i=await dialog("Some scenarios already have an output",`<p>${overlap.length} imported output(s) are for scenarios that already have one.</p>`,[{label:"Keep the old ones"},{label:"Replace with new",cls:"primary"}]);if(i===-1)return;replace=i===1;}
+  let added=0;Object.keys(ok).forEach(id=>{if(state.outputs[id]&&!replace)return;state.outputs[id]=ok[id];added++;});if(added){state.saved=null;state.dirty=true;Object.keys(ok).forEach(id=>{delete state.marks[id];delete state.props[id];});syncAuto();}
+  const missing=state.cases.filter(c=>!state.outputs[c.id]).length;
+  bulkMsg(rej.length||unm.length||dup.length?"info":"ok",`<b>${added} outputs accepted</b> · ${rej.length} rejected · ${unm.length} unmatched · ${dup.length} duplicated · ${missing} scenarios still without an output.${rej.length||unm.length||dup.length?`<ul>${rej.slice(0,6).map(x=>`<li>${esc(x)}</li>`).join("")}${unm.length?`<li>Unknown id: ${esc(unm.slice(0,8).join(", "))}</li>`:""}${dup.length?`<li>Several outputs for the same scenario, none imported: ${esc([...new Set(dup)].join(", "))}</li>`:""}</ul>`:""}`);
+  $("#bulkMsg").insertAdjacentHTML("afterbegin",warn);render();}
+$("#ansFile").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)importOutputs(await f.text());};
+$("#loadSample").onclick=()=>{const p=((state.rev-1)%3)+1;importOutputs(JSON.stringify({dataset_version:state.ver,answers:state.cases.map(c=>({id:c.id,output:sampleOutput(c,p)}))}));};
+
+/* ---------- results ---------- */
+const STS={"Pass":"good","Fail":"bad","Awaiting verification":"warn","Not run":""};
+const SRC={auto:"automatic",you:"set by you",llm:"LLM opinion, approved by you"};
+const errHtml=c=>c.errors.length?c.errors.map(e=>`<div style="margin-bottom:6px"><span class="pill bad">${esc(e.label||"error")}</span> <span class="casetext">${esc(e.field)}${e.fragment?" · “"+esc(e.fragment)+"”":""}</span><div class="casetext">${esc(e.description)}</div></div>`).join(""):`<span class="pill good">none (clean)</span>`;
+const byId=id=>state.cases.find(x=>x.id===id);
+const awaiting=()=>state.cases.filter(c=>state.outputs[c.id]&&!state.verdicts[c.id]);
+function verifyPrompt(cs){
+  return `You are checking the work of an LLM judge. Each case below has scenario fields, the errors that were deliberately injected (the expected errors) and the judge's received output.
+For every expected error decide whether the judge found it (different wording is fine; a quote that points at a clearly different place is not). Then list everything the judge reported that is NOT an expected error, saying for each whether it is a real error nobody planned ("real": true) or a false alarm ("real": false). The texts are narrative, so be tolerant about exact wording but strict about substance.
+Reply ONLY with JSON:
+{"opinions":[{"id":"<case id>","expected":[{"index":1,"found":true,"reason":"<short>"}],"unexpected":[{"label":"<label>","fragment":"<quote>","real":false,"reason":"<short>"}]}]}
+
+`+cs.map(c=>`=== CASE ${c.id} · ${dname(c)} ===
+${Object.entries(c.fields).map(([k,v])=>`${k}: ${v}`).join("\n")}
+Expected errors:
+${c.errors.length?c.errors.map((e,i)=>`${i+1}. ${e.label||"error"}${e.fragment?` · “${e.fragment}”`:""} · ${e.description}`).join("\n"):"(none, this scenario is clean)"}
+Judge's received output:
+${state.outputs[c.id]||""}
+`).join("\n");}
+function draftFor(c){
+  let k=state.marks[c.id];if(k&&k.found.length===c.errors.length)return k;
+  const v=state.verdicts[c.id];
+  if(v){k={found:[...v.found],items:v.unx.map(l=>({label:l})),unx:v.unx.map(()=>"fa"),extra:0,unreadable:false};}
+  else{const m=matchCase(c)||{found:c.errors.map(()=>null),unexpected:[],readable:true};k={found:[...m.found],items:m.unexpected,unx:m.unexpected.map(()=>null),extra:0,unreadable:m.readable===false};}
+  return state.marks[c.id]=k;}
+function saveVerdict(c,by){
+  const k=draftFor(c);if(k.found.some(x=>x===null)||k.unx.some(x=>x===null))return false;
+  const found=[...k.found],unx=[];let added=0;
+  k.items.forEach((it,i)=>{if(k.unx[i]==="fa")unx.push(it.label);else if(k.unx[i]==="real"){c.errors.push(E(it.label,it.description||"Real error found by the judge, added from its finding","output",it.fragment||""));found.push(true);added++;}});
+  for(let i=0;i<(+k.extra||0);i++)unx.push("(unlabeled)");
+  state.verdicts[c.id]={by,found,unx};delete state.marks[c.id];delete state.props[c.id];state.saved=null;state.dirty=true;if(added)touch();return true;}
+function verifyCell(c){
+  const v=state.verdicts[c.id],s=status(c);
+  let h=`<span class="pill ${STS[s]}">${s}</span>`+(v?` <span class="pill">${SRC[v.by]}</span>`:"")+(state.props[c.id]&&!v?` <span class="pill warn">LLM proposal</span>`:"");
+  if(!state.outputs[c.id])return h+`<div class="casetext">No output yet.</div>`;
+  const m=matchCase(c),k=draftFor(c);
+  if(m&&m.reasons.length&&!v)h+=`<ul class="casetext" style="margin:6px 0;padding-left:18px">${m.reasons.map(r=>`<li>${esc(r)}</li>`).join("")}</ul>`;
+  h+=c.errors.map((e,i)=>`<div class="row" style="margin-top:6px"><span class="casetext" style="flex:1;margin:0">${esc(e.label||"error")}${e.fragment?" · “"+esc(e.fragment)+"”":""}</span><select data-mf="${esc(c.id)}|${i}" style="width:auto" aria-label="Was ${esc(e.label||"error")} found?"><option value="">—</option><option value="y" ${k.found[i]===true?"selected":""}>found</option><option value="n" ${k.found[i]===false?"selected":""}>not found</option></select></div>`).join("");
+  if(k.items.length)h+=`<div class="casetext" style="margin-top:10px"><b>Unexpected findings</b> (not in the expected errors)</div>`+k.items.map((u,j)=>`<div class="row" style="margin-top:4px"><span class="casetext" style="flex:1;margin:0">${esc(u.label)}${u.fragment?" · “"+esc(u.fragment)+"”":""}</span><select data-mu="${esc(c.id)}|${j}" style="width:auto" aria-label="Decision for ${esc(u.label)}"><option value="">—</option><option value="fa" ${k.unx[j]==="fa"?"selected":""}>false alarm</option><option value="real" ${k.unx[j]==="real"?"selected":""}>real error: add to expected</option></select></div>`).join("");
+  else if(k.unreadable)h+=`<div class="row" style="margin-top:10px"><span class="casetext" style="flex:1;margin:0">Unexpected findings in the text (count)</span><input type="number" min="0" data-mx="${esc(c.id)}" value="${k.extra}" style="width:70px" aria-label="Unexpected findings count"></div>`;
+  const complete=!k.found.some(x=>x===null)&&!k.unx.some(x=>x===null);
+  h+=`<input type="text" data-vn="${esc(c.id)}" value="${esc(state.notes[c.id]||"")}" placeholder="Note (optional)" style="margin-top:8px" aria-label="Note">`;
+  h+=`<div class="row" style="margin-top:8px"><button class="btn primary" data-sv="${esc(c.id)}" ${complete?"":"disabled"}>${v?"Override verdict":"Save verdict"}</button>${state.props[c.id]&&!v?`<button class="btn" data-ap="${esc(c.id)}" ${complete?"":"disabled"}>Approve LLM proposal</button>`:""}<button class="btn" data-vp="${esc(c.id)}">Copy LLM prompt</button></div>`;
+  return h;}
+function renderResults(){
+  const ready=hasCases()&&state.final;$("#resGate").hidden=ready;
+  const got=ready?Object.keys(state.outputs).length:0;$("#resEmpty").hidden=!ready||got>0;$("#resFull").hidden=!got;if(!got)return;
+  syncAuto();
+  const m=measures(state.cases,state.outputs,state.verdicts),left=state.cases.length-got,th=state.th;
+  const fa=finalAnswer(m,left),cls=fa.a==="Works"?"good":fa.a==="Does not work"?"bad":"warn";
+  let note="";if(m.pending)note+=`<div class="msg info" style="margin:0 0 12px">Provisional: ${m.pending} scenario(s) await verification and are not counted yet.</div>`;if(left)note+=`<div class="msg info" style="margin:0 0 12px">${left} scenario(s) have no output yet.</div>`;$("#resNote").innerHTML=note;
+  $("#finalCard").innerHTML=`<div class="row spread" style="align-items:flex-start"><div><div class="casetext" style="margin:0">Final answer · judge ${esc(judgeVer())} · dataset ${esc(state.ver)}</div><div style="font-size:38px;font-weight:700;letter-spacing:-.02em;margin:4px 0;color:var(--${cls==="warn"?"warn":cls})">${fa.a}</div></div><span class="pill ${cls}" style="font-size:14px">${fa.a}</span></div>
+    <ul style="margin:6px 0 0;padding-left:18px">${fa.why.map(w=>`<li>${esc(w)}</li>`).join("")}</ul>
+    ${fa.border&&fa.border.length?`<div class="msg info">Borderline: the 95% interval for ${fa.border.join(" and ")} includes the threshold. More scenarios would settle it.</div>`:""}
+    <div class="row" style="margin-top:14px;gap:14px"><span class="casetext" style="margin:0">Thresholds</span>
+      <label style="margin:0">Detection ≥ <input type="number" min="0" max="100" data-th="det" value="${th.det}" style="width:64px"> %</label>
+      <label style="margin:0">False alarms ≤ <input type="number" min="0" max="100" data-th="fa" value="${th.fa}" style="width:64px"> %</label>
+      <label style="margin:0">Min. expected errors <input type="number" min="1" data-th="minErr" value="${th.minErr}" style="width:70px"></label>
+      <label style="margin:0">Min. clean scenarios <input type="number" min="1" data-th="minClean" value="${th.minClean}" style="width:70px"></label></div>`;
+  const mrow=(name,sub,k,n,hi,target)=>{const[p,lo,h]=wilson(k,n),bad=hi?p*100<th.det:p*100>th.fa;return`<tr><td><b>${name}</b><div class="casetext">${sub}</div></td><td><b style="font-size:17px">${n?pc(p)+"%":"—"}</b>${m.pending?' <span class="pill warn">provisional</span>':""}</td><td>${k} of ${n}</td><td>${n?pc(lo)+"–"+pc(h)+"%":"—"}<div class="bar" style="margin:6px 0 0;height:5px;width:120px"><div class="range" style="left:${lo*100}%;width:${(h-lo)*100}%"></div><div class="dot" style="left:${p*100}%;width:11px;height:11px;top:-3px"></div></div></td><td>${target}</td><td><span class="pill ${n?(bad?"bad":"good"):""}">${n?(bad?"Below target":"Within target"):"No data"}</span></td></tr>`;};
+  $("#measRows").innerHTML=mrow("Detection rate","expected errors found, counted per injected error",m.det[0],m.det[1],true,"≥ "+th.det+"%")+mrow("False-alarm rate","scenarios with an unexpected finding, clean or not",m.fa[0],m.fa[1],false,"≤ "+th.fa+"%")
+    +`<tr><td colspan="6" class="casetext">False alarms among clean scenarios alone: ${m.faClean[0]} of ${m.faClean[1]}${m.faClean[1]?" ("+pc(m.faClean[0]/m.faClean[1])+"%)":""} · unexpected findings in total: <b>${m.unx}</b></td></tr>`;
+  $("#labRows").innerHTML=Object.entries(m.byLabel).sort((a,b)=>b[1].n-a[1].n).map(([l,x])=>{const r=x.n?x.k/x.n:null;return`<tr><td><span class="pill">${esc(l)}</span></td><td>${x.n}</td><td>${x.k}</td><td>${x.n-x.k}</td><td>${x.n?`<b>${pc(r)}%</b> <span class="pill ${r<th.det/100?"bad":"good"}">${r<th.det/100?"weak":"ok"}</span>`:"—"}</td><td>${x.u?`<span class="pill bad">${x.u}</span>`:"0"}</td></tr>`;}).join("")||`<tr><td colspan="6" class="sub">No decided scenarios yet.</td></tr>`;
+  const counts={};state.cases.forEach(c=>{const s=status(c);counts[s]=(counts[s]||0)+1;});
+  $("#chips").innerHTML=["","Pass","Fail","Awaiting verification","Not run"].map(k=>`<button class="btn ${state.resFilter===k?"primary":""}" data-chip="${k}">${k||"All"} ${k?(counts[k]||0):state.cases.length}</button>`).join("");
+  $("#sumFilter").textContent=state.resFilter?"filter: "+state.resFilter:"all scenarios";
+  const list=state.cases.filter(c=>!state.resFilter||status(c)===state.resFilter);
+  $("#sumRows").innerHTML=list.map(c=>{const s=status(c),v=state.verdicts[c.id],mm=matchCase(c),pf=state.outputs[c.id]?parseFindings(state.outputs[c.id]):null;
+    const rep=!state.outputs[c.id]?"—":pf?(pf.list.length?[...new Set(pf.list.map(f=>f.label))].join(", "):"nothing"):"free text";
+    return`<tr class="clickable" data-jump="${esc(c.id)}" tabindex="0"><td><b>${esc(dname(c))}</b> <span class="casetext">#${esc(c.id)}</span></td><td><span class="pill ${c.errors.length?"bad":"good"}">${c.errors.length?"Errors expected":"Clean"}</span></td><td><span class="pill ${STS[s]}">${s}</span></td><td>${v&&c.errors.length?v.found.filter(Boolean).length+" of "+c.errors.length:"—"}</td><td>${v?(v.unx.length?`<span class="pill bad">${v.unx.length}</span>`:"0"):(mm&&mm.unexpected&&mm.unexpected.length?`<span class="pill warn">${mm.unexpected.length} to check</span>`:"—")}</td><td>${v?SRC[v.by]:(state.props[c.id]?"LLM proposal":"—")}</td><td>${esc(rep)}</td></tr>`;}).join("")||`<tr><td colspan="7" class="sub">No scenarios match this filter.</td></tr>`;
+  $("#llmCount").textContent=awaiting().length+" awaiting verification";
+  $("#detRows").innerHTML=state.cases.map(c=>`<tr id="det-${esc(c.id)}"><td><b>${esc(dname(c))}</b> <span class="casetext">#${esc(c.id)}</span><details style="margin-top:6px"><summary class="casetext" style="cursor:pointer">Show full prompt</summary><div class="prompt" style="max-height:200px;margin-top:6px">${esc(composed(c))}</div></details></td>
+      <td>${errHtml(c)}</td>
+      <td><textarea data-out="${esc(c.id)}" style="min-height:90px" placeholder="Paste the received output here…" aria-label="Received output for ${esc(dname(c))}">${esc(state.outputs[c.id]||"")}</textarea></td>
+      <td>${verifyCell(c)}</td></tr>`).join("");
+  $("#savedPill").textContent=state.saved?"saved to shelf":"not saved to shelf";$("#savedPill").className="pill "+(state.saved?"good":"warn");
+  if(!$("#resLabel").value)$("#resLabel").value=PNAMES[((state.rev-1)%3)+1]||("Judge version "+state.rev);}
+document.addEventListener("click",async e=>{
+  const ch=e.target.closest("[data-chip]");if(ch){state.resFilter=ch.dataset.chip;renderResults();}
+  const j=e.target.closest("[data-jump]");if(j){const r=document.getElementById("det-"+j.dataset.jump);if(r){r.scrollIntoView({behavior:"smooth",block:"center"});r.classList.add("sel");setTimeout(()=>r.classList.remove("sel"),1800);}}
+  const sv=e.target.closest("[data-sv]");if(sv){if(saveVerdict(byId(sv.dataset.sv),"you"))renderResults();}
+  const ap=e.target.closest("[data-ap]");if(ap){if(saveVerdict(byId(ap.dataset.ap),"llm"))renderResults();}
+  const vp=e.target.closest("[data-vp]");if(vp){const p=verifyPrompt([byId(vp.dataset.vp)]);$("#llmPrompt").textContent=p;$("#llmPromptDet").open=true;try{await navigator.clipboard.writeText(p);llmMsg("ok","Verification prompt for this case copied. Paste the LLM's JSON answer in the box above the table.");}catch{llmMsg("info","Select the prompt shown below and copy it manually.");}$("#llmCard").scrollIntoView({behavior:"smooth",block:"center"});}});
+document.addEventListener("change",e=>{const t=e.target;
+  if(t.dataset.mf!==undefined){const[id,i]=t.dataset.mf.split("|");const k=draftFor(byId(id));k.found[+i]=t.value===""?null:t.value==="y";renderResults();}
+  if(t.dataset.mu!==undefined){const[id,i]=t.dataset.mu.split("|");const k=draftFor(byId(id));k.unx[+i]=t.value===""?null:t.value;renderResults();}
+  if(t.dataset.mx!==undefined){draftFor(byId(t.dataset.mx)).extra=Math.max(0,parseInt(t.value)||0);}
+  if(t.dataset.vn!==undefined){state.notes[t.dataset.vn]=t.value;}
+  if(t.dataset.th!==undefined){state.th[t.dataset.th]=Math.max(0,+t.value||0);renderResults();}
+  if(t.dataset.out!==undefined){saveOutput(t.dataset.out,t.value);render();}});
+const llmMsg=(k,t)=>{$("#llmMsg").innerHTML=`<div class="msg ${k}">${t}</div>`;};
+$("#llmCopyAll").onclick=async()=>{const a=awaiting();if(!a.length)return llmMsg("info","Nothing awaits verification.");const p=verifyPrompt(a);$("#llmPrompt").textContent=p;$("#llmPromptDet").open=true;
+  try{await navigator.clipboard.writeText(p);llmMsg("ok",`Copied one verification prompt for ${a.length} scenario(s). Run it in your LLM and paste its JSON answer below.`);}catch{llmMsg("info","Select the prompt shown below and copy it manually.");}};
+$("#llmExample").onclick=()=>{const a=awaiting();if(!a.length)return llmMsg("info","Nothing awaits verification.");
+  const ops=a.map(c=>{const m=matchCase(c),rd=m&&m.readable;return{id:c.id,expected:c.errors.map((e,i)=>({index:i+1,found:rd?m.found[i]!==false:true,reason:rd?(m.found[i]===false?"Not reported.":"Reported; the wording or the quoted place differs slightly."):"The free-text answer names this problem."})),unexpected:(rd?m.unexpected:[]).map(u=>({label:u.label,fragment:u.fragment,real:false,reason:"Not an error in the text; the judge was too strict."}))};});
+  $("#llmPaste").value=JSON.stringify({opinions:ops},null,1);llmMsg("info","Example opinion inserted. Press “Read opinion”.");};
+$("#llmRead").onclick=()=>{let j;try{j=JSON.parse($("#llmPaste").value);}catch{return llmMsg("err","This is not valid JSON. Your text was kept and nothing was changed.");}
+  const list=Array.isArray(j)?j:j&&j.opinions;if(!Array.isArray(list))return llmMsg("err",'Expected {"opinions":[…]}. Your text was kept and nothing was changed.');
+  let n=0;const skip=[];
+  list.forEach(o=>{const c=byId(String(o&&o.id));if(!c||!state.outputs[c.id]||state.verdicts[c.id]){skip.push(String(o&&o.id));return;}
+    const exp=Array.isArray(o.expected)?o.expected:[];const found=c.errors.map((e,i)=>{const x=exp.find(y=>+y.index===i+1);return x?!!x.found:null;});
+    const items=(Array.isArray(o.unexpected)?o.unexpected:[]).map(u=>({label:String(u.label||"(no label)"),fragment:String(u.fragment||""),description:String(u.reason||""),real:!!u.real}));
+    state.marks[c.id]={found,items,unx:items.map(u=>u.real?"real":"fa"),extra:0,unreadable:false};state.props[c.id]=true;n++;});
+  renderResults();llmMsg(n?"ok":"info",`<b>${n} proposal(s) read.</b> They stay proposals: the scenarios keep awaiting verification until you approve them.${skip.length?` Skipped (unknown, no output, or already decided): ${esc(skip.join(", "))}.`:""}`);};
+$("#llmApproveAll").onclick=()=>{let n=0;awaiting().forEach(c=>{if(state.props[c.id]&&saveVerdict(c,"llm"))n++;});renderResults();llmMsg(n?"ok":"info",n?`Approved ${n} proposal(s). Their source is recorded as “LLM opinion, approved by you”.`:"No complete proposals to approve.");};
+
+/* save / export */
+function resultObject(label){const m=measures(state.cases,state.outputs,state.verdicts),left=state.cases.filter(c=>!state.outputs[c.id]).length,fa=finalAnswer(m,left);return{format:"judge-the-judge-result",version:4,label:label||$("#resLabel").value||"Unnamed result",judgeVer:judgeVer(),dsVer:state.ver,dsName:state.name,date:new Date().toISOString().slice(0,10),det:m.det,fa:m.fa,faClean:m.faClean,unexpected:m.unx,pending:m.pending,answer:fa.a,answerWhy:fa.why,thresholds:{...state.th},byLabel:m.byLabel,judge:{prompt:$("#tpl").value},catalog:Object.keys(state.custom),cases:state.cases.map(c=>({...serCase(c),prompt:composed(c),output:state.outputs[c.id]||"",status:status(c),verdict:state.verdicts[c.id]?{...state.verdicts[c.id],note:state.notes[c.id]||""}:null}))};}
+$("#saveRes").onclick=()=>{const r=resultObject();addShelf(r.label,{det:r.det,fa:r.fa,pending:r.pending},{answer:r.answer});state.saved=true;$("#resLabel").value="";render();};
+$("#saveJson").onclick=()=>{const r=resultObject();download("result-"+r.label.replace(/[^\w-]+/g,"_")+".json",JSON.stringify(r,null,2),"application/json");state.dirty=false;};
+$("#exportHtml").onclick=()=>{const r=resultObject(),pc2=(k,n)=>n?Math.round(k/n*100)+"% ("+k+" of "+n+")":"—";
+  const src={auto:"automatic",you:"set by the user",llm:"LLM opinion, approved by the user"},th=r.thresholds;
+  const errs=c=>c.expected_errors.length?c.expected_errors.map(e=>`<b>${esc(e.label||"error")}</b> (${esc(e.field)}${e.fragment?", “"+esc(e.fragment)+"”":""}): ${esc(e.description)}`).join("<br>"):"none (clean)";
+  const rows=r.cases.map(c=>{const v=c.verdict;return`<tr><td><b>${esc(dname(c))}</b> #${esc(c.id)}</td><td>${c.expected_errors.length?"Errors expected":"Clean"}</td><td class="s-${c.status.split(" ")[0]}">${esc(c.status)}</td><td>${v&&c.expected_errors.length?v.found.filter(Boolean).length+" of "+c.expected_errors.length:"—"}</td><td>${v?v.unx.length:"—"}</td><td>${v?esc(src[v.by]):"—"}</td></tr>`;}).join("");
+  const lab=Object.entries(r.byLabel).map(([l,x])=>`<tr><td>${esc(l)}</td><td>${x.n}</td><td>${x.k}</td><td>${x.n-x.k}</td><td>${x.n?pc2(x.k,x.n):"—"}</td><td>${x.u}</td></tr>`).join("");
+  const det=r.cases.map(c=>`<tr><td><b>${esc(dname(c))}</b><details open><summary>Full prompt</summary><pre>${esc(c.prompt)}</pre></details></td><td>${errs(c)}</td><td><pre>${esc(c.output)||"—"}</pre></td><td>${esc(c.status)}${c.verdict?"<br>"+esc(src[c.verdict.by]):""}${c.verdict&&c.verdict.note?"<br><i>"+esc(c.verdict.note)+"</i>":""}</td></tr>`).join("");
+  const col=r.answer==="Works"?"#1e7e34":r.answer==="Does not work"?"#c5221f":"#8a5a00";
+  const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${esc(r.label)}</title><style>body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:32px;color:#1d1d1f;max-width:1000px}h1{font-size:24px}table{border-collapse:collapse;width:100%;margin:12px 0 28px}th,td{border-bottom:1px solid #d8d8dd;padding:8px 10px;text-align:left;vertical-align:top}th{font-size:12px;text-transform:uppercase;color:#6e6e73}pre{white-space:pre-wrap;background:#f2f2f4;padding:8px;border-radius:6px;font-size:12.5px}.s-Pass{color:#1e7e34;font-weight:600}.s-Fail{color:#c5221f;font-weight:600}.s-Awaiting{color:#8a5a00}.final{border:2px solid ${col};border-radius:12px;padding:16px 20px;margin:16px 0}.final b{font-size:30px;color:${col}}@media print{body{margin:12mm}h2{break-after:avoid}tr{break-inside:avoid}}</style></head><body>
+<h1>${esc(r.label)}</h1><p>Dataset ${esc(r.dsName)} (${esc(r.dsVer)}) · judge ${esc(r.judgeVer)} · error catalog: ${esc(r.catalog.join(", "))} · ${esc(r.date)}${r.pending?" · <b>provisional: "+r.pending+" awaiting verification</b>":""}</p>
+<div class="final"><div>Final answer</div><b>${esc(r.answer)}</b><ul>${r.answerWhy.map(w=>"<li>"+esc(w)+"</li>").join("")}</ul><p>Thresholds used: detection at least ${th.det}%, false alarms at most ${th.fa}%, minimum sample ${th.minErr} expected errors and ${th.minClean} clean scenarios.</p></div>
+<h2>Overall</h2><table><tr><th>Measure</th><th>Result</th></tr><tr><td>Detection rate (expected errors found)</td><td>${pc2(...r.det)}</td></tr><tr><td>False-alarm rate (scenarios with an unexpected finding)</td><td>${pc2(...r.fa)}</td></tr><tr><td>False alarms among clean scenarios only</td><td>${pc2(...r.faClean)}</td></tr><tr><td>Unexpected findings in total</td><td>${r.unexpected}</td></tr></table>
+<h2>Per kind of error</h2><table><tr><th>Label</th><th>Expected</th><th>Found</th><th>Missed</th><th>Detection</th><th>Unexpected</th></tr>${lab}</table>
+<h2>Scenarios</h2><table><tr><th>Scenario</th><th>Kind</th><th>Status</th><th>Errors found</th><th>Unexpected</th><th>Verdict source</th></tr>${rows}</table>
+<h2>Details</h2><table><tr><th>Prompt tested</th><th>Expected errors</th><th>Received output</th><th>Verification</th></tr>${det}</table></body></html>`;
+  download("report-"+r.label.replace(/[^\w-]+/g,"_")+".html",html,"text/html");};
+$("#reviseBtn").onclick=async()=>{
+  if(!state.saved&&Object.keys(state.outputs).length){const i=await dialog("Save the current result first?","<p>This result is not on the shelf yet. After you change the judge, the outputs are cleared.</p>",[{label:"Cancel"},{label:"Skip saving"},{label:"Save to shelf, then continue",cls:"primary"}]);if(i<=0)return;if(i===2)$("#saveRes").click();}
+  state.outputs={};state.verdicts={};state.saved=null;state.revising=true;state.rev++;$("#resLabel").value="";$("#bulkMsg").innerHTML="";render();go("judge");};
+
+/* ---------- shelf & compare ---------- */
+function exportItem(id){const r=state.shelf.find(x=>x.id===id);r.exported=true;download("result-"+r.label.replace(/[^\w-]+/g,"_")+".json",JSON.stringify({format:"judge-the-judge-result",version:3,...r},null,2),"application/json");render();}
+$("#resFile").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{const j=JSON.parse(await f.text());if(j.format!=="judge-the-judge-result"||!Array.isArray(j.det)||!Array.isArray(j.fa))throw 0;
+    state.shelf.push({id:"r"+Date.now(),label:j.label+" (imported)",judgeVer:j.judgeVer,dsVer:j.dsVer,dsName:j.dsName,date:j.date,det:j.det,fa:j.fa,pending:j.pending||0,answer:j.answer||"",imported:true,exported:true});$("#shelfMsg").innerHTML=`<div class="msg ok">Imported “${esc(j.label)}”.</div>`;}
+  catch{$("#shelfMsg").innerHTML=`<div class="msg err">This is not a valid result file. Nothing was imported.</div>`;}render();};
+document.addEventListener("click",e=>{const b=e.target.closest("[data-exp]");if(b)exportItem(b.dataset.exp);const r=e.target.closest("[data-rm]");if(r){state.shelf=state.shelf.filter(x=>x.id!==r.dataset.rm);render();}});
+function renderCompare(){
+  const sh=state.shelf;$("#shelfCount").textContent=sh.length+" saved";
+  $("#shelf").innerHTML=sh.map(r=>`<div class="shelfitem"><div><b>${esc(r.label)}</b>${r.imported?' <span class="pill">imported</span>':""}${r.pending?' <span class="pill warn">provisional</span>':""}${r.answer?` <span class="pill ${r.answer==="Works"?"good":r.answer==="Does not work"?"bad":"warn"}">${esc(r.answer)}</span>`:""}<br><small>${esc(r.judgeVer)} · dataset ${esc(r.dsVer)} · ${esc(r.date)} · detection ${r.det[1]?Math.round(r.det[0]/r.det[1]*100):"—"}% · false alarms ${r.fa[1]?Math.round(r.fa[0]/r.fa[1]*100):"—"}%</small></div><div class="row"><button class="btn" data-exp="${r.id}">${r.exported?"Export again":"Export"}</button><button class="btn danger" data-rm="${r.id}" aria-label="Remove ${esc(r.label)}">Remove</button></div></div>`).join("")||`<div class="empty" style="padding:20px"><p>The shelf is empty. Save a result on the Results page, or import a result file.</p></div>`;
+  $("#cmpPick").hidden=sh.length<2;if(sh.length<2){$("#cmpRows").innerHTML=sh.length?`<div class="msg info">Save or import one more result to compare.</div>`:"";return;}
+  const opts=id=>sh.map(r=>`<option value="${r.id}" ${r.id===id?"selected":""}>${esc(r.label)}</option>`).join("");
+  if(!sh.find(r=>r.id===state.cmpA))state.cmpA=sh[0].id;if(!sh.find(r=>r.id===state.cmpB)||state.cmpB===state.cmpA)state.cmpB=(sh.find(r=>r.id!==state.cmpA)||sh[1]).id;
+  $("#cmpA").innerHTML=opts(state.cmpA);$("#cmpB").innerHTML=opts(state.cmpB);
+  const A=sh.find(r=>r.id===state.cmpA),B=sh.find(r=>r.id===state.cmpB);
+  $("#cmpWarn").innerHTML=A.dsVer!==B.dsVer?`<div class="msg err">Different datasets (${esc(A.dsVer)} vs ${esc(B.dsVer)}): not a like-for-like comparison.</div>`:`<div class="msg ok">Same dataset (${esc(A.dsVer)}): a fair comparison.</div>`;
+  const rows=[["Detection rate (per injected error)",A.det,B.det,true],["False-alarm rate (per scenario)",A.fa,B.fa,false]];
+  $("#cmpRows").innerHTML=`<div class="card"><div class="cmp"><div><span class="pill">${esc(A.label)}</span></div><div></div><div><span class="pill good">${esc(B.label)}</span></div></div></div>`+rows.map(([n,a,b,high])=>{
+    const[pa,la,ha]=wilson(...a),[pb,lb,hb]=wilson(...b),worse=high?pb<pa:pb>pa,better=high?pb>pa:pb<pa,clearly=worse&&(high?hb<la:lb>ha);
+    return`<div class="card"><div class="cmp"><div class="metric"><div class="val">${Math.round(pa*100)}%</div><div class="ci">${a[0]}/${a[1]}</div></div><div><div style="font-weight:700">${n}</div><div class="arrow" style="color:${worse?"var(--bad)":better?"var(--good)":"var(--muted)"}">${worse?"▼":better?"▲":"="}</div></div><div class="metric"><div class="val">${Math.round(pb*100)}%</div><div class="ci">${b[0]}/${b[1]}</div></div></div>
+    ${clearly?`<div class="msg err">Clearly worse: the intervals do not overlap.</div>`:worse?`<div class="msg info">Worse, but within the uncertainty.</div>`:better?`<div class="msg ok">Improved.</div>`:`<div class="msg info">No change.</div>`}</div>`;}).join("");}
+$("#cmpA").onchange=e=>{state.cmpA=e.target.value;renderCompare();};$("#cmpB").onchange=e=>{state.cmpB=e.target.value;renderCompare();};
+
+/* ---------- case cards ---------- */
+function caseCard(c){
+  const fs=Object.keys(c.fields),fin=state.final;
+  return`<div class="card cc" data-cid="${esc(c.id)}">
+    <div class="row spread" style="margin-bottom:10px"><div class="row"><h2 style="margin:0">#${esc(c.id)} ${fin?esc(dname(c)):""}</h2>${fin?"":`<input type="text" data-cname="1" value="${esc(c.name)}" placeholder="Name" style="width:260px" aria-label="Name">`}<span class="pill ${c.errors.length?"bad":"good"}">${c.errors.length?c.errors.length+" expected error"+(c.errors.length>1?"s":""):"Clean"}</span></div>${fin?"":`<button class="btn danger" data-delcase="1">Delete</button>`}</div>
+    <div class="grid">
+      <div><label>Input fields ${fin?'<span class="casetext">(fixed)</span>':""}</label>${fs.map(f=>`<div class="casetext" style="margin:4px 0 2px">${esc(f)}</div><textarea data-ff="${esc(f)}" ${fin?"readonly":""} style="min-height:70px;margin-bottom:6px">${esc(c.fields[f])}</textarea>`).join("")}</div>
+      <div><label>Expected errors <span class="casetext">${fin?"(you can still adjust these)":""}</span></label>
+        ${c.errors.map((e,i)=>errRow(e,i,fs,"data-c")).join("")||`<div class="casetext" style="margin-bottom:6px">None: the judge should find nothing.</div>`}
+        <button class="btn" data-adde="1">+ Add expected error</button></div>
+    </div>
+    <details style="margin-top:12px"><summary><b>Final prompt</b> <span class="casetext">— exactly what you paste into your LLM</span></summary><div class="row" style="margin:10px 0 6px;justify-content:flex-end"><button class="btn primary" data-copyfin="1">Copy prompt</button></div><div class="prompt">${esc(composed(c))}</div></details>
+
+  </div>`;}
+function renderCaseList(){
+  const q=$("#q").value.toLowerCase(),fk=$("#fKind").value;
+  const list=state.cases.filter(c=>(!q||(c.name+" "+ftext(c)).toLowerCase().includes(q))&&(!fk||kindOf(c)===fk));
+  const pages=Math.max(1,Math.ceil(list.length/PAGE));if(state.page>=pages)state.page=pages-1;
+  const act=document.activeElement;if(act&&act.closest&&act.closest("#caseList"))return;
+  $("#caseList").innerHTML=list.slice(state.page*PAGE,(state.page+1)*PAGE).map(caseCard).join("")||`<div class="card empty"><p>No scenarios match.</p></div>`;
+  $("#caseCount").textContent=`Scenarios ${list.length?state.page*PAGE+1:0}–${Math.min(list.length,(state.page+1)*PAGE)} of ${list.length}`;
+  $("#pgPrev").disabled=state.page<=0;$("#pgNext").disabled=state.page>=pages-1;}
+$("#pgPrev").onclick=()=>{state.page--;$("#caseList").innerHTML="";renderCaseList();};$("#pgNext").onclick=()=>{state.page++;$("#caseList").innerHTML="";renderCaseList();};
+["#q","#fKind"].forEach(s=>$(s).addEventListener("input",()=>{state.page=0;$("#caseList").innerHTML="";renderCaseList();}));
+const cardCase=el=>state.cases.find(c=>c.id===el.closest(".cc").dataset.cid);
+function refreshCard(el){const card=el.closest(".cc"),c=cardCase(el);const sel=[...card.querySelectorAll("details")].map(d=>d.open);card.outerHTML=caseCard(c);const n=$(`.cc[data-cid="${c.id}"]`);n.querySelectorAll("details").forEach((d,i)=>d.open=sel[i]);}
+$("#caseList").addEventListener("input",e=>{const t=e.target,c=cardCase(t),k=Object.keys(t.dataset)[0];if(!k)return;
+  if(k==="cname"){c.name=t.value;touch();}
+  else if(k==="ff"){c.fields[t.dataset.ff]=t.value;touch();}
+  else if(["cf","cl","cg","cd"].includes(k)){const idx=+t.dataset[k],m={cf:"field",cl:"label",cg:"fragment",cd:"description"}[k];if(c.errors[idx]){c.errors[idx][m]=t.value;touch();}}});
+$("#caseList").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;const card=b.closest(".cc");if(!card)return;const c=cardCase(b);
+  if(b.dataset.delcase){state.cases=state.cases.filter(x=>x.id!==c.id);touch();$("#caseList").innerHTML="";render();return;}
+  if(b.dataset.adde){c.errors.push(E("","",Object.keys(c.fields)[0]));touch();refreshCard(b);render();return;}
+  if(b.dataset.cr!==undefined){c.errors.splice(+b.dataset.cr,1);touch();refreshCard(b);render();return;}
+  if(b.dataset.copyfin){try{await navigator.clipboard.writeText(composed(c));b.textContent="Copied";setTimeout(()=>b.textContent="Copy prompt",1500);}catch{}return;}});
+
+/* ---------- render ---------- */
+function render(){
+  buildNav();const has=hasCases(),fin=state.final;
+  $("#lockBar").innerHTML=fin?`<div class="lock"><span>Dataset ${esc(state.ver)} is finalized. Judge prompt and input fields are fixed; expected errors can still be adjusted.</span><span class="row"><button class="btn" id="reviseTop">Change the judge, keep the cases</button><button class="btn danger" id="newEval">Start new evaluation</button></span></div>`:"";
+  if(fin){$("#newEval").onclick=async()=>{if(await confirmDiscard()){resetEval();render();go("cases");}};$("#reviseTop").onclick=()=>$("#reviseBtn").click();}
+  const edit=!fin||state.revising;$("#tpl").readOnly=!edit;$("#judgeFile").disabled=!edit;
+  const ph=placeholders();$("#phInfo").innerHTML=ph.length?"Placeholders found: "+ph.map(p=>`<code>{{${esc(p)}}}</code>`).join(" "):"No placeholders yet. Use <code>{{output}}</code> (and optionally <code>{{input}}</code>) where scenario data goes.";
+  $("#verPill").textContent="judge "+judgeVer()+(state.revising?" · editing new version":"");$("#jsonWarn").innerHTML=($("#tpl").value.trim()&&!hasShape())?`<div class="msg info">This prompt does not ask for the JSON reply shape. You can still use it, but every scenario will then need manual or LLM-assisted verification. “Insert JSON reply block” adds it.</div>`:"";$("#insJson").disabled=!(!state.final||state.revising)||hasShape();
+  $("#authorCard").hidden=fin;$("#pasteCard").hidden=fin;$("#genCard").hidden=fin;$("#packCard").hidden=false;$("#casesEmpty").hidden=has;$("#casesFull").hidden=!has;renderPacks();syncGenControls();renderGen();
+  if(!document.activeElement||!document.activeElement.closest||!document.activeElement.closest("#authorCard"))renderDraft();
+  if(has){const d=state.cases.filter(c=>c.errors.length).length;
+    $("#dsName").textContent="“"+state.name+"”";$("#dsVer").textContent=state.ver;$("#dsDirty").hidden=!state.dirty;$("#finalizeBtn").hidden=fin;
+    $("#dsStats").innerHTML=`<div class="stat"><b>${state.cases.length}</b><span>of ${MAX} scenarios</span></div><div class="stat"><b>${d}</b><span>with expected errors</span></div><div class="stat"><b>${state.cases.length-d}</b><span>clean</span></div><div class="stat"><b>${Object.keys(state.outputs).length}</b><span>with output</span></div>`;
+    $("#dsWarn").innerHTML=fin?"":dsWarnings().map(x=>`<div class="msg info warnbox">${esc(x)}</div>`).join("");renderCaseList();}
+  const ready=has&&fin;$("#runEmpty").hidden=ready;$("#runFull").hidden=!ready;
+  if(!ready){$("#runEmptyT").textContent=has?"Finalize the dataset first":"Nothing to run yet";$("#runEmptyP").textContent=has?"Prompts and outputs are available after you finalize the dataset on the Cases page.":"Load test cases and finalize the dataset first.";}
+  if(ready){if(!state.cases.find(c=>c.id===state.sel))state.sel=state.cases[0].id;
+    $("#caseSel").innerHTML=state.cases.map(c=>`<option value="${esc(c.id)}" ${c.id===state.sel?"selected":""}>${esc(c.id)} · ${esc(dname(c))}${state.outputs[c.id]?" ✓":""}</option>`).join("");
+    const c=state.cases.find(x=>x.id===state.sel);$("#composed").textContent=composed(c);$("#runName").textContent=dname(c)+" (#"+c.id+")";
+    $("#runPills").innerHTML=`<span class="pill ${c.errors.length?"bad":"good"}">${c.errors.length?c.errors.length+" expected error"+(c.errors.length>1?"s":""):"Clean"}</span>`;
+    $("#runData").innerHTML=Object.entries(c.fields).map(([k,v])=>`<div class="casetext" style="margin:6px 0 2px">${esc(k)}</div><div class="shape" style="font-family:inherit;font-size:15px">${esc(v)}</div>`).join("");
+    const done=Object.keys(state.outputs).length;$("#progTxt").textContent=`${done} of ${state.cases.length} scenarios have an output`;$("#progBar").style.width=(done/state.cases.length*100)+"%";$("#runVer").textContent="dataset "+state.ver;$("#runJ").textContent="judge "+judgeVer();
+    const s=status(c);$("#caseState").textContent=s;$("#caseState").className="pill "+STS[s];const i=state.cases.findIndex(x=>x.id===c.id);$("#prevCase").disabled=i<=0;$("#nextCase").disabled=i>=state.cases.length-1;
+    if(document.activeElement!==$("#ans")&&!$("#ans").value)$("#ans").value=state.outputs[c.id]||"";}
+  renderResults();renderCompare();}
+$("#tpl").addEventListener("input",()=>{render();});
+
+const catArray=()=>Object.entries(state.custom).map(([k,v])=>({name:k,description:v&&v[0]&&v[0]!=="Custom label."?v[0]:"",example:(v&&v[1])||""}));
+$("#judgeFile").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f||(state.final&&!state.revising))return;const t=await f.text();let prompt=null,cat=null;
+  try{const j=JSON.parse(t);prompt=typeof j.prompt==="string"?j.prompt:(typeof j.template==="string"?j.template:null);
+    const ec=j.error_catalog||j.catalog;if(Array.isArray(ec)){cat={};ec.forEach(l=>{const n=String((l&&l.name)||l||"").trim().toLowerCase().replace(/\s+/g,"-");if(n)cat[n]=[String((l&&l.description)||"")||"Custom label.",String((l&&l.example)||"")];});}
+    if(prompt===null)throw 0;}
+  catch{if(f.name.endsWith(".json")){$("#packMsg").innerHTML=`<div class="msg err">This is not a judge set file. It needs a "prompt" text and, optionally, an "error_catalog" list. Nothing was changed.</div>`;return;}prompt=t;cat=null;}
+  if(($("#tpl").value.trim()||Object.keys(state.custom).length)&&!confirm("Replace the current judge prompt"+(cat?" and error catalog":"")+" with the contents of this file?"))return;
+  $("#tpl").value=prompt;if(cat){state.custom=cat;}state.dirty=true;
+  $("#packMsg").innerHTML=`<div class="msg ok">Loaded the judge set from ${esc(f.name)}${cat?`: prompt and ${Object.keys(cat).length} error kinds.`:": prompt only (the file has no error catalog, so the list was kept)."}</div>`;render();};
+const saveJudgeSet=()=>download((state.name&&state.name!=="mock-scenarios"?state.name+"-":"")+"judge-set.json",JSON.stringify({format:"judge-the-judge-judge-set",version:1,prompt:$("#tpl").value,error_catalog:catArray()},null,2),"application/json");
+$("#saveJudge").onclick=saveJudgeSet;$("#saveJudge2").onclick=saveJudgeSet;
+$("#insJson").onclick=()=>{if(hasShape())return;const t=$("#tpl");t.value=t.value.replace(/\s+$/,"")+"\n\n"+JSON_BLOCK+"\n";state.dirty=true;render();};
+$("#themeBtn").onclick=()=>{const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=dark?"light":"dark";};
+$("#tpl").value="";
+go("judge");
+</script>
+</body>
+</html>
