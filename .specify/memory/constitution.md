@@ -1,16 +1,3 @@
-<!--
-Sync Impact Report
-- Version change: 1.0.0 → 1.4.0 (MINOR: new principles VI, VII, VIII added; principle IV
-  expanded; 1.1.0–1.3.0 were never committed)
-- Modified principles: IV (expanded with file-loading and mock-data rules)
-- Added sections: Principle VI. Extensible Metrics and Configurable Checks;
-  Principle VII. Modern, Impressive, and Clear UI;
-  Principle VIII. Living Help Documentation (plus a Development Workflow bullet)
-- Removed sections: none
-- Follow-up TODOs: none. Technology stack intentionally left open; to be decided in the first
-  /speckit-plan and recorded as a MINOR amendment if it should become binding.
-- This comment is temporary review material and should be removed before commit.
--->
 # Judge the Judge Constitution
 
 ## Core Principles
@@ -97,6 +84,9 @@ runtime, and adding one MUST NOT require changes to the core, the interface, or 
 - Checks (pass/fail rules, thresholds, validations applied to metric results) MUST be defined in
   configuration files, not in code, and MUST be adjustable without modifying a metric's code.
   Invalid configuration MUST fail with a clear, human-readable error.
+- A specification MAY fix a check value so that users cannot change it (for example a minimum
+  test size). Such a value MUST still be held in the bundled configuration data, not in code,
+  and a loaded configuration that tries to change it MUST be told that the value is fixed.
 - The repository MUST contain a short "how to add a metric" guide and an example metric
   definition file, kept in sync with the schema, so a non-developer can write one with AI help.
 - A shared contract test suite MUST run against every built-in metric and against the example
@@ -148,8 +138,13 @@ documentation is worse than none, so updating it is part of finishing every chan
   complexity MUST be justified in the plan's complexity tracking.
 - **Accessibility and privacy**: the published site MUST NOT send user data to any third party
   without explicit, visible user action.
-- **Technology stack**: not yet fixed. It MUST satisfy Principles II and III and will be chosen
-  during planning.
+- **Technology stack**: fixed by the first plan (2026-11-11). TypeScript in strict mode, built
+  with Vite into static files; Preact for the interface; Zod for file schemas and validation;
+  Vitest for tests that run without a browser and Playwright for end-to-end and accessibility
+  checks. The build output MUST be plain static files that work from any folder of any static
+  host. A runtime dependency MAY be added or replaced only with a written justification in a
+  plan's research; changing the language, the build tool or the interface library requires an
+  amendment.
 
 ## Development Workflow
 
@@ -175,4 +170,4 @@ rationale, approval from the project owner, and a note of any affected specs or 
 - **Compliance review**: every spec, plan, and implementation review MUST verify compliance
   with this constitution. Unjustified violations block completion.
 
-**Version**: 1.4.0 | **Ratified**: 2026-11-08 | **Last Amended**: 2026-11-08
+**Version**: 1.5.0 | **Ratified**: 2026-11-08 | **Last Amended**: 2026-11-11
