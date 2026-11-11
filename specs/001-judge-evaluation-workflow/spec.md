@@ -63,6 +63,8 @@ case authoring). Every answer below is current; answers that were later replaced
 - Q: Should the tool have its own built-in rules for injecting errors, or is the generation prompt for the user's LLM enough? → A: The prompt is enough, plus editing by hand. There are no built-in rules that change text; they would give artificial, easy-to-spot errors in narrative texts and overstate the detection rate.
 - Q: How long may one text in a test case be? → A: Up to 100,000 characters per field, with a warning above 30,000 characters that the prompt may not fit the model's context window; longer fields are refused with the limit stated.
 - Q: Should answers that were later replaced be removed from this section? → A: Yes. Superseded answers were removed and the remaining ones trimmed to what still holds; the full history is in git.
+- Q: What does the tool do when the judge prompt uses a placeholder (such as `{{context}}`) that a test case has no field for? → A: The placeholder is filled with empty text and the case is flagged with a warning; finalizing is still allowed.
+- Q: Should the tool look for the judge's JSON inside a reply that wraps it in other text or a code fence? → A: Yes. It uses the first complete JSON block it can read (inside a code fence or in plain text); if none can be read, the case waits for manual verification.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -590,6 +592,8 @@ through a large dataset to check what was loaded. Once the dataset is fixed, cas
 - Identifier collision between a hand-made case and a loaded case.
 - Import is interrupted halfway: the previously loaded dataset must remain intact.
 - Empty text or text consisting only of spaces.
+- A judge placeholder with no matching field in a case: filled with empty text and flagged with a
+  warning; finalizing is still allowed (FR-040).
 - Very long text: a field longer than 30,000 characters shows a warning that it may not fit the
   model's context window; a field longer than 100,000 characters is refused, stating the limit
   (FR-028).
@@ -786,7 +790,10 @@ through a large dataset to check what was loaded. Once the dataset is fixed, cas
 - **FR-040**: The system MUST compose the final prompt for each case from the judge prompt with the
   case's named input fields filled into the matching placeholders (such as {{field-name}}). The
   system MUST NOT add any text of its own to that prompt (no appended material, instructions, or
-  format requirements); the prompt is used exactly as the user wrote it.
+  format requirements); the prompt is used exactly as the user wrote it. When a case has no field
+  for a placeholder in the prompt, the placeholder MUST be replaced with empty text and the case
+  MUST be flagged with a warning naming the missing field, in the case view and in the finalize
+  summary; this MUST NOT block finalizing.
 - **FR-041**: Whenever a judge and at least one case are present, the system MUST show the
   complete prompt that would be sent to the LLM for a chosen case (FR-040), with a single action to
   copy it. This view MUST be available both where the dataset is built and on the Run step, so the
@@ -865,7 +872,10 @@ through a large dataset to check what was loaded. Once the dataset is fixed, cas
 
 - **FR-060**: Every test case MUST have a status: Not run, Awaiting verification, Pass, or Fail.
   The user's verdict MUST be authoritative. When the received output can be read through the reply mapping
-  (FR-011), the system MUST match findings to expected errors by place: an expected error is found
+  (FR-011), the system MUST match findings to expected errors by place. The reply is read even
+  when the judge's JSON is wrapped in other text or a code fence: the system uses the first
+  complete JSON block it can read, and when none can be read the case is Awaiting verification.
+  Matching works as follows: an expected error is found
   when at least one finding's text points at the expected fragment in the field the expected error
   names. Several findings may point at the same expected error, and none of them is unexpected. A
   category is not required for a match; when the judge reports one that differs from the expected
