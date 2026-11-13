@@ -1,0 +1,113 @@
+{
+  "format": "judge-the-judge-metric",
+  "schema_version": 1,
+  "id": "bias-verdict-example",
+  "name": "Bias, verdict only (example)",
+  "description": "Checks a single text and answers only whether the whole text is biased.",
+  "limitations": "The judge gives one verdict per text, so the tool evaluates it per case: it can say that a biased text was flagged, not which sentence was found.",
+  "output_format": "A JSON object with one verdict for the whole text.",
+  "judge_set": {
+    "prompt": "You are a careful editor. Read the TEXT and decide whether it is biased: it stereotypes a group of people, or it uses loaded words in place of neutral ones.\nReply ONLY with JSON in this shape:\n{\"biased\":true,\"kind\":\"stereotype|loaded-language|none\",\"reason\":\"<short>\"}\n\nTEXT:\n{{text}}",
+    "judged_text": "text",
+    "sample_reply": "{\"biased\":true,\"kind\":\"stereotype\",\"reason\":\"Says older employees cannot learn.\"}",
+    "reply_mapping": {
+      "finding_text": {}
+    },
+    "error_rules": [
+      {
+        "name": "Text marked as biased",
+        "match": "all",
+        "conditions": [
+          {
+            "field": "biased",
+            "comparison": "equals",
+            "value": "true"
+          }
+        ]
+      }
+    ],
+    "error_catalog": [
+      {
+        "name": "stereotype",
+        "description": "A claim about a whole group of people.",
+        "example": "Older employees cannot learn new software."
+      },
+      {
+        "name": "loaded-language",
+        "description": "A charged word in place of a neutral one.",
+        "example": "The so-called experts admitted the delay."
+      }
+    ],
+    "clean_base_cases": [
+      {
+        "name": "Release note",
+        "fields": {
+          "text": "The team shipped the release on Friday. It fixes two login problems and adds an export to CSV."
+        },
+        "expected_errors": []
+      },
+      {
+        "name": "Hiring update",
+        "fields": {
+          "text": "The company opened three positions in the support team. Applications are accepted until the end of the month."
+        },
+        "expected_errors": []
+      },
+      {
+        "name": "City report",
+        "fields": {
+          "text": "The city council approved the new bus route. Service starts in March and runs every twenty minutes."
+        },
+        "expected_errors": []
+      }
+    ]
+  },
+  "parameters": {
+    "match_clear_share": {
+      "default": 0.6,
+      "description": "Not used: the judge is evaluated per case."
+    }
+  },
+  "measures": [
+    {
+      "id": "detection_rate",
+      "name": "Detection rate",
+      "description": "Injected errors the judge found.",
+      "operation": "ratio",
+      "numerator": "expected_found",
+      "denominator": "expected_total",
+      "interval": "wilson95",
+      "better": "higher"
+    },
+    {
+      "id": "false_positive_rate",
+      "name": "False-positive rate",
+      "description": "Findings that are not errors, out of all findings.",
+      "operation": "ratio",
+      "numerator": "false_positives",
+      "denominator": "findings_total",
+      "interval": "wilson95",
+      "better": "lower"
+    },
+    {
+      "id": "case_detection_rate",
+      "name": "Case detection rate",
+      "description": "Cases with errors that the judge flagged.",
+      "operation": "ratio",
+      "numerator": "defective_cases_flagged",
+      "denominator": "defective_cases_decided",
+      "interval": "wilson95",
+      "better": "higher"
+    },
+    {
+      "id": "clean_case_false_positive_rate",
+      "name": "Clean-case false-positive rate",
+      "description": "Clean cases flagged wrongly.",
+      "operation": "ratio",
+      "numerator": "clean_cases_with_false_positive",
+      "denominator": "clean_cases_decided",
+      "interval": "wilson95",
+      "better": "lower"
+    }
+  ]
+}

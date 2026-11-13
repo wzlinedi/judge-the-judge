@@ -1,6 +1,6 @@
 # Data Model: Judge the Judge
 
-**Date**: 2026-11-11 | **Plan**: [plan.md](./plan.md) | **Spec**: [spec.md](./spec.md)
+**Date**: 2026-11-13 | **Plan**: [plan.md](./plan.md) | **Spec**: [spec.md](./spec.md)
 
 Entities, their fields, the rules that validate them, and how they change over a session. File
 layouts are in [contracts/file-formats.md](./contracts/file-formats.md). "Derived" means computed
@@ -9,257 +9,392 @@ from other data and never stored as a source of truth.
 ## Overview
 
 ```text
-Judge ──────────────┐
- └─ ReplyMapping    │
-                    ├──> Evaluation (one page session)
-Dataset ────────────┘      ├─ outputs      (case id → received output)
- ├─ ErrorCatalog           ├─ verdicts     (case id → verdict)
- │   └─ Label              ├─ opinions     (case id → verification opinion, a proposal)
- └─ Scenario (test case)   ├─ checks       (thresholds in use)
-     └─ ExpectedError      └─ model note
+TestProject ──────────────────────┐
+ ├─ JudgeSet                       │
+ │   ├─ prompt ──> Variables       │
+ │   ├─ sample reply ──> ReplyMapping (recognized fields, finding text per list)
+ │   └─ ErrorRule ── Condition     ├──> Evaluation (one page session)
+ ├─ ErrorCatalog ── Category       │      ├─ replies     (case id → judge prompt + received reply)
+ ├─ TestCases ── TestCase ─────────┘      ├─ decisions   (case id → what the user settled,
+ │                └─ ExpectedError        │                incl. added findings)
+ └─ metric, checks                        ├─ checks      (thresholds in use)
+                                          └─ model note
 
-Evaluation ──save──> Result (snapshot) ──> Shelf ──pick two──> Comparison
-MetricDefinition ──registered in──> MetricRegistry ──starter fills──> Judge + ErrorCatalog
+reply ──rules──> Findings ──matching──> CaseReview ──+ decisions──> CaseStatus ──> Results
+case JSON (pasted, LLM answer, Show JSON) ──check──> TestCase (new, or corrected expected errors)
+MetricDefinition ──registered in──> MetricRegistry ──"Load example…"──> TestProject
 ```
 
-## Judge
+A clean base case is simply a clean test case (no expected errors): any clean case can be the
+optional base of a case with injected errors (research.md, section 15; FR-082).
 
-The thing under test. Only the prompt comes from outside.
+**Two files** (FR-076): the **test project** file holds the JudgeSet, the error catalog, the test
+cases, the active metric and the checks (one test, used for every run); the **evaluation** file
+holds all of that plus the replies, decisions, model note and results of one run. The word
+"dataset" survives only as the key of the test cases block inside both files
+(contracts/file-formats.md, section 1).
+
+## JudgeSet
+
+Everything on the Judge step. Saved and loaded inside the test project file, together with the
+test cases (FR-009, FR-020); there is no separate judge set file.
 
 | Field | Type | Rules |
 |---|---|---|
-| `prompt` | text | Required, not empty. Used exactly as written (FR-040). |
-| `reply_mapping` | ReplyMapping or none | Optional. Without it every case needs manual or LLM-assisted verification (FR-011). |
-| placeholders | list of names, derived | Every `{{name}}` in the prompt; names use letters, digits, `-` and `_`. They decide which fields a scenario must have. |
-| version | text, derived | Content hash of prompt and reply mapping (research.md, section 11). |
+| `prompt` | text | The judge prompt, used exactly as written (FR-047). May be empty while editing; needed before finalizing. |
+| `sample_reply` | text | One reply of the judge, as pasted. Optional. |
+| `reply_mapping` | ReplyMapping | Derived from the sample reply, plus the user's finding-text choices. |
+| `error_rules` | list of ErrorRule | Written only by the user (FR-013). May be empty. |
+| `error_catalog` | list of Category | Belongs to the test project; stored here for the file layout. Changed only by the user, on the Test cases step (FR-015). |
+| variables | list of names, derived | Every `{{name}}` in the prompt, in order, without repeats (research.md, section 8). |
+| `judged_text` | variable name | The variable that is the output the judge evaluates; errors are injected into it (FR-010). The last variable is proposed; when the named variable leaves the prompt, the last variable is proposed again and the user is told. Not part of the judge version. |
+| version | text, derived | Content hash of prompt, finding-text choices and error rules (research.md, section 14). |
+| counting mode | `per_expected_error` or `per_case`, derived | `per_case` when at least one usable rule exists and every rule uses only fields outside any list: the judge gives one verdict for the whole text (FR-061; research.md, section 29). Changes when the rules change. |
 
-- A prompt with no placeholder is allowed but triggers a warning: every case would get the same
-  prompt.
-- The judge can be edited until the dataset is finalized; after that only through "change the
-  judge, keep the cases" (FR-072), which gives it a new version.
+- A prompt with no variable is allowed but triggers a warning: nothing from the cases reaches it.
+- Editable until the test cases are finalized. After that the prompt is fixed; the reply mapping and
+  the error rules may still be corrected (FR-053), which changes the version. "Edit the judge and
+  run again" (FR-074) reopens the prompt and clears replies and decisions.
+- "Can replies be read automatically?" is derived: yes when a sample reply is set, at least one
+  rule exists, no rule is broken, and every list used by a rule has a finding-text field. When
+  not, a warning is shown on the Judge step and before finalizing (FR-021).
 
 ## ReplyMapping
 
-How to read the judge's own JSON reply.
+The recognized structure of the judge's reply. It never says what an error is (FR-011).
 
 | Field | Type | Rules |
 |---|---|---|
-| `list_path` | text | Dot-separated path to the list of parts; empty when the reply itself is the list. |
-| `text_key` | text | Required. The entry holding a part's text. |
-| `assessment_key` | text or none | When absent, every listed part is a problem. |
-| `problem_values` | list of text | Required when `assessment_key` is set; compared without regard to case; `true` and `false` allowed. |
-| `category_key` | text or none | Shown as information only; never required for a match. |
-| `target_field` | text or none | The scenario field the findings point at; limits matching to expected errors in that field. |
+| fields | list of ReplyField, derived from the sample reply | Recomputed whenever the sample changes and is readable; a sample that cannot be read keeps the fields of the last readable one and shows its line and column (FR-084, FR-088). |
+| lists | list of paths, derived | Every list of objects in the sample, for example `claims[]`. |
+| `finding_text` | list path → field path | Per list, the field holding the text a finding points at. Proposed by the tool, confirmed or changed by the user; may be unset (FR-012). The field must belong to that list and hold text. |
 
-## Dataset
+**ReplyField** (derived): `path` (for example `claims[].verdict`), kind (text, number, true/false,
+empty), up to eight distinct values seen in the sample, and the list it belongs to (or none).
 
-A named collection of scenarios with its error catalog.
+## ErrorRule and Condition
 
 | Field | Type | Rules |
 |---|---|---|
-| `name` | text | Required; default "Untitled dataset". Not part of the version. |
-| `error_catalog` | list of Label | Names unique after normalization. |
-| `scenarios` | list of Scenario | At most 500 (FR-021). Identifiers unique. |
-| version | text, derived | Content hash of scenarios and error catalog; changes with any edit (FR-023, FR-030). |
-| finalized | yes/no, session only | Not stored in files: a loaded dataset is always open (FR-047). |
-| unsaved changes | yes/no, session only | Set by any edit, cleared by saving (FR-048). |
+| `name` | text | Required; shown wherever a finding is shown. |
+| `match` | `all` or `any` | Whether all conditions must hold or any one of them. |
+| `conditions` | list of Condition | At least one for the rule to be used. No upper limit. |
 
-**State transitions**
+| Condition field | Type | Rules |
+|---|---|---|
+| `field` | path | Must be a field recognized in the sample reply. |
+| `comparison` | `equals`, `not_equals`, `greater_than`, `less_than`, `is_empty`, `is_not_empty` | |
+| `value` | text | Required except for the two "empty" comparisons. Picked from the values seen or typed. |
 
-```text
-(empty) ──add / load / paste──> Open ──finalize (after summary + confirm)──> Finalized
-   ^                              │  ^                                          │
-   └──── new evaluation ──────────┘  └──── load a saved file (always opens) ────┘
-Finalized ──"change the judge, keep the cases"──> Finalized (same dataset, outputs cleared)
-Finalized ──load a different judge or dataset / new evaluation──> Open (after warning + confirm)
-```
+- All list fields of one rule belong to the same list; fields outside any list may be mixed in
+  (FR-014).
+- A rule is **broken** when a condition names a field that the current sample reply does not
+  contain, or when it uses two lists. A broken rule is shown as such, is not applied, and is
+  reported before finalizing.
+- Evaluation is three-valued (holds, does not hold, unknown); see research.md, section 9.
 
-- **Open**: scenarios and catalog can be added, edited, deleted; single prompts can be viewed and
-  copied; prompt batch export and answer entry are not available (FR-050).
-- **Finalized**: fields, identifiers and the judge prompt are fixed. Expected errors may still be
-  edited (they are the reference); this changes the dataset version, recomputes automatic verdicts
-  and keeps verdicts set by hand.
-- Finalizing is refused for an empty dataset and requires every scenario to have a non-empty field
-  for every placeholder of the judge prompt.
-
-## Label (entry of the error catalog)
+## Category (entry of the error catalog)
 
 | Field | Type | Rules |
 |---|---|---|
 | `name` | text | Required. Normalized to lower case with dashes; unique. |
-| `description` | text | Optional; shown as help (FR-012). |
+| `description` | text | Optional; shown where a category is chosen (FR-015). |
 | `example` | text | Optional. |
 
-- A label typed on an expected error that is not in the catalog is normalized and added
-  automatically, with a short confirmation.
-- A label used by any expected error cannot be deleted (FR-010); the refusal lists the scenarios.
+- Added only by the user: typed or pasted as text (`name`, `name - description`, also with `:` or
+  `|`) in the "Error categories" section of the Test cases step; typed as a new name where the
+  category of an error to prepare, or of an added finding, is given (FR-024, FR-062); named in a
+  saved case JSON (the window says so); or, with explicit consent, when an imported test-case file
+  uses unknown categories (FR-029). There is no catalog file of its own.
+- Uses (derived): the number of test cases that have at least one expected error with the
+  category; a case counts once (FR-015).
+- Rename applies to every expected error that uses the category, also after finalizing, and
+  changes the test cases version. Remove happens at once when no test case uses the category; while
+  one does, Remove is disabled with the reason ("Used by N test cases. Remove those test cases
+  first, or rename the category."; after finalizing, when every such case has a reply, "Used by N
+  test cases. It can be renamed.").
 
-## Scenario (test case)
+## TestCases (stored under the key `dataset`)
+
+The named collection of test cases of a test project.
 
 | Field | Type | Rules |
 |---|---|---|
-| `id` | text | Unique in the dataset. From the file when every scenario has one; otherwise assigned by order (`1`, `2`, …) and reported. A mix of with and without is rejected (edge case). Hand-made scenarios get the next free number (FR-029). |
-| `name` | text | Optional; shown as "Case <id>" when empty. |
-| `base` | text or none | Identifier of the clean scenario this variant was made from (FR-035). Must exist in the dataset, otherwise a warning. |
-| `fields` | name → text | At least one non-empty field (FR-028). Each at most 100,000 characters; warning above 30,000. |
-| `expected_errors` | list of ExpectedError | Empty list means a clean scenario. |
-| kind | "clean" or "defective", derived | From whether `expected_errors` is empty. |
-| final prompt | text, derived | Judge prompt with each `{{name}}` replaced by the field of that name; nothing else added. |
+| `name` | text | Required; default "Untitled test cases". Not part of the version. |
+| `cases` | list of TestCase | At most 500 (FR-032). Identifiers unique. Clean cases are listed first. |
+| version | text, derived | Content hash of the cases; changes with any edit (FR-034, FR-039). |
+| finalized | yes/no | Kept in the test project file and the evaluation file and restored as saved (FR-020). "Import test cases" adds cases before and after finalizing (FR-053). |
 
-- Two scenarios whose fields are all identical are flagged as duplicates (FR-043). A variant and
-  its base share the input but differ in the output, so they are not duplicates.
-- Fields not named by any placeholder are kept and shown, with a note that the judge will not see
-  them.
+**State transitions**
+
+```text
+(empty) ──add / import / clone──> Open ──finalize (after summary + confirm)──> Finalized
+   ^                                ^                                           │
+   └──── Start new evaluation ──────┴──── "Edit test cases" (no reply yet) ─────┘
+Finalized ──add / import / clone──> Finalized (new cases start Not run; "added after first reply"
+                                    when replies exist; new test cases version)
+Finalized ──rename / remove a case without a reply, or correct its expected errors──> Finalized
+                                    (new test cases version; "corrected after first reply" when
+                                    replies exist)
+Finalized ──"Edit the judge and run again"──> Finalized (same cases, replies and decisions cleared,
+                                              prompt editable until the first reply is saved)
+any ──"Load test project"──> the saved state (open or finalized), with no replies (after warning)
+any ──"Load evaluation" / "Load example…"──> exactly the saved state (open or finalized)
+```
+
+- **Open**: cases can be added, cloned, renamed and removed; the catalog and judge set can be
+  edited; composed prompts can be viewed and copied; replies cannot be entered (FR-053). A saved
+  case is never edited: it is changed by cloning it, changing the copy's JSON and removing the
+  original (FR-025, FR-086).
+- **Finalized**: the judge prompt and the fields and identifiers of every case are fixed. While no
+  reply exists, "Edit test cases" returns to Open without losing anything (FR-053). Cases may still
+  be added, cloned and imported; a case without a reply may be renamed, removed or have its
+  expected errors corrected through its JSON (FR-089); a case with a reply is not changed (an
+  expected error that should not count is marked "Ignore" on Run). The reply mapping and the error
+  rules may still be corrected; automatic results are recomputed and decisions made by hand are
+  kept.
+- Finalizing is refused for empty test cases or an empty judge prompt. Everything else (one kind of
+  case only, replies not readable automatically, a broken rule, a case with no field for a
+  variable, no subtle error, test size below the minimum) is a warning in the summary (FR-052).
+
+## TestCase
+
+| Field | Type | Rules |
+|---|---|---|
+| `id` | text | Unique in the test project. From the file when every case has one; otherwise assigned by order (`1`, `2`, …) and reported. A mix of with and without is rejected. Cases made in the tool get the next free number (FR-033). |
+| `name` | text | Unique in the test project, compared without regard to case (FR-079); a case JSON with an empty name gets one made from its base and number of errors. A name used twice by an import or a loaded file is kept and both cases show the warning. |
+| `base` | text or none | Optional. Identifier of the clean case it was made from (FR-022). Must name an existing clean case, otherwise a warning. A clone keeps it only when its JSON names it; there is no link to an original (FR-078). |
+| `changed_after_first_reply` | `added`, `corrected` or none | Set when the case is added, or its expected errors are corrected, after the first reply of the run; shown in the tables, on Results and in the report (FR-053). |
+| `fields` | name → text | One per variable of the judge prompt. At least one non-empty field (FR-037). Each at most 100,000 characters; warning above 30,000. |
+| `expected_errors` | list of ExpectedError | Empty list means a clean case. |
+| kind | "Clean" or "Injected errors", derived | From whether `expected_errors` is empty. |
+| final prompt | text, derived | The judge prompt with each variable replaced by the field of that name; nothing else added. |
+| warnings | list, derived | No field for a variable; a field that matches no variable (kept, not used); fragment not found word for word in the judged text (or, for an omission, in another field); unknown category; unknown base; a changed place covered by no expected error; no change compared with the base; very long field. |
+
+- A clean case cannot be removed while other cases name it as their base; the refusal lists them
+  (FR-017).
+- Two cases whose fields are all identical are flagged as duplicates (FR-045).
+- A case with injected errors must differ from its base in at least one field (FR-044).
+- Before a case with injected errors is saved, the check line of FR-080 compares text and list:
+  changed places not covered, expected errors not in the text, identical to base (refused), no
+  fragment or category (note).
+- A case is made only from a case JSON (contracts/file-formats.md, section 2), checked as it
+  changes; its fields are never edited after saving (FR-081).
 
 ## ExpectedError
 
 | Field | Type | Rules |
 |---|---|---|
-| `description` | text | Required (FR-028). What is wrong and why. |
-| `field` | text | Optional; default `output`. Must name a field of the scenario. For an omission it names the input field (FR-038). |
-| `label` | text | Optional free text; normalized; added to the catalog when new. |
-| `fragment` | text | Optional. Exact words in `field` where the error is. Without it the error cannot be matched automatically (FR-060). A warning is shown when it does not occur word for word in the field (FR-035). |
-| `difficulty` | "obvious", "subtle" or none | Optional (FR-036). |
-| `original` | text | Optional. The words that stood there before the change; this is the injection record, together with `description` and the scenario's `base`. |
+| `id` | text | Unique inside the case (for example `e1`); assigned by the tool when absent. Decisions refer to it (research.md, section 16). |
+| `description` | text | Required (FR-037). What is wrong and why; for an injected error, what was changed. |
+| `category` | text | Optional. A name from the error catalog. |
+| `fragment` | text | Optional. Exact words of the judged text where the error is; for an omission, words of another field that the judged text no longer covers (FR-044). Without it the error cannot be matched automatically (FR-061). |
+| `difficulty` | "obvious", "subtle" or none | Optional (FR-043). |
+
+An expected error has no field of its own: it always concerns the judged text (FR-022). A `field`
+key found in a file is ignored and reported once.
 
 ## Evaluation (the working session)
 
-Holds one judge, one dataset and everything received and decided for them. Exists only in memory.
+Holds one test project and everything received and decided for it. Exists in memory;
+written whole to the evaluation file (FR-073).
 
 | Field | Type | Rules |
 |---|---|---|
-| `judge`, `dataset` | as above | One of each (spec, Assumptions). |
-| `outputs` | case id → text | Any format, never rejected for its format (FR-053). Empty text is not an output. |
-| `verdicts` | case id → Verdict | Only for cases with an output. |
-| `opinions` | case id → VerificationOpinion | Proposals awaiting approval (FR-062). |
-| `checks` | CheckConfiguration | Thresholds in use; defaults from the bundled configuration. |
-| `model_note` | text | Optional free text: which model and settings ran the judge (FR-052). |
+| `judge_set`, test cases (`dataset`), error catalog | as above | One of each. |
+| `replies` | case id → Reply | Only after finalizing. |
+| `decisions` | case id → CaseDecisions | Only for cases with a reply. |
+| `checks` | CheckConfiguration | Thresholds in use; defaults from the bundled configuration, or restored from a loaded test project or evaluation. |
+| `model_note` | text | Optional multi-line free text, shown as "Model details": the model and the settings that ran the judge, in any form; never read or checked (FR-058). |
+| save files | two file handles, not stored | One for the test project and one for the evaluation (FR-076): chosen by the first "Save …" or by "Save … as", or the file opened by the matching load through the picker (not a dropped file). Held in memory only (research.md, section 25). "Load test project" forgets the evaluation file; "Load evaluation" forgets the test project file; "Start new evaluation", "Load example…" and "Edit the judge and run again" forget both; "Edit test cases" keeps both. |
+| unsaved changes | yes/no, not stored | One flag (FR-051): set by any change; cleared by "Save evaluation", and by "Save test project" while no reply exists. |
+| `metric` | id and parameters | The active metric and the matching parameters in use; written to the test project file and the evaluation file so a result can be reproduced (Principle V). |
+| reply draft | case id → text, not stored | Text changed in the always-visible reply box and not yet saved; moving or closing asks first (FR-055). |
+| replies since save | number, derived, not stored | Replies saved since the last "Save evaluation"; shown on Run and in the case window, with a reminder every 25 (FR-059). |
+| `reply_judge_version` | text | The judge version when the first reply was saved; cleared when replies are cleared (research.md, section 14). |
+
+**Reply**: `prompt` (the composed judge prompt at the moment the reply was saved) and `reply` (text
+of any format, never rejected for its format, not empty) (FR-056, FR-057). It arrives from
+"Paste reply from clipboard" or from the always-visible box with "Save reply"; both have the same
+effect. The box is checked as it changes (line and column). Saving a new reply for a case resets
+it: its decisions, the added findings included, are removed and the automatic part is computed
+again. The tool asks first, saying how many will be removed, only when the case has
+decisions with source `manual` or `llm-approved`; with automatic results only it replaces the
+reply without asking.
+
+The Results step changes nothing but the thresholds (`checks`); there is no closed state (research.md,
+section 27).
+
+## Findings (derived, per case with a reply)
+
+| Field | Meaning |
+|---|---|
+| readable | Whether a JSON block was found and rules exist. When not, the reason. |
+| findings | One per list item (or per reply) for which at least one rule holds: `key` (list path and position, or `reply`), `text` (from the finding-text field; empty when unset or for a whole-reply finding), `rules` (names of the rules that hold). |
+| unknown | Fields that were missing or could not be compared, so that a rule could not be evaluated. |
+
+## CaseReview (derived: automatic result for one case)
+
+Built from the case, its findings and the matching rule (research.md, sections 10 and 11).
+
+| Part | Content |
+|---|---|
+| per expected error | Automatic state: `found`, `missed` or undecided; the findings attached to it (clear or partial); the reason when undecided. |
+| additional findings | Findings that match no expected error (or have no text). Always undecided automatically. |
+| needs approval | True when the reply could not be read: the user must confirm the case after marking it by hand. |
+
+## CaseDecisions (stored: what the user settled)
+
+| Field | Type | Rules |
+|---|---|---|
+| `expected` | expected error id → Decision | State `found`, `missed` or `ignored`. |
+| `additional` | finding key → Decision | State `real_error`, `false_positive` or `ignored`. |
+| `added_findings` | list | Findings added with "Add finding", or by an applied LLM opinion (`from_opinion`): `text`, optional `category` (a catalog name; a new one joins the catalog) and `difficulty` (`obvious` or `subtle`), and a Decision. The only findings with "Remove" (FR-062). |
+| `approved` | yes/no | Set by "Approve" and by "Apply opinion"; required when the reply could not be read. |
+| no answer | item → yes, not stored | Items an applied opinion did not answer and that were undecided; their reason becomes "The LLM opinion gave no answer for this item" (FR-063). |
+| `note` | text | Optional. |
+
+**Decision**: `state` and `source`: `manual` (set by hand) or `llm-approved` (an LLM opinion the
+user applied with "Apply opinion"). Automatic results are not stored; their source is shown as
+`automatic`. The states are shown as "Found", "Issue: missed", "Ignore", "Issue: false positive"
+and "Real error".
+
+- The effective state of an item is the stored decision when there is one, otherwise the automatic
+  state.
+- "Apply opinion" in the second-opinion window (FR-063) sets the decision of every item the opinion
+  answers, decisions set by hand included, with source `llm-approved`, adds its new findings to
+  `added_findings`, and sets `approved`. The window shows every change before it is applied. The
+  user can change any of them afterwards; a changed one becomes `manual`. There are no stored
+  proposals.
+- When an expected error is decided `missed`, findings that only partly resembled it move to the
+  additional findings and need their own decision.
 
 ### Case status (derived)
 
 ```text
-Not run ──output received──> matching ──clear result──> Pass / Fail  (source: automatic)
-                                │
-                                └──unclear or unreadable──> Awaiting verification
-Awaiting verification ──user sets marks──> Pass / Fail  (source: set by hand)
-Awaiting verification ──LLM opinion pasted──> Awaiting verification (proposal shown)
-                      ──user approves──> Pass / Fail  (source: LLM opinion, approved by the user)
-Pass / Fail ──user changes marks──> Pass / Fail  (source: set by hand)
-any ──output replaced──> matching again (a hand-set verdict is dropped only after confirmation)
+Not run ──reply saved──> reading + matching
+   everything settled automatically ───────────────────────────> Pass / Fail
+   something undecided, or reply not readable ─> Awaiting verification
+Awaiting verification ──user decides the items (and approves an unreadable reply)──> Pass / Fail
+Awaiting verification ──"Apply opinion"──> Pass / Fail, or Awaiting while an unanswered item
+                                          stays undecided
+Pass / Fail ──user changes a decision──> Pass / Fail, or back to Awaiting if set to undecided
+any ──new reply saved──> decisions and added findings removed, reading + matching again
+any ──expected errors, mapping or rules corrected──> automatic part recomputed, decisions kept
 ```
 
-## Verdict
-
-| Field | Type | Rules |
-|---|---|---|
-| `found` | list of yes/no | One entry per expected error, in order. |
-| `false_alarms` | whole number ≥ 0 | Findings confirmed as matching no expected error. |
-| `findings_total` | whole number ≥ 0 | Parts the mapping marks as problems; when the reply is unreadable, found count plus `false_alarms`. |
-| `source` | "automatic", "manual", "llm-approved" | Shown in the results table and report. |
-| `note` | text | Optional. |
-| outcome | Pass or Fail, derived | Pass only when every `found` is yes and `false_alarms` is 0. |
-
-- Turning an unexpected finding into a real error adds an ExpectedError to the scenario (allowed
-  after finalizing), marks it found, and lowers `false_alarms` by one.
-
-## MatchResult (derived, per case with an output)
-
-| Field | Meaning |
-|---|---|
-| readable | Whether the reply could be read through the mapping. |
-| parts, findings | All parts of the reply; those assessed as problems. |
-| per expected error | Clear match, partial match, or no match, with the matching findings. |
-| unexpected findings | Findings with no clear or partial match to any expected error. |
-| clear | True when nothing is partial, no expected error lacks a fragment, and there are no unexpected findings. Only then is an automatic verdict set. |
-| reasons | Plain sentences explaining why the case awaits verification. |
-
-Matching rule: research.md, section 8.
+- **Pass**: every expected error that is not ignored is found, and no additional finding is a
+  false positive. **Fail** otherwise (FR-064). A confirmed real error does not fail a case.
 
 ## VerificationOpinion
 
-An external LLM's assessment of one case, pasted by the user. A proposal until approved.
+An external LLM's assessment of one case, pasted into the second-opinion window. It changes nothing
+until the user presses "Apply opinion" after the preview of every change.
 
 | Field | Type | Rules |
 |---|---|---|
-| `case_id` | text | Must match a case with an output. |
-| `expected` | list | Per expected error: `index`, `found` yes/no, `finding` (text), `reason`. |
-| `unexpected` | list | Each with `finding` and `reason`. |
+| `id` | text | Must be the case whose window it was pasted into; an opinion for another case is refused with the reason (FR-063). |
+| `expected` | list | Per expected error: `index` (position in the verification prompt, from 1), `found` yes/no, `reason`, `fragment` (the words of the data or reply it rests on). |
+| `additional` | list | Per additional finding: `index` (as numbered in the verification prompt); `real` yes/no; `reason`; `fragment`. An entry with `text` and no valid `index` is read as a new finding. |
+| `new` | list | Findings the reply contains that are not in the list: `text`, `real` yes/no, `reason`, `fragment`, optional `category` and `difficulty`. |
+
+- An item is answered only when its entry has `found` or `real` as true or false. An opinion that
+  answers no item and adds no finding cannot be applied; the window names the reason per item.
 
 ## Counters and measures (derived)
 
-Computed only from cases that have a verdict.
+Computed only from cases whose status is Pass or Fail. Ignored items are left out of every counter
+except the two "ignored" ones.
 
 | Counter | Meaning |
 |---|---|
-| `expected_total`, `expected_found` | Expected errors in judged cases; those marked found. |
-| `findings_total`, `false_alarms` | Sum of the verdict fields over judged cases. |
-| `cases_judged`, `cases_pending`, `cases_not_run` | By status. |
-| `cases_with_false_alarm`, `clean_cases_judged`, `clean_cases_with_false_alarm` | For the informational shares (FR-063). |
-| per label, per difficulty | `expected_total` and `expected_found` split by label and by difficulty (FR-064). |
+| `expected_total`, `expected_found`, `expected_missed` | Expected errors in decided cases, by effective state. |
+| `additional_total`, `real_errors`, `false_positives` | Additional findings in decided cases, by decision. |
+| `findings_total` | Correct findings + `real_errors` + `false_positives` (research.md, section 11). |
+| `subtle_total`, `subtle_found`, `subtle_missed` | Expected errors marked subtle. |
+| `ignored_expected`, `ignored_additional` | Shown as a separate count (FR-066). |
+| `cases_decided`, `cases_awaiting`, `cases_not_run` | By status. |
+| `clean_cases_decided`, `cases_with_false_positive`, `clean_cases_with_false_positive` | For the minimum sample and the informational shares (FR-069). |
+| `defective_cases_decided`, `defective_cases_flagged` | Decided cases with at least one expected error not ignored; those of them with at least one expected error found. Used when the judge is evaluated per case. |
+| per category, per difficulty | `expected_total` and `expected_found` split by category and by difficulty (FR-070). |
+| per rule | `real_errors` and `false_positives` split by the rule that produced the finding. |
+| additional per category, per difficulty | `real_errors` and `false_positives` of additional findings split by their category and difficulty, with "(no category)" and "(not set)"; counts only (FR-070). |
 
 | Measure | Definition |
 |---|---|
-| Detection rate | `expected_found / expected_total`, with a 95% interval. |
-| False-alarm rate | `false_alarms / findings_total`, with a 95% interval; "not available" when `findings_total` is 0. |
-| Combined score | Harmonic mean of detection rate and (1 − false-alarm rate); not available when either part is. |
-| Per label, per difficulty | Detection rate with interval; counts only when fewer than 10 expected errors. |
+| Detection rate | `expected_found / expected_total`. |
+| False-positive rate | `false_positives / findings_total`; "not available" when `findings_total` is 0. |
+| Per category, per difficulty | Detection rate; counts only when fewer than 10 expected errors. |
 
-All measures are labeled "provisional" while `cases_pending` is above 0.
+**Per case** (counting mode `per_case`, FR-061, FR-066, FR-067, FR-070): in a case with a reply,
+a flagged reply makes every expected error found and an unflagged one makes every expected error
+missed, each with source `automatic`; on a clean case a flag is an additional finding decided by
+the user. The Summary counts cases instead of errors (cases with errors: flagged, not flagged;
+clean cases: flagged wrongly, not flagged); the two measures are the **case detection rate**
+(`defective_cases_flagged / defective_cases_decided`) and the **clean-case false-positive rate**
+(`clean_cases_with_false_positive / clean_cases_decided`); the category and difficulty groups count
+cases (a case once in each category and difficulty its errors have) and show counts only.
 
-## TestSizeSummary (derived from the dataset)
+Both rates carry a 95% interval that is shown only in "Details". Everything is labeled
+"provisional" while `cases_awaiting` or `cases_not_run` is above 0, on screen and in both exported
+files. There is no combined score.
 
-Total scenarios, clean scenarios, scenarios grouped by number of expected errors, total expected
-errors, and for the two fixed minimums (30 expected errors, 10 clean scenarios) whether each is met
-or how many are missing (FR-044). Shown while building the dataset and with the results.
+## TestSizeSummary (derived)
 
-## FinalAnswer (derived)
+Total cases, clean cases, cases grouped by number of expected errors, total expected errors, and for
+the two fixed minimums (30 expected errors, 10 clean cases) whether each is met or how many are
+missing. On the Test cases step it is computed from the test cases as a forecast (FR-046); on the
+Results step from decided, not ignored items (FR-068).
 
-| Answer | When |
+## OverallResult (derived)
+
+| Result | When |
 |---|---|
-| Inconclusive | Any case is Not run or Awaiting verification, or expected errors < 30, or clean scenarios < 10. The reason lists what is missing. |
-| Works | Otherwise, when every check passes (by default detection ≥ 80% and false alarms ≤ 10%). |
+| Inconclusive | Any case is Not run or Awaiting verification, or decided expected errors < 30 (per case: decided cases with errors < 30), or decided clean cases < 10. The reason lists what is missing. |
+| Works | Otherwise, when every check passes (by default detection ≥ 80% and false positives ≤ 10%). |
 | Does not work | Otherwise, when any check fails. The reason names it. |
 
-A "borderline" note is added for each measure whose interval contains its threshold.
+A "borderline" note, shown in "Details", is added for each rate whose interval contains its
+threshold.
 
-## Result (saved snapshot)
+## Evaluation file content (saved snapshot)
 
-Everything needed to reproduce and audit one evaluation (FR-074).
+Everything needed to continue, reproduce and audit one evaluation (FR-072, FR-073, FR-075).
 
 | Field | Content |
 |---|---|
-| `label`, `created` | User-editable name; date and time. |
-| `tool_version` | Version of the tool that produced it. |
-| `judge` | Prompt, reply mapping, version. |
-| `model_note` | As entered on the Run step. |
-| `dataset` | The complete dataset with its name and version. |
-| `outputs`, `verdicts` | Complete. |
-| `checks`, `minimum_sample` | The values the final answer was based on. |
-| `summary` | Counters, measures and the final answer at the time of saving. |
+| `tool_version`, `saved` | Version of the tool; date and time. |
+| `judge_set` | Prompt, sample reply, reply mapping, error rules, error catalog. |
+| `judge_version`, `reply_judge_version`, `rules_corrected_after_replies` | See research.md, section 14. |
+| `dataset` | The test cases: name, version, finalized, all cases. |
+| `model_note` | As entered on the Run step ("Model details"). |
+| `metric` | The active metric's `id` and the matching parameters used. |
+| `replies`, `decisions` | Complete, the added findings included. |
+| `checks`, `minimum_sample` | The values the overall result is based on. |
+| `results` | The way of counting (`evaluated_per`, and the earlier way when a correction changed it, FR-075), counters, measures, the overall result with reasons, and per case its status and effective states with sources. Empty until something is decided. |
 
-- On import the summary is recomputed from the stored data; if it differs from the stored summary
+- On load the results are recomputed from the stored data; if they differ from the stored results
   (for example a newer tool version changed a rule), the tool says so and shows both (Principle V).
 
-## Shelf and Comparison
+## Test project file content (saved snapshot)
 
-- **Shelf**: the session's list of Results (saved here or imported). Each entry shows label, judge
-  version, dataset version, date and headline measures. Not kept after the page is closed.
-- **Comparison** (derived from two Results): the three headline measures side by side; per
-  measure "worse" when the newer value is worse, "clearly worse" when the two intervals do not
-  overlap; a warning when the dataset versions differ.
+The same test for every run (FR-020): `judge_set` (with the error catalog), `dataset` (the test
+cases: name, version, finalized, all cases), `metric` (id and parameters) and `checks`. No replies,
+decisions, results or model note. Loading it starts a new Evaluation with these and no
+replies, and opens the first step with unfinished work.
 
 ## MetricDefinition and CheckConfiguration
 
 Defined in [contracts/metric-and-checks.md](./contracts/metric-and-checks.md). A MetricDefinition
-supplies a starter judge (prompt and reply mapping), a starter error catalog, matching parameters
-and the list of measures. A CheckConfiguration supplies the thresholds. The MetricRegistry holds
-the two built-in definitions and any loaded during the session.
+supplies a complete starter judge set, matching parameters and the list of measures. A
+CheckConfiguration supplies the thresholds. The MetricRegistry holds the two built-in definitions
+and any loaded during the session; its entries are the choices of the "Load example…" window.
 
-## Batches and summaries
+## Summaries shown before something is accepted
 
 | Entity | Content |
 |---|---|
-| ImportSummary | For a file or pasted block: total, clean and defective counts, invalid rows with position and reason, warnings, and the user's choice (import valid rows, or cancel). A cancelled or failed import changes nothing (FR-017). |
-| PromptBatch | Dataset name and version, judge version, and one composed prompt per selected case with its identifier (FR-055, FR-059). |
-| AnswerBatch | Optional dataset version and a list of case identifier plus output text (FR-056). |
-| AnswerImportSummary | Accepted, rejected with reasons, unmatched, duplicate and still-missing counts; the keep-or-replace choice for overlaps (FR-057, FR-058). |
+| ImportSummary | For a test-case file: total, clean and injected-errors counts, invalid rows with position and reason, fields that match no variable, variables with no field, categories missing from the catalog, and the user's choice (import the valid rows, or cancel; add the categories, or cancel). Imported cases are added to those already here. A cancelled or failed import changes nothing (FR-027 to FR-029). |
+| CaseJsonCheck | For a pasted case JSON (Paste JSON, Clean case, Case with injected errors, Correct expected errors): problems with line and column or field path, warnings, notes, the kind the case will have, and its last valid state (FR-041, FR-084). |
+| OpinionPreview | For a pasted verification opinion: every change with the current and the new mark, new findings, unanswered items, and whether it can be applied (FR-063). |
+| FinalizeSummary | Counts, balance, test-size forecast and all warnings, and whether finalizing is allowed (FR-052). |

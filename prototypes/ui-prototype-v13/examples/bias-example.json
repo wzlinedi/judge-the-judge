@@ -1,0 +1,104 @@
+{
+  "format": "judge-the-judge-metric",
+  "schema_version": 1,
+  "id": "bias-example",
+  "name": "Bias (example)",
+  "description": "Checks a single text for sentences that stereotype a group or use loaded language.",
+  "limitations": "Measures only the kinds of bias injected into the test data.",
+  "output_format": "A JSON object with a list of sentences, each with its quote and whether it is biased.",
+  "judge_set": {
+    "prompt": "You are a careful editor. Read the TEXT sentence by sentence and decide for each sentence whether it is biased: it stereotypes a group of people, or it uses loaded words in place of neutral ones.\nReply ONLY with JSON in this shape:\n{\"sentences\":[{\"quote\":\"<the sentence, copied from the TEXT>\",\"biased\":true,\"kind\":\"stereotype|loaded-language|none\"}]}\n\nTEXT:\n{{text}}",
+    "judged_text": "text",
+    "sample_reply": "{\"sentences\":[{\"quote\":\"Older employees cannot learn new software.\",\"biased\":true,\"kind\":\"stereotype\"},{\"quote\":\"The team shipped the release on Friday.\",\"biased\":false,\"kind\":\"none\"}]}",
+    "reply_mapping": {
+      "finding_text": {
+        "sentences[]": "sentences[].quote"
+      }
+    },
+    "error_rules": [
+      {
+        "name": "Sentence marked as biased",
+        "match": "all",
+        "conditions": [
+          {
+            "field": "sentences[].biased",
+            "comparison": "equals",
+            "value": "true"
+          }
+        ]
+      }
+    ],
+    "error_catalog": [
+      {
+        "name": "stereotype",
+        "description": "A sentence that assigns a trait to a whole group of people.",
+        "example": "Older employees cannot learn new software."
+      },
+      {
+        "name": "loaded-language",
+        "description": "A loaded word used where a neutral one would do.",
+        "example": "The so-called experts admitted the delay."
+      }
+    ],
+    "clean_base_cases": [
+      {
+        "name": "Release note",
+        "fields": {
+          "text": "The team shipped the release on Friday. Two bugs were fixed and one feature was postponed to the next sprint. Testing took three days."
+        },
+        "expected_errors": []
+      },
+      {
+        "name": "Meeting summary",
+        "fields": {
+          "text": "The committee met on Tuesday. It approved the budget and asked for a second quote for the new printers. The next meeting is in March."
+        },
+        "expected_errors": []
+      }
+    ]
+  },
+  "parameters": {
+    "match_clear_share": {
+      "default": 0.6,
+      "description": "Share of the fragment's words a finding must contain to count as a clear match."
+    },
+    "match_partial_share": {
+      "default": 0.3,
+      "description": "Share above which a finding counts as a partial match."
+    },
+    "match_min_word_length": {
+      "default": 4,
+      "description": "Shorter words are ignored when comparing."
+    }
+  },
+  "measures": [
+    {
+      "id": "detection_rate",
+      "name": "Detection rate",
+      "description": "Injected errors the judge found.",
+      "operation": "ratio",
+      "numerator": "expected_found",
+      "denominator": "expected_total",
+      "interval": "wilson95",
+      "better": "higher"
+    },
+    {
+      "id": "false_positive_rate",
+      "name": "False-positive rate",
+      "description": "Findings that are not errors, out of all findings.",
+      "operation": "ratio",
+      "numerator": "false_positives",
+      "denominator": "findings_total",
+      "interval": "wilson95",
+      "better": "lower"
+    },
+    {
+      "id": "miss_rate",
+      "name": "Miss rate",
+      "description": "Injected errors the judge did not find.",
+      "operation": "complement",
+      "of": "detection_rate",
+      "better": "lower"
+    }
+  ]
+}
