@@ -1,0 +1,92 @@
+/* Design tokens: the single source of colors, spacing, type sizes, radii, shadows and motion.
+   Black and red (FR-007; research.md, section 30). Red is the one accent: primary action,
+   current step, focus ring. Every text pair is at least 4.5:1 in both schemes. */
+
+:root {
+  color-scheme: light dark;
+
+  /* Light scheme (default) */
+  --bg: #ffffff;
+  --surface: #f6f6f7;
+  --surface-2: #ececee;
+  --border: #c9c9ce;
+  --text: #111113;
+  --text-muted: #55555c;
+  --accent: #c8102e;
+  --accent-hover: #a50d26;
+  --on-accent: #ffffff;
+  --focus: #c8102e;
+  --success: #1b6e3c;
+  --success-bg: #e4f3ea;
+  --warning: #8a5a00;
+  --warning-bg: #fdf1d8;
+  --error: #b00020;
+  --error-bg: #fbe5e9;
+  --overlay: rgb(0 0 0 / 0.45);
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  /* Type */
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+
+  /* Shape and motion */
+  --radius: 6px;
+  --radius-lg: 10px;
+  --shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+  --motion: 150ms ease-out;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b0b0c;
+    --surface: #161618;
+    --surface-2: #212125;
+    --border: #3a3a40;
+    --text: #f3f3f5;
+    --text-muted: #b4b4bc;
+    --accent: #ff4d63;
+    --accent-hover: #ff7586;
+    --on-accent: #0b0b0c;
+    --focus: #ff4d63;
+    --success: #5fd08a;
+    --success-bg: #12281b;
+    --warning: #f2c14e;
+    --warning-bg: #2d2411;
+    --error: #ff6b7d;
+    --error-bg: #34141a;
+    --overlay: rgb(0 0 0 / 0.65);
+    --shadow: 0 2px 8px rgb(0 0 0 / 0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b0b0c;
+  --surface: #161618;
+  --surface-2: #212125;
+  --border: #3a3a40;
+  --text: #f3f3f5;
+  --text-muted: #b4b4bc;
+  --accent: #ff4d63;
+  --accent-hover: #ff7586;
+  --on-accent: #0b0b0c;
+  --focus: #ff4d63;
+  --success: #5fd08a;
+  --success-bg: #12281b;
+  --warning: #f2c14e;
+  --warning-bg: #2d2411;
+  --error: #ff6b7d;
+  --error-bg: #34141a;
+  --overlay: rgb(0 0 0 / 0.65);
+  --shadow: 0 2px 8px rgb(0 0 0 / 0.6);
+}

@@ -1,0 +1,81 @@
+/* Resets and shared rules (Principle VII). Uses only tokens from tokens.css. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: var(--text-md) / 1.5 var(--font);
+  min-width: 360px;
+}
+
+h1, h2, h3 { line-height: 1.25; margin: 0 0 var(--space-3); }
+p { margin: 0 0 var(--space-3); }
+code, pre, textarea.json { font-family: var(--font-mono); }
+
+a { color: var(--accent); }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+button {
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-4);
+  min-height: 2.25rem;
+}
+button:hover:not(:disabled) { background: var(--border); }
+button:disabled { cursor: not-allowed; opacity: 0.6; }
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+button.primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+input[type="text"], input:not([type]), textarea, select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+  width: 100%;
+}
+
+/* Visible focus ring on every interactive element */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Tables scroll inside their own container, never the page */
+.table-scroll { overflow-x: auto; max-width: 100%; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border); vertical-align: top; }
+
+/* Status marks always carry a sign besides their color (Principle VII, FR-007) */
+.pass, .fail, .error, .warn { font-weight: 600; }
+.pass { color: var(--success); }
+.fail, .error { color: var(--error); }
+.warn { color: var(--warning); }
+.pass::before { content: "✓ "; }
+.fail::before, .error::before { content: "✕ "; }
+.warn::before { content: "⚠ "; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
