@@ -84,7 +84,8 @@ describe('CaseWindowFrame', () => {
     expect(screen.getByRole('button', { name: 'Previous test case' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Next test case' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
-    expect(screen.getByRole('banner')).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Case A' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Close' }).closest('.case-window-header')).not.toBeNull();
   });
 
   it('keeps two columns that scroll on their own', () => {

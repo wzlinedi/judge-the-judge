@@ -1,0 +1,868 @@
+{
+  "awaiting_verification": [
+    "3",
+    "10",
+    "14",
+    "17",
+    "19"
+  ],
+  "decisions_after": {
+    "3": {
+      "expected": {},
+      "additional": {
+        "claims[]#2": {
+          "state": "false_positive",
+          "source": "llm-approved"
+        }
+      },
+      "added_findings": [],
+      "approved": true,
+      "note": ""
+    },
+    "10": {
+      "expected": {},
+      "additional": {},
+      "added_findings": [],
+      "approved": true,
+      "note": ""
+    },
+    "14": {
+      "expected": {
+        "e2": {
+          "state": "found",
+          "source": "llm-approved"
+        }
+      },
+      "additional": {},
+      "added_findings": [],
+      "approved": true,
+      "note": ""
+    },
+    "17": {
+      "expected": {
+        "e2": {
+          "state": "missed",
+          "source": "llm-approved"
+        }
+      },
+      "additional": {
+        "claims[]#2": {
+          "state": "false_positive",
+          "source": "llm-approved"
+        }
+      },
+      "added_findings": [],
+      "approved": true,
+      "note": ""
+    },
+    "19": {
+      "expected": {},
+      "additional": {
+        "claims[]#3": {
+          "state": "real_error",
+          "source": "llm-approved"
+        }
+      },
+      "added_findings": [],
+      "approved": true,
+      "note": ""
+    }
+  },
+  "as_loaded": {
+    "evaluated_per": "expected_error",
+    "counted_per_before_correction": null,
+    "provisional": true,
+    "undecided": 5,
+    "counters": {
+      "expected_total": 21,
+      "expected_found": 19,
+      "expected_missed": 2,
+      "additional_total": 0,
+      "real_errors": 0,
+      "false_positives": 0,
+      "findings_total": 19,
+      "subtle_total": 11,
+      "subtle_found": 9,
+      "subtle_missed": 2,
+      "ignored_expected": 0,
+      "ignored_additional": 0,
+      "cases_decided": 15,
+      "cases_awaiting": 5,
+      "cases_not_run": 0,
+      "clean_cases_decided": 8,
+      "cases_with_false_positive": 0,
+      "clean_cases_with_false_positive": 0,
+      "defective_cases_decided": 7,
+      "defective_cases_flagged": 7,
+      "per_category": {
+        "wrong-number": {
+          "expected_total": 7,
+          "expected_found": 7
+        },
+        "factual-error": {
+          "expected_total": 5,
+          "expected_found": 4
+        },
+        "misattribution": {
+          "expected_total": 4,
+          "expected_found": 4
+        },
+        "contradiction": {
+          "expected_total": 4,
+          "expected_found": 3
+        },
+        "unsupported-claim": {
+          "expected_total": 1,
+          "expected_found": 1
+        }
+      },
+      "per_difficulty": {
+        "obvious": {
+          "expected_total": 10,
+          "expected_found": 10
+        },
+        "subtle": {
+          "expected_total": 11,
+          "expected_found": 9
+        }
+      },
+      "per_rule": {},
+      "additional_per_category": {},
+      "additional_per_difficulty": {}
+    },
+    "measures": {
+      "detection_rate": {
+        "id": "detection_rate",
+        "name": "Detection rate",
+        "better": "higher",
+        "value": 0.9047619047619048,
+        "numerator": 19,
+        "denominator": 21,
+        "interval": {
+          "lower": 0.7108586073515344,
+          "upper": 0.9734812328017302
+        }
+      },
+      "false_positive_rate": {
+        "id": "false_positive_rate",
+        "name": "False-positive rate",
+        "better": "lower",
+        "value": 0,
+        "numerator": 0,
+        "denominator": 19,
+        "interval": {
+          "lower": 0,
+          "upper": 0.16817922625956366
+        }
+      }
+    },
+    "overall": {
+      "result": "Inconclusive",
+      "reasons": [
+        "5 cases are not decided yet (0 not run, 5 awaiting verification).",
+        "The test is too small: 9 more expected errors are needed (at least 30 expected errors).",
+        "The test is too small: 2 more clean cases are needed (at least 10)."
+      ],
+      "borderline": []
+    },
+    "cases": {
+      "1": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "2": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "3": {
+        "status": "awaiting",
+        "expected": [],
+        "additional": [
+          {
+            "key": "claims[]#2",
+            "text": "The prince speaks about the rose he loves.",
+            "rules": [
+              "Contradicted or unsupported claim"
+            ],
+            "state": "undecided",
+            "source": "automatic"
+          }
+        ]
+      },
+      "4": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "5": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "6": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "7": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "8": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "9": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "10": {
+        "status": "awaiting",
+        "expected": [],
+        "additional": []
+      },
+      "11": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "12": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "13": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "14": {
+        "status": "awaiting",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "undecided",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "15": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "16": {
+        "status": "fail",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "missed",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "17": {
+        "status": "awaiting",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "undecided",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": [
+          {
+            "key": "claims[]#2",
+            "text": "Gandalf persuades Bilbo Baggins",
+            "rules": [
+              "Contradicted or unsupported claim"
+            ],
+            "state": "undecided",
+            "source": "automatic"
+          }
+        ]
+      },
+      "18": {
+        "status": "fail",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "missed",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "19": {
+        "status": "awaiting",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": [
+          {
+            "key": "claims[]#3",
+            "text": "Santiago fights a huge marlin for five nights.",
+            "rules": [
+              "Contradicted or unsupported claim"
+            ],
+            "state": "undecided",
+            "source": "automatic"
+          }
+        ]
+      },
+      "20": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      }
+    }
+  },
+  "after_deciding": {
+    "evaluated_per": "expected_error",
+    "counted_per_before_correction": null,
+    "provisional": false,
+    "undecided": 0,
+    "counters": {
+      "expected_total": 30,
+      "expected_found": 27,
+      "expected_missed": 3,
+      "additional_total": 3,
+      "real_errors": 1,
+      "false_positives": 2,
+      "findings_total": 30,
+      "subtle_total": 15,
+      "subtle_found": 12,
+      "subtle_missed": 3,
+      "ignored_expected": 0,
+      "ignored_additional": 0,
+      "cases_decided": 20,
+      "cases_awaiting": 0,
+      "cases_not_run": 0,
+      "clean_cases_decided": 10,
+      "cases_with_false_positive": 2,
+      "clean_cases_with_false_positive": 1,
+      "defective_cases_decided": 10,
+      "defective_cases_flagged": 10,
+      "per_category": {
+        "wrong-number": {
+          "expected_total": 12,
+          "expected_found": 11
+        },
+        "factual-error": {
+          "expected_total": 8,
+          "expected_found": 7
+        },
+        "misattribution": {
+          "expected_total": 4,
+          "expected_found": 4
+        },
+        "contradiction": {
+          "expected_total": 5,
+          "expected_found": 4
+        },
+        "unsupported-claim": {
+          "expected_total": 1,
+          "expected_found": 1
+        }
+      },
+      "per_difficulty": {
+        "obvious": {
+          "expected_total": 15,
+          "expected_found": 15
+        },
+        "subtle": {
+          "expected_total": 15,
+          "expected_found": 12
+        }
+      },
+      "per_rule": {
+        "Contradicted or unsupported claim": {
+          "real_errors": 1,
+          "false_positives": 2
+        }
+      },
+      "additional_per_category": {
+        "(no category)": {
+          "real": 1,
+          "fp": 2
+        }
+      },
+      "additional_per_difficulty": {
+        "(not set)": {
+          "real": 1,
+          "fp": 2
+        }
+      }
+    },
+    "measures": {
+      "detection_rate": {
+        "id": "detection_rate",
+        "name": "Detection rate",
+        "better": "higher",
+        "value": 0.9,
+        "numerator": 27,
+        "denominator": 30,
+        "interval": {
+          "lower": 0.7437891726682571,
+          "upper": 0.9654001115225814
+        }
+      },
+      "false_positive_rate": {
+        "id": "false_positive_rate",
+        "name": "False-positive rate",
+        "better": "lower",
+        "value": 0.06666666666666667,
+        "numerator": 2,
+        "denominator": 30,
+        "interval": {
+          "lower": 0.018477023624516822,
+          "upper": 0.21323458516874166
+        }
+      }
+    },
+    "overall": {
+      "result": "Works",
+      "reasons": [
+        "Detection rate is 90% (at least 80% required).",
+        "False-positive rate is 6.7% (at most 10% required)."
+      ],
+      "borderline": [
+        "Detection rate is borderline: its 95% interval 74.4% to 96.5% contains the threshold 80%.",
+        "False-positive rate is borderline: its 95% interval 1.8% to 21.3% contains the threshold 10%."
+      ]
+    },
+    "cases": {
+      "1": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "2": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "3": {
+        "status": "fail",
+        "expected": [],
+        "additional": [
+          {
+            "key": "claims[]#2",
+            "text": "The prince speaks about the rose he loves.",
+            "rules": [
+              "Contradicted or unsupported claim"
+            ],
+            "state": "false_positive",
+            "source": "llm-approved"
+          }
+        ]
+      },
+      "4": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "5": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "6": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "7": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "8": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "9": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "10": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "11": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "12": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "13": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "14": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "llm-approved"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "15": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "16": {
+        "status": "fail",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "missed",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "17": {
+        "status": "fail",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "missed",
+            "source": "llm-approved"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": [
+          {
+            "key": "claims[]#2",
+            "text": "Gandalf persuades Bilbo Baggins",
+            "rules": [
+              "Contradicted or unsupported claim"
+            ],
+            "state": "false_positive",
+            "source": "llm-approved"
+          }
+        ]
+      },
+      "18": {
+        "status": "fail",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "missed",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "19": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": [
+          {
+            "key": "claims[]#3",
+            "text": "Santiago fights a huge marlin for five nights.",
+            "rules": [
+              "Contradicted or unsupported claim"
+            ],
+            "state": "real_error",
+            "source": "llm-approved"
+          }
+        ]
+      },
+      "20": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      }
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "format": "judge-the-judge-metric",
+  "schema_version": 1,
+  "id": "accuracy",
+  "name": "Accuracy",
+  "description": "Checks that every claim in the summary is supported by the source.",
+  "limitations": "Measures only the kinds of errors injected into the test data.",
+  "output_format": "A JSON object with a list of claims, each with its text, a verdict (supported, contradicted or unsupported) and a reason.",
+  "judge_set": {
+    "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\n{{source_text}}\n\nSUMMARY:\n{{summary}}",
+    "judged_text": "summary",
+    "sample_reply": "{\"claims\":[{\"text\":\"The book was published in 1890.\",\"verdict\":\"contradicted\",\"reason\":\"The source says 1887.\"},{\"text\":\"The hero is a merchant.\",\"verdict\":\"supported\",\"reason\":\"Stated in the source.\"}]}",
+    "reply_mapping": { "finding_text": { "claims[]": "claims[].text" } },
+    "error_rules": [
+      {
+        "name": "Contradicted or unsupported claim",
+        "match": "any",
+        "conditions": [
+          { "field": "claims[].verdict", "comparison": "equals", "value": "contradicted" },
+          { "field": "claims[].verdict", "comparison": "equals", "value": "unsupported" }
+        ]
+      }
+    ],
+    "error_catalog": [
+      { "name": "factual-error", "description": "A statement that is simply untrue according to the source.", "example": "The hero is a doctor (the source says a merchant)." },
+      { "name": "contradiction", "description": "A statement that says the opposite of the source.", "example": "She accepts the proposal (the source says she refuses)." },
+      { "name": "wrong-number", "description": "A number, year or amount that does not match the source.", "example": "1890 instead of 1887." },
+      { "name": "unsupported-claim", "description": "A statement the source does not support at all.", "example": "He later moved to Paris (not mentioned)." },
+      { "name": "misattribution", "description": "A true statement given to the wrong person or place.", "example": "The brother, not the sister, leaves the town." }
+    ],
+    "clean_base_cases": [
+      {
+        "name": "Short story, clean",
+        "fields": {
+          "source_text": "Anna is a baker in a small town. She opens her shop at five every morning and sells bread to the neighbours. In 1998 she bought a second oven.",
+          "summary": "Anna, a baker in a small town, opens her shop at five each morning. In 1998 she bought a second oven."
+        },
+        "expected_errors": []
+      },
+      {
+        "name": "Travel note, clean",
+        "fields": {
+          "source_text": "Tom travelled from Warsaw to Gdansk by train. The journey took four hours and he read a novel on the way.",
+          "summary": "Tom took a four-hour train from Warsaw to Gdansk and read a novel."
+        },
+        "expected_errors": []
+      },
+      {
+        "name": "Lab report, clean",
+        "fields": {
+          "source_text": "The team tested twelve samples. Nine samples passed and three failed because of contamination.",
+          "summary": "Of twelve samples tested, nine passed and three failed because of contamination."
+        },
+        "expected_errors": []
+      }
+    ]
+  },
+  "parameters": {
+    "match_clear_share": { "default": 0.6, "description": "Share of the fragment's words a finding must contain to count as a clear match." },
+    "match_partial_share": { "default": 0.3, "description": "Share above which a finding counts as a partial match." },
+    "match_min_word_length": { "default": 4, "description": "Shorter words are ignored when comparing." }
+  },
+  "measures": [
+    { "id": "detection_rate", "name": "Detection rate", "description": "Injected errors the judge found.", "operation": "ratio", "numerator": "expected_found", "denominator": "expected_total", "interval": "wilson95", "better": "higher" },
+    { "id": "false_positive_rate", "name": "False-positive rate", "description": "Findings that are not errors, out of all findings.", "operation": "ratio", "numerator": "false_positives", "denominator": "findings_total", "interval": "wilson95", "better": "lower" }
+  ]
+}

@@ -31,6 +31,8 @@ export interface AppState {
   evaluationFile: string | null;
   /** True once a file was loaded or saved, so the indicator can say "All changes saved". */
   hasFile: boolean;
+  /** The case open in the case window of Run, if any. */
+  openCase: string | null;
 }
 
 export function emptyEvaluation(): Evaluation {
@@ -46,7 +48,7 @@ export function emptyEvaluation(): Evaluation {
 }
 
 export function createState(): AppState {
-  return { step: 'judge', evaluation: emptyEvaluation(), unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: null, hasFile: false };
+  return { step: 'judge', evaluation: emptyEvaluation(), unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: null, hasFile: false, openCase: null };
 }
 
 export function goToStep(state: AppState, step: StepId): AppState {
@@ -77,6 +79,9 @@ export function recordReplySaved(state: AppState): AppState {
   return { ...state, unsaved: true, repliesSinceSave: state.repliesSinceSave + 1 };
 }
 
+/** Writes the file text for the state; may be asynchronous because content versions are. */
+export type Serializer = (state: AppState) => string | Promise<string>;
+
 export interface ActionResult {
   state: AppState;
   outcome: SaveResult['status'];
@@ -90,8 +95,8 @@ async function write(target: SaveTarget, text: string, saveAs: boolean): Promise
   return saveAs ? target.saveAs(text) : target.save(text);
 }
 
-async function saveEvaluationWith(state: AppState, ports: Ports, serialize: (s: AppState) => string, saveAs: boolean): Promise<ActionResult> {
-  const result = await write(ports.evaluationTarget, serialize(state), saveAs);
+async function saveEvaluationWith(state: AppState, ports: Ports, serialize: Serializer, saveAs: boolean): Promise<ActionResult> {
+  const result = await write(ports.evaluationTarget, await serialize(state), saveAs);
   if (result.status === 'saved') {
     return { state: { ...state, unsaved: false, repliesSinceSave: 0, evaluationFile: result.fileName, hasFile: true }, outcome: 'saved' };
   }
@@ -101,16 +106,16 @@ async function saveEvaluationWith(state: AppState, ports: Ports, serialize: (s: 
   return { state, outcome: result.status };
 }
 
-export function saveEvaluation(state: AppState, ports: Ports, serialize: (s: AppState) => string): Promise<ActionResult> {
+export function saveEvaluation(state: AppState, ports: Ports, serialize: Serializer): Promise<ActionResult> {
   return saveEvaluationWith(state, ports, serialize, false);
 }
 
-export function saveEvaluationAs(state: AppState, ports: Ports, serialize: (s: AppState) => string): Promise<ActionResult> {
+export function saveEvaluationAs(state: AppState, ports: Ports, serialize: Serializer): Promise<ActionResult> {
   return saveEvaluationWith(state, ports, serialize, true);
 }
 
-async function saveTestProjectWith(state: AppState, ports: Ports, serialize: (s: AppState) => string, saveAs: boolean): Promise<ActionResult> {
-  const result = await write(ports.testProjectTarget, serialize(state), saveAs);
+async function saveTestProjectWith(state: AppState, ports: Ports, serialize: Serializer, saveAs: boolean): Promise<ActionResult> {
+  const result = await write(ports.testProjectTarget, await serialize(state), saveAs);
   if (result.status === 'saved') {
     const hasReplies = Object.keys(state.evaluation.replies).length > 0;
     // Only while no reply exists does the test project hold all the work (FR-051).
@@ -125,11 +130,11 @@ async function saveTestProjectWith(state: AppState, ports: Ports, serialize: (s:
   return { state, outcome: result.status };
 }
 
-export function saveTestProject(state: AppState, ports: Ports, serialize: (s: AppState) => string): Promise<ActionResult> {
+export function saveTestProject(state: AppState, ports: Ports, serialize: Serializer): Promise<ActionResult> {
   return saveTestProjectWith(state, ports, serialize, false);
 }
 
-export function saveTestProjectAs(state: AppState, ports: Ports, serialize: (s: AppState) => string): Promise<ActionResult> {
+export function saveTestProjectAs(state: AppState, ports: Ports, serialize: Serializer): Promise<ActionResult> {
   return saveTestProjectWith(state, ports, serialize, true);
 }
 

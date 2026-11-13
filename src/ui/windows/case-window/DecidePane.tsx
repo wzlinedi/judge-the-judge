@@ -1,0 +1,115 @@
+import type { Effective, EffectiveAdditional, EffectiveExpected } from '../../../core/evaluation/decisions';
+import type { ReviewedCase } from '../../../core/evaluation/results';
+import type { AdditionalState, ExpectedState, TestCase } from '../../../core/model';
+import { SOURCE_LABELS } from '../../components/sources';
+import { StatusMark } from '../../components/StatusMark';
+import { labels } from '../../labels';
+
+const EXPECTED_MARKS: ReadonlyArray<{ state: ExpectedState; label: string }> = [
+  { state: 'found', label: labels.found },
+  { state: 'missed', label: labels.issueMissed },
+  { state: 'ignored', label: labels.ignore },
+];
+const ADDITIONAL_MARKS: ReadonlyArray<{ state: AdditionalState; label: string }> = [
+  { state: 'false_positive', label: labels.issueFalsePositive },
+  { state: 'real_error', label: labels.realError },
+  { state: 'ignored', label: labels.ignore },
+];
+
+export interface DecidePaneProps {
+  reviewed: ReviewedCase;
+  effective: Effective;
+  reply: string;
+  onExpected: (expectedId: string, state: ExpectedState) => void;
+  onAdditional: (item: EffectiveAdditional, state: AdditionalState) => void;
+  onApprove: () => void;
+  onShowInText: (expectedId: string) => void;
+}
+
+function ExpectedItem({ error, index, testCase, onMark, onShow }: { error: EffectiveExpected; index: number; testCase: TestCase; onMark: (s: ExpectedState) => void; onShow: () => void }) {
+  const meta = testCase.expected_errors.find((e) => e.id === error.id);
+  const name = `E${index + 1}`;
+  return (
+    <li data-expected={error.id} class="decide-item">
+      <div class="item-head">
+        <strong>{name}</strong> <span>{meta?.description}</span>
+        <button type="button" class="link-button" onClick={onShow}>
+          {labels.showInText}
+        </button>
+      </div>
+      {meta?.fragment ? <p class="muted item-fragment">{`Fragment: “${meta.fragment}”`}</p> : null}
+      <div role="group" aria-label={`Mark for ${name}`} class="marks">
+        {EXPECTED_MARKS.map((m) => (
+          <button key={m.state} type="button" aria-pressed={error.state === m.state} class={error.state === m.state ? 'pressed' : ''} onClick={() => onMark(m.state)}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+      {error.state === 'undecided' ? <p class="reason">{error.reason ?? 'Decide this by hand.'}</p> : <p class="source muted">{SOURCE_LABELS[error.source]}</p>}
+    </li>
+  );
+}
+
+function AdditionalItem({ item, onMark }: { item: EffectiveAdditional; onMark: (s: AdditionalState) => void }) {
+  return (
+    <li data-additional={item.key} class="decide-item">
+      <div class="item-head">
+        <span>{item.text === '' ? 'A finding about the whole reply' : item.text}</span>
+      </div>
+      {item.rules.length > 0 ? <p class="muted">{`Rule: ${item.rules.join(', ')}`}</p> : null}
+      {item.category || item.difficulty ? <p class="muted">{[item.category, item.difficulty].filter(Boolean).join(' · ')}</p> : null}
+      <div role="group" aria-label={`Mark for ${item.text || item.key}`} class="marks">
+        {ADDITIONAL_MARKS.map((m) => (
+          <button key={m.state} type="button" aria-pressed={item.state === m.state} class={item.state === m.state ? 'pressed' : ''} onClick={() => onMark(m.state)}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+      {item.state === 'undecided' ? <p class="reason">This finding matches no expected error. Is it a false positive or a real error?</p> : <p class="source muted">{SOURCE_LABELS[item.source]}</p>}
+    </li>
+  );
+}
+
+export function DecidePane({ reviewed, effective, reply, onExpected, onAdditional, onApprove, onShowInText }: DecidePaneProps) {
+  const unreadable = reviewed.review !== null && !reviewed.review.readable;
+  const awaiting = reviewed.status === 'awaiting';
+  return (
+    <div class="decide-pane">
+      <h3>Judge’s reply</h3>
+      <label class="field-label" for="judge-reply">
+        Judge reply
+      </label>
+      <textarea id="judge-reply" class="json" rows={8} value={reply} readOnly aria-label="Judge reply" />
+      {unreadable ? <p class="error-note">{reviewed.review?.reason}</p> : null}
+
+      <div class="status-row">
+        <StatusMark status={reviewed.status} />
+        <button type="button" class={awaiting ? 'primary' : ''} onClick={onApprove}>
+          {labels.approve}
+        </button>
+      </div>
+
+      {effective.expected.length > 0 ? (
+        <>
+          <h4>Expected errors</h4>
+          <ul class="decide-list" aria-label="Expected errors">
+            {effective.expected.map((e, i) => (
+              <ExpectedItem key={e.id} error={e} index={i} testCase={reviewed.testCase} onMark={(s) => onExpected(e.id, s)} onShow={() => onShowInText(e.id)} />
+            ))}
+          </ul>
+        </>
+      ) : null}
+
+      {effective.additional.length > 0 ? (
+        <>
+          <h4>Additional findings</h4>
+          <ul class="decide-list" aria-label="Additional findings">
+            {effective.additional.map((a) => (
+              <AdditionalItem key={a.key} item={a} onMark={(s) => onAdditional(a, s)} />
+            ))}
+          </ul>
+        </>
+      ) : null}
+    </div>
+  );
+}

@@ -8,10 +8,12 @@ export interface LoadExampleWindowProps {
   onChoose: (example: ExampleId) => void;
   onLoadMetric: () => void;
   onClose: () => void;
+  /** The choices that work in this version; the others are shown but disabled. */
+  enabled?: ReadonlyArray<ExampleId | 'metric'>;
 }
 
 /** The ready examples (FR-019, FR-026): two metrics that start a new test project, and the demo run. */
-export function LoadExampleWindow({ open, onChoose, onLoadMetric, onClose }: LoadExampleWindowProps) {
+export function LoadExampleWindow({ open, onChoose, onLoadMetric, onClose, enabled = ['accuracy', 'completeness', 'demo', 'metric'] }: LoadExampleWindowProps) {
   return (
     <Dialog
       open={open}
@@ -25,25 +27,25 @@ export function LoadExampleWindow({ open, onChoose, onLoadMetric, onClose }: Loa
     >
       <ul class="example-list">
         <li>
-          <button type="button" onClick={() => onChoose('accuracy')}>
+          <button type="button" disabled={!enabled.includes('accuracy')} onClick={() => onChoose('accuracy')}>
             Accuracy
           </button>
           <span class="muted"> Does the judge find the errors in a text?</span>
         </li>
         <li>
-          <button type="button" onClick={() => onChoose('completeness')}>
+          <button type="button" disabled={!enabled.includes('completeness')} onClick={() => onChoose('completeness')}>
             Completeness
           </button>
           <span class="muted"> Does the judge find what is missing?</span>
         </li>
         <li>
-          <button type="button" onClick={() => onChoose('demo')}>
+          <button type="button" disabled={!enabled.includes('demo')} onClick={() => onChoose('demo')}>
             Demo: book summaries
           </button>
           <span class="muted"> A finished run, to see what the results look like.</span>
         </li>
         <li>
-          <button type="button" onClick={onLoadMetric}>
+          <button type="button" disabled={!enabled.includes('metric')} onClick={onLoadMetric}>
             {labels.loadMetricDefinition}
           </button>
         </li>

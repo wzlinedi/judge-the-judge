@@ -1,0 +1,983 @@
+{
+  "format": "judge-the-judge-evaluation",
+  "schema_version": 1,
+  "tool_version": "1.0.0",
+  "saved": "2026-11-13T10:00:00Z",
+  "judge_set": {
+    "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\n{{source_text}}\n\nSUMMARY:\n{{summary}}",
+    "reply_mapping": {
+      "finding_text": {
+        "claims[]": "claims[].text"
+      }
+    },
+    "error_rules": [
+      {
+        "name": "Contradicted or unsupported claim",
+        "match": "any",
+        "conditions": [
+          {
+            "field": "claims[].verdict",
+            "comparison": "equals",
+            "value": "contradicted"
+          },
+          {
+            "field": "claims[].verdict",
+            "comparison": "equals",
+            "value": "unsupported"
+          }
+        ]
+      }
+    ],
+    "error_catalog": [
+      {
+        "name": "factual-error",
+        "description": "A statement that is simply untrue according to the source.",
+        "example": "The hero is a doctor (the source says a merchant)."
+      },
+      {
+        "name": "contradiction",
+        "description": "A statement that says the opposite of the source.",
+        "example": "She accepts the proposal (the source says she refuses)."
+      },
+      {
+        "name": "wrong-number",
+        "description": "A number, year or amount that does not match the source.",
+        "example": "1890 instead of 1887."
+      },
+      {
+        "name": "unsupported-claim",
+        "description": "A statement the source does not support at all.",
+        "example": "He later moved to Paris (not mentioned)."
+      },
+      {
+        "name": "misattribution",
+        "description": "A true statement given to the wrong person or place.",
+        "example": "The brother, not the sister, leaves the town."
+      }
+    ],
+    "judged_text": "summary",
+    "sample_reply": "{\"claims\":[{\"text\":\"The book was published in 1890.\",\"verdict\":\"contradicted\",\"reason\":\"The source says 1887.\"},{\"text\":\"The hero is a merchant.\",\"verdict\":\"supported\",\"reason\":\"Stated in the source.\"}]}"
+  },
+  "judge_version": "afa4c94191a8",
+  "reply_judge_version": "afa4c94191a8",
+  "rules_corrected_after_replies": false,
+  "model_note": "Demo run: replies were prepared with a script, not by a real model.",
+  "metric": {
+    "id": "accuracy",
+    "parameters": {
+      "match_clear_share": 0.6,
+      "match_partial_share": 0.3,
+      "match_min_word_length": 4
+    }
+  },
+  "dataset": {
+    "name": "Book summaries, set A",
+    "version": "7f54ff5ff473",
+    "finalized": true,
+    "cases": [
+      {
+        "id": "1",
+        "name": "Pride and Prejudice",
+        "fields": {
+          "source_text": "Pride and Prejudice was published in 1813 by Jane Austen. Elizabeth Bennet, the second of five sisters, refuses a proposal from the clergyman Mr Collins. She misjudges the wealthy Mr Darcy at first and later comes to love him. The novel ends with her marriage to Darcy and the marriage of her sister Jane to Mr Bingley.",
+          "summary": "Jane Austen published Pride and Prejudice in 1813. Elizabeth Bennet, the second of five sisters, refuses Mr Collins. She misjudges Mr Darcy at first but later marries him, and her sister Jane marries Mr Bingley."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "2",
+        "name": "Moby-Dick",
+        "fields": {
+          "source_text": "Moby-Dick was written by Herman Melville and published in 1851. The narrator Ishmael joins the whaling ship Pequod. Captain Ahab, who lost his leg to a white whale, is obsessed with revenge. In the end the whale destroys the ship and only Ishmael survives.",
+          "summary": "Herman Melville published Moby-Dick in 1851. Ishmael joins the Pequod, whose Captain Ahab wants revenge on the whale that took his leg. In the end the ship is destroyed and only Ishmael survives."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "3",
+        "name": "The Little Prince",
+        "fields": {
+          "source_text": "The Little Prince was written by Antoine de Saint-Exupery in 1943. A pilot crashes in the Sahara desert and meets a small prince from a tiny planet. The prince tells him about a vain rose he loves and about the fox who teaches him that one sees clearly only with the heart.",
+          "summary": "In The Little Prince, written by Antoine de Saint-Exupery in 1943, a pilot crashes in the Sahara and meets a prince from a tiny planet. The prince speaks about the rose he loves. The fox teaches him that one sees clearly only with the heart."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "4",
+        "name": "Frankenstein",
+        "fields": {
+          "source_text": "Frankenstein was written by Mary Shelley and first published in 1818. The scientist Victor Frankenstein builds a living creature from parts of dead bodies. Horrified, he abandons the creature, which then seeks revenge on his family. The story is told through letters of a ship captain named Walton.",
+          "summary": "Mary Shelley first published Frankenstein in 1818. The scientist Victor Frankenstein builds a creature and abandons it in horror, and the creature then seeks revenge on his family. The tale reaches the reader through the letters of Captain Walton."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "5",
+        "name": "Robinson Crusoe",
+        "fields": {
+          "source_text": "Robinson Crusoe was written by Daniel Defoe and published in 1719. After a shipwreck the sailor Crusoe lives alone on a tropical island for many years. He meets a man whom he names Friday after saving him from cannibals. Crusoe finally returns to England after twenty-eight years.",
+          "summary": "Daniel Defoe published Robinson Crusoe in 1719. After a shipwreck Crusoe lives alone on an island and later saves a man whom he names Friday. He returns to England after twenty-eight years."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "6",
+        "name": "Dracula",
+        "fields": {
+          "source_text": "Dracula was written by Bram Stoker and published in 1897. The solicitor Jonathan Harker travels to Transylvania to meet Count Dracula. The Count then moves to England and threatens Harker's wife Mina. Professor Van Helsing and his friends hunt the vampire and destroy him.",
+          "summary": "Bram Stoker published Dracula in 1897. Jonathan Harker travels to Transylvania to meet the Count, who then moves to England and threatens Mina. Professor Van Helsing and his friends destroy the vampire."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "7",
+        "name": "The Hobbit",
+        "fields": {
+          "source_text": "The Hobbit was written by J. R. R. Tolkien and published in 1937. The hobbit Bilbo Baggins is persuaded by the wizard Gandalf to join thirteen dwarves. Together they travel to the Lonely Mountain to win back treasure guarded by the dragon Smaug. On the way Bilbo finds a magic ring.",
+          "summary": "J. R. R. Tolkien published The Hobbit in 1937. Gandalf persuades Bilbo Baggins to join thirteen dwarves who want to win back the treasure guarded by the dragon Smaug. On the way Bilbo finds a magic ring."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "8",
+        "name": "Animal Farm",
+        "fields": {
+          "source_text": "Animal Farm was written by George Orwell and published in 1945. The animals of Manor Farm drive out the farmer Mr Jones and run the farm themselves. The pigs, led by Napoleon, gradually take all power. At the end the animals cannot tell the pigs from the humans.",
+          "summary": "George Orwell published Animal Farm in 1945. The animals drive out Mr Jones, but the pigs led by Napoleon gradually take all power. In the end the animals cannot tell the pigs from the humans."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "9",
+        "name": "The Old Man and the Sea",
+        "fields": {
+          "source_text": "The Old Man and the Sea was written by Ernest Hemingway and published in 1952. The old fisherman Santiago has caught no fish for eighty-four days. He finally hooks a huge marlin and fights it for three days. Sharks eat the fish on the way home and only the skeleton is left.",
+          "summary": "Ernest Hemingway published The Old Man and the Sea in 1952. Santiago, who has caught nothing for eighty-four days, fights a huge marlin for three days. Sharks eat the fish on the way home and only the skeleton is left."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "10",
+        "name": "Alice in Wonderland",
+        "fields": {
+          "source_text": "Alice's Adventures in Wonderland was written by Lewis Carroll and published in 1865. Alice follows a white rabbit down a hole and falls into a strange world. She meets the Mad Hatter, the Cheshire Cat and the Queen of Hearts. At the end she wakes up and finds that it was only a dream.",
+          "summary": "Lewis Carroll published Alice's Adventures in Wonderland in 1865. Alice follows a white rabbit into a strange world and meets the Mad Hatter and the Queen of Hearts. At the end she wakes up and finds that it was a dream."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "11",
+        "name": "Pride and Prejudice + 3 errors",
+        "base": "1",
+        "fields": {
+          "source_text": "Pride and Prejudice was published in 1813 by Jane Austen. Elizabeth Bennet, the second of five sisters, refuses a proposal from the clergyman Mr Collins. She misjudges the wealthy Mr Darcy at first and later comes to love him. The novel ends with her marriage to Darcy and the marriage of her sister Jane to Mr Bingley.",
+          "summary": "Jane Austen published Pride and Prejudice in 1831. Elizabeth Bennet, the eldest of five sisters, refuses Mr Collins. She misjudges Mr Darcy at first but later marries him, and her sister Jane marries Mr Collins."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "wrong-number",
+            "fragment": "Pride and Prejudice in 1831",
+            "description": "The source says 1813.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e2",
+            "category": "factual-error",
+            "fragment": "the eldest of five sisters",
+            "description": "Elizabeth is the second sister, not the eldest.",
+            "difficulty": "subtle"
+          },
+          {
+            "id": "e3",
+            "category": "misattribution",
+            "fragment": "her sister Jane marries Mr Collins",
+            "description": "Jane marries Mr Bingley; Mr Collins was refused by Elizabeth.",
+            "difficulty": "subtle"
+          }
+        ]
+      },
+      {
+        "id": "12",
+        "name": "Moby-Dick + 3 errors",
+        "base": "2",
+        "fields": {
+          "source_text": "Moby-Dick was written by Herman Melville and published in 1851. The narrator Ishmael joins the whaling ship Pequod. Captain Ahab, who lost his leg to a white whale, is obsessed with revenge. In the end the whale destroys the ship and only Ishmael survives.",
+          "summary": "Herman Melville published Moby-Dick in 1815. Ishmael joins the Pequod, whose Captain Ahab wants revenge on the whale that took his arm. In the end the ship is destroyed and only Ahab survives."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "wrong-number",
+            "fragment": "Moby-Dick in 1815",
+            "description": "The source says 1851.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e2",
+            "category": "factual-error",
+            "fragment": "the whale that took his arm",
+            "description": "Ahab lost his leg, not his arm.",
+            "difficulty": "subtle"
+          },
+          {
+            "id": "e3",
+            "category": "contradiction",
+            "fragment": "only Ahab survives",
+            "description": "Only Ishmael survives, while Ahab dies.",
+            "difficulty": "obvious"
+          }
+        ]
+      },
+      {
+        "id": "13",
+        "name": "The Little Prince + 3 errors",
+        "base": "3",
+        "fields": {
+          "source_text": "The Little Prince was written by Antoine de Saint-Exupery in 1943. A pilot crashes in the Sahara desert and meets a small prince from a tiny planet. The prince tells him about a vain rose he loves and about the fox who teaches him that one sees clearly only with the heart.",
+          "summary": "In The Little Prince, written by Antoine de Saint-Exupery in 1934, a pilot crashes in the Sahara and meets a prince from a tiny planet. The prince speaks about the rose he hates. The rose teaches him that one sees clearly only with the heart."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "wrong-number",
+            "fragment": "Saint-Exupery in 1934",
+            "description": "The source says 1943.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e2",
+            "category": "contradiction",
+            "fragment": "the rose he hates",
+            "description": "The prince loves the rose.",
+            "difficulty": "subtle"
+          },
+          {
+            "id": "e3",
+            "category": "misattribution",
+            "fragment": "The rose teaches him",
+            "description": "It is the fox, not the rose, who teaches the lesson.",
+            "difficulty": "subtle"
+          }
+        ]
+      },
+      {
+        "id": "14",
+        "name": "Frankenstein + 3 errors",
+        "base": "4",
+        "fields": {
+          "source_text": "Frankenstein was written by Mary Shelley and first published in 1818. The scientist Victor Frankenstein builds a living creature from parts of dead bodies. Horrified, he abandons the creature, which then seeks revenge on his family. The story is told through letters of a ship captain named Walton.",
+          "summary": "Mary Shelley first published Frankenstein in 1881. The scientist Victor Frankenstein finds a creature and abandons it in horror, and the creature then seeks revenge on his family. The tale reaches the reader through the diary of Captain Walton."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "wrong-number",
+            "fragment": "Frankenstein in 1881",
+            "description": "The source says 1818.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e2",
+            "category": "contradiction",
+            "fragment": "Victor Frankenstein finds a creature",
+            "description": "Victor builds the creature; he does not find it.",
+            "difficulty": "subtle"
+          },
+          {
+            "id": "e3",
+            "category": "factual-error",
+            "fragment": "the diary of Captain Walton",
+            "description": "The story is told through letters, not a diary.",
+            "difficulty": "subtle"
+          }
+        ]
+      },
+      {
+        "id": "15",
+        "name": "Robinson Crusoe + 3 errors",
+        "base": "5",
+        "fields": {
+          "source_text": "Robinson Crusoe was written by Daniel Defoe and published in 1719. After a shipwreck the sailor Crusoe lives alone on a tropical island for many years. He meets a man whom he names Friday after saving him from cannibals. Crusoe finally returns to England after twenty-eight years.",
+          "summary": "Daniel Defoe published Robinson Crusoe in 1791. After a shipwreck Crusoe lives on an island with his brother and later saves a man whom he names Friday. He returns to England after twenty-eight months."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "wrong-number",
+            "fragment": "Robinson Crusoe in 1791",
+            "description": "The source says 1719.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e2",
+            "category": "unsupported-claim",
+            "fragment": "lives on an island with his brother",
+            "description": "Crusoe lives alone; a brother is never mentioned.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e3",
+            "category": "factual-error",
+            "fragment": "after twenty-eight months",
+            "description": "The source says twenty-eight years.",
+            "difficulty": "subtle"
+          }
+        ]
+      },
+      {
+        "id": "16",
+        "name": "Dracula + 3 errors",
+        "base": "6",
+        "fields": {
+          "source_text": "Dracula was written by Bram Stoker and published in 1897. The solicitor Jonathan Harker travels to Transylvania to meet Count Dracula. The Count then moves to England and threatens Harker's wife Mina. Professor Van Helsing and his friends hunt the vampire and destroy him.",
+          "summary": "Bram Stoker published Dracula in 1879. Jonathan Harker travels to Romania to meet the Count, who then moves to England and threatens Mina. Doctor Seward and his friends destroy the vampire."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "wrong-number",
+            "fragment": "Dracula in 1879",
+            "description": "The source says 1897.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e2",
+            "category": "factual-error",
+            "fragment": "travels to Romania",
+            "description": "The source says Transylvania.",
+            "difficulty": "subtle"
+          },
+          {
+            "id": "e3",
+            "category": "misattribution",
+            "fragment": "Doctor Seward and his friends destroy the vampire",
+            "description": "It is Professor Van Helsing who leads the hunt.",
+            "difficulty": "subtle"
+          }
+        ]
+      },
+      {
+        "id": "17",
+        "name": "The Hobbit + 3 errors",
+        "base": "7",
+        "fields": {
+          "source_text": "The Hobbit was written by J. R. R. Tolkien and published in 1937. The hobbit Bilbo Baggins is persuaded by the wizard Gandalf to join thirteen dwarves. Together they travel to the Lonely Mountain to win back treasure guarded by the dragon Smaug. On the way Bilbo finds a magic ring.",
+          "summary": "J. R. R. Tolkien published The Hobbit in 1973. Gandalf persuades Bilbo Baggins to join twelve dwarves who want to win back the treasure guarded by the dragon Smaug. On the way Bilbo finds a magic sword."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "wrong-number",
+            "fragment": "The Hobbit in 1973",
+            "description": "The source says 1937.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e2",
+            "category": "wrong-number",
+            "fragment": "join twelve dwarves",
+            "description": "The source says thirteen dwarves.",
+            "difficulty": "subtle"
+          },
+          {
+            "id": "e3",
+            "category": "factual-error",
+            "fragment": "Bilbo finds a magic sword",
+            "description": "Bilbo finds a magic ring.",
+            "difficulty": "obvious"
+          }
+        ]
+      },
+      {
+        "id": "18",
+        "name": "Animal Farm + 3 errors",
+        "base": "8",
+        "fields": {
+          "source_text": "Animal Farm was written by George Orwell and published in 1945. The animals of Manor Farm drive out the farmer Mr Jones and run the farm themselves. The pigs, led by Napoleon, gradually take all power. At the end the animals cannot tell the pigs from the humans.",
+          "summary": "George Orwell published Animal Farm in 1954. The animals drive out Mr Jones, but the pigs led by Snowball gradually take all power. In the end the animals can easily tell the pigs from the humans."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "wrong-number",
+            "fragment": "Animal Farm in 1954",
+            "description": "The source says 1945.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e2",
+            "category": "misattribution",
+            "fragment": "the pigs led by Snowball",
+            "description": "The pigs are led by Napoleon.",
+            "difficulty": "subtle"
+          },
+          {
+            "id": "e3",
+            "category": "contradiction",
+            "fragment": "can easily tell the pigs from the humans",
+            "description": "The animals can no longer tell the pigs from the humans.",
+            "difficulty": "subtle"
+          }
+        ]
+      },
+      {
+        "id": "19",
+        "name": "The Old Man and the Sea + 3 errors",
+        "base": "9",
+        "fields": {
+          "source_text": "The Old Man and the Sea was written by Ernest Hemingway and published in 1952. The old fisherman Santiago has caught no fish for eighty-four days. He finally hooks a huge marlin and fights it for three days. Sharks eat the fish on the way home and only the skeleton is left.",
+          "summary": "Ernest Hemingway published The Old Man and the Sea in 1925. Santiago, who has caught nothing for forty-eight days, fights a huge marlin for five nights. Birds eat the fish on the way home and only the skeleton is left."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "wrong-number",
+            "fragment": "Sea in 1925",
+            "description": "The source says 1952.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e2",
+            "category": "wrong-number",
+            "fragment": "forty-eight days",
+            "description": "The source says eighty-four days.",
+            "difficulty": "subtle"
+          },
+          {
+            "id": "e3",
+            "category": "factual-error",
+            "fragment": "Birds eat the fish",
+            "description": "It is sharks that eat the fish.",
+            "difficulty": "obvious"
+          }
+        ]
+      },
+      {
+        "id": "20",
+        "name": "Alice in Wonderland + 3 errors",
+        "base": "10",
+        "fields": {
+          "source_text": "Alice's Adventures in Wonderland was written by Lewis Carroll and published in 1865. Alice follows a white rabbit down a hole and falls into a strange world. She meets the Mad Hatter, the Cheshire Cat and the Queen of Hearts. At the end she wakes up and finds that it was only a dream.",
+          "summary": "Lewis Carroll published Alice's Adventures in Wonderland in 1856. Alice follows a black cat into a strange world and meets the Mad Hatter and the Queen of Hearts. At the end she stays in Wonderland forever."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "wrong-number",
+            "fragment": "Wonderland in 1856",
+            "description": "The source says 1865.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e2",
+            "category": "factual-error",
+            "fragment": "follows a black cat",
+            "description": "Alice follows a white rabbit.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e3",
+            "category": "contradiction",
+            "fragment": "she stays in Wonderland forever",
+            "description": "At the end she wakes up; it was only a dream.",
+            "difficulty": "subtle"
+          }
+        ]
+      }
+    ]
+  },
+  "replies": {
+    "1": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nPride and Prejudice was published in 1813 by Jane Austen. Elizabeth Bennet, the second of five sisters, refuses a proposal from the clergyman Mr Collins. She misjudges the wealthy Mr Darcy at first and later comes to love him. The novel ends with her marriage to Darcy and the marriage of her sister Jane to Mr Bingley.\n\nSUMMARY:\nJane Austen published Pride and Prejudice in 1813. Elizabeth Bennet, the second of five sisters, refuses Mr Collins. She misjudges Mr Darcy at first but later marries him, and her sister Jane marries Mr Bingley.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Jane Austen published Pride and Prejudice in 1813.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"Elizabeth Bennet, the second of five sisters, refuses Mr Collins.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"She misjudges Mr Darcy at first but later marries him, and her sister Jane marries Mr Bingley.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    }\n  ]\n}"
+    },
+    "2": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nMoby-Dick was written by Herman Melville and published in 1851. The narrator Ishmael joins the whaling ship Pequod. Captain Ahab, who lost his leg to a white whale, is obsessed with revenge. In the end the whale destroys the ship and only Ishmael survives.\n\nSUMMARY:\nHerman Melville published Moby-Dick in 1851. Ishmael joins the Pequod, whose Captain Ahab wants revenge on the whale that took his leg. In the end the ship is destroyed and only Ishmael survives.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Herman Melville published Moby-Dick in 1851.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"Ishmael joins the Pequod, whose Captain Ahab wants revenge on the whale that took his leg.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"In the end the ship is destroyed and only Ishmael survives.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    }\n  ]\n}"
+    },
+    "3": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nThe Little Prince was written by Antoine de Saint-Exupery in 1943. A pilot crashes in the Sahara desert and meets a small prince from a tiny planet. The prince tells him about a vain rose he loves and about the fox who teaches him that one sees clearly only with the heart.\n\nSUMMARY:\nIn The Little Prince, written by Antoine de Saint-Exupery in 1943, a pilot crashes in the Sahara and meets a prince from a tiny planet. The prince speaks about the rose he loves. The fox teaches him that one sees clearly only with the heart.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"In The Little Prince, written by Antoine de Saint-Exupery in 1943, a pilot crashes in the Sahara and meets a prince from a tiny planet.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"The prince speaks about the rose he loves.\",\n      \"verdict\": \"unsupported\",\n      \"reason\": \"The source does not say this.\"\n    },\n    {\n      \"text\": \"The fox teaches him that one sees clearly only with the heart.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    }\n  ]\n}"
+    },
+    "4": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nFrankenstein was written by Mary Shelley and first published in 1818. The scientist Victor Frankenstein builds a living creature from parts of dead bodies. Horrified, he abandons the creature, which then seeks revenge on his family. The story is told through letters of a ship captain named Walton.\n\nSUMMARY:\nMary Shelley first published Frankenstein in 1818. The scientist Victor Frankenstein builds a creature and abandons it in horror, and the creature then seeks revenge on his family. The tale reaches the reader through the letters of Captain Walton.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Mary Shelley first published Frankenstein in 1818.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"The scientist Victor Frankenstein builds a creature and abandons it in horror, and the creature then seeks revenge on his family.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"The tale reaches the reader through the letters of Captain Walton.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    }\n  ]\n}"
+    },
+    "5": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nRobinson Crusoe was written by Daniel Defoe and published in 1719. After a shipwreck the sailor Crusoe lives alone on a tropical island for many years. He meets a man whom he names Friday after saving him from cannibals. Crusoe finally returns to England after twenty-eight years.\n\nSUMMARY:\nDaniel Defoe published Robinson Crusoe in 1719. After a shipwreck Crusoe lives alone on an island and later saves a man whom he names Friday. He returns to England after twenty-eight years.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Daniel Defoe published Robinson Crusoe in 1719.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"After a shipwreck Crusoe lives alone on an island and later saves a man whom he names Friday.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"He returns to England after twenty-eight years.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    }\n  ]\n}"
+    },
+    "6": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nDracula was written by Bram Stoker and published in 1897. The solicitor Jonathan Harker travels to Transylvania to meet Count Dracula. The Count then moves to England and threatens Harker's wife Mina. Professor Van Helsing and his friends hunt the vampire and destroy him.\n\nSUMMARY:\nBram Stoker published Dracula in 1897. Jonathan Harker travels to Transylvania to meet the Count, who then moves to England and threatens Mina. Professor Van Helsing and his friends destroy the vampire.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Bram Stoker published Dracula in 1897.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"Jonathan Harker travels to Transylvania to meet the Count, who then moves to England and threatens Mina.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"Professor Van Helsing and his friends destroy the vampire.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    }\n  ]\n}"
+    },
+    "7": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nThe Hobbit was written by J. R. R. Tolkien and published in 1937. The hobbit Bilbo Baggins is persuaded by the wizard Gandalf to join thirteen dwarves. Together they travel to the Lonely Mountain to win back treasure guarded by the dragon Smaug. On the way Bilbo finds a magic ring.\n\nSUMMARY:\nJ. R. R. Tolkien published The Hobbit in 1937. Gandalf persuades Bilbo Baggins to join thirteen dwarves who want to win back the treasure guarded by the dragon Smaug. On the way Bilbo finds a magic ring.",
+      "reply": "Here is my analysis of the summary:\n\n```json\n{\n  \"claims\": [\n    {\n      \"text\": \"J. R. R. Tolkien published The Hobbit in 1937.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"Gandalf persuades Bilbo Baggins to join thirteen dwarves who want to win back the treasure guarded by the dragon Smaug.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"On the way Bilbo finds a magic ring.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    }\n  ]\n}\n```\n\nI hope this helps."
+    },
+    "8": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nAnimal Farm was written by George Orwell and published in 1945. The animals of Manor Farm drive out the farmer Mr Jones and run the farm themselves. The pigs, led by Napoleon, gradually take all power. At the end the animals cannot tell the pigs from the humans.\n\nSUMMARY:\nGeorge Orwell published Animal Farm in 1945. The animals drive out Mr Jones, but the pigs led by Napoleon gradually take all power. In the end the animals cannot tell the pigs from the humans.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"George Orwell published Animal Farm in 1945.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"The animals drive out Mr Jones, but the pigs led by Napoleon gradually take all power.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"In the end the animals cannot tell the pigs from the humans.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    }\n  ]\n}"
+    },
+    "9": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nThe Old Man and the Sea was written by Ernest Hemingway and published in 1952. The old fisherman Santiago has caught no fish for eighty-four days. He finally hooks a huge marlin and fights it for three days. Sharks eat the fish on the way home and only the skeleton is left.\n\nSUMMARY:\nErnest Hemingway published The Old Man and the Sea in 1952. Santiago, who has caught nothing for eighty-four days, fights a huge marlin for three days. Sharks eat the fish on the way home and only the skeleton is left.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Ernest Hemingway published The Old Man and the Sea in 1952.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"Santiago, who has caught nothing for eighty-four days, fights a huge marlin for three days.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"Sharks eat the fish on the way home and only the skeleton is left.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    }\n  ]\n}"
+    },
+    "10": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nAlice's Adventures in Wonderland was written by Lewis Carroll and published in 1865. Alice follows a white rabbit down a hole and falls into a strange world. She meets the Mad Hatter, the Cheshire Cat and the Queen of Hearts. At the end she wakes up and finds that it was only a dream.\n\nSUMMARY:\nLewis Carroll published Alice's Adventures in Wonderland in 1865. Alice follows a white rabbit into a strange world and meets the Mad Hatter and the Queen of Hearts. At the end she wakes up and finds that it was a dream.",
+      "reply": "I looked at the summary and it seems fine to me."
+    },
+    "11": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nPride and Prejudice was published in 1813 by Jane Austen. Elizabeth Bennet, the second of five sisters, refuses a proposal from the clergyman Mr Collins. She misjudges the wealthy Mr Darcy at first and later comes to love him. The novel ends with her marriage to Darcy and the marriage of her sister Jane to Mr Bingley.\n\nSUMMARY:\nJane Austen published Pride and Prejudice in 1831. Elizabeth Bennet, the eldest of five sisters, refuses Mr Collins. She misjudges Mr Darcy at first but later marries him, and her sister Jane marries Mr Collins.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Jane Austen published Pride and Prejudice in 1831.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"Elizabeth Bennet, the eldest of five sisters, refuses Mr Collins.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"She misjudges Mr Darcy at first but later marries him, and her sister Jane marries Mr Collins.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    }\n  ]\n}"
+    },
+    "12": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nMoby-Dick was written by Herman Melville and published in 1851. The narrator Ishmael joins the whaling ship Pequod. Captain Ahab, who lost his leg to a white whale, is obsessed with revenge. In the end the whale destroys the ship and only Ishmael survives.\n\nSUMMARY:\nHerman Melville published Moby-Dick in 1815. Ishmael joins the Pequod, whose Captain Ahab wants revenge on the whale that took his arm. In the end the ship is destroyed and only Ahab survives.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Herman Melville published Moby-Dick in 1815.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"Ishmael joins the Pequod, whose Captain Ahab wants revenge on the whale that took his arm.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"In the end the ship is destroyed and only Ahab survives.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    }\n  ]\n}"
+    },
+    "13": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nThe Little Prince was written by Antoine de Saint-Exupery in 1943. A pilot crashes in the Sahara desert and meets a small prince from a tiny planet. The prince tells him about a vain rose he loves and about the fox who teaches him that one sees clearly only with the heart.\n\nSUMMARY:\nIn The Little Prince, written by Antoine de Saint-Exupery in 1934, a pilot crashes in the Sahara and meets a prince from a tiny planet. The prince speaks about the rose he hates. The rose teaches him that one sees clearly only with the heart.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"In The Little Prince, written by Antoine de Saint-Exupery in 1934, a pilot crashes in the Sahara and meets a prince from a tiny planet.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"The prince speaks about the rose he hates.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"The rose teaches him that one sees clearly only with the heart.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    }\n  ]\n}"
+    },
+    "14": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nFrankenstein was written by Mary Shelley and first published in 1818. The scientist Victor Frankenstein builds a living creature from parts of dead bodies. Horrified, he abandons the creature, which then seeks revenge on his family. The story is told through letters of a ship captain named Walton.\n\nSUMMARY:\nMary Shelley first published Frankenstein in 1881. The scientist Victor Frankenstein finds a creature and abandons it in horror, and the creature then seeks revenge on his family. The tale reaches the reader through the diary of Captain Walton.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Mary Shelley first published Frankenstein in 1881.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"Victor and the creature\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"The tale reaches the reader through the diary of Captain Walton.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    }\n  ]\n}"
+    },
+    "15": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nRobinson Crusoe was written by Daniel Defoe and published in 1719. After a shipwreck the sailor Crusoe lives alone on a tropical island for many years. He meets a man whom he names Friday after saving him from cannibals. Crusoe finally returns to England after twenty-eight years.\n\nSUMMARY:\nDaniel Defoe published Robinson Crusoe in 1791. After a shipwreck Crusoe lives on an island with his brother and later saves a man whom he names Friday. He returns to England after twenty-eight months.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Daniel Defoe published Robinson Crusoe in 1791.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"After a shipwreck Crusoe lives on an island with his brother and later saves a man whom he names Friday.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"He returns to England after twenty-eight months.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    }\n  ]\n}"
+    },
+    "16": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nDracula was written by Bram Stoker and published in 1897. The solicitor Jonathan Harker travels to Transylvania to meet Count Dracula. The Count then moves to England and threatens Harker's wife Mina. Professor Van Helsing and his friends hunt the vampire and destroy him.\n\nSUMMARY:\nBram Stoker published Dracula in 1879. Jonathan Harker travels to Romania to meet the Count, who then moves to England and threatens Mina. Doctor Seward and his friends destroy the vampire.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Bram Stoker published Dracula in 1879.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"Jonathan Harker travels to Romania to meet the Count, who then moves to England and threatens Mina.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"Doctor Seward and his friends destroy the vampire.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    }\n  ]\n}"
+    },
+    "17": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nThe Hobbit was written by J. R. R. Tolkien and published in 1937. The hobbit Bilbo Baggins is persuaded by the wizard Gandalf to join thirteen dwarves. Together they travel to the Lonely Mountain to win back treasure guarded by the dragon Smaug. On the way Bilbo finds a magic ring.\n\nSUMMARY:\nJ. R. R. Tolkien published The Hobbit in 1973. Gandalf persuades Bilbo Baggins to join twelve dwarves who want to win back the treasure guarded by the dragon Smaug. On the way Bilbo finds a magic sword.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"J. R. R. Tolkien published The Hobbit in 1973.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"Gandalf persuades Bilbo Baggins\",\n      \"verdict\": \"unsupported\",\n      \"reason\": \"The source does not say this.\"\n    },\n    {\n      \"text\": \"join twelve dwarves who want to win back the treasure guarded by the dragon Smaug.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    },\n    {\n      \"text\": \"On the way Bilbo finds a magic sword.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    }\n  ]\n}"
+    },
+    "18": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nAnimal Farm was written by George Orwell and published in 1945. The animals of Manor Farm drive out the farmer Mr Jones and run the farm themselves. The pigs, led by Napoleon, gradually take all power. At the end the animals cannot tell the pigs from the humans.\n\nSUMMARY:\nGeorge Orwell published Animal Farm in 1954. The animals drive out Mr Jones, but the pigs led by Snowball gradually take all power. In the end the animals can easily tell the pigs from the humans.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"George Orwell published Animal Farm in 1954.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"The animals drive out Mr Jones, but the pigs led by Snowball gradually take all power.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"In the end the animals can easily tell the pigs from the humans.\",\n      \"verdict\": \"supported\",\n      \"reason\": \"The source says so.\"\n    }\n  ]\n}"
+    },
+    "19": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nThe Old Man and the Sea was written by Ernest Hemingway and published in 1952. The old fisherman Santiago has caught no fish for eighty-four days. He finally hooks a huge marlin and fights it for three days. Sharks eat the fish on the way home and only the skeleton is left.\n\nSUMMARY:\nErnest Hemingway published The Old Man and the Sea in 1925. Santiago, who has caught nothing for forty-eight days, fights a huge marlin for five nights. Birds eat the fish on the way home and only the skeleton is left.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Ernest Hemingway published The Old Man and the Sea in 1925.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"Santiago, who has caught nothing for forty-eight days.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"Santiago fights a huge marlin for five nights.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"Birds eat the fish on the way home and only the skeleton is left.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    }\n  ]\n}"
+    },
+    "20": {
+      "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\nAlice's Adventures in Wonderland was written by Lewis Carroll and published in 1865. Alice follows a white rabbit down a hole and falls into a strange world. She meets the Mad Hatter, the Cheshire Cat and the Queen of Hearts. At the end she wakes up and finds that it was only a dream.\n\nSUMMARY:\nLewis Carroll published Alice's Adventures in Wonderland in 1856. Alice follows a black cat into a strange world and meets the Mad Hatter and the Queen of Hearts. At the end she stays in Wonderland forever.",
+      "reply": "{\n  \"claims\": [\n    {\n      \"text\": \"Lewis Carroll published Alice's Adventures in Wonderland in 1856.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"Alice follows a black cat into a strange world and meets the Mad Hatter and the Queen of Hearts.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    },\n    {\n      \"text\": \"At the end she stays in Wonderland forever.\",\n      \"verdict\": \"contradicted\",\n      \"reason\": \"The source says something else.\"\n    }\n  ]\n}"
+    }
+  },
+  "decisions": {},
+  "checks": {
+    "rules": [
+      {
+        "measure": "detection_rate",
+        "comparison": "at_least",
+        "value": 0.8
+      },
+      {
+        "measure": "false_positive_rate",
+        "comparison": "at_most",
+        "value": 0.1
+      },
+      {
+        "measure": "case_detection_rate",
+        "comparison": "at_least",
+        "value": 0.8
+      },
+      {
+        "measure": "clean_case_false_positive_rate",
+        "comparison": "at_most",
+        "value": 0.1
+      }
+    ]
+  },
+  "minimum_sample": {
+    "expected_errors": 30,
+    "clean_cases": 10
+  },
+  "results": {
+    "evaluated_per": "expected_error",
+    "counted_per_before_correction": null,
+    "counters": {
+      "expected_total": 21,
+      "expected_found": 19,
+      "expected_missed": 2,
+      "additional_total": 0,
+      "real_errors": 0,
+      "false_positives": 0,
+      "findings_total": 19,
+      "subtle_total": 11,
+      "subtle_found": 9,
+      "subtle_missed": 2,
+      "ignored_expected": 0,
+      "ignored_additional": 0,
+      "cases_decided": 15,
+      "cases_awaiting": 5,
+      "cases_not_run": 0,
+      "clean_cases_decided": 8,
+      "cases_with_false_positive": 0,
+      "clean_cases_with_false_positive": 0,
+      "defective_cases_decided": 7,
+      "defective_cases_flagged": 7,
+      "per_category": {
+        "wrong-number": {
+          "expected_total": 7,
+          "expected_found": 7
+        },
+        "factual-error": {
+          "expected_total": 5,
+          "expected_found": 4
+        },
+        "misattribution": {
+          "expected_total": 4,
+          "expected_found": 4
+        },
+        "contradiction": {
+          "expected_total": 4,
+          "expected_found": 3
+        },
+        "unsupported-claim": {
+          "expected_total": 1,
+          "expected_found": 1
+        }
+      },
+      "per_difficulty": {
+        "obvious": {
+          "expected_total": 10,
+          "expected_found": 10
+        },
+        "subtle": {
+          "expected_total": 11,
+          "expected_found": 9
+        }
+      },
+      "per_rule": {},
+      "additional_per_category": {},
+      "additional_per_difficulty": {}
+    },
+    "measures": {
+      "detection_rate": {
+        "value": 0.9047619047619048,
+        "numerator": 19,
+        "denominator": 21,
+        "interval": {
+          "lower": 0.7108586073515344,
+          "upper": 0.9734812328017302
+        }
+      },
+      "false_positive_rate": {
+        "value": 0,
+        "numerator": 0,
+        "denominator": 19,
+        "interval": {
+          "lower": 0,
+          "upper": 0.16817922625956366
+        }
+      }
+    },
+    "overall": {
+      "result": "Inconclusive",
+      "reasons": [
+        "5 cases are not decided yet (0 not run, 5 awaiting verification).",
+        "The test is too small: 9 more expected errors are needed (at least 30 expected errors).",
+        "The test is too small: 2 more clean cases are needed (at least 10)."
+      ],
+      "borderline": []
+    },
+    "cases": {
+      "1": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "2": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "3": {
+        "status": "awaiting",
+        "expected": [],
+        "additional": [
+          {
+            "key": "claims[]#2",
+            "text": "The prince speaks about the rose he loves.",
+            "rules": [
+              "Contradicted or unsupported claim"
+            ],
+            "state": "undecided",
+            "source": "automatic"
+          }
+        ]
+      },
+      "4": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "5": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "6": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "7": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "8": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "9": {
+        "status": "pass",
+        "expected": [],
+        "additional": []
+      },
+      "10": {
+        "status": "awaiting",
+        "expected": [],
+        "additional": []
+      },
+      "11": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "12": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "13": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "14": {
+        "status": "awaiting",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "undecided",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "15": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "16": {
+        "status": "fail",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "missed",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "17": {
+        "status": "awaiting",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "undecided",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": [
+          {
+            "key": "claims[]#2",
+            "text": "Gandalf persuades Bilbo Baggins",
+            "rules": [
+              "Contradicted or unsupported claim"
+            ],
+            "state": "undecided",
+            "source": "automatic"
+          }
+        ]
+      },
+      "18": {
+        "status": "fail",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "missed",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      },
+      "19": {
+        "status": "awaiting",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": [
+          {
+            "key": "claims[]#3",
+            "text": "Santiago fights a huge marlin for five nights.",
+            "rules": [
+              "Contradicted or unsupported claim"
+            ],
+            "state": "undecided",
+            "source": "automatic"
+          }
+        ]
+      },
+      "20": {
+        "status": "pass",
+        "expected": [
+          {
+            "id": "e1",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e2",
+            "state": "found",
+            "source": "automatic"
+          },
+          {
+            "id": "e3",
+            "state": "found",
+            "source": "automatic"
+          }
+        ],
+        "additional": []
+      }
+    }
+  }
+}

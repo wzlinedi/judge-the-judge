@@ -1,0 +1,11 @@
+{
+  "format": "judge-the-judge-checks",
+  "schema_version": 1,
+  "rules": [
+    { "measure": "detection_rate", "comparison": "at_least", "value": 0.8 },
+    { "measure": "false_positive_rate", "comparison": "at_most", "value": 0.1 },
+    { "measure": "case_detection_rate", "comparison": "at_least", "value": 0.8 },
+    { "measure": "clean_case_false_positive_rate", "comparison": "at_most", "value": 0.1 }
+  ],
+  "minimum_sample": { "expected_errors": 30, "clean_cases": 10 }
+}

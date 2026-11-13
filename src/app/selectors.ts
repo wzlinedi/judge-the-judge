@@ -1,4 +1,5 @@
 // Derived values for the interface, recomputed from state and never stored in it.
+import type { ReviewedCase } from '../core/evaluation/results';
 import type { AppState, StepId } from './store';
 
 export const STEPS: ReadonlyArray<{ id: Exclude<StepId, 'help'>; number: number; name: string }> = [
@@ -11,7 +12,7 @@ export const STEPS: ReadonlyArray<{ id: Exclude<StepId, 'help'>; number: number;
 export interface NextAction {
   sentence: string;
   detail?: string;
-  action: { label: string; go?: StepId; disabled?: boolean };
+  action: { label: string; go?: StepId; openCase?: string; disabled?: boolean };
 }
 
 export interface StepGateInfo {
@@ -40,8 +41,13 @@ export function stepGate(state: AppState, step: StepId): StepGateInfo | null {
   return null;
 }
 
+/** The case Continue opens on Run: the first awaiting verification, else the first without a reply (FR-073). */
+export function caseToContinue(reviewed: readonly ReviewedCase[]): string | undefined {
+  return (reviewed.find((r) => r.status === 'awaiting') ?? reviewed.find((r) => r.status === 'not_run'))?.testCase.id;
+}
+
 /** The "what next" line of a step (FR-001): a sentence, an optional second line and one primary action. */
-export function nextAction(state: AppState, step: StepId = state.step): NextAction {
+export function nextAction(state: AppState, step: StepId = state.step, reviewed: readonly ReviewedCase[] = []): NextAction {
   const { judge_set, dataset } = state.evaluation;
   const count = dataset.cases.length;
   switch (step) {
@@ -64,8 +70,13 @@ export function nextAction(state: AppState, step: StepId = state.step): NextActi
         return { sentence: 'Add your first test case, or import test cases from the File menu.', action: { label: 'Add test case' } };
       }
       return { sentence: 'Finalize the test cases when they are ready.', detail: `${count} test cases`, action: { label: 'Finalize test cases' } };
-    case 'run':
-      return { sentence: 'Run each test case: copy its prompt, run it in your LLM and paste the reply.', action: { label: 'Continue' } };
+    case 'run': {
+      const decided = reviewed.filter((r) => r.status === 'pass' || r.status === 'fail').length;
+      const next = caseToContinue(reviewed);
+      const detail = `${decided} of ${reviewed.length} cases decided`;
+      if (next === undefined) return { sentence: 'Every case is decided. Read the results.', detail, action: { label: 'Next: Results', go: 'results' } };
+      return { sentence: 'Continue with the next case that needs you.', detail, action: { label: 'Continue', openCase: next } };
+    }
     case 'results':
       return { sentence: 'Read the result of the evaluation.', action: { label: 'Continue' } };
     default:

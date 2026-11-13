@@ -16,7 +16,8 @@ export default defineConfig({
     timeout: 120_000,
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // PW_CHANNEL=chrome runs the chromium project in an installed Google Chrome instead of the downloaded Chromium.
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], channel: process.env['PW_CHANNEL'] || undefined } },
     { name: 'msedge', use: { ...devices['Desktop Edge'], channel: 'msedge' } },
   ],
 });

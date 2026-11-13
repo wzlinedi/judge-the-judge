@@ -1,0 +1,69 @@
+{
+  "3": {
+    "opinion": {
+      "id": "3",
+      "expected": [],
+      "additional": [
+        {
+          "index": 1,
+          "real": false,
+          "reason": "The source says the prince speaks about the rose.",
+          "fragment": "The prince speaks about the rose he loves."
+        }
+      ],
+      "new": []
+    }
+  },
+  "14": {
+    "opinion": {
+      "id": "14",
+      "expected": [
+        {
+          "index": 2,
+          "found": true,
+          "reason": "The judge pointed at Victor and the creature, which is the changed claim.",
+          "fragment": "Victor and the creature"
+        }
+      ],
+      "additional": [],
+      "new": []
+    }
+  },
+  "17": {
+    "opinion": {
+      "id": "17",
+      "expected": [
+        {
+          "index": 2,
+          "found": false,
+          "reason": "No finding is about the number of dwarves.",
+          "fragment": "join twelve dwarves"
+        }
+      ],
+      "additional": [
+        {
+          "index": 1,
+          "real": false,
+          "reason": "Gandalf does persuade Bilbo, as the source says.",
+          "fragment": "Gandalf persuades Bilbo Baggins"
+        }
+      ],
+      "new": []
+    }
+  },
+  "19": {
+    "opinion": {
+      "id": "19",
+      "expected": [],
+      "additional": [
+        {
+          "index": 1,
+          "real": true,
+          "reason": "The source says three days, not five nights.",
+          "fragment": "fights a huge marlin for five nights"
+        }
+      ],
+      "new": []
+    }
+  }
+}
