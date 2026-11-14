@@ -9,7 +9,7 @@ describe('Help (Principle VIII)', () => {
   it('has the sections written so far, in plain headings', () => {
     render(<HelpStep />);
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Reading the results']);
+    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Reading the results']);
   });
 
   it('quotes the numbers of the demo from the demo files, so they cannot drift', () => {
@@ -47,5 +47,23 @@ describe('Help (Principle VIII)', () => {
     expect(text).toMatch(/permission/i);
     expect(text).toMatch(/never sent/i);
     expect(text).toMatch(/save often/i);
+  });
+
+  it('explains variables, the judged text and the limit on a literal double brace', () => {
+    render(<HelpStep />);
+    const text = document.body.textContent ?? '';
+    expect(text).toContain('{{name}}');
+    expect(text).toMatch(/judged text/i);
+    expect(text).toMatch(/last variable/i);
+    expect(text).toMatch(/literal.*\{\{/i);
+  });
+
+  it('explains the sample reply, the finding text and rules, with Add rule and Add condition', () => {
+    render(<HelpStep />);
+    const text = document.body.textContent ?? '';
+    for (const label of ['Add rule', 'Add condition', 'claims[].verdict']) expect(text).toContain(label);
+    expect(text).toMatch(/never proposes a rule|does not propose a rule/i);
+    expect(text).toMatch(/broken/i);
+    expect(text).toMatch(/code fence/i);
   });
 });

@@ -205,17 +205,22 @@ example…**. The judge set is saved inside the test project (Phase 4).
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T072 [US2] Write `tests/e2e/v2-judge.spec.ts` implementing quickstart.md V2 (saved with **Save test project**, loaded with **Load test project**)
-- [ ] T073 [P] [US2] Write `tests/unit/ui/judge-step.test.tsx`: the step has no welcome section and no buttons of its own besides **Add rule**, **Add condition** and **Remove** (SC-038); variables listed live, no-variable warning, the judged-text choice with the last variable proposed; the sample reply is read as soon as it is pasted or changed, a problem is shown under the box with its line and column, the text is kept and the fields of the last readable sample stay (FR-084, FR-088, SC-037); fields table; finding-text choice per list; "Add rule" offers only recognized fields; a missing field is refused; preview names rules; broken rule marked; readability warning; explanations sit behind **Explain**, and no paragraph longer than one sentence is on the step; there is no error catalog and no clean case section; the "what next" line names what is still missing (prompt, a variable, sample reply, a rule) and offers **Next: Test cases** once nothing is missing; after finalizing it says the prompt is fixed (FR-001, FR-010 to FR-014, FR-021, FR-053)
+- [X] T072 [US2] Write `tests/e2e/v2-judge.spec.ts` implementing quickstart.md V2 (saved with **Save test project**, loaded with **Load test project**)
+- [X] T073 [P] [US2] Write `tests/unit/ui/judge-step.test.tsx`: the step has no welcome section and no buttons of its own besides **Add rule**, **Add condition** and **Remove** (SC-038); variables listed live, no-variable warning, the judged-text choice with the last variable proposed; the sample reply is read as soon as it is pasted or changed, a problem is shown under the box with its line and column, the text is kept and the fields of the last readable sample stay (FR-084, FR-088, SC-037); fields table; finding-text choice per list; "Add rule" offers only recognized fields; a missing field is refused; preview names rules; broken rule marked; readability warning; explanations sit behind **Explain**, and no paragraph longer than one sentence is on the step; there is no error catalog and no clean case section; the "what next" line names what is still missing (prompt, a variable, sample reply, a rule) and offers **Next: Test cases** once nothing is missing; after finalizing it says the prompt is fixed (FR-001, FR-010 to FR-014, FR-021, FR-053)
 
 ### Implementation for User Story 2
 
-- [ ] T074 [P] [US2] Create `src/core/metrics/builtin/completeness.json` (judged text `summary`; categories missing-information, missing-step, omitted-requirement, partial-answer and missing-caveat, each with a description and an example; prompt, sample reply, finding text, rules, a few `clean_base_cases`) and register it so `listExamples` returns Accuracy and Completeness (FR-019)
-- [ ] T075 [US2] Implement `src/app/actions/judge.ts`: `setPrompt`, `setJudgedText`, `setSampleReply` (read as it changes), `setFindingText`, rule actions, `loadExample` for Accuracy and Completeness (asks before replacing; starts a new test project with its judge, catalog and clean cases; sets the active metric and its parameters) (FR-009, FR-019, FR-021, FR-053, FR-088)
-- [ ] T076 [US2] Implement `src/ui/steps/judge/PromptSection.tsx` (editor, variables, judged-text choice, version) and add Accuracy and Completeness to `src/ui/windows/load-example/LoadExampleWindow.tsx`
-- [ ] T077 [US2] Implement `src/ui/steps/judge/SampleReplySection.tsx` (on `JsonBox`), `RulesSection.tsx` and `RulePreview.tsx`
-- [ ] T078 [US2] Implement `src/ui/steps/judge/JudgeStep.tsx` with the empty state, the readability warning, the **Explain** controls and the Judge `nextAction`, to pass T073 and T072
-- [ ] T079 [US2] Write the Help sections "Variables and the judged text" and "Sample reply, fields and error rules" (with the literal `{{` limit) in `src/ui/help/sections/`
+- [X] T074 [P] [US2] Create `src/core/metrics/builtin/completeness.json` (judged text `summary`; categories missing-information, missing-step, omitted-requirement, partial-answer and missing-caveat, each with a description and an example; prompt, sample reply, finding text, rules, a few `clean_base_cases`) and register it so `listExamples` returns Accuracy and Completeness (FR-019)
+- [X] T075 [US2] Implement `src/app/actions/judge.ts`: `setPrompt`, `setJudgedText`, `setSampleReply` (read as it changes), `setFindingText`, rule actions, `loadExample` for Accuracy and Completeness (asks before replacing; starts a new test project with its judge, catalog and clean cases; sets the active metric and its parameters) (FR-009, FR-019, FR-021, FR-053, FR-088)
+- [X] T076 [US2] Implement `src/ui/steps/judge/PromptSection.tsx` (editor, variables, judged-text choice, version) and add Accuracy and Completeness to `src/ui/windows/load-example/LoadExampleWindow.tsx`
+- [X] T077 [US2] Implement `src/ui/steps/judge/SampleReplySection.tsx` (on `JsonBox`), `RulesSection.tsx` and `RulePreview.tsx`
+- [X] T078 [US2] Implement `src/ui/steps/judge/JudgeStep.tsx` with the empty state, the readability warning, the **Explain** controls and the Judge `nextAction`, to pass T073 and T072
+- [X] T079 [US2] Write the Help sections "Variables and the judged text" and "Sample reply, fields and error rules" (with the literal `{{` limit) in `src/ui/help/sections/`
+
+**Done 2026-11-14.** US2 is complete (the actions are in `src/app/actions/judge.ts`, the step in
+`src/ui/steps/judge/`). Notes: **Next: Test cases** stays disabled only while the prompt or a variable is
+missing; a missing sample reply or rule is named in the sentence and the step can still be left, because
+FR-021 allows judging by hand. The Test cases step is still a placeholder until US3.
 
 ---
 

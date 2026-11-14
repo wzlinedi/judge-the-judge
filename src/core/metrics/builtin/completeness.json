@@ -1,0 +1,121 @@
+{
+  "format": "judge-the-judge-metric",
+  "schema_version": 1,
+  "id": "completeness",
+  "name": "Completeness",
+  "description": "Checks that every element of the source is present in the summary.",
+  "limitations": "Measures only the kinds of omissions injected into the test data.",
+  "output_format": "A JSON object with a list of elements of the source, each with its text and a verdict of present or missing.",
+  "judge_set": {
+    "prompt": "You are a strict reviewer. Read the SOURCE and the SUMMARY.\nList the separate elements of the SOURCE: facts, steps, requirements and caveats. For each element decide whether the SUMMARY contains it.\nAnswer only with JSON in this form:\n{\"elements\": [{\"text\": \"the element of the source\", \"verdict\": \"present | missing\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\n{{source_text}}\n\nSUMMARY:\n{{summary}}",
+    "judged_text": "summary",
+    "sample_reply": "{\"elements\":[{\"text\":\"The shop opens at five every morning.\",\"verdict\":\"present\",\"reason\":\"Stated in the summary.\"},{\"text\":\"She bought a second oven in 1998.\",\"verdict\":\"missing\",\"reason\":\"The summary does not mention the oven.\"}]}",
+    "reply_mapping": {
+      "finding_text": {
+        "elements[]": "elements[].text"
+      }
+    },
+    "error_rules": [
+      {
+        "name": "Missing element",
+        "match": "all",
+        "conditions": [
+          {
+            "field": "elements[].verdict",
+            "comparison": "equals",
+            "value": "missing"
+          }
+        ]
+      }
+    ],
+    "error_catalog": [
+      {
+        "name": "missing-information",
+        "description": "A fact of the source that the summary leaves out.",
+        "example": "The year of the event is not mentioned."
+      },
+      {
+        "name": "missing-step",
+        "description": "A step of a procedure that the summary skips.",
+        "example": "The summary goes from step two to step four."
+      },
+      {
+        "name": "omitted-requirement",
+        "description": "A requirement of the source that the summary does not state.",
+        "example": "The summary does not say the form must be signed."
+      },
+      {
+        "name": "partial-answer",
+        "description": "One part of a question that the summary leaves unanswered.",
+        "example": "Only the cost is given, not the deadline."
+      },
+      {
+        "name": "missing-caveat",
+        "description": "A warning or condition of the source that the summary drops.",
+        "example": "\"Only for adults\" is left out."
+      }
+    ],
+    "clean_base_cases": [
+      {
+        "name": "Bakery, complete",
+        "fields": {
+          "source_text": "Anna is a baker in a small town. She opens her shop at five every morning and sells bread to the neighbours. In 1998 she bought a second oven.",
+          "summary": "Anna, a baker in a small town, opens her shop at five every morning and sells bread to the neighbours. In 1998 she bought a second oven."
+        },
+        "expected_errors": []
+      },
+      {
+        "name": "Password reset, complete",
+        "fields": {
+          "source_text": "To reset a password, open Settings and choose Security. Press Reset password and enter the code sent by email. The code is valid for ten minutes.",
+          "summary": "To reset a password, open Settings, choose Security and press Reset password. Enter the code sent by email within ten minutes."
+        },
+        "expected_errors": []
+      },
+      {
+        "name": "Library card, complete",
+        "fields": {
+          "source_text": "A library card is free for residents. Bring an identity document and proof of address. Children under twelve need a parent to sign the form.",
+          "summary": "Residents get a library card for free with an identity document and proof of address. A parent must sign the form for a child under twelve."
+        },
+        "expected_errors": []
+      }
+    ]
+  },
+  "parameters": {
+    "match_clear_share": {
+      "default": 0.6,
+      "description": "Share of the fragment's words a finding must contain to count as a clear match."
+    },
+    "match_partial_share": {
+      "default": 0.3,
+      "description": "Share above which a finding counts as a partial match."
+    },
+    "match_min_word_length": {
+      "default": 4,
+      "description": "Shorter words are ignored when comparing."
+    }
+  },
+  "measures": [
+    {
+      "id": "detection_rate",
+      "name": "Detection rate",
+      "description": "Injected errors the judge found.",
+      "operation": "ratio",
+      "numerator": "expected_found",
+      "denominator": "expected_total",
+      "interval": "wilson95",
+      "better": "higher"
+    },
+    {
+      "id": "false_positive_rate",
+      "name": "False-positive rate",
+      "description": "Findings that are not errors, out of all findings.",
+      "operation": "ratio",
+      "numerator": "false_positives",
+      "denominator": "findings_total",
+      "interval": "wilson95",
+      "better": "lower"
+    }
+  ]
+}

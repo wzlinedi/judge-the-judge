@@ -1,5 +1,6 @@
 // Derived values for the interface, recomputed from state and never stored in it.
 import type { ReviewedCase } from '../core/evaluation/results';
+import { findVariables } from '../core/judge/variables';
 import type { AppState, StepId } from './store';
 
 export const STEPS: ReadonlyArray<{ id: Exclude<StepId, 'help'>; number: number; name: string }> = [
@@ -51,17 +52,24 @@ export function nextAction(state: AppState, step: StepId = state.step, reviewed:
   const { judge_set, dataset } = state.evaluation;
   const count = dataset.cases.length;
   switch (step) {
-    case 'judge':
+    case 'judge': {
       if (dataset.finalized) {
         return { sentence: 'The judge prompt and the test cases are fixed. Go on with the run.', action: { label: 'Continue', go: 'run' } };
       }
-      if (judge_set.prompt.trim() === '') {
-        return {
-          sentence: 'Write the judge prompt, with a {{variable}} for each field of a test case.',
-          action: { label: 'Next: Test cases', disabled: true },
-        };
-      }
-      return { sentence: 'The judge is ready. Next, prepare the test cases.', action: { label: 'Next: Test cases', go: 'cases' } };
+      const needed: string[] = [];
+      if (judge_set.prompt.trim() === '') needed.push('the judge prompt');
+      else if (findVariables(judge_set.prompt).length === 0) needed.push('a {{variable}} in the prompt');
+      const hasSample = (judge_set.sample_reply ?? '').trim() !== '';
+      const blocking = needed.length > 0;
+      if (!hasSample) needed.push('a sample reply');
+      if (judge_set.error_rules.length === 0) needed.push('an error rule');
+      if (needed.length === 0) return { sentence: 'The judge is ready. Next, prepare the test cases.', action: { label: 'Next: Test cases', go: 'cases' } };
+      return {
+        sentence: `Still missing: ${needed.join(', ')}.`,
+        ...(blocking ? {} : { detail: 'You can go on, but every case will then need verification by hand.' }),
+        action: { label: 'Next: Test cases', ...(blocking ? { disabled: true } : { go: 'cases' as const }) },
+      };
+    }
     case 'cases':
       if (dataset.finalized) {
         return { sentence: 'The test cases are finalized. Go on with the run.', detail: `${count} test cases`, action: { label: 'Continue', go: 'run' } };

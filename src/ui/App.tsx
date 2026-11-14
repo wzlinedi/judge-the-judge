@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import demoEvaluation from '../../examples/demo/evaluation.json?raw';
 import { loadExample } from '../app/actions/evaluation';
+import { startFromMetric, type JudgeEdit } from '../app/actions/judge';
 import { continueWork, loadEvaluation, loadTestProject, saveEvaluation, saveEvaluationAs, saveTestProject, saveTestProjectAs, type FileEnv } from '../app/actions/files';
 import { guardFor, installBeforeUnload, type GuardedAction } from '../app/guard';
 import { metricFor } from '../app/metrics';
@@ -22,6 +23,7 @@ import { StepGate } from './components/shell/StepGate';
 import { HelpStep } from './help/HelpStep';
 import { labels } from './labels';
 import { ResultsStep } from './steps/results/ResultsStep';
+import { JudgeStep } from './steps/judge/JudgeStep';
 import { RunStep } from './steps/run/RunStep';
 import { CaseWindow } from './windows/case-window/CaseWindow';
 import { LoadExampleWindow, type ExampleId } from './windows/load-example/LoadExampleWindow';
@@ -85,6 +87,11 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     } else if (result.outcome === 'loaded') say(result.message);
   };
 
+  const applyJudge = (result: JudgeEdit) => {
+    setState(result.state);
+    say(result.note);
+  };
+
   const perform = (action: FileAction) => {
     if (action === 'load-example') setShowExamples(true);
     else if (action === 'start-new-evaluation') {
@@ -108,6 +115,10 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     if (example === 'demo') {
       setState((s) => loadExample(s, demoEvaluation, portsRef.current, metricFor('accuracy')));
       say('The demo was loaded.');
+    } else {
+      const metric = metricFor(example);
+      setState((s) => startFromMetric(s, metric, portsRef.current));
+      say(`${metric.name} was loaded as the start of a new test project.`);
     }
   };
 
@@ -153,6 +164,8 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
                 onSave={() => void save(false)}
                 onSaveAs={() => void save(true)}
               />
+            ) : state.step === 'judge' ? (
+              <JudgeStep state={state} onEdit={applyJudge} />
             ) : (
               <section class="step-content" aria-label={state.step} />
             )}
@@ -174,7 +187,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           saveBar={{ fileName: state.evaluationFile, repliesSinceSave: state.repliesSinceSave, onSave: () => void save(false), onSaveAs: () => void save(true) }}
         />
       ) : null}
-      <LoadExampleWindow open={showExamples} enabled={['demo']} onChoose={chooseExample} onLoadMetric={() => setShowExamples(false)} onClose={() => setShowExamples(false)} />
+      <LoadExampleWindow open={showExamples} enabled={['accuracy', 'completeness', 'demo']} onChoose={chooseExample} onLoadMetric={() => setShowExamples(false)} onClose={() => setShowExamples(false)} />
       <Dialog
         open={pending !== null}
         title="Unsaved changes"
