@@ -126,3 +126,61 @@ describe('the "what next" line', () => {
     expect(screen.queryByRole('table', { name: 'Test cases' })).toBeNull();
   });
 });
+
+describe('search, filters, sorting and the count (FR-025, User Story 15)', () => {
+  const rowsShown = () => screen.getAllByRole('row').slice(1);
+  const count = () => screen.getByRole('status', { name: 'Shown test cases' }).textContent;
+  const type = (text: string) => fireEvent.input(screen.getByRole('searchbox', { name: 'Search test cases' }), { target: { value: text } });
+
+  it('says how many cases there are, and shows them all at first', () => {
+    show();
+    expect(count()).toBe('2 test cases');
+    expect(rowsShown()).toHaveLength(2);
+  });
+
+  it('searches the name and the texts of the fields, and says how many of all are shown', () => {
+    show();
+    type('doctor');
+    expect(rowsShown()).toHaveLength(1);
+    expect(rowsShown()[0]!.textContent).toContain('Anna + 2 errors');
+    expect(count()).toBe('1 of 2 test cases');
+    type('no such text');
+    expect(rowsShown()).toHaveLength(0);
+    expect(count()).toMatch(/No test case matches/);
+  });
+
+  it('filters by kind and by reply, together, and Clear search and filters shows every case again', () => {
+    show(stateOf(false, true));
+    fireEvent.change(screen.getByLabelText('Kind'), { target: { value: 'clean' } });
+    expect(rowsShown().map((r) => r.textContent)).toEqual([expect.stringContaining('Anna')]);
+    expect(rowsShown()[0]!.textContent).not.toContain('2 errors');
+    fireEvent.change(screen.getByLabelText('Reply'), { target: { value: 'with' } });
+    expect(rowsShown()).toHaveLength(0);
+    const clear = screen.getByRole('button', { name: 'Clear search and filters' });
+    expect(clear.hasAttribute('disabled')).toBe(false);
+    fireEvent.click(clear);
+    expect(rowsShown()).toHaveLength(2);
+    expect(clear.hasAttribute('disabled')).toBe(true);
+  });
+
+  it('keeps Open, Clone, Rename and Remove on the rows that are shown', () => {
+    show();
+    type('doctor');
+    expect(within(rowsShown()[0]!).getAllByRole('button').map((b) => b.textContent)).toEqual(['Open', 'Clone', 'Rename', 'Remove']);
+  });
+
+  it('sorts by a column: ascending, descending, then the original order, and says which way in aria-sort', () => {
+    show();
+    const header = () => screen.getByRole('columnheader', { name: /^Name/ });
+    const names = () => rowsShown().map((r) => (r.querySelectorAll('td')[1] as HTMLElement).textContent);
+    expect(names()).toEqual(['Anna', 'Anna + 2 errors']);
+    fireEvent.click(within(header()).getByRole('button'));
+    expect(header().getAttribute('aria-sort')).toBe('ascending');
+    fireEvent.click(within(header()).getByRole('button'));
+    expect(header().getAttribute('aria-sort')).toBe('descending');
+    expect(names()).toEqual(['Anna + 2 errors', 'Anna']);
+    fireEvent.click(within(header()).getByRole('button'));
+    expect(header().hasAttribute('aria-sort')).toBe(false);
+    expect(names()).toEqual(['Anna', 'Anna + 2 errors']);
+  });
+});

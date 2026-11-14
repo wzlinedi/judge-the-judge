@@ -628,9 +628,11 @@ first run's test project) has the first judge version, test cases version and mo
 
 **Independent Test**: 500 cases filtered to "injected errors and without a reply".
 
-- [ ] T191 [US15] Write `tests/e2e/fixtures/make-500-cases.ts` and `tests/e2e/us15-large-test-project.spec.ts`: 500 cases load, list, filter and sort without freezing more than 2 seconds (FR-036, SC-018)
-- [ ] T192 [P] [US15] Write `tests/unit/app/case-filter.test.ts`: search in name and fields; filters by kind (clean, injected errors), with warnings, with a reply, without a reply, combinable; sorting; count
-- [ ] T193 [US15] Implement `src/app/case-filter.ts` to pass T192, and add search, filters, sorting and the count to `CasesTable.tsx` to pass T191 (FR-025)
+- [X] T191 [US15] Write `tests/e2e/fixtures/make-500-cases.ts` and `tests/e2e/us15-large-test-project.spec.ts`: 500 cases load, list, filter and sort without freezing more than 2 seconds (FR-036, SC-018)
+- [X] T192 [P] [US15] Write `tests/unit/app/case-filter.test.ts`: search in name and fields; filters by kind (clean, injected errors), with warnings, with a reply, without a reply, combinable; sorting; count
+- [X] T193 [US15] Implement `src/app/case-filter.ts` to pass T192, and add search, filters, sorting and the count to `CasesTable.tsx` to pass T191 (FR-025)
+
+**Done 2026-11-14**: the Test cases table has a search box (name and the texts of the fields), the filters Kind, Reply and With warnings, sorting by Id, Name, Kind and Expected errors (ascending, descending, original order, with `aria-sort`), a count under the filters ("2 of 5 test cases") and "Clear search and filters". The rows and their warnings are worked out once per change of the test project in `src/app/case-filter.ts`, so typing in the search only filters. Measured with 500 cases in Chrome: loading the evaluation 0.6 s, the two filters 0.1 s, a sort 0.03 s (SC-018 asks for under 2 s). Help explains the controls. Also made the V5 e2e wait for the asynchronous memory write before reading `again.json`, `exported.json` and `project.json`, which had failed once in six runs.
 
 ---
 

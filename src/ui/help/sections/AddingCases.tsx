@@ -44,6 +44,14 @@ export function AddingCases() {
         until you save. <strong>{labels.rename}</strong> asks for a new name, and <strong>{labels.remove}</strong> asks for confirmation. A case that other cases were
         made from cannot be removed, and after the test cases are finalized a case with a reply can be neither renamed nor removed.
       </p>
+      <p>
+        <strong>Searching, filtering and sorting.</strong> Above the table the search box looks in the name and in the texts of every field. <strong>Kind</strong> shows
+        only the clean cases or only the cases with injected errors, <strong>Reply</strong> only the cases with or without a reply, and <strong>With warnings</strong>{' '}
+        only the cases that have a warning. The search and the filters work together, and a line under them says how many cases are shown out of all of them;{' '}
+        <strong>{labels.clearFilters}</strong> shows every case again. A click on the heading of Id, Name, Kind or Expected errors sorts the table by that column, a second
+        click reverses it and a third returns to the order of the test project. Nothing here changes a case or the test project; it only changes what you see, which is
+        how you check a large file after loading it. A test project may hold up to 500 cases.
+      </p>
       <p>The text of a saved case is never edited. To change it, clone the case, change the copy and remove the original.</p>
       <p>
         <strong>{labels.correctExpectedErrors}.</strong> After the test cases are finalized, the read-only view of a case that has no reply offers this button. It opens the

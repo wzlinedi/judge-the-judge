@@ -174,6 +174,20 @@ describe('Help for reproducing and auditing a result (US13)', () => {
   });
 });
 
+describe('Help for browsing a large test project (US15)', () => {
+  it('explains the search, the filters, the sorting and the count, and that nothing is changed', () => {
+    render(<HelpStep />);
+    const section = screen.getByRole('heading', { name: 'Adding test cases' }).closest('section')!;
+    const text = (section.textContent ?? '').replace(/\s+/g, ' ');
+    expect(within(section).getByText('Searching, filtering and sorting.')).toBeTruthy();
+    for (const label of ['Kind', 'Reply', 'With warnings', 'Clear search and filters', 'Id, Name, Kind or Expected errors']) expect(text).toContain(label);
+    expect(text).toMatch(/name and in the texts of every field/);
+    expect(text).toMatch(/how many cases are shown out of all of them/);
+    expect(text).toMatch(/third returns to the order of the test project/);
+    expect(text).toMatch(/Nothing here changes a case/);
+  });
+});
+
 describe('Help for marking after each reply (US8)', () => {
   it('names the buttons and what each one does', () => {
     render(<HelpStep />);

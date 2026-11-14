@@ -70,6 +70,10 @@
 .card h2 { font-size: var(--text-lg); }
 .card p { margin: 0 0 var(--space-2); }
 .button-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.cases-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
+.cases-toolbar input[type="search"] { flex: 1; min-width: 12rem; width: auto; }
+.sort-button { background: none; border: 0; padding: 0; font: inherit; font-weight: inherit; color: inherit; cursor: pointer; text-align: left; }
+.sort-button:hover { text-decoration: underline; }
 .list-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
 select { width: auto; }
 

@@ -1,9 +1,18 @@
-import { useState } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
 import { removeCase, renameCase, type CaseEdit } from '../../../app/actions/cases';
+import {
+  caseRows,
+  countText,
+  DEFAULT_VIEW,
+  filterCases,
+  isDefaultView,
+  nextSort,
+  type CaseView,
+  type KindFilter,
+  type ReplyFilter,
+  type SortKey,
+} from '../../../app/case-filter';
 import type { AppState } from '../../../app/store';
-import { testProjectFeedback } from '../../../core/cases/feedback';
-import { normalizeName } from '../../../core/cases/validate';
-import { composePrompt } from '../../../core/judge/compose';
 import type { TestCase } from '../../../core/model';
 import { Dialog } from '../../components/Dialog';
 import { labels } from '../../labels';
@@ -15,24 +24,29 @@ export interface CasesTableProps {
   onEdit: (edit: CaseEdit) => void;
 }
 
-function warningsOf(testCase: TestCase, all: readonly TestCase[], prompt: string, duplicates: readonly (readonly string[])[]): string[] {
-  const warnings: string[] = [];
-  const twin = duplicates.find((ids) => ids.includes(testCase.id))?.find((id) => id !== testCase.id);
-  if (twin !== undefined) warnings.push(`Identical fields to case ${twin}`);
-  const missing = composePrompt(prompt, testCase).missing;
-  if (missing.length > 0) warnings.push(`No field for ${missing.join(', ')}`);
-  const same = all.find((c) => c.id !== testCase.id && normalizeName(c.name) !== '' && normalizeName(c.name) === normalizeName(testCase.name));
-  if (same) warnings.push(`The name “${testCase.name}” is also used by case ${same.id}`);
-  return warnings;
-}
-
 /** One table of all test cases, clean and with injected errors, with four visible buttons on each row (FR-025). */
 export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) {
   const [renaming, setRenaming] = useState<TestCase | null>(null);
   const [newName, setNewName] = useState('');
   const [removing, setRemoving] = useState<TestCase | null>(null);
-  const { dataset, replies, judge_set } = state.evaluation;
-  const { duplicates } = testProjectFeedback(state.evaluation);
+  const [view, setView] = useState<CaseView>(DEFAULT_VIEW);
+  const { dataset } = state.evaluation;
+  // The warnings of all the cases are worked out once per change of the test project, not on every key typed in the search.
+  const rows = useMemo(() => caseRows(state), [state.evaluation]);
+  const shown = useMemo(() => filterCases(rows, view), [rows, view]);
+  const byId = useMemo(() => new Map(dataset.cases.map((c) => [c.id, c])), [dataset.cases]);
+  const change = (over: Partial<CaseView>) => setView((current) => ({ ...current, ...over }));
+  const sortable = (key: SortKey, title: string) => {
+    const direction = view.sort?.key === key ? view.sort.direction : null;
+    return (
+      <th aria-sort={direction === 'asc' ? 'ascending' : direction === 'desc' ? 'descending' : undefined}>
+        <button type="button" class="sort-button" onClick={() => change({ sort: nextSort(view.sort, key) })}>
+          {title}
+          <span aria-hidden="true">{direction === 'asc' ? ' ▲' : direction === 'desc' ? ' ▼' : ''}</span>
+        </button>
+      </th>
+    );
+  };
 
   /** A case that cannot be removed (a base in use) is refused at once, with the reason; others ask first. */
   const askRemove = (c: TestCase) => {
@@ -50,15 +64,49 @@ export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) 
 
   return (
     <>
+      <div class="cases-toolbar">
+        <input
+          type="search"
+          aria-label="Search test cases"
+          placeholder="Search name or text…"
+          value={view.search}
+          onInput={(event) => change({ search: (event.currentTarget as HTMLInputElement).value })}
+        />
+        <label>
+          Kind{' '}
+          <select value={view.kind} onChange={(event) => change({ kind: (event.currentTarget as HTMLSelectElement).value as KindFilter })}>
+            <option value="all">All kinds</option>
+            <option value="clean">Clean</option>
+            <option value="injected">Injected errors</option>
+          </select>
+        </label>
+        <label>
+          Reply{' '}
+          <select value={view.reply} onChange={(event) => change({ reply: (event.currentTarget as HTMLSelectElement).value as ReplyFilter })}>
+            <option value="all">With or without a reply</option>
+            <option value="with">With a reply</option>
+            <option value="without">Without a reply</option>
+          </select>
+        </label>
+        <label class="inline-check">
+          <input type="checkbox" checked={view.warnings} onChange={(event) => change({ warnings: (event.currentTarget as HTMLInputElement).checked })} /> With warnings
+        </label>
+        <button type="button" disabled={isDefaultView(view)} onClick={() => change({ search: '', kind: 'all', reply: 'all', warnings: false })}>
+          {labels.clearFilters}
+        </button>
+      </div>
+      <p class="muted" role="status" aria-label="Shown test cases">
+        {countText(shown.length, rows.length)}
+      </p>
       <div class="table-scroll">
         <table aria-label="Test cases">
           <thead>
             <tr>
-              <th>Id</th>
-              <th>Name</th>
-              <th>Kind</th>
+              {sortable('id', 'Id')}
+              {sortable('name', 'Name')}
+              {sortable('kind', 'Kind')}
               <th>Base</th>
-              <th>Expected errors</th>
+              {sortable('errors', 'Expected errors')}
               <th>Categories</th>
               <th>Warnings</th>
               <th>
@@ -67,9 +115,8 @@ export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) 
             </tr>
           </thead>
           <tbody>
-            {dataset.cases.map((c) => {
-              const hasReply = replies[c.id] !== undefined;
-              const base = c.base ? dataset.cases.find((b) => b.id === c.base) : undefined;
+            {shown.map(({ testCase: c, hasReply, warnings }) => {
+              const base = c.base ? byId.get(c.base) : undefined;
               const categories = [...new Set(c.expected_errors.map((e) => e.category).filter((x): x is string => !!x))];
               return (
                 <tr key={c.id} class="clickable" onClick={() => onOpen(c.id)}>
@@ -82,7 +129,7 @@ export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) 
                   <td>{c.base ? `${c.base}${base ? ` (${base.name})` : ''}` : ''}</td>
                   <td>{c.expected_errors.length}</td>
                   <td>{categories.join(', ')}</td>
-                  <td>{warningsOf(c, dataset.cases, judge_set.prompt, duplicates).join('; ')}</td>
+                  <td>{warnings.join('; ')}</td>
                   <td onClick={(event) => event.stopPropagation()}>
                     <div class="button-row">
                       <button type="button" onClick={() => onOpen(c.id)}>

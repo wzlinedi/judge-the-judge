@@ -26,6 +26,8 @@ export const labels = {
   explain: 'Explain',
   goToJudge: 'Go to Judge',
   goToTestCases: 'Go to Test cases',
+  // Browsing the test cases
+  clearFilters: 'Clear search and filters',
   // Judge
   addRule: 'Add rule',
   addCondition: 'Add condition',

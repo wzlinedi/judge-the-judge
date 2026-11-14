@@ -57,6 +57,7 @@ test('Export test cases, a new evaluation, Import test cases; and the test proje
   memory.chooseSaveName('exported.json');
   await menu(page, 'Export test cases');
   await expect(page.getByText(/Exported 3 test cases/)).toBeVisible();
+  await expect.poll(() => memory.files.has('exported.json')).toBe(true);
   const exported = JSON.parse(memory.files.get('exported.json') ?? '{}');
   expect(exported.format).toBe('judge-the-judge-test-cases');
   expect(exported.cases).toHaveLength(3);
@@ -74,11 +75,13 @@ test('Export test cases, a new evaluation, Import test cases; and the test proje
 
   memory.chooseSaveName('again.json');
   await menu(page, 'Export test cases');
+  await expect.poll(() => memory.files.has('again.json')).toBe(true); // the write is asynchronous
   expect(JSON.parse(memory.files.get('again.json') ?? '{}').cases).toEqual(exported.cases);
 
   // Save test project, reload, Load test project
   memory.chooseSaveName('project.json');
   await menu(page, 'Save test project');
+  await expect.poll(() => memory.files.has('project.json')).toBe(true);
   await page.reload();
   memory.chooseOpenName('project.json');
   await menu(page, 'Load test project');
