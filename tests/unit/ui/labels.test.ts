@@ -4,7 +4,7 @@ import { labels } from '../../../src/ui/labels';
 const required = [
   'Load test project…', 'Save test project', 'Save test project as…', 'Save evaluation', 'Save evaluation as…',
   'Save evaluation first', 'Discard', 'Import test cases…', 'Export test cases…', 'Load demo…',
-  'Load metric definition…', 'Reopen test cases', 'Continue', 'Explain', 'File', 'Add test case…', 'From JSON',
+  'Load metric definition…', 'Reopen test cases', 'Continue', 'Explain', 'More', 'Add test case…', 'From JSON',
   'Clean case', 'Case with errors', 'Save case', 'Close without saving', 'Open',
   'Rename', 'Show JSON', 'Copy JSON', 'Recreate the test case', 'Copy and recreate', 'Example', 'Show the issue', 'Edit expected errors',
   'Paste reply', 'Save reply', 'Add finding…', 'Second opinion…', 'Apply opinion', 'Approve',

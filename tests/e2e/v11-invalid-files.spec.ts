@@ -19,7 +19,7 @@ async function snapshot(page: Page) {
   return { header: await page.locator('header').first().innerText(), main: await page.locator('main').innerText(), step: await page.locator('[aria-current="step"]').innerText() };
 }
 const menu = async (page: Page, item: string) => {
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: item, exact: true }).click();
 };
 

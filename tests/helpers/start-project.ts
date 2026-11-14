@@ -43,7 +43,7 @@ export async function startFromMetricFile(page: Page, metric: MetricFile, memory
 async function open(page: Page, files: MemoryFiles): Promise<MemoryFiles> {
   files.chooseOpenName('starter.json');
   await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load test project…', exact: true }).click();
   return files;
 }

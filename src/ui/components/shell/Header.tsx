@@ -10,18 +10,21 @@ export interface HeaderProps {
   onFileAction: (action: FileAction) => void;
 }
 
-/** The two save buttons are always here, each with the name of its file under it; "Save … as…" and the loads are in the File menu (FR-076, T242). */
+/** The two save buttons are always here, each with the name of its file under it; "Save … as…" and the loads are in the More menu, and Help stands beside it (FR-076, T242, T246). */
 export function Header({ state, onGo, onFileAction }: HeaderProps) {
   return (
     <header class="app-header" role="banner">
       <div class="app-header-top">
         <h1 class="app-name">Judge the Judge</h1>
         <SaveState state={state} />
-        <div class="save-buttons">
+        <div class="header-actions">
           <SaveButton label={labels.saveTestProject} file={state.testProjectFile} onClick={() => onFileAction('save-test-project')} />
           <SaveButton label={labels.saveEvaluation} file={state.evaluationFile} onClick={() => onFileAction('save-evaluation')} />
+          <FileMenu onAction={onFileAction} />
+          <button type="button" class={`help-button${state.step === 'help' ? ' current' : ''}`} aria-current={state.step === 'help' ? 'page' : undefined} onClick={() => onGo('help')}>
+            {labels.help}
+          </button>
         </div>
-        <FileMenu onAction={onFileAction} />
       </div>
       <StepBar current={state.step} onGo={onGo} />
     </header>

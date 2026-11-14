@@ -11,7 +11,7 @@ const summary = async (page: Page) => ((await page.getByRole('tabpanel').textCon
 
 async function loadDemo(page: Page) {
   await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
   await page.getByRole('button', { name: /3\s*Run/ }).click();
@@ -35,7 +35,7 @@ async function decideEverything(page: Page) {
 
 async function loadEvaluation(page: Page, memory: Awaited<ReturnType<typeof installMemoryFiles>>, name: string) {
   memory.chooseOpenName(name);
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load evaluation…' }).click();
 }
 
@@ -76,7 +76,7 @@ test('a finished result is reproduced from the evaluation file alone: identical 
   await expect(page.getByRole('region', { name: 'Notices' })).toHaveCount(0);
   await expect.poll(() => summary(page)).toBe(numbers);
   await page.getByRole('button', { name: /3\s*Run/ }).click();
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Save evaluation as…' }).click();
   await expect.poll(() => memory.files.has('again.json')).toBe(true);
   const again = JSON.parse(memory.files.get('again.json')!);
@@ -139,10 +139,10 @@ test('the earlier run is never overwritten: after Run again with a new judge… 
   await loadDemo(page);
   await decideEverything(page);
   await page.getByRole('button', { name: /3\s*Run/ }).click();
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('button', { name: 'Save test project', exact: true }).click();
   expect(memory.asked()).toBe(1);
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('button', { name: 'Save test project', exact: true }).click();
   expect(memory.asked()).toBe(1); // overwritten, not asked again
 
@@ -152,7 +152,7 @@ test('the earlier run is never overwritten: after Run again with a new judge… 
   await expect(page.getByRole('dialog')).toHaveCount(0); // saved, so nothing is asked
 
   memory.chooseSaveName('project-2.json');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('button', { name: 'Save test project', exact: true }).click();
   await expect.poll(() => memory.files.has('project-2.json')).toBe(true);
   const asked = memory.asked();

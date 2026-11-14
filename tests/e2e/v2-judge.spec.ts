@@ -67,12 +67,12 @@ test('the Judge step builds a judge from scratch, shows the preview, and survive
   await expect(page.getByText(/Broken rule/)).toHaveCount(0);
 
   // save the test project, reload, load it
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('button', { name: 'Save test project', exact: true }).click();
   await expect(page.getByRole('banner').locator('.file-name').filter({ hasText: 'judge.json' })).toBeVisible();
   await page.reload();
   memory.chooseOpenName('judge.json');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load test project…' }).click();
   await expect(page.getByRole('button', { name: /2\s*Test cases/ })).toHaveAttribute('aria-current', 'step');
 
@@ -86,7 +86,7 @@ test('the Judge step builds a judge from scratch, shows the preview, and survive
 
 test('Load demo… loads the demo with no window and opens the Judge step with its judge filled in (T243)', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step');

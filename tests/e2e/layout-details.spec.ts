@@ -5,7 +5,7 @@ import { installMemoryFiles } from '../helpers/memory-files';
 
 const demoProject = readFileSync('examples/demo/test-project.json', 'utf8');
 const menu = async (page: Page, item: string) => {
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: item, exact: true }).click();
 };
 
@@ -66,4 +66,21 @@ test('the disabled Save case is quiet, not pale red, and says what is needed', a
   });
   expect(background).not.toBe(accent);
   expect(await approve.evaluate((b) => getComputedStyle(b).opacity)).toBe('1');
+});
+
+test('the More menu opens inside the screen, at a wide and at a narrow width, and More and Help stand on the line of the save buttons (T246)', async ({ page }) => {
+  for (const width of [1280, 420]) {
+    await page.setViewportSize({ width, height: 700 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'More', exact: true }).click();
+    const box = (await page.getByRole('menu', { name: 'More' }).boundingBox())!;
+    expect(box.x, `left edge at ${width}`).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width, `right edge at ${width}`).toBeLessThanOrEqual(width);
+    expect(box.y + box.height, `bottom edge at ${width}`).toBeLessThanOrEqual(700);
+    await expect(page.getByRole('menuitem', { name: 'New evaluation' })).toBeInViewport({ ratio: 1 });
+    await page.keyboard.press('Escape');
+  }
+  await page.setViewportSize({ width: 1280, height: 700 });
+  const tops = await Promise.all(['Save test project', 'Save evaluation', 'More', 'Help'].map(async (name) => Math.round((await page.getByRole('button', { name, exact: true }).boundingBox())!.y)));
+  expect(new Set(tops).size, JSON.stringify(tops)).toBe(1);
 });

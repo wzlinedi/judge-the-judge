@@ -16,7 +16,7 @@ const panel = () => screen.getByRole('dialog', { name: 'Import test cases…' })
 
 function openPanel(ports: FakePorts = createFakePorts(), state: AppState = draft()) {
   render(<App ports={ports} env={env} initialState={state} />);
-  fireEvent.click(screen.getByRole('button', { name: 'File' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More' }));
   fireEvent.click(screen.getByRole('menuitem', { name: 'Import test cases…' }));
   return ports;
 }
@@ -190,7 +190,7 @@ describe('Export test cases', () => {
   it('asks for a file name each time and keeps the unsaved indicator as it was', async () => {
     const ports = createFakePorts();
     render(<App ports={ports} env={env} initialState={draft()} />);
-    fireEvent.click(screen.getByRole('button', { name: 'File' }));
+    fireEvent.click(screen.getByRole('button', { name: 'More' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Export test cases…' }));
     expect(await screen.findByText(/Exported 2 test cases/)).toBeTruthy();
     expect(ports.exportTarget.asked).toBe(1);

@@ -31,6 +31,8 @@ export interface FileMenuProps {
 export function FileMenu({ onAction }: FileMenuProps) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(0);
+  /** The menu hangs from the right edge of its button; from the left edge when there is no room on that side (T246). */
+  const [fromLeft, setFromLeft] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const root = useRef<HTMLDivElement>(null);
   const items = useRef<Array<HTMLButtonElement | null>>([]);
@@ -38,6 +40,13 @@ export function FileMenu({ onAction }: FileMenuProps) {
   useEffect(() => {
     if (open) items.current[focusIndex]?.focus();
   }, [open, focusIndex]);
+
+  useEffect(() => {
+    if (!open) return;
+    const menu = root.current?.querySelector<HTMLElement>('.menu');
+    const right = button.current?.getBoundingClientRect().right ?? 0;
+    setFromLeft(right - (menu?.offsetWidth ?? 0) < 0);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -95,10 +104,10 @@ export function FileMenu({ onAction }: FileMenuProps) {
         }}
         onKeyDown={onButtonKey}
       >
-        {labels.file}
+        {labels.more}
       </button>
       {open ? (
-        <div class="menu" role="menu" aria-label={labels.file}>
+        <div class={fromLeft ? 'menu menu-left' : 'menu'} role="menu" aria-label={labels.more}>
           {FILE_ITEMS.map((item, index) => (
             <button
               key={item.action}

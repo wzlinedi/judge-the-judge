@@ -12,7 +12,7 @@ The tool has no separate step for loading a metric: **the test project file carr
 
 1. Take a definition file such as the ones in the examples below (they are metric files: `judge_set` is the judge, the rest is the metric).
 2. Put the judge (`judge_set`, without `clean_base_cases`) and the test cases in a test project, and copy `name`, `description`, `limitations`, `output_format`, `parameters` and `measures` into `metric.definition` of that file, next to `metric.id` (the same `id` as the definition) and `metric.parameters`.
-3. Open the file with **File**, then **Load test project…**. If something in `metric.definition` is wrong, the window says what and where (for example `metric.definition.measures[0].operation`), and nothing changes.
+3. Open the file with **More**, then **Load test project…**. If something in `metric.definition` is wrong, the window says what and where (for example `metric.definition.measures[0].operation`), and nothing changes.
 
 A file whose `metric.id` is the id of a metric loaded earlier replaces it, because the file you load is the one you mean. The built-in metric (Accuracy) cannot be replaced.
 

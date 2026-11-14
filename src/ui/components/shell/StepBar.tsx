@@ -1,7 +1,7 @@
 import { STEPS } from '../../../app/selectors';
 import type { StepId } from '../../../app/store';
-import { labels } from '../../labels';
 
+/** The four numbered steps. Help is in the top bar of the header (T246). */
 export function StepBar({ current, onGo }: { current: StepId; onGo: (step: StepId) => void }) {
   return (
     <nav class="step-bar" aria-label="Steps">
@@ -17,14 +17,6 @@ export function StepBar({ current, onGo }: { current: StepId; onGo: (step: StepI
           <span class="step-name">{step.name}</span>
         </button>
       ))}
-      <button
-        type="button"
-        class={`step help${current === 'help' ? ' current' : ''}`}
-        aria-current={current === 'help' ? 'step' : undefined}
-        onClick={() => onGo('help')}
-      >
-        {labels.help}
-      </button>
     </nav>
   );
 }

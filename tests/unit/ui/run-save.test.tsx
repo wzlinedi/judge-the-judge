@@ -16,7 +16,7 @@ const demoText = readFileSync('examples/demo/evaluation.json', 'utf8');
 const renderApp = (ports: FakePorts, initialState?: AppState) => render(<App ports={ports} env={env} fileEnv={fileEnv} initialState={initialState} />);
 const stateOn = (step: AppState['step'], evaluation: Evaluation = sampleEvaluation(), extra: Partial<AppState> = {}): AppState => ({ ...createState(), step, evaluation, ...extra });
 const menu = (name: string) => {
-  fireEvent.click(screen.getByRole('button', { name: 'File' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More' }));
   fireEvent.click(screen.getByRole('menuitem', { name }));
 };
 const loadFile = async (ports: FakePorts, menuItem: string, text: string, name = 'chosen.json') => {

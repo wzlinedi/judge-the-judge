@@ -7,7 +7,7 @@ const next = (page: Page) => page.getByRole('region', { name: 'What next' });
 const item = (page: Page, kind: 'expected' | 'additional', id: string) => page.locator(`[data-${kind}="${id}"]`);
 
 async function loadDemo(page: Page) {
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
   await page.getByRole('button', { name: /3\s*Run/ }).click();
@@ -44,7 +44,7 @@ test('Save evaluation asks for a file once, overwrites it later, and Load evalua
 
   // save as: asks, to a second file
   memory.chooseSaveName('run-2.json');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Save evaluation as…' }).click();
   await expect(page.getByText('All changes saved (run-2.json)')).toBeVisible();
   expect(memory.asked()).toBe(2);
@@ -54,7 +54,7 @@ test('Save evaluation asks for a file once, overwrites it later, and Load evalua
   await page.reload();
   await expect(page.getByText('Nothing to save yet')).toBeVisible();
   memory.chooseOpenName('run-1.json');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load evaluation…' }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
   await expect(page.getByText('All changes saved (run-1.json)')).toBeVisible();
@@ -102,7 +102,7 @@ test('Save test project with replies keeps the indicator on, and "Save evaluatio
   await loadDemo(page);
   await decideCase3(page);
 
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('button', { name: 'Save test project', exact: true }).click();
   await expect(page.getByText(/Replies are kept only by "Save evaluation"/)).toBeVisible();
   await expect(page.getByText('Unsaved changes')).toBeVisible();
@@ -110,7 +110,7 @@ test('Save test project with replies keeps the indicator on, and "Save evaluatio
   expect(memory.files.get('project.json')).not.toContain('"replies"');
 
   memory.chooseSaveName('run.json');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   const warning = page.getByRole('dialog', { name: 'Unsaved changes' });
   await expect(warning.getByRole('button')).toHaveText(['Cancel', 'Discard', 'Save evaluation first']);
@@ -124,13 +124,13 @@ test('a saved test project loads back finalized on Run with no replies (quicksta
   memory.chooseSaveName('books.json');
   await page.goto('/');
   await loadDemo(page);
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('button', { name: 'Save test project', exact: true }).click();
   await expect(page.getByRole('banner').locator('.file-name').filter({ hasText: 'books.json' })).toBeVisible();
 
   await page.reload();
   memory.chooseOpenName('books.json');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load test project…' }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
   await expect(next(page)).toContainText('0 of 20 cases decided');

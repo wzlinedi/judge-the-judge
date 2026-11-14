@@ -12,7 +12,7 @@ const CONFIRMING = ['Save case', 'Save case', 'Apply opinion', 'Import test case
 const NEEDED_NEXT: Record<string, string[]> = { 'Import window': ['Choose file…'] };
 
 const menu = async (page: Page, item: string) => {
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: item, exact: true }).click();
 };
 const step = (page: Page, name: RegExp) => page.getByRole('button', { name }).click();
@@ -208,7 +208,7 @@ test('every action is reachable with the keyboard alone: the File menu, a dialog
     }
     throw new Error(`Could not reach ${String(name)} with Tab`);
   };
-  await reach('File');
+  await reach('More');
   expect(await focusRing()).not.toBe('none');
   await page.keyboard.press('Enter');
   await expect(page.getByRole('menuitem', { name: 'Load demo…' })).toBeVisible();

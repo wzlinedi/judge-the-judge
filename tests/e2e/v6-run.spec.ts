@@ -19,7 +19,7 @@ async function openRunWithoutReplies(page: Page) {
   memory.files.set('books.json', testProject);
   memory.chooseOpenName('books.json');
   await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load test project…' }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
   return memory;

@@ -1,7 +1,7 @@
 // The action names of FR-008, used by every component. One key per name; no two keys share a label.
 export const labels = {
   // File menu and header
-  file: 'File',
+  more: 'More',
   help: 'Help',
   loadEvaluation: 'Load evaluation…',
   loadTestProject: 'Load test project…',

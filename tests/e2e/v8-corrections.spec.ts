@@ -9,7 +9,7 @@ const notices = (page: Page) => page.getByRole('region', { name: 'Notices' });
 
 async function loadDemo(page: Page) {
   await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
   await page.getByRole('button', { name: /3\s*Run/ }).click();

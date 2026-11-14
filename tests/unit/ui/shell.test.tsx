@@ -11,14 +11,20 @@ const renderApp = (props: Partial<Parameters<typeof App>[0]> = {}) =>
   render(<App ports={createFakePorts()} env={supportedEnv} {...props} />);
 
 describe('header', () => {
-  it('shows the tool name, four numbered steps and Help', () => {
+  it('shows the tool name and four numbered steps; More and Help stand in the top bar with the save buttons (T246)', () => {
     renderApp();
     const header = screen.getByRole('banner');
     expect(within(header).getByText('Judge the Judge')).toBeTruthy();
     const nav = within(header).getByRole('navigation', { name: 'Steps' });
     const steps = within(nav).getAllByRole('button');
-    expect(steps.map((s) => s.textContent)).toEqual(['1Judge', '2Test cases', '3Run', '4Results', 'Help']);
+    expect(steps.map((s) => s.textContent)).toEqual(['1Judge', '2Test cases', '3Run', '4Results']);
     expect(steps[0]?.getAttribute('aria-current')).toBe('step');
+    const actions = header.querySelector('.header-actions') as HTMLElement;
+    expect(within(actions).getAllByRole('button').map((b) => b.textContent)).toEqual(['Save test project', 'Save evaluation', 'More', 'Help']);
+    expect(screen.queryByRole('button', { name: 'File' })).toBeNull();
+    fireEvent.click(within(actions).getByRole('button', { name: 'Help' }));
+    expect(within(actions).getByRole('button', { name: 'Help' }).getAttribute('aria-current')).toBe('page');
+    expect(within(nav).getAllByRole('button').every((b) => b.getAttribute('aria-current') === null)).toBe(true);
   });
 
   it('shows the one indicator: nothing to save, unsaved, all saved with the file name', () => {
@@ -36,9 +42,9 @@ describe('header', () => {
     expect(screen.getAllByText(/run-1\.json/).length).toBeGreaterThan(0);
   });
 
-  it('has a File menu with the loads and the Save as… items; the plain saves are buttons of the header (T242)', () => {
+  it('has a More menu with the loads and the Save as… items; the plain saves are buttons of the header (T242)', () => {
     renderApp();
-    const button = screen.getByRole('button', { name: labels.file });
+    const button = screen.getByRole('button', { name: labels.more });
     expect(button.getAttribute('aria-haspopup')).toBe('menu');
     fireEvent.click(button);
     const items = screen.getAllByRole('menuitem').map((i) => i.textContent);
@@ -61,7 +67,7 @@ describe('header', () => {
 
   it('opens and closes the menu with the keyboard and Escape', () => {
     renderApp();
-    const button = screen.getByRole('button', { name: labels.file });
+    const button = screen.getByRole('button', { name: labels.more });
     button.focus();
     fireEvent.keyDown(button, { key: 'ArrowDown' });
     expect(button.getAttribute('aria-expanded')).toBe('true');
@@ -76,7 +82,7 @@ describe('header', () => {
 
   it('"Load demo…" loads the demo at once, with no window, and opens the Judge step (T243)', async () => {
     renderApp();
-    fireEvent.click(screen.getByRole('button', { name: labels.file }));
+    fireEvent.click(screen.getByRole('button', { name: labels.more }));
     fireEvent.click(screen.getByRole('menuitem', { name: labels.loadExample }));
     expect(screen.queryByRole('dialog')).toBeNull();
     expect((await screen.findByRole('button', { name: /1\s*Judge/ })).getAttribute('aria-current')).toBe('step');

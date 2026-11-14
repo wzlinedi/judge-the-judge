@@ -38,7 +38,7 @@ features.
 
 ### V1. First run with demo data (SC-001, SC-009, SC-010, User Stories 1 and 9)
 
-1. Open the tool; in the File menu choose "Load demo…". The demo is loaded at once and the Judge step opens; go on to Run.
+1. Open the tool; in the More menu choose "Load demo…". The demo is loaded at once and the Judge step opens; go on to Run.
 2. On Results choose "Export HTML report". Then press "Continue" in the "what next" line and
    decide each case it opens. Open Results and export again.
 
@@ -60,7 +60,7 @@ first-time user, not by the automated test.)
 2. Paste a broken sample reply, then fix it; then paste one wrapped in a code fence.
 3. Add a rule with two conditions joined by "any of", then a second rule with "all of".
 4. Replace the sample with one that lacks a field used by a rule.
-5. "Save test project" (File menu), reload the page, "Load test project".
+5. "Save test project" (More menu), reload the page, "Load test project".
 
 **Expected**: the step shows no buttons of its own besides "Add rule", "Add condition" and
 "Remove"; exactly the three variables are listed and `context` (the last) was proposed as the
@@ -113,7 +113,7 @@ field change is a problem, and the test cases version changes.
 
 ### V5. Import and export test cases (SC-015 to SC-020, User Story 5)
 
-1. "Import test cases" (File menu), "Download example file", add rows in a spreadsheet, including
+1. "Import test cases" (More menu), "Download example file", add rows in a spreadsheet, including
    one invalid row and Polish characters.
 2. Choose the file and read the summary; import the valid rows. Then import a JSON file of cases
    with a category that is not in the catalog and an identifier already used.
@@ -217,7 +217,7 @@ stopped. The header indicator says "All changes saved" with the file name after 
 evaluation". On Results the case opens read-only with Previous and Next, and only the threshold
 can be changed. The loaded JSON shows identical numbers, judge version and test cases version, and
 the report can be generated from it. There is no "Export JSON". The test project asks for a file
-once and then overwrites it, its name shown in the File menu; after "Run again with a new judge…"
+once and then overwrites it, its name shown in the More menu; after "Run again with a new judge…"
 the next "Save test project" and "Save evaluation" each ask for a new file, so the earlier run's
 files are untouched. "Save test project" with replies entered leaves the indicator on and says that
 replies are kept only by "Save evaluation"; the warning before "Load demo…" offers "Save

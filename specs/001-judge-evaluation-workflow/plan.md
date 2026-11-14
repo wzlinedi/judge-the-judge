@@ -173,7 +173,7 @@ src/
 │   │                        # case view of Results on the same frame), second-opinion/, load-example/
 │   ├── help/
 │   ├── components/          # Shared controls, tables, dialogs, the "what next" line, the
-│   │                        # File menu, the JSON box with live problems, empty and error states
+│   │                        # More menu, the JSON box with live problems, empty and error states
 │   └── styles/              # tokens.css (single source of design tokens), base.css
 └── main.tsx
 
@@ -212,7 +212,7 @@ runs on the demo data, so the core value (reading replies and judging the judge)
 any editing screen exists.
 
 1. **Foundation**: project setup, design tokens (black and red, light and dark), application
-   shell with the four steps, the header with the unsaved-changes indicator, the File menu and
+   shell with the four steps, the header with the unsaved-changes indicator, the More menu and
    **Load demo…** (no save button: **Save evaluation** is on Run), the "what next" line, schemas and file identity (`format`,
    `schema_version`), demo data files, removal of the answered prototypes.
 2. **Read and judge on demo data (User Stories 1 and 6, part of 8 and 9)**: load and save an evaluation file,

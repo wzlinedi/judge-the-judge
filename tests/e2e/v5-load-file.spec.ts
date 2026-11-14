@@ -7,7 +7,7 @@ import { startFromAccuracy } from '../helpers/start-project';
 const importWindow = (page: Page) => page.getByRole('dialog', { name: 'Import test cases…' });
 const rows = (page: Page) => page.getByRole('row');
 const menu = async (page: Page, item: string) => {
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: item, exact: true }).click();
 };
 const startAccuracy = (page: Page, memory: MemoryFiles) => startFromAccuracy(page, memory);

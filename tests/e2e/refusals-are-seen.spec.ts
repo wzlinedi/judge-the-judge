@@ -50,7 +50,7 @@ test('removing a base case is refused in a banner that is in view where the butt
 test('a message of the tool is a visible banner, not small grey text', async ({ page }) => {
   const memory = await installMemoryFiles(page);
   await start(page, memory);
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Export test cases…' }).click();
   const banner = message(page);
   await expect(banner).toContainText(/Exported/);

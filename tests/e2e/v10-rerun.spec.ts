@@ -15,7 +15,7 @@ async function versions(page: Page): Promise<{ judge: string; cases: string }> {
   return { judge: judge!, cases: cases! };
 }
 async function file(page: Page, item: string) {
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: item, exact: true }).click();
 }
 async function enterFirstReply(page: Page) {

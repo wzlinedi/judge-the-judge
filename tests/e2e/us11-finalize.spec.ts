@@ -27,7 +27,7 @@ async function pasteCase(page: Page, text: string) {
 }
 async function importRows(page: Page, memory: Awaited<ReturnType<typeof installMemoryFiles>>, name: string) {
   memory.chooseOpenName(name);
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Import test cases…' }).click();
   const importWindow = page.getByRole('dialog', { name: 'Import test cases…' });
   await importWindow.getByRole('button', { name: 'Choose file…' }).click();
@@ -38,7 +38,7 @@ async function openDemoRun(page: Page) {
   memory.files.set('books.json', testProject);
   memory.chooseOpenName('books.json');
   await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load test project…' }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
   return memory;
@@ -101,7 +101,7 @@ test('Reopen test cases stands in the "what next" line of Run and Add test case 
   await expect(page.getByLabel('Judge prompt')).not.toHaveAttribute('readonly', '');
 
   // nothing is lost and the remembered file is kept: saving does not ask for a file again
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('button', { name: 'Save test project', exact: true }).click();
   expect(memory.asked()).toBe(0);
   expect(JSON.parse(memory.files.get('books.json')!).dataset.finalized).toBe(false);
@@ -140,7 +140,7 @@ test('leaving the page with unsaved cases warns; after saving the test project i
   await expect.poll(() => types).toEqual(['beforeunload']);
   expect(page.isClosed()).toBe(false);
 
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('button', { name: 'Save test project', exact: true }).click();
   await expect(page.getByText('All changes saved').first()).toBeVisible();
   await page.close({ runBeforeUnload: true });

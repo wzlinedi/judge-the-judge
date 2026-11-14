@@ -10,11 +10,14 @@ Chrome and Microsoft Edge (FR-003).
 
 ## Shell
 
-- A header with the tool name, the four numbered steps as a progress bar, and a link to **Help**.
+- A header with the tool name and, on the same line, **Save test project**, **Save evaluation**, the
+  **More** menu and **Help** (T246); under it the four numbered steps as a progress bar. The **More**
+  menu always opens inside the screen (it is aligned to the right edge of its button and scrolls when
+  it is taller than the screen).
   The current step and how far the user has got are always visible.
 - **The header holds the two save buttons** (FR-076, T242). It shows the one indicator of unsaved changes
   ("Unsaved changes", or "All changes saved" with the file name; FR-051), **Save test project** and
-  **Save evaluation**, each with the name of its file (or "no file yet") under it, and a **File** menu
+  **Save evaluation**, each with the name of its file (or "no file yet") under it, and a **More** menu
   holding **Load evaluation…**, **Load test project…**, **Save test project as…**, **Save evaluation
   as…**, **Import test cases…**, **Export test cases…**, **Load demo…** and **New evaluation**.
   No other screen has a save button.
@@ -90,7 +93,7 @@ Compare step and no result shelf.
      list, a note says that the judge is evaluated per case (FR-061).
 - There is no error catalog and no clean case section on this step.
 - **States**: empty (the "what next" line names what is missing; examples are loaded from the
-  File menu); prompt with no variables (warning); judged-text variable removed (the last variable
+  More menu); prompt with no variables (warning); judged-text variable removed (the last variable
   proposed again, with a note); sample that cannot be read (line and column, text kept, fields
   unchanged); broken rule (marked, with the missing field named; a condition without a value yet is
   "unfinished", not broken); replies not readable
@@ -126,13 +129,13 @@ Compare step and no result shelf.
      row **Open**, **Rename** and **Remove** as buttons; a click on the row also opens
      the case. Search, filter (all kinds, clean, injected errors, with warnings, with a reply,
      without a reply) and sorting. There is no details panel and no row menu (FR-025).
-- **Import summary** (after **Import test cases** in the File menu, with **Download example file**
+- **Import summary** (after **Import test cases** in the More menu, with **Download example file**
   in its panel): found, clean, with injected errors, invalid rows with position and reason, fields
   that match no variable, variables with no field, categories missing from the catalog with a
   choice to add them; then **Import test cases** (adds the cases to those already here, also after
   finalizing) or **Cancel** (FR-027 to FR-030, FR-053).
 - **Finalize**: a summary dialog (counts, balance, test size, all warnings) and a confirmation.
-- **States**: no cases yet (points to **Add test case**, the File menu and the Judge step); 500-case
+- **States**: no cases yet (points to **Add test case**, the More menu and the Judge step); 500-case
   limit reached; text too long; identifier collision on import (new identifiers, said in the
   summary); name used twice (both cases show the warning); finalized (**Add test case**
   above the list and **Import test cases** stay available and new cases start as Not run; **Rename** and

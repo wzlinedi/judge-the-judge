@@ -13,7 +13,7 @@ const fileEnv = { now: () => '2026-01-01T00:00:00.000Z', toolVersion: 'test' };
 const unsaved = (): AppState => ({ ...createState(), step: 'run', evaluation: sampleEvaluation(), unsaved: true });
 const renderApp = (ports: FakePorts, state: AppState) => render(<App ports={ports} env={env} fileEnv={fileEnv} initialState={state} />);
 const menu = (name: string) => {
-  fireEvent.click(screen.getByRole('button', { name: 'File' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More' }));
   fireEvent.click(screen.getByRole('menuitem', { name }));
 };
 

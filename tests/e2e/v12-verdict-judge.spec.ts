@@ -52,7 +52,7 @@ test('a verdict judge: the Judge step says so, replies decide whole cases, the S
 
   // the test project with its cases and its metric is loaded and opens on Run
   memory.chooseOpenName('bias-texts.json');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load test project…' }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
 

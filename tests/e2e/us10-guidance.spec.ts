@@ -72,7 +72,7 @@ test('the limit of 500: the remaining capacity is shown, an import beyond it is 
   await start(page, memory);
 
   memory.chooseOpenName('too-many.csv');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Import test cases…' }).click();
   const importWindow = page.getByRole('dialog', { name: 'Import test cases…' });
   await importWindow.getByRole('button', { name: 'Choose file…' }).click();
@@ -81,7 +81,7 @@ test('the limit of 500: the remaining capacity is shown, an import beyond it is 
   await expect(card(page)).toContainText('497 more test cases can be added (500 at most).');
 
   memory.chooseOpenName('exactly.csv');
-  await page.getByRole('button', { name: 'File' }).click();
+  await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Import test cases…' }).click();
   await importWindow.getByRole('button', { name: 'Choose file…' }).click();
   await importWindow.getByRole('button', { name: 'Import test cases…' }).click();
