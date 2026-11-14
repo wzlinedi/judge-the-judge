@@ -56,14 +56,10 @@ describe('the read-only view', () => {
     expect(win().textContent).toMatch(/Anna is a doctor\. She bought a .*second oven in 2005\./);
   });
 
-  it('Clone makes the name unique each time and saves a new case with no link to the original', () => {
+  it('has no Clone button: a wrong case is changed through Show JSON, Paste JSON and Remove (T218)', () => {
     show();
     open('Anna + 2 errors');
-    fireEvent.click(within(view()).getByRole('button', { name: 'Clone' }));
-    fireEvent.click(within(screen.getByRole('dialog', { name: 'Test case' })).getByRole('button', { name: 'Save case' }));
-    expect(screen.getByText('Anna + 2 errors (copy)')).toBeTruthy();
-    open('Anna + 2 errors');
-    fireEvent.click(within(view()).getByRole('button', { name: 'Clone' }));
-    expect((within(screen.getByRole('dialog', { name: 'Test case' })).getByLabelText('Case JSON') as HTMLTextAreaElement).value).toContain('(copy 2)');
+    expect(within(view()).queryByRole('button', { name: 'Clone' })).toBeNull();
+    expect(within(view()).getByRole('button', { name: 'Show JSON' })).toBeTruthy();
   });
 });

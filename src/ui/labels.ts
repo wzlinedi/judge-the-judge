@@ -37,6 +37,7 @@ export const labels = {
   rename: 'Rename',
   addTestCase: 'Add test case',
   open: 'Open',
+  /** No button has this label any more (T218). It stays only because the Help still quotes it; the Help update at the end removes both (T225). */
   clone: 'Clone',
   finalizeTestCases: 'Finalize test cases',
   editTestCases: 'Edit test cases',

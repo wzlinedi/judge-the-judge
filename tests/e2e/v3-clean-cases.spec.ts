@@ -48,13 +48,20 @@ test('a clean case is made from a prompt and an answer, and checked as it is pas
   await expect(page.getByText('Unsaved changes')).toBeVisible();
 });
 
-test('Clone, Rename and Remove work from the row buttons, and a base in use cannot be removed', async ({ page }) => {
+test('Rename and Remove work from the row buttons, a copy is made with Show JSON and Paste JSON, and a base in use cannot be removed', async ({ page }) => {
   await start(page);
   const first = page.getByRole('row').nth(1);
   const firstName = (await first.getByRole('cell').nth(1).textContent()) ?? '';
 
-  await first.getByRole('button', { name: 'Clone' }).click();
-  await expect(testWindow(page).getByLabel('Case JSON')).toHaveValue(new RegExp(`${firstName} \\(copy\\)`));
+  // no Clone button (T218); a copy is made with Show JSON and Paste JSON
+  await expect(first.getByRole('button', { name: 'Clone' })).toHaveCount(0);
+  await first.getByRole('button', { name: 'Open' }).click();
+  await page.getByRole('button', { name: 'Show JSON' }).click();
+  const shown = await page.getByRole('textbox', { name: 'Case JSON' }).inputValue();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.getByRole('button', { name: 'Add test case' }).click();
+  await testWindow(page).getByRole('button', { name: 'Paste JSON' }).click();
+  await testWindow(page).getByLabel('Case JSON').fill(JSON.stringify({ ...JSON.parse(shown), name: `${firstName} (copy)` }));
   await testWindow(page).getByRole('button', { name: 'Save case' }).click();
   await expect(row(page, `${firstName} (copy)`)).toBeVisible();
 

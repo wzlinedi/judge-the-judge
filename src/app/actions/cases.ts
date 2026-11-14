@@ -1,6 +1,6 @@
 // The actions of the Test cases step (FR-017, FR-023, FR-025, FR-039, FR-053, FR-078, FR-089).
 // Every change gives a new test cases version: the stored one is dropped and recomputed on save.
-import { caseToJson, checkCaseJson } from '../../core/cases/case-json';
+import { checkCaseJson } from '../../core/cases/case-json';
 import { canChangeCase, markLate } from '../../core/cases/case-actions';
 import { assignIdentifiers } from '../../core/cases/identifiers';
 import { normalizeName } from '../../core/cases/validate';
@@ -75,18 +75,6 @@ export function removeCase(state: AppState, id: string): CaseEdit {
   const allowed = canChangeCase(state.evaluation.dataset.cases, state.evaluation.replies, state.evaluation.dataset.finalized, id, 'remove');
   if (!allowed.allowed) return { state, note: allowed.reason };
   return { state: withCases(state, state.evaluation.dataset.cases.filter((c) => c.id !== id)) };
-}
-
-/** "Clone" is only a shortcut: it gives the case JSON with the name "… (copy)" made unique; nothing is added yet (FR-078). */
-export function cloneCase(state: AppState, id: string): string | undefined {
-  const original = state.evaluation.dataset.cases.find((c) => c.id === id);
-  if (!original) return undefined;
-  const names = new Set(state.evaluation.dataset.cases.map((c) => normalizeName(c.name)));
-  const label = original.name.trim() === '' ? `Case ${original.id}` : original.name;
-  let name = `${label} (copy)`;
-  for (let n = 2; names.has(normalizeName(name)); n++) name = `${label} (copy ${n})`;
-  const { base: _link, ...rest } = original;
-  return caseToJson({ ...rest, name });
 }
 
 /** After finalizing, the expected errors of a case without a reply may be corrected through its JSON (FR-089). */

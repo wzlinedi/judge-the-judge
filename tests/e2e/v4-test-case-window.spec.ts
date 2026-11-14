@@ -1,4 +1,4 @@
-// quickstart.md V4: a case with injected errors in three parts, Open, Show JSON, Clone, Correct expected errors
+// quickstart.md V4: a case with injected errors in three parts, Open, Show JSON, Correct expected errors
 // (SC-022 to SC-024, SC-031, SC-033, SC-035, SC-036, User Story 4).
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';

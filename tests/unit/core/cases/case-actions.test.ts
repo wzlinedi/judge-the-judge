@@ -63,7 +63,7 @@ describe('markLate (FR-053)', () => {
     expect(markLate(plain, false, 'added')).toBe(plain);
   });
 
-  it('marks a case added, cloned or imported after the first reply as added', () => {
+  it('marks a case added or imported after the first reply as added', () => {
     expect(markLate(plain, true, 'added').changed_after_first_reply).toBe('added');
   });
 

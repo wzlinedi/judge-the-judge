@@ -1,4 +1,4 @@
-import { cloneCase, type CaseEdit } from '../../../app/actions/cases';
+import type { CaseEdit } from '../../../app/actions/cases';
 import type { AppState } from '../../../app/store';
 import { AddChoice } from './AddChoice';
 import { InjectWindow } from './InjectWindow';
@@ -41,7 +41,6 @@ export function TestCaseWindow({ state, view, onView, onApply }: TestCaseWindowP
           state={state}
           caseId={view.id}
           onNavigate={(id) => onView({ view: 'open', id })}
-          onClone={(id) => onView({ view: 'paste', text: cloneCase(state, id) ?? '' })}
           onCorrect={(id) => onView({ view: 'correct', id })}
           onClose={close}
         />

@@ -50,7 +50,7 @@ Names below describe behavior; exact TypeScript signatures are written with thei
 | `canChangeCase(cases, replies, finalized, id, action)` | For **Rename**, **Remove** and **Correct expected errors**: allowed, or refused with the reason ("This case has a reply"; a base still in use, FR-017) (FR-025, FR-039, FR-089). |
 | `checkCaseJson(text, context)` | file-formats.md, section 2. `context` = mode (`paste`, `clean`, `inject`, `correct`), variables, judged text, catalog, existing cases, picked base, number of errors to prepare, and the original case for `correct`. Returns problems (with line and column or field path), warnings, notes, the kind the case will have, and the case when valid (FR-031, FR-041, FR-083, FR-084, FR-089, FR-090). |
 | `textListCheck(testCase, base, judgedText)` | The line of FR-080: changed places not in the list (with their text, to highlight), expected errors not in the text, identical to base, errors with no fragment or category. |
-| `caseToJson(testCase)` | The case JSON of "Show JSON", "Copy JSON" and "Clone" (no `id`; `base` only when set); `checkCaseJson` of its output gives the same fields and expected errors (SC-036). |
+| `caseToJson(testCase)` | The case JSON of "Show JSON" and "Copy JSON" (no `id`; `base` only when set); `checkCaseJson` of its output gives the same fields and expected errors (SC-036). |
 | `markLate(case, hasReplies, change)` | Sets `changed_after_first_reply` to `added` or `corrected` when replies exist (FR-053). |
 | `testCasesFeedback(cases)` | Clean and injected-errors counts, missing kinds, duplicate texts, remaining capacity. |
 | `testSizeForecast(cases, minimumSample)` | Totals, grouping by number of expected errors, and met or missing for each minimum. |

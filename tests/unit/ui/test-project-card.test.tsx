@@ -87,7 +87,7 @@ describe('the test project card', () => {
 });
 
 const step = (state: AppState) =>
-  render(<CasesStep state={state} onAdd={vi.fn()} onOpen={vi.fn()} onClone={vi.fn()} onEdit={vi.fn()} categoriesOpen={false} onToggleCategories={vi.fn()} onCatalogEdit={vi.fn()} />);
+  render(<CasesStep state={state} onAdd={vi.fn()} onOpen={vi.fn()} onEdit={vi.fn()} categoriesOpen={false} onToggleCategories={vi.fn()} onCatalogEdit={vi.fn()} />);
 
 describe('the Test cases step', () => {
   it('puts the test project card between the error categories and the table', () => {

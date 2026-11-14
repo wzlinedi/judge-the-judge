@@ -9,7 +9,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 
 const text = (p: Problem): string => p.message;
 
-/** The case JSON of "Show JSON", "Copy JSON" and "Clone": no identifiers, `base` only when set. */
+/** The case JSON of "Show JSON" and "Copy JSON": no identifiers, `base` only when set. */
 export function caseToJson(testCase: TestCase): string {
   const json = {
     name: testCase.name,

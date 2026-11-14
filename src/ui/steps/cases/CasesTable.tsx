@@ -21,12 +21,11 @@ import { TableScroll } from '../../components/TableScroll';
 export interface CasesTableProps {
   state: AppState;
   onOpen: (id: string) => void;
-  onClone: (id: string) => void;
   onEdit: (edit: CaseEdit) => void;
 }
 
 /** One table of all test cases, clean and with injected errors, with four visible buttons on each row (FR-025). */
-export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) {
+export function CasesTable({ state, onOpen, onEdit }: CasesTableProps) {
   const [renaming, setRenaming] = useState<TestCase | null>(null);
   const [newName, setNewName] = useState('');
   /** A refused rename is said inside the window, where the user is looking. */
@@ -141,9 +140,6 @@ export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) 
                     <div class="button-row">
                       <button type="button" onClick={() => onOpen(c.id)}>
                         {labels.open}
-                      </button>
-                      <button type="button" onClick={() => onClone(c.id)}>
-                        {labels.clone}
                       </button>
                       <button
                         type="button"

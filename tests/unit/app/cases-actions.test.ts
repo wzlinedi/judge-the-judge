@@ -1,6 +1,6 @@
 // The actions of the Test cases step (FR-017, FR-023, FR-025, FR-039, FR-053, FR-078, FR-089).
 import { describe, expect, it } from 'vitest';
-import { cloneCase, correctExpectedErrors, removeCase, renameCase, saveCaseFromJson } from '../../../src/app/actions/cases';
+import { correctExpectedErrors, removeCase, renameCase, saveCaseFromJson } from '../../../src/app/actions/cases';
 import { createState, type AppState } from '../../../src/app/store';
 import { caseToJson } from '../../../src/core/cases/case-json';
 import { sampleEvaluation } from '../../helpers/fixtures';
@@ -77,22 +77,6 @@ describe('rename and remove', () => {
     const removed = removeCase(open(), '2');
     expect(removed.state.evaluation.dataset.cases.map((c) => c.id)).toEqual(['1']);
     expect(removed.state.unsaved).toBe(true);
-  });
-});
-
-describe('clone', () => {
-  it('gives the JSON of the case with a unique "(copy)" name and links nothing to the original', () => {
-    const state = open();
-    const text = cloneCase(state, '1')!;
-    const parsed = JSON.parse(text);
-    expect(parsed.name).toBe('Anna (copy)');
-    expect(parsed.fields).toEqual(state.evaluation.dataset.cases[0]!.fields);
-    expect(parsed).not.toHaveProperty('id');
-    // pasting it back is an ordinary new case
-    const saved = saveCaseFromJson(state, text, { mode: 'paste' });
-    expect(saved.state.evaluation.dataset.cases[2]).toMatchObject({ id: '3', name: 'Anna (copy)' });
-    expect(saved.state.evaluation.dataset.cases[2]?.base).toBeUndefined();
-    expect(cloneCase(saved.state, '1')).toContain('Anna (copy 2)');
   });
 });
 

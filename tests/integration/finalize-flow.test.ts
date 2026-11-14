@@ -1,7 +1,7 @@
 // User Story 11: imported and added cases join one test project, are finalized, and what stays fixed or open afterwards
 // (FR-039, FR-049, FR-053, FR-076, FR-089).
 import { describe, expect, it } from 'vitest';
-import { cloneCase, correctExpectedErrors, removeCase, renameCase, saveCaseFromJson } from '../../src/app/actions/cases';
+import { correctExpectedErrors, removeCase, renameCase, saveCaseFromJson } from '../../src/app/actions/cases';
 import { editTestCases, finalize } from '../../src/app/actions/finalize';
 import { setFindingText, setJudgedText, setPrompt, updateRule } from '../../src/app/actions/judge';
 import { saveReply } from '../../src/app/actions/replies';
@@ -108,19 +108,14 @@ describe('what is fixed after finalizing', () => {
 });
 
 describe('what may still change after finalizing', () => {
-  it('cases may still be added, cloned and imported; they start without a reply and the others stay as they are', async () => {
+  it('cases may still be added and imported; they start without a reply and the others stay as they are', async () => {
     let state = await finalized();
     state = saveCaseFromJson(state, json('Thirteenth', 'Anna works as a baker, as before.'), { mode: 'paste' }).state;
     expect(state.evaluation.dataset.cases).toHaveLength(13);
     expect(state.evaluation.dataset.finalized).toBe(true);
 
-    const copy = cloneCase(state, '12');
-    expect(copy).toBeDefined();
-    state = saveCaseFromJson(state, copy!.replace('Anna is a doctor.', 'Anna is a nurse.').replace('Anna is a doctor', 'Anna is a nurse'), { mode: 'paste' }).state;
-    expect(state.evaluation.dataset.cases).toHaveLength(14);
-
     state = await imported(state, 'name,field:source_text,field:summary\nLater import,Source,Another text\n');
-    expect(state.evaluation.dataset.cases).toHaveLength(15);
+    expect(state.evaluation.dataset.cases).toHaveLength(14);
     expect(state.evaluation.dataset.finalized).toBe(true);
   });
 

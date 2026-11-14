@@ -135,13 +135,10 @@ describe('the read-only view (Open)', () => {
     expect(within(view).getByRole('button', { name: 'Copy JSON' })).toBeTruthy();
   });
 
-  it('Clone opens Paste JSON filled with the case JSON and the name "… (copy)"', () => {
+  it('has no Clone button in the read-only view (T218)', () => {
     show();
     open('Anna + 2 errors');
-    fireEvent.click(within(screen.getByRole('dialog', { name: /Anna \+ 2 errors/ })).getByRole('button', { name: 'Clone' }));
-    const box = within(windowOf()).getByLabelText('Case JSON') as HTMLTextAreaElement;
-    expect(JSON.parse(box.value).name).toBe('Anna + 2 errors (copy)');
-    expect((within(windowOf()).getByRole('button', { name: 'Save case' }) as HTMLButtonElement).disabled).toBe(false);
+    expect(within(screen.getByRole('dialog', { name: /Anna \+ 2 errors/ })).queryByRole('button', { name: 'Clone' })).toBeNull();
   });
 
   it('Correct expected errors is offered after finalizing for a case without a reply, and says why when there is a reply', () => {

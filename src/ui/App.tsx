@@ -5,7 +5,7 @@ import { changeThreshold, loadChecksFromFile } from '../app/actions/checks';
 import { correctRules } from '../app/actions/decide';
 import { exportReport } from '../app/actions/export';
 import { modelDetailsEdit, pasteReplyFromClipboard, saveReply, type ReplyOutcome } from '../app/actions/replies';
-import { cloneCase, type CaseEdit } from '../app/actions/cases';
+import type { CaseEdit } from '../app/actions/cases';
 import type { CatalogEdit } from '../app/actions/catalog';
 import { loadMetricDefinition, replaceLoadedMetric, startFromMetric, type JudgeEdit } from '../app/actions/judge';
 import { continueWork, loadEvaluation, loadTestProject, saveEvaluation, saveEvaluationAs, saveTestProject, saveTestProjectAs, type FileEnv } from '../app/actions/files';
@@ -302,7 +302,6 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
                 onCatalogEdit={applyCatalog}
                 onAdd={() => setTestWindow({ view: 'choice' })}
                 onOpen={(id) => setTestWindow({ view: 'open', id })}
-                onClone={(id) => setTestWindow({ view: 'paste', text: cloneCase(state, id) ?? '' })}
                 onEdit={applyCase}
               />
             ) : (

@@ -13,13 +13,12 @@ export interface CaseReadOnlyProps {
   state: AppState;
   caseId: string;
   onNavigate: (caseId: string) => void;
-  onClone: (caseId: string) => void;
   onCorrect: (caseId: string) => void;
   onClose: () => void;
 }
 
 /** "Open": a saved case read-only (FR-086). Nothing in it can be edited. */
-export function CaseReadOnly({ state, caseId, onNavigate, onClone, onCorrect, onClose }: CaseReadOnlyProps) {
+export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onClose }: CaseReadOnlyProps) {
   const [showJson, setShowJson] = useState(false);
   const [strong, setStrong] = useState<string | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
@@ -50,9 +49,6 @@ export function CaseReadOnly({ state, caseId, onNavigate, onClone, onCorrect, on
       onClose={onClose}
       headerExtra={
         <>
-          <button type="button" onClick={() => onClone(caseId)}>
-            {labels.clone}
-          </button>
           {dataset.finalized && !reply ? (
             <button type="button" onClick={() => onCorrect(caseId)}>
               {labels.correctExpectedErrors}

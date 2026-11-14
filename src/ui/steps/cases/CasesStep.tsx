@@ -12,7 +12,6 @@ export interface CasesStepProps {
   state: AppState;
   onAdd: () => void;
   onOpen: (id: string) => void;
-  onClone: (id: string) => void;
   onEdit: (edit: CaseEdit) => void;
   categoriesOpen: boolean;
   onToggleCategories: () => void;
@@ -20,7 +19,7 @@ export interface CasesStepProps {
 }
 
 /** The Test cases step: Add test case above one table of every case (FR-025, FR-087). */
-export function CasesStep({ state, onAdd, onOpen, onClone, onEdit, categoriesOpen, onToggleCategories, onCatalogEdit }: CasesStepProps) {
+export function CasesStep({ state, onAdd, onOpen, onEdit, categoriesOpen, onToggleCategories, onCatalogEdit }: CasesStepProps) {
   const empty = state.evaluation.dataset.cases.length === 0;
   const full = testProjectFeedback(state.evaluation).capacity.full;
   return (
@@ -36,7 +35,7 @@ export function CasesStep({ state, onAdd, onOpen, onClone, onEdit, categoriesOpe
       {empty ? (
         <EmptyState title="There are no test cases yet">Add a test case, or import test cases from the File menu.</EmptyState>
       ) : (
-        <CasesTable state={state} onOpen={onOpen} onClone={onClone} onEdit={onEdit} />
+        <CasesTable state={state} onOpen={onOpen} onEdit={onEdit} />
       )}
     </div>
   );

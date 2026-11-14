@@ -15,8 +15,8 @@ evaluated per case). Updated on 2026-11-13 for the reviews of v13 to v17: one us
 catalog as a collapsible "Error categories" section of the Test cases step; no clean-case section
 on the Judge step and no welcome section; every test case made from one **case JSON** (Paste JSON,
 Clean case, Case with injected errors in three parts), never edited after saving, with a
-read-only **Open**, **Show JSON**, **Clone** and **Correct expected errors**; adding, importing and
-cloning after finalizing; "Save evaluation" only on Run; on Run an always-visible reply box,
+read-only **Open**, **Show JSON** and **Correct expected errors**; adding and importing
+after finalizing; "Save evaluation" only on Run; on Run an always-visible reply box,
 **Add finding** with optional category and difficulty and **Remove**, and the second opinion as its
 own window with a preview and **Apply opinion**. Prototype v17 is now the reference.
 
@@ -225,7 +225,7 @@ any editing screen exists.
    metric and thresholds).
 4. **Test cases step (User Stories 3, 4, 5, 10, 11, 15)**: the collapsible **Error categories**
    section (uses per category, rename, remove refused with the reason), one table with **Open**,
-   **Clone**, **Rename** and **Remove**, the test case window (**Paste JSON**, **Clean case**,
+   **Rename** and **Remove**, the test case window (**Paste JSON**, **Clean case**,
    **Case with injected errors** in three parts, the case view with **Show in text** and the check
    line, the read-only **Open** with **Show JSON** and **Correct expected errors**), one case JSON
    check with line and column or field path, **Import test cases** (adding, also after

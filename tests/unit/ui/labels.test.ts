@@ -6,7 +6,7 @@ const required = [
   'Save evaluation first', 'Discard', 'Import test cases', 'Export test cases', 'Load example…',
   'Load metric definition…', 'Edit test cases', 'Continue', 'Explain', 'File', 'Add test case', 'Paste JSON',
   'Clean case', 'Case with injected errors', 'Approve and close', 'Save case', 'Close without saving', 'Open',
-  'Clone', 'Rename', 'Show JSON', 'Copy JSON', 'Show in text', 'Correct expected errors',
+  'Rename', 'Show JSON', 'Copy JSON', 'Show in text', 'Correct expected errors',
   'Paste reply from clipboard', 'Save reply', 'Add finding', 'Second opinion…', 'Apply opinion', 'Approve',
   // the rest of FR-008
   'Load evaluation', 'Start new evaluation', 'Add rule', 'Add condition', 'Remove', 'Add category',

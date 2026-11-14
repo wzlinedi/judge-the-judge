@@ -111,7 +111,7 @@ Compare step and no result shelf.
   3. **One table of all test cases**, with **Add test case** above it: identifier, name, kind
      ("Clean" or "Injected errors", with "added after first reply" or "corrected after first
      reply" when it applies), base, number of expected errors, categories, warnings, and at each
-     row **Open**, **Clone**, **Rename** and **Remove** as buttons; a click on the row also opens
+     row **Open**, **Rename** and **Remove** as buttons; a click on the row also opens
      the case. Search, filter (all kinds, clean, injected errors, with warnings, with a reply,
      without a reply) and sorting. There is no details panel and no row menu (FR-025).
 - **Import summary** (after **Import test cases** in the File menu, with **Download example file**
@@ -122,14 +122,14 @@ Compare step and no result shelf.
 - **Finalize**: a summary dialog (counts, balance, test size, all warnings) and a confirmation.
 - **States**: no cases yet (points to **Add test case**, the File menu and the Judge step); 500-case
   limit reached; text too long; identifier collision on import (new identifiers, said in the
-  summary); name used twice (both cases show the warning); finalized (**Add test case**, **Clone**
+  summary); name used twice (both cases show the warning); finalized (**Add test case**
   and **Import test cases** stay available and new cases start as Not run; **Rename** and
   **Remove** are disabled with "This case has a reply" for a case with a reply; while no reply
   exists, **Edit test cases** opens the test project again).
 
 ### Window: the test case window
 
-Opened by **Add test case**, **Open** and **Clone** (FR-038, FR-083, FR-085, FR-086, FR-089,
+Opened by **Add test case** and **Open** (FR-038, FR-083, FR-085, FR-086, FR-089,
 FR-090). It fills the screen, has a header that never scrolls and two columns that scroll on
 their own. While something is being added, the header always shows **Close without saving**,
 which asks first when something was pasted or typed.
@@ -139,8 +139,7 @@ which asks first when something was pasted or typed.
 - **Paste JSON** (FR-090): one box for a case JSON (file-formats.md, section 2), checked as it
   changes, with problems under it (line and column, or field path); **Next** when valid; then the
   case view below. The window names the kind the case will have (clean without expected errors,
-  injected errors with at least one). **Clone** opens this view filled with the case's JSON and the
-  name "… (copy)".
+  injected errors with at least one). There is no **Clone**: a copy is made with **Show JSON**, **Copy JSON** and this view.
 - **Clean case** (FR-083): left, **Name**, an optional **Comment** and an optional **Like case**
   (an existing clean case whose fields go into the prompt as a model), then the prompt for the
   user's LLM with **Copy prompt**; right, the box for the LLM's answer, checked as it changes. When
@@ -164,7 +163,7 @@ which asks first when something was pasted or typed.
   mismatch of FR-080 it asks for confirmation; a case identical to its base is refused.
 - **Open** (FR-086): the same case view, read-only and without the JSON box, with **Previous test
   case**, **Next test case** and the position ("case 7 of 20") in the header (Alt + Left/Right do
-  the same), **Show JSON** (the case JSON with **Copy JSON**), **Clone**, and after finalizing,
+  the same), **Show JSON** (the case JSON with **Copy JSON**), and after finalizing,
   for a case without a reply, **Correct expected errors**; also the composed judge prompt with
   **Copy prompt** and the reply if one exists. A saved case is never edited.
 - **Correct expected errors** (FR-089): the case view with the case's JSON, where only
@@ -297,7 +296,7 @@ offers no action that changes the case, and **Open on Run** leads to the case wi
   needs, with a worked example; the four steps; the manual copy-and-paste workflow; variables and
   the judged text; the sample reply, field paths and error rules, with examples; the error
   categories; adding test cases (Paste JSON, Clean case, Case with injected errors, the case JSON
-  layout, Open, Show JSON, Clone, Correct expected errors); importing test cases from a file;
+  layout, Open, Show JSON, Correct expected errors); importing test cases from a file;
   pasting replies and what happens when a reply is replaced; marking after each reply, Add finding
   and Remove, the second opinion window and "Ignore"; the two files (the test project, reused for
   every run; the evaluation, the progress of one run), the indicator of unsaved changes, "… as",

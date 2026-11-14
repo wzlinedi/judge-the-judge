@@ -128,10 +128,10 @@ The named collection of test cases of a test project.
 **State transitions**
 
 ```text
-(empty) ──add / import / clone──> Open ──finalize (after summary + confirm)──> Finalized
+(empty) ──add / import──> Open ──finalize (after summary + confirm)──> Finalized
    ^                                ^                                           │
    └──── Start new evaluation ──────┴──── "Edit test cases" (no reply yet) ─────┘
-Finalized ──add / import / clone──> Finalized (new cases start Not run; "added after first reply"
+Finalized ──add / import──> Finalized (new cases start Not run; "added after first reply"
                                     when replies exist; new test cases version)
 Finalized ──rename / remove a case without a reply, or correct its expected errors──> Finalized
                                     (new test cases version; "corrected after first reply" when
@@ -142,13 +142,13 @@ any ──"Load test project"──> the saved state (open or finalized), with n
 any ──"Load evaluation" / "Load example…"──> exactly the saved state (open or finalized)
 ```
 
-- **Open**: cases can be added, cloned, renamed and removed; the catalog and judge set can be
+- **Open**: cases can be added, renamed and removed; the catalog and judge set can be
   edited; composed prompts can be viewed and copied; replies cannot be entered (FR-053). A saved
-  case is never edited: it is changed by cloning it, changing the copy's JSON and removing the
-  original (FR-025, FR-086).
+  case is never edited: it is changed by copying its JSON into a new case, changing it and removing the
+  original (FR-025, FR-086); there is no "Clone" (FR-078).
 - **Finalized**: the judge prompt and the fields and identifiers of every case are fixed. While no
   reply exists, "Edit test cases" returns to Open without losing anything (FR-053). Cases may still
-  be added, cloned and imported; a case without a reply may be renamed, removed or have its
+  be added and imported; a case without a reply may be renamed, removed or have its
   expected errors corrected through its JSON (FR-089); a case with a reply is not changed (an
   expected error that should not count is marked "Ignore" on Run). The reply mapping and the error
   rules may still be corrected; automatic results are recomputed and decisions made by hand are
@@ -163,7 +163,7 @@ any ──"Load evaluation" / "Load example…"──> exactly the saved state (
 |---|---|---|
 | `id` | text | Unique in the test project. From the file when every case has one; otherwise assigned by order (`1`, `2`, …) and reported. A mix of with and without is rejected. Cases made in the tool get the next free number (FR-033). |
 | `name` | text | Unique in the test project, compared without regard to case (FR-079); a case JSON with an empty name gets one made from its base and number of errors. A name used twice by an import or a loaded file is kept and both cases show the warning. |
-| `base` | text or none | Optional. Identifier of the clean case it was made from (FR-022). Must name an existing clean case, otherwise a warning. A clone keeps it only when its JSON names it; there is no link to an original (FR-078). |
+| `base` | text or none | Optional. Identifier of the clean case it was made from (FR-022). Must name an existing clean case, otherwise a warning. A case made from a copied JSON keeps it only when that JSON names it; there is no link to an original (FR-078). |
 | `changed_after_first_reply` | `added`, `corrected` or none | Set when the case is added, or its expected errors are corrected, after the first reply of the run; shown in the tables, on Results and in the report (FR-053). |
 | `fields` | name → text | One per variable of the judge prompt. At least one non-empty field (FR-037). Each at most 100,000 characters; warning above 30,000. |
 | `expected_errors` | list of ExpectedError | Empty list means a clean case. |

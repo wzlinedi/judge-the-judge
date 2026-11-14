@@ -76,16 +76,16 @@ version, and the tool opens the Test cases step (the first step with unfinished 
    "Like case" when one exists, "Copy prompt", run it in an LLM, paste the answer into the box and
    "Approve and close".
 2. Paste an answer with expected errors into a new clean case view.
-3. "Clone" a clean case, "Save case"; "Rename" the copy to a name another case has, then to a free
-   name; "Remove" the copy.
+3. Make a copy of a clean case by hand ("Open", "Show JSON", then "Paste JSON" in a new case with a
+   new name), "Save case"; "Rename" the copy to a name another case has, then to a free name;
+   "Remove" the copy. There is no "Clone" button.
 4. Try to remove a clean case that another case uses as its base.
 
 **Expected**: the prompt contains the judge prompt, its variables and judged text, the catalog,
 the comment and the fields of the picked case; the answer is checked as it is pasted, its fields
 are shown read-only and the case is saved under the typed name; the answer with expected errors is
-a problem that points to "Paste JSON"; the table shows Kind "Clean" and the buttons Open, Clone,
-Rename and Remove on every row; the clone is a new case named "… (copy)" with no link to the
-original, the taken name is refused; the removal of the base is refused with the list of cases
+a problem that points to "Paste JSON"; the table shows Kind "Clean" and the buttons Open,
+Rename and Remove on every row; the copy is a new case with no link to the original, the taken name is refused; the removal of the base is refused with the list of cases
 made from it.
 
 ### V4. A case with injected errors (SC-022 to SC-024, SC-031, SC-033, SC-035, SC-036, User Story 4)

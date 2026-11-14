@@ -13,7 +13,7 @@ import { TestCaseFrame } from './TestCaseFrame';
 
 export interface JsonCaseViewProps {
   state: AppState;
-  /** `paste`: a new case from JSON (also Clone). `inject`: parts 2 and 3 of a case with injected errors. `correct`: only the expected errors of a saved case may change. */
+  /** `paste`: a new case from JSON. `inject`: parts 2 and 3 of a case with injected errors. `correct`: only the expected errors of a saved case may change. */
   mode: 'paste' | 'inject' | 'correct';
   caseId?: string;
   initialText: string;

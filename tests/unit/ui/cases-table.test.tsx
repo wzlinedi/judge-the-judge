@@ -36,10 +36,10 @@ describe('the table', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  it('shows Open, Clone, Rename and Remove as visible buttons on every row', () => {
+  it('shows Open, Rename and Remove as visible buttons on every row', () => {
     show();
     for (const row of screen.getAllByRole('row').slice(1)) {
-      expect(within(row).getAllByRole('button').map((b) => b.textContent)).toEqual(['Open', 'Clone', 'Rename', 'Remove']);
+      expect(within(row).getAllByRole('button').map((b) => b.textContent)).toEqual(['Open', 'Rename', 'Remove']);
     }
   });
 
@@ -101,12 +101,12 @@ describe('Open, Rename and Remove', () => {
 });
 
 describe('after finalizing (FR-053)', () => {
-  it('keeps Open, Clone and Add test case enabled; Rename and Remove only for a case without a reply', () => {
+  it('keeps Open and Add test case enabled; Rename and Remove only for a case without a reply', () => {
     show(stateOf(true, true));
     expect((screen.getByRole('button', { name: 'Add test case' }) as HTMLButtonElement).disabled).toBe(false);
     const withReply = rowOf('Anna + 2 errors');
     const without = rowOf('Anna');
-    for (const name of ['Open', 'Clone']) expect((within(withReply).getByRole('button', { name }) as HTMLButtonElement).disabled).toBe(false);
+    for (const name of ['Open']) expect((within(withReply).getByRole('button', { name }) as HTMLButtonElement).disabled).toBe(false);
     for (const name of ['Rename', 'Remove']) {
       expect((within(withReply).getByRole('button', { name }) as HTMLButtonElement).disabled).toBe(true);
     }
@@ -165,10 +165,10 @@ describe('search, filters, sorting and the count (FR-025, User Story 15)', () =>
     expect(clear.hasAttribute('disabled')).toBe(true);
   });
 
-  it('keeps Open, Clone, Rename and Remove on the rows that are shown', () => {
+  it('keeps Open, Rename and Remove on the rows that are shown', () => {
     show();
     type('doctor');
-    expect(within(rowsShown()[0]!).getAllByRole('button').map((b) => b.textContent)).toEqual(['Open', 'Clone', 'Rename', 'Remove']);
+    expect(within(rowsShown()[0]!).getAllByRole('button').map((b) => b.textContent)).toEqual(['Open', 'Rename', 'Remove']);
   });
 
   it('sorts by a column: ascending, descending, then the original order, and says which way in aria-sort', () => {

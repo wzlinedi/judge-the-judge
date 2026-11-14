@@ -131,7 +131,7 @@ Rules for `judge_set`:
 The one layout of a single test case (FR-031). It is what the user's LLM is asked to return (the
 clean case view, FR-083, and part 1 of a case with injected errors, FR-040), what is pasted with
 "Paste JSON" (FR-090) and in part 2 of a case with injected errors (FR-041), what "Show JSON" and
-"Copy JSON" give back and "Clone" starts from (FR-078, FR-086), and what "Correct expected errors"
+"Copy JSON" give back (FR-086), and what "Correct expected errors"
 edits (FR-089).
 
 ```json
@@ -227,7 +227,7 @@ Rules (see data-model.md for the full list):
 - `changed_after_first_reply` is `added` or `corrected` for a case added, or whose expected errors
   were corrected, after the first reply of the run was entered (FR-053); it is absent otherwise.
   The Results step and the report list these cases.
-- There is no `cloned_from`: a clone keeps no link to its original (FR-078).
+- There is no `cloned_from`: a copy made by hand keeps no link to its original (FR-078).
 - At most 500 cases in the test project after the import; each field at most 100,000 characters.
 - The file contains all cases, clean ones included, and carries no error catalog: categories are
   referred to by name. Categories that are not in the catalog are named in the import summary and
