@@ -2,6 +2,7 @@ import type { ReviewedCase } from '../../../core/evaluation/results';
 import { SOURCE_LABELS } from '../../../core/evaluation/source-labels';
 import { StatusMark } from '../../components/StatusMark';
 import { labels } from '../../labels';
+import { TableScroll } from '../../components/TableScroll';
 
 /** The sources of the decisions of a case, each once; "Automatic" when nothing was set by hand. */
 export function sourcesOf(r: ReviewedCase): string {
@@ -31,7 +32,7 @@ export function CaseListView({ reviewed, onOpen }: CaseListViewProps) {
   return (
     <div class="case-list-view">
       <h2 class="visually-hidden">Test case list</h2>
-      <div class="table-scroll">
+      <TableScroll label="Table of test cases">
         <table aria-label="Test cases">
           <thead>
             <tr>
@@ -79,7 +80,7 @@ export function CaseListView({ reviewed, onOpen }: CaseListViewProps) {
             })}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
     </div>
   );
 }

@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "test-cases.schema.json",
+  "title": "Judge the Judge: test-case file",
+  "description": "Test cases alone, for \"Import test cases\" and \"Export test cases\" (file-formats.md, section 3).",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "string",
+      "const": "judge-the-judge-test-cases"
+    },
+    "schema_version": {
+      "type": "number",
+      "const": 1
+    },
+    "tool_version": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "default": "",
+            "type": "string"
+          },
+          "base": {
+            "type": "string"
+          },
+          "changed_after_first_reply": {
+            "type": "string",
+            "enum": [
+              "added",
+              "corrected"
+            ]
+          },
+          "fields": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 100000
+            }
+          },
+          "expected_errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "category": {
+                  "type": "string"
+                },
+                "fragment": {
+                  "type": "string"
+                },
+                "difficulty": {
+                  "type": "string",
+                  "enum": [
+                    "obvious",
+                    "subtle"
+                  ]
+                }
+              },
+              "required": [
+                "description"
+              ]
+            }
+          }
+        },
+        "required": [
+          "fields",
+          "expected_errors"
+        ]
+      }
+    }
+  },
+  "required": [
+    "format",
+    "schema_version",
+    "cases"
+  ]
+}

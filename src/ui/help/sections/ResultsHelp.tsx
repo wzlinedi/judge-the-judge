@@ -19,7 +19,7 @@ export function ResultsHelp() {
         </p>
         <pre class="example">{JSON.stringify(checksExample, null, 2)}</pre>
         <p>
-          Details also shows the 95% interval of each rate. A rate is <em>borderline</em> when its interval contains its threshold: with this many cases the judge could be on either side, so add
+          Details also shows the 95% interval of each rate. The errors of one case are judged together, so they are not fully independent, and the interval is somewhat optimistic when each case carries many errors. A rate is <em>borderline</em> when its interval contains its threshold: with this many cases the judge could be on either side, so add
           cases before you decide. It shows, as information, how many cases had at least one false positive and how many of the clean cases did.
         </p>
       </section>

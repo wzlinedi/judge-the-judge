@@ -7,6 +7,11 @@ export function Privacy() {
         page: your work lives only in the files you save. Replies and prompts are never sent to any service by the tool; you copy them yourself.
       </p>
       <p>
+        <strong>The files hold your data.</strong> The files you save and the report you export contain your data: your judge prompt, test cases and replies, and the text of your
+        decisions. The tool never sends them anywhere, so what you do with a file is up to you. Before you share one, for example by e-mail or in a repository, read it and
+        remove what must not leave your team.
+      </p>
+      <p>
         Saving to a file you choose needs Chrome or Edge. In other browsers the tool shows a notice and cannot save. The first time you save to a file you
         opened, the browser asks for permission to write to it; allow it, or choose <strong>Save evaluation as</strong> to pick a new file.
       </p>

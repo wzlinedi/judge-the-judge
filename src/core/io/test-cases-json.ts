@@ -41,7 +41,8 @@ export function writeTestCases(parts: { name: string; cases: readonly TestCase[]
   return JSON.stringify(file, null, 2) + '\n';
 }
 
-const importCase = testCaseSchema.extend({ id: z.string().min(1).optional(), name: z.string().default('') });
+/** A case of a test-case file: the identifier may be missing and so may the name. */
+export const importCase = testCaseSchema.extend({ id: z.string().min(1).optional(), name: z.string().default('') });
 
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 
@@ -91,7 +92,7 @@ export function readTestCasesJson(text: string): ReadResult<ParsedCases> {
     const parsed = importCase.safeParse(prepared);
     if (!parsed.success) {
       const reason = zodProblems(parsed.error, prepared)
-        .map((p) => (p.path ? `${p.path}: ${p.message}` : p.message))
+        .map((p) => (p.path && !p.message.startsWith(p.path) ? `${p.path}: ${p.message}` : p.message))
         .join(' ');
       invalid.push({ position, label, reason });
       return;

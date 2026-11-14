@@ -15,6 +15,8 @@ body {
 h1, h2, h3 { line-height: 1.25; margin: 0 0 var(--space-3); }
 p { margin: 0 0 var(--space-3); }
 code, pre, textarea.json { font-family: var(--font-mono); }
+/* A long file name or format name breaks inside its line, so a narrow screen never scrolls sideways */
+code { overflow-wrap: anywhere; }
 
 a { color: var(--accent); }
 
@@ -53,7 +55,11 @@ input[type="text"], input:not([type]), textarea, select {
 }
 
 /* Tables scroll inside their own container, never the page */
-.table-scroll { overflow-x: auto; max-width: 100%; }
+.table-scroll { overflow-x: auto; max-width: 100%; position: relative; }
+
+/* Examples and JSON wrap inside their box, so a narrow screen never scrolls sideways */
+pre { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
+pre.example { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3); font-size: var(--text-sm); }
 table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border); vertical-align: top; }
 

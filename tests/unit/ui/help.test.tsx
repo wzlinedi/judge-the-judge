@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/preact';
 import { HelpStep } from '../../../src/ui/help/HelpStep';
@@ -9,7 +9,7 @@ describe('Help (Principle VIII)', () => {
   it('has the sections written so far, in plain headings', () => {
     render(<HelpStep />);
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Finalizing, and editing before the first reply', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Marking after each reply: Add finding, Remove, the second opinion and Ignore', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results', 'Judges that give only a verdict (for example bias: yes or no)', 'Overall result and thresholds', 'Exporting the report, and what provisional means']);
+    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Finalizing, and editing before the first reply', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Marking after each reply: Add finding, Remove, the second opinion and Ignore', 'Files: the test project and the evaluation', 'Files and their formats', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results', 'Judges that give only a verdict (for example bias: yes or no)', 'Overall result and thresholds', 'Exporting the report, and what provisional means']);
   });
 
   it('quotes the numbers of the demo from the demo files, so they cannot drift', () => {
@@ -268,5 +268,76 @@ describe('Help for judges that give only a verdict (US14 part 2)', () => {
       }
     };
     expect([...document.querySelectorAll('pre.example')].map((p) => compact(p.textContent ?? ''))).toContain(compact(set.sample_reply));
+  });
+});
+
+describe('Help is complete before the first release (T195, FR-006, contracts/ui-flow.md Help)', () => {
+  const help = () => {
+    render(<HelpStep />);
+    return document.body.textContent ?? '';
+  };
+
+  it('names every part of the workflow that FR-006 lists', () => {
+    const text = help();
+    const names = [
+      // adding and correcting test cases
+      'Paste JSON', 'Clean case', 'Case with injected errors', 'Show JSON', 'Clone', 'Correct expected errors', 'Edit test cases', 'Finalize test cases',
+      // loading
+      'Import test cases', 'Load check settings', 'Load example', 'Load metric definition',
+      // marks of Run, the second opinion
+      'Found', 'Issue: missed', 'Issue: false positive', 'Real error', 'Ignore', 'Add finding', 'Second opinion', 'Apply opinion',
+      // the two files, Continue, per case
+      'Save test project', 'Save evaluation', 'Load test project', 'Load evaluation', 'Continue', 'evaluated per case',
+      // results
+      'Summary', 'Error analysis', 'provisional', 'Inconclusive', 'thresholds',
+    ];
+    expect(names.filter((name) => !text.includes(name))).toEqual([]);
+  });
+
+  it('says that the tool works in Chrome and Edge, and that the files it writes hold the user’s data', () => {
+    const text = help();
+    expect(text).toMatch(/Chrome or Edge/);
+    expect(text).toMatch(/files you save and the report you export contain your data/i);
+    expect(text).toMatch(/judge prompt, test cases and replies/i);
+  });
+
+  it('carries the limitation of the interval (research.md section 7) where the interval is explained and where the test size is', () => {
+    const text = help();
+    const sections = [...document.querySelectorAll('section')].map((s) => s.textContent ?? '');
+    const sizeAndResults = sections.filter((s) => /95% interval/.test(s));
+    expect(sizeAndResults.length).toBeGreaterThanOrEqual(2);
+    for (const section of sizeAndResults) expect(section).toMatch(/not fully independent|optimistic/i);
+    expect(text).toMatch(/two or three errors per case/i);
+  });
+
+  it('lists every file format of docs/schemas with its format name, the JSON Schema and the example file', () => {
+    const text = help();
+    const schemas = readdirSync('docs/schemas').filter((f) => f.endsWith('.schema.json'));
+    expect(schemas.length).toBe(6);
+    for (const file of schemas) {
+      const schema = JSON.parse(readFileSync(`docs/schemas/${file}`, 'utf8')) as { properties: { format?: { const: string } } };
+      expect(text, `${file} is not described in Help`).toContain(file);
+      if (schema.properties.format) expect(text, `the format of ${file}`).toContain(schema.properties.format.const);
+    }
+    expect(text).toMatch(/CSV/);
+    expect(text).toContain('docs/schemas');
+  });
+
+  it('shows that a file with an unknown format, a newer schema_version or extra keys is handled the way the readers do', () => {
+    const text = help();
+    expect(text).toMatch(/schema_version/);
+    expect(text).toMatch(/newer/i);
+    expect(text).toMatch(/keys the tool does not use/i);
+  });
+
+  it('tells the keyboard user how to move in and out of a window', () => {
+    expect(help()).toMatch(/Escape closes the window/);
+  });
+
+  it('names the browsers the tool supports in plain words and what happens in another browser', () => {
+    const text = help();
+    expect(text).toMatch(/Chrome/);
+    expect(text).toMatch(/Edge/);
+    expect(text).toMatch(/other browsers the tool shows a notice/i);
   });
 });

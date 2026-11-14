@@ -2,6 +2,7 @@ import { DemoData } from './sections/DemoData';
 import { AddingCases } from './sections/AddingCases';
 import { ErrorCategories } from './sections/ErrorCategories';
 import { FinalizingHelp } from './sections/FinalizingHelp';
+import { FileFormats } from './sections/FileFormats';
 import { Files } from './sections/Files';
 import { ImportingCases } from './sections/ImportingCases';
 import { FourSteps } from './sections/FourSteps';
@@ -34,6 +35,7 @@ export function HelpStep() {
       <WorkingByHand />
       <MarkingAfterReplies />
       <Files />
+      <FileFormats />
       <Privacy />
       <DemoData />
       <MetricsAndChecks />

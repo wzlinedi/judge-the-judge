@@ -7,6 +7,7 @@ import { labels } from '../../labels';
 import { JudgeSummary } from './JudgeSummary';
 import { SaveReminder } from './SaveReminder';
 import { useVersions } from './useVersions';
+import { TableScroll } from '../../components/TableScroll';
 
 export interface RunStepProps {
   evaluation: Evaluation;
@@ -95,7 +96,7 @@ export function RunStep({ evaluation, reviewed, fileName, repliesSinceSave, onOp
             </select>
           </label>
         </div>
-        <div class="table-scroll">
+        <TableScroll label="Test cases to run">
           <table>
             <thead>
               <tr>
@@ -133,7 +134,7 @@ export function RunStep({ evaluation, reviewed, fileName, repliesSinceSave, onOp
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       </section>
     </div>
   );

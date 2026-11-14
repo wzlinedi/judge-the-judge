@@ -13,7 +13,7 @@ export function WorkingByHand() {
           The Run step lists every test case. <strong>{labels.open}</strong> a case, and its window has the case on the left and <strong>Judge&rsquo;s reply</strong> on the right
           with four steps: press <strong>{labels.copyPrompt}</strong>; run the prompt in a <strong>new conversation</strong> of your LLM, so that one case cannot influence
           another; copy the answer; press <strong>{labels.pasteReplyFromClipboard}</strong>. The reply is saved by the paste itself and the marks appear under it. Then press{' '}
-          <strong>{labels.nextTestCase}</strong>, or Alt + Right on the keyboard. One case takes three actions.
+          <strong>{labels.nextTestCase}</strong>, or Alt + Right on the keyboard; Escape closes the window, and Tab stays inside it. One case takes three actions.
         </p>
         <p>
           Above the list the Run step shows one line about the judge being run: its version, the name and version of the test project and the judged text. The prompt and the

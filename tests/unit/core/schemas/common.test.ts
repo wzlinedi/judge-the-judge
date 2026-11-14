@@ -80,4 +80,9 @@ describe('zodProblems', () => {
       expect(p.message).toContain(p.path ?? '');
     }
   });
+  it('writes a limit with a thousands separator, as the rest of the tool does', () => {
+    const parsed = z.object({ text: z.string().max(100_000) }).safeParse({ text: 'x'.repeat(100_001) });
+    if (parsed.success) throw new Error('expected a failure');
+    expect(zodProblems(parsed.error, {})[0]?.message).toBe('text is too long: at most 100,000 characters.');
+  });
 });

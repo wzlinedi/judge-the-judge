@@ -1,6 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import { Dialog } from '../../components/Dialog';
+import { useWindow } from '../../components/useWindow';
 import { labels } from '../../labels';
 
 export interface TestCaseFrameProps {
@@ -16,12 +17,14 @@ export interface TestCaseFrameProps {
 /** The test case window: it fills the screen, always shows "Close without saving", and has two columns that scroll on their own. */
 export function TestCaseFrame({ title, dirty, onClose, headerExtra, left, right }: TestCaseFrameProps) {
   const [asking, setAsking] = useState(false);
+  const leave = () => (dirty ? setAsking(true) : onClose());
+  const window = useWindow(leave);
   return (
-    <div class="case-window" role="dialog" aria-modal="true" aria-label="Test case">
+    <div {...window} class="case-window" role="dialog" aria-modal="true" aria-label="Test case">
       <div class="case-window-header">
         <h2 class="case-window-title">{title}</h2>
         {headerExtra}
-        <button type="button" onClick={() => (dirty ? setAsking(true) : onClose())}>
+        <button type="button" onClick={leave}>
           {labels.closeWithoutSaving}
         </button>
       </div>

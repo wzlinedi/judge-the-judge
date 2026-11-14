@@ -56,6 +56,11 @@ function expectedKind(expected: string): string {
   }
 }
 
+/** 100000 as 100,000, the way the limits are written elsewhere in the tool. */
+function grouped(value: unknown): string {
+  return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 function sentenceFor(issue: ZodIssue, input: unknown): string {
   const where = pathText(issue.path);
   const label = where || 'The file';
@@ -68,10 +73,10 @@ function sentenceFor(issue: ZodIssue, input: unknown): string {
     }
     case 'too_small':
       if (anyIssue['origin'] === 'string' && Number(anyIssue['minimum']) <= 1) return `${label} is empty. Write something there.`;
-      return `${label} is too small: at least ${String(anyIssue['minimum'])} is needed.`;
+      return `${label} is too small: at least ${grouped(anyIssue['minimum'])} is needed.`;
     case 'too_big':
-      if (anyIssue['origin'] === 'string') return `${label} is too long: at most ${String(anyIssue['maximum'])} characters.`;
-      return `${label} is too big: at most ${String(anyIssue['maximum'])} are allowed.`;
+      if (anyIssue['origin'] === 'string') return `${label} is too long: at most ${grouped(anyIssue['maximum'])} characters.`;
+      return `${label} is too big: at most ${grouped(anyIssue['maximum'])} are allowed.`;
     case 'invalid_value': {
       const values = Array.isArray(anyIssue['values']) ? (anyIssue['values'] as unknown[]).map((v) => `"${String(v)}"`).join(', ') : '';
       const found = valueAt(input, issue.path);

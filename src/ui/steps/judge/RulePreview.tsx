@@ -1,6 +1,7 @@
 import { previewRules } from '../../../core/judge/findings';
 import { recognizeFields } from '../../../core/judge/fields';
 import type { JudgeSet } from '../../../core/model';
+import { TableScroll } from '../../components/TableScroll';
 
 /** Which parts of the sample are findings, and by which rule (FR-014). Updated as the rules change. */
 export function RulePreview({ set }: { set: JudgeSet }) {
@@ -12,7 +13,7 @@ export function RulePreview({ set }: { set: JudgeSet }) {
   const preview = previewRules(sample, set.error_rules, set.reply_mapping.finding_text, recognized);
   if (!preview.readable) return <p class="muted">No rule can be used yet, so the preview is empty.</p>;
   return (
-    <div class="table-scroll">
+    <TableScroll label="Preview of the findings, table">
       <table aria-label="Preview of the findings">
         <thead>
           <tr>
@@ -31,6 +32,6 @@ export function RulePreview({ set }: { set: JudgeSet }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </TableScroll>
   );
 }

@@ -16,6 +16,7 @@ import type { AppState } from '../../../app/store';
 import type { TestCase } from '../../../core/model';
 import { Dialog } from '../../components/Dialog';
 import { labels } from '../../labels';
+import { TableScroll } from '../../components/TableScroll';
 
 export interface CasesTableProps {
   state: AppState;
@@ -98,7 +99,7 @@ export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) 
       <p class="muted" role="status" aria-label="Shown test cases">
         {countText(shown.length, rows.length)}
       </p>
-      <div class="table-scroll">
+      <TableScroll label="Table of test cases">
         <table aria-label="Test cases">
           <thead>
             <tr>
@@ -159,7 +160,7 @@ export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) 
             })}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
       <Dialog
         open={renaming !== null}
         title="Rename test case"

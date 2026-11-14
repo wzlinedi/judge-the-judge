@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "case.schema.json",
+  "title": "Judge the Judge: one test case",
+  "description": "The case JSON: what \"Paste JSON\", \"Show JSON\" and \"Copy JSON\" use (file-formats.md, section 2).",
+  "type": "object",
+  "properties": {
+    "name": {
+      "default": "",
+      "type": "string"
+    },
+    "base": {
+      "type": "string"
+    },
+    "fields": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 100000
+      }
+    },
+    "expected_errors": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "category": {
+            "type": "string"
+          },
+          "fragment": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "obvious",
+              "subtle"
+            ]
+          }
+        },
+        "required": [
+          "description"
+        ]
+      }
+    }
+  },
+  "required": [
+    "fields"
+  ]
+}

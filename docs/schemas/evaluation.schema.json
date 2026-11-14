@@ -1,0 +1,478 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "evaluation.schema.json",
+  "title": "Judge the Judge: evaluation file",
+  "description": "The whole work of one run and its results (file-formats.md, section 5).",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "string",
+      "const": "judge-the-judge-evaluation"
+    },
+    "schema_version": {
+      "type": "number",
+      "const": 1
+    },
+    "tool_version": {
+      "type": "string"
+    },
+    "saved": {
+      "type": "string"
+    },
+    "judge_set": {
+      "type": "object",
+      "properties": {
+        "prompt": {
+          "type": "string"
+        },
+        "judged_text": {
+          "type": "string"
+        },
+        "sample_reply": {
+          "type": "string"
+        },
+        "reply_mapping": {
+          "default": {
+            "finding_text": {}
+          },
+          "type": "object",
+          "properties": {
+            "finding_text": {
+              "default": {},
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "error_rules": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "match": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "any"
+                ]
+              },
+              "conditions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "comparison": {
+                      "type": "string",
+                      "enum": [
+                        "equals",
+                        "not_equals",
+                        "greater_than",
+                        "less_than",
+                        "is_empty",
+                        "is_not_empty"
+                      ]
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "field",
+                    "comparison"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "match",
+              "conditions"
+            ]
+          }
+        },
+        "error_catalog": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string"
+              },
+              "example": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      },
+      "required": [
+        "prompt"
+      ]
+    },
+    "judge_version": {
+      "type": "string"
+    },
+    "reply_judge_version": {
+      "type": "string"
+    },
+    "reply_counted_per": {
+      "type": "string",
+      "enum": [
+        "expected_error",
+        "case"
+      ]
+    },
+    "rules_corrected_after_replies": {
+      "type": "boolean"
+    },
+    "model_note": {
+      "default": "",
+      "type": "string"
+    },
+    "metric": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "parameters": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "dataset": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "default": "Untitled test cases",
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "finalized": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cases": {
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string"
+              },
+              "base": {
+                "type": "string"
+              },
+              "changed_after_first_reply": {
+                "type": "string",
+                "enum": [
+                  "added",
+                  "corrected"
+                ]
+              },
+              "fields": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "maxLength": 100000
+                }
+              },
+              "expected_errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "category": {
+                      "type": "string"
+                    },
+                    "fragment": {
+                      "type": "string"
+                    },
+                    "difficulty": {
+                      "type": "string",
+                      "enum": [
+                        "obvious",
+                        "subtle"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "description"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "fields",
+              "expected_errors"
+            ]
+          }
+        }
+      },
+      "required": [
+        "cases"
+      ]
+    },
+    "replies": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string"
+          },
+          "reply": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "prompt",
+          "reply"
+        ]
+      }
+    },
+    "decisions": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "expected": {
+            "default": {},
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "found",
+                    "missed",
+                    "ignored"
+                  ]
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "manual",
+                    "llm-approved"
+                  ]
+                }
+              },
+              "required": [
+                "state",
+                "source"
+              ]
+            }
+          },
+          "additional": {
+            "default": {},
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "real_error",
+                    "false_positive",
+                    "ignored"
+                  ]
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "manual",
+                    "llm-approved"
+                  ]
+                }
+              },
+              "required": [
+                "state",
+                "source"
+              ]
+            }
+          },
+          "added_findings": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "difficulty": {
+                  "type": "string",
+                  "enum": [
+                    "obvious",
+                    "subtle"
+                  ]
+                },
+                "from_opinion": {
+                  "type": "boolean"
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "real_error",
+                    "false_positive",
+                    "ignored"
+                  ]
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "manual",
+                    "llm-approved"
+                  ]
+                }
+              },
+              "required": [
+                "text",
+                "state",
+                "source"
+              ]
+            }
+          },
+          "approved": {
+            "default": false,
+            "type": "boolean"
+          },
+          "note": {
+            "default": "",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "measure": {
+                "type": "string"
+              },
+              "comparison": {
+                "type": "string",
+                "enum": [
+                  "at_least",
+                  "at_most"
+                ]
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "measure",
+              "comparison",
+              "value"
+            ]
+          }
+        }
+      },
+      "required": [
+        "rules"
+      ]
+    },
+    "minimum_sample": {
+      "type": "object",
+      "properties": {
+        "expected_errors": {
+          "type": "number"
+        },
+        "clean_cases": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "expected_errors",
+        "clean_cases"
+      ]
+    },
+    "results": {}
+  },
+  "required": [
+    "format",
+    "schema_version",
+    "judge_set",
+    "metric",
+    "dataset",
+    "checks"
+  ]
+}

@@ -1,12 +1,13 @@
 import { errorAnalysis, MIN_GROUP, type AdditionalRow, type GroupRow } from '../../../core/evaluation/analysis';
 import { PER_CASE_WHY } from '../../../core/evaluation/counting-note';
 import type { Results } from '../../../core/evaluation/results';
+import { TableScroll } from '../../components/TableScroll';
 
 const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
 
 function Groups({ label, rows, perCase }: { label: string; rows: GroupRow[]; perCase: boolean }) {
   return (
-    <div class="table-scroll">
+    <TableScroll label={`${label}, table`}>
       <table aria-label={label}>
         <thead>
           <tr>
@@ -29,13 +30,13 @@ function Groups({ label, rows, perCase }: { label: string; rows: GroupRow[]; per
           ))}
         </tbody>
       </table>
-    </div>
+    </TableScroll>
   );
 }
 
 function Additional({ label, first, rows }: { label: string; first: string; rows: ReadonlyArray<AdditionalRow | { name: string; real: number; fp: number }> }) {
   return (
-    <div class="table-scroll">
+    <TableScroll label={`${label}, table`}>
       <table aria-label={label}>
         <thead>
           <tr>
@@ -60,7 +61,7 @@ function Additional({ label, first, rows }: { label: string; first: string; rows
           )}
         </tbody>
       </table>
-    </div>
+    </TableScroll>
   );
 }
 

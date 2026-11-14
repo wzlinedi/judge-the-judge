@@ -1,6 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 import { labels } from '../labels';
+import { useWindow } from './useWindow';
 
 export interface CaseWindowFrameProps {
   title: string;
@@ -50,8 +51,10 @@ export function CaseWindowFrame({ title, index, total, left, right, onPrevious, 
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
+  const window = useWindow(onClose);
+
   return (
-    <div class="case-window" role="dialog" aria-modal="true" aria-label={title}>
+    <div {...window} class="case-window" role="dialog" aria-modal="true" aria-label={title}>
       <div class="case-window-header">
         <h2 class="case-window-title">{title}</h2>
         <div class="case-window-nav">

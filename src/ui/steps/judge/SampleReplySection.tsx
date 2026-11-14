@@ -4,6 +4,7 @@ import { recognizeFields, unreadableToProblem, type RecognizedFields } from '../
 import { Explain } from '../../components/Explain';
 import { JsonBox } from '../../components/JsonBox';
 import type { SectionProps } from './PromptSection';
+import { TableScroll } from '../../components/TableScroll';
 
 /** The sample reply is read as soon as it changes; the fields of the last readable one stay while the text is broken (FR-011, SC-037). */
 export function SampleReplySection({ state, onEdit }: SectionProps) {
@@ -32,7 +33,7 @@ export function SampleReplySection({ state, onEdit }: SectionProps) {
       <Explain>Paste one real reply of your judge. The tool reads its fields; you say below which of them mean an error.</Explain>
       {fields ? (
         <>
-          <div class="table-scroll">
+          <TableScroll label="Fields of the sample reply, table">
             <table aria-label="Fields of the sample reply">
               <thead>
                 <tr>
@@ -53,7 +54,7 @@ export function SampleReplySection({ state, onEdit }: SectionProps) {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           {fields.lists.map((list) => {
             const choices = fields.fields.filter((f) => f.list === list && f.kind === 'text');
             return (

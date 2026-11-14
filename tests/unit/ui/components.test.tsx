@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { useState } from 'preact/hooks';
 import { Dialog } from '../../../src/ui/components/Dialog';
 import { CaseWindowFrame } from '../../../src/ui/components/CaseWindowFrame';
+import { TestCaseFrame } from '../../../src/ui/windows/test-case/TestCaseFrame';
 import { NextBar } from '../../../src/ui/components/shell/NextBar';
 import { JsonBox } from '../../../src/ui/components/JsonBox';
 import { Explain } from '../../../src/ui/components/Explain';
@@ -117,6 +118,83 @@ describe('CaseWindowFrame', () => {
     expect((screen.getByRole('button', { name: 'Next test case' }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.keyDown(document.body, { key: 'ArrowRight', altKey: true });
     expect(h.onNext).not.toHaveBeenCalled();
+  });
+
+  describe('as a window (Principle VII: windows trap and return focus, and Escape closes)', () => {
+    it('moves the focus into the window when it opens, and returns it to what had it when it closes', async () => {
+      const opener = document.createElement('button');
+      document.body.appendChild(opener);
+      opener.focus();
+      const { unmount } = render(<CaseWindowFrame title="Case A" index={0} total={2} left={<p>left</p>} right={<p>right</p>} onPrevious={() => {}} onNext={() => {}} onClose={() => {}} />);
+      expect(screen.getByRole('dialog', { name: 'Case A' }).contains(document.activeElement)).toBe(true);
+      unmount();
+      await waitFor(() => expect(document.activeElement).toBe(opener));
+      opener.remove();
+    });
+
+    it('returns the focus to what had it even when opening the window already took it away (the page behind turns inert)', async () => {
+      const opener = document.createElement('button');
+      document.body.appendChild(opener);
+      opener.focus();
+      opener.blur(); // an inert page loses the focus before the window can ask what had it
+      const { unmount } = render(<CaseWindowFrame title="Case A" index={0} total={2} left={<p>left</p>} right={<p>right</p>} onPrevious={() => {}} onNext={() => {}} onClose={() => {}} />);
+      unmount();
+      await waitFor(() => expect(document.activeElement).toBe(opener));
+      opener.remove();
+    });
+
+    it('closes with Escape', () => {
+      const h = frame();
+      fireEvent.keyDown(screen.getByRole('dialog', { name: 'Case A' }), { key: 'Escape' });
+      expect(h.onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves Escape to a dialog that is open inside the window', () => {
+      const h = frame({
+        overlay: (
+          <dialog open aria-label="Inner">
+            <button>Inner button</button>
+          </dialog>
+        ),
+      });
+      fireEvent.keyDown(screen.getByRole('button', { name: 'Inner button' }), { key: 'Escape' });
+      expect(h.onClose).not.toHaveBeenCalled();
+    });
+
+    it('keeps Tab inside the window: from the last control to the first, and Shift + Tab the other way', () => {
+      frame({ left: <button>First in the pane</button>, right: <button>Last in the pane</button> });
+      const window = screen.getByRole('dialog', { name: 'Case A' });
+      const controls = Array.from(window.querySelectorAll<HTMLElement>('button:not([disabled])'));
+      const first = controls[0] as HTMLElement;
+      const last = controls[controls.length - 1] as HTMLElement;
+      last.focus();
+      fireEvent.keyDown(last, { key: 'Tab' });
+      expect(document.activeElement).toBe(first);
+      first.focus();
+      fireEvent.keyDown(first, { key: 'Tab', shiftKey: true });
+      expect(document.activeElement).toBe(last);
+    });
+  });
+});
+
+describe('TestCaseFrame as a window', () => {
+  it('Escape closes it when nothing was typed, and asks first when something was', () => {
+    const onClose = vi.fn();
+    const { unmount } = render(<TestCaseFrame title="Test case" dirty={false} onClose={onClose} left={<p>left</p>} />);
+    fireEvent.keyDown(screen.getByRole('dialog', { name: 'Test case' }), { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+    unmount();
+
+    const again = vi.fn();
+    render(<TestCaseFrame title="Test case" dirty onClose={again} left={<p>left</p>} />);
+    fireEvent.keyDown(screen.getByRole('dialog', { name: 'Test case' }), { key: 'Escape' });
+    expect(again).not.toHaveBeenCalled();
+    expect(screen.getByText('What you typed or pasted has not been saved.')).toBeTruthy();
+  });
+
+  it('takes the focus when it opens', () => {
+    render(<TestCaseFrame title="Test case" dirty={false} onClose={() => {}} left={<button>Inside</button>} />);
+    expect(screen.getByRole('dialog', { name: 'Test case' }).contains(document.activeElement)).toBe(true);
   });
 });
 
