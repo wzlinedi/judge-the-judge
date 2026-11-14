@@ -38,6 +38,9 @@
           "fragment": {
             "type": "string"
           },
+          "source_fragment": {
+            "type": "string"
+          },
           "difficulty": {
             "type": "string",
             "enum": [

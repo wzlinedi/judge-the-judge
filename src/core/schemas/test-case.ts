@@ -10,6 +10,7 @@ export const expectedErrorSchema = z.object({
   description: z.string().min(1),
   category: z.string().optional(),
   fragment: z.string().optional(),
+  source_fragment: z.string().optional(),
   difficulty: z.enum(['obvious', 'subtle']).optional(),
 });
 
@@ -55,6 +56,7 @@ export function assignExpectedIds(parsed: ParsedCase[]): TestCase[] {
         description: e.description,
         ...(e.category !== undefined ? { category: e.category } : {}),
         ...(e.fragment !== undefined ? { fragment: e.fragment } : {}),
+        ...(e.source_fragment !== undefined ? { source_fragment: e.source_fragment } : {}),
         ...(e.difficulty !== undefined ? { difficulty: e.difficulty } : {}),
       })),
     };
@@ -81,6 +83,7 @@ export function storedCase(c: TestCase): Record<string, unknown> {
       id: e.id,
       ...(e.category !== undefined ? { category: e.category } : {}),
       ...(e.fragment !== undefined ? { fragment: e.fragment } : {}),
+      ...(e.source_fragment !== undefined ? { source_fragment: e.source_fragment } : {}),
       description: e.description,
       ...(e.difficulty !== undefined ? { difficulty: e.difficulty } : {}),
     })),

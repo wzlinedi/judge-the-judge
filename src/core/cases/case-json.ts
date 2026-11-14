@@ -1,6 +1,7 @@
 // The one case JSON layout and its check (file-formats.md, section 2; FR-031, FR-041, FR-083, FR-084, FR-089, FR-090).
 import { extractJson } from '../judge/extract-json';
 import type { CaseJsonCheck, CaseJsonCheckContext, Difficulty, ExpectedError, Problem, TestCase } from '../model';
+import { findFragment } from './fragments';
 import { defaultCaseName } from './identifiers';
 import { validateCase } from './validate';
 
@@ -19,6 +20,7 @@ export function caseToJson(testCase: TestCase): string {
     expected_errors: testCase.expected_errors.map((e) => ({
       ...(e.category !== undefined ? { category: e.category } : {}),
       ...(e.fragment !== undefined ? { fragment: e.fragment } : {}),
+      ...(e.source_fragment !== undefined ? { source_fragment: e.source_fragment } : {}),
       description: e.description,
       ...(e.difficulty !== undefined ? { difficulty: e.difficulty } : {}),
     })),
@@ -87,10 +89,14 @@ export function checkCaseJson(input: string, context: CaseJsonCheckContext): Cas
       }
       const fragment = typeof item['fragment'] === 'string' && item['fragment'] !== '' ? item['fragment'] : undefined;
       const category = typeof item['category'] === 'string' && item['category'] !== '' ? item['category'] : undefined;
+      const sourceFragment = typeof item['source_fragment'] === 'string' && item['source_fragment'] !== '' ? item['source_fragment'] : undefined;
+      if (sourceFragment !== undefined && !Object.values(fields).some((value) => findFragment(value, sourceFragment))) {
+        warnings.push(`${at}: the source fragment is in no field of the case, so it cannot be shown in the text.`);
+      }
       if (fragment === undefined) warnings.push(`${at}: there is no fragment, so it cannot be matched automatically and is decided by hand on Run.`);
       if (category === undefined) warnings.push(`${at}: there is no category, so it is not grouped in the error analysis.`);
       else if (!context.catalog.some((c) => c.name === category)) notes.push(`The category "${category}" is new and is added to the catalog when the case is saved.`);
-      errors.push({ id: `e${i + 1}`, description, ...(category !== undefined ? { category } : {}), ...(fragment !== undefined ? { fragment } : {}), ...(difficulty === 'obvious' || difficulty === 'subtle' ? { difficulty: difficulty as Difficulty } : {}) });
+      errors.push({ id: `e${i + 1}`, description, ...(category !== undefined ? { category } : {}), ...(fragment !== undefined ? { fragment } : {}), ...(sourceFragment !== undefined ? { source_fragment: sourceFragment } : {}), ...(difficulty === 'obvious' || difficulty === 'subtle' ? { difficulty: difficulty as Difficulty } : {}) });
     });
   }
 

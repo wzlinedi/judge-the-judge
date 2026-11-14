@@ -167,8 +167,12 @@ edits (FR-089).
   each at most 100,000 characters. A key that is not a variable is a warning: it is kept and never
   sent to the judge.
 - `expected_errors` is a list and may be empty. Each item requires `description`; `fragment`,
-  `category` and `difficulty` (`obvious` or `subtle`) are optional. A missing fragment or category
-  is a warning (decided by hand on Run, not grouped). A category not in the catalog is added to it
+  `source_fragment`, `category` and `difficulty` (`obvious` or `subtle`) are optional. A missing
+  fragment or category is a warning (decided by hand on Run, not grouped). `source_fragment`
+  (T250) is the exact words of another field, the source, that the error contradicts (for example
+  `"fragment": "the whale that took his arm"` with `"source_fragment": "lost his leg to a white
+  whale"`); the tool shows the two side by side and never matches with it; when it is in no field
+  of the case that is a warning. A category not in the catalog is added to it
   when the case is saved, and the window says so.
 - `name` must be unique in the test project (FR-079); empty means a name is made from the base and
   the number of errors. `id` is ignored: the case gets a new identifier when saved.
@@ -224,7 +228,7 @@ is read the same way, using its `dataset.cases`.
 Rules (see data-model.md for the full list):
 
 - `cases[].fields` and `cases[].expected_errors` are required; `expected_errors` may be empty. Each
-  expected error requires `description`; `category`, `fragment` and `difficulty` are optional. An
+  expected error requires `description`; `category`, `fragment`, `source_fragment` and `difficulty` are optional. An
   expected error without `id` gets one on load. Expected errors have no `field`: they concern the
   judged text; a `field` key is ignored and reported once.
 - `id` must be present on all cases or on none; duplicates make those entries invalid. On import,

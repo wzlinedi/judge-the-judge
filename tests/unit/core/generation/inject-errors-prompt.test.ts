@@ -68,6 +68,13 @@ describe('injectErrorsPrompt', () => {
     expect(text).toMatch(/another field/i);
   });
 
+  it('asks for source_fragment, the words of the source that each error contradicts, and says when to leave it out (T250)', () => {
+    const text = build();
+    expect(text).toMatch(/"source_fragment": "…exact words of the source it contradicts…"/);
+    expect(text).toMatch(/Give in "source_fragment" the exact words of another field/);
+    expect(text).toMatch(/Leave "source_fragment" out when/);
+  });
+
   it('starts with what the case is for: there are no own instructions any more (T249)', () => {
     expect(build().startsWith('I am testing an LLM judge.')).toBe(true);
   });

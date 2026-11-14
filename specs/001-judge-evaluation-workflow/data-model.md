@@ -191,6 +191,7 @@ any ──"Load evaluation" / "Load demo…"──> exactly the saved state (ope
 | `description` | text | Required (FR-037). What is wrong and why; for an injected error, what was changed. |
 | `category` | text | Optional. A name from the error catalog. |
 | `fragment` | text | Optional. Exact words of the judged text where the error is; for an omission, words of another field that the judged text no longer covers (FR-044). Without it the error cannot be matched automatically (FR-061). |
+| `source_fragment` | text | Optional (T250). Exact words of another field (the source) that the error contradicts; shown beside `fragment` and highlighted by "Show the issue". Never used for matching. A text that is in no field is a warning. Part of the test cases version only for an error that has it. |
 | `difficulty` | "obvious", "subtle" or none | Optional (FR-043). |
 
 An expected error has no field of its own: it always concerns the judged text (FR-022). A `field`

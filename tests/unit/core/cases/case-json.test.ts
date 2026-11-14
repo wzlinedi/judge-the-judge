@@ -79,6 +79,22 @@ describe('fields and expected errors', () => {
     expect(check(one({ expected_errors: [{ description: 'd', difficulty: 'hard' }] })).problems.find((p) => p.path === 'expected_errors[0].difficulty')).toBeDefined();
   });
 
+  it('keeps an optional source_fragment, the words of another field that the error contradicts (T250)', () => {
+    const r = check(one({ expected_errors: [{ category: 'factual-error', fragment: 'Anna is a doctor', source_fragment: 'Anna is a baker', description: 'Changed' }] }));
+    expect(r.problems).toEqual([]);
+    expect(r.warnings.join(' ')).not.toMatch(/source fragment/);
+    expect(r.case?.expected_errors[0]).toMatchObject({ fragment: 'Anna is a doctor', source_fragment: 'Anna is a baker' });
+    expect(check(one()).case?.expected_errors[0]).not.toHaveProperty('source_fragment');
+    expect(check(one({ expected_errors: [{ description: 'd', fragment: 'Anna is a doctor', category: 'factual-error', source_fragment: '' }] })).case?.expected_errors[0]).not.toHaveProperty('source_fragment');
+  });
+
+  it('warns, and still accepts the case, when the source_fragment is in no field', () => {
+    const r = check(one({ expected_errors: [{ category: 'factual-error', fragment: 'Anna is a doctor', source_fragment: 'Anna is a pilot', description: 'Changed' }] }));
+    expect(r.problems).toEqual([]);
+    expect(r.case).toBeDefined();
+    expect(r.warnings).toContain('expected_errors[0]: the source fragment is in no field of the case, so it cannot be shown in the text.');
+  });
+
   it('ignores id and gives the expected errors identifiers', () => {
     const r = check(one({ id: '77' }));
     expect(r.case).not.toHaveProperty('id');
@@ -179,6 +195,16 @@ describe('caseToJson (SC-036)', () => {
     expect(b.base).toBe('1');
     expect(b).not.toHaveProperty('id');
     expect(b.expected_errors[0]).not.toHaveProperty('id');
+  });
+
+  it('writes source_fragment after fragment when the error has one, and reads it back (T250)', () => {
+    const injected = e.dataset.cases[1]!;
+    const withSource = { ...injected, expected_errors: injected.expected_errors.map((x, i) => (i === 0 ? { ...x, source_fragment: 'Anna is a baker' } : x)) };
+    const written = JSON.parse(caseToJson(withSource));
+    expect(Object.keys(written.expected_errors[0])).toEqual(['category', 'fragment', 'source_fragment', 'description', 'difficulty']);
+    expect(written.expected_errors[1]).not.toHaveProperty('source_fragment');
+    const r = checkCaseJson(caseToJson(withSource), ctx({ mode: 'paste', existingCases: [] }));
+    expect(r.case?.expected_errors[0]?.source_fragment).toBe('Anna is a baker');
   });
 
   it('checkCaseJson of its output gives the same fields and expected errors', () => {

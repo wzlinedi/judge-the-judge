@@ -67,7 +67,7 @@
   },
   "dataset": {
     "name": "Book summaries, set A",
-    "version": "7f54ff5ff473",
+    "version": "178fbb293653",
     "finalized": true,
     "cases": [
       {
@@ -173,6 +173,7 @@
             "id": "e1",
             "category": "wrong-number",
             "fragment": "Pride and Prejudice in 1831",
+            "source_fragment": "published in 1813",
             "description": "The source says 1813.",
             "difficulty": "obvious"
           },
@@ -180,6 +181,7 @@
             "id": "e2",
             "category": "factual-error",
             "fragment": "the eldest of five sisters",
+            "source_fragment": "the second of five sisters",
             "description": "Elizabeth is the second sister, not the eldest.",
             "difficulty": "subtle"
           },
@@ -187,6 +189,7 @@
             "id": "e3",
             "category": "misattribution",
             "fragment": "her sister Jane marries Mr Collins",
+            "source_fragment": "the marriage of her sister Jane to Mr Bingley",
             "description": "Jane marries Mr Bingley; Mr Collins was refused by Elizabeth.",
             "difficulty": "subtle"
           }
@@ -205,6 +208,7 @@
             "id": "e1",
             "category": "wrong-number",
             "fragment": "Moby-Dick in 1815",
+            "source_fragment": "published in 1851",
             "description": "The source says 1851.",
             "difficulty": "obvious"
           },
@@ -212,6 +216,7 @@
             "id": "e2",
             "category": "factual-error",
             "fragment": "the whale that took his arm",
+            "source_fragment": "lost his leg to a white whale",
             "description": "Ahab lost his leg, not his arm.",
             "difficulty": "subtle"
           },
@@ -219,6 +224,7 @@
             "id": "e3",
             "category": "contradiction",
             "fragment": "only Ahab survives",
+            "source_fragment": "only Ishmael survives",
             "description": "Only Ishmael survives, while Ahab dies.",
             "difficulty": "obvious"
           }
@@ -237,6 +243,7 @@
             "id": "e1",
             "category": "wrong-number",
             "fragment": "Saint-Exupery in 1934",
+            "source_fragment": "in 1943",
             "description": "The source says 1943.",
             "difficulty": "obvious"
           },
@@ -244,6 +251,7 @@
             "id": "e2",
             "category": "contradiction",
             "fragment": "the rose he hates",
+            "source_fragment": "a vain rose he loves",
             "description": "The prince loves the rose.",
             "difficulty": "subtle"
           },
@@ -251,6 +259,7 @@
             "id": "e3",
             "category": "misattribution",
             "fragment": "The rose teaches him",
+            "source_fragment": "the fox who teaches him",
             "description": "It is the fox, not the rose, who teaches the lesson.",
             "difficulty": "subtle"
           }
@@ -269,6 +278,7 @@
             "id": "e1",
             "category": "wrong-number",
             "fragment": "Frankenstein in 1881",
+            "source_fragment": "first published in 1818",
             "description": "The source says 1818.",
             "difficulty": "obvious"
           },
@@ -276,6 +286,7 @@
             "id": "e2",
             "category": "contradiction",
             "fragment": "Victor Frankenstein finds a creature",
+            "source_fragment": "builds a living creature",
             "description": "Victor builds the creature; he does not find it.",
             "difficulty": "subtle"
           },
@@ -283,6 +294,7 @@
             "id": "e3",
             "category": "factual-error",
             "fragment": "the diary of Captain Walton",
+            "source_fragment": "told through letters of a ship captain named Walton",
             "description": "The story is told through letters, not a diary.",
             "difficulty": "subtle"
           }
@@ -301,6 +313,7 @@
             "id": "e1",
             "category": "wrong-number",
             "fragment": "Robinson Crusoe in 1791",
+            "source_fragment": "published in 1719",
             "description": "The source says 1719.",
             "difficulty": "obvious"
           },
@@ -308,6 +321,7 @@
             "id": "e2",
             "category": "unsupported-claim",
             "fragment": "lives on an island with his brother",
+            "source_fragment": "lives alone on a tropical island",
             "description": "Crusoe lives alone; a brother is never mentioned.",
             "difficulty": "obvious"
           },
@@ -315,6 +329,7 @@
             "id": "e3",
             "category": "factual-error",
             "fragment": "after twenty-eight months",
+            "source_fragment": "after twenty-eight years",
             "description": "The source says twenty-eight years.",
             "difficulty": "subtle"
           }
@@ -333,6 +348,7 @@
             "id": "e1",
             "category": "wrong-number",
             "fragment": "Dracula in 1879",
+            "source_fragment": "published in 1897",
             "description": "The source says 1897.",
             "difficulty": "obvious"
           },
@@ -340,6 +356,7 @@
             "id": "e2",
             "category": "factual-error",
             "fragment": "travels to Romania",
+            "source_fragment": "travels to Transylvania",
             "description": "The source says Transylvania.",
             "difficulty": "subtle"
           },
@@ -347,6 +364,7 @@
             "id": "e3",
             "category": "misattribution",
             "fragment": "Doctor Seward and his friends destroy the vampire",
+            "source_fragment": "Professor Van Helsing and his friends hunt the vampire",
             "description": "It is Professor Van Helsing who leads the hunt.",
             "difficulty": "subtle"
           }
@@ -365,6 +383,7 @@
             "id": "e1",
             "category": "wrong-number",
             "fragment": "The Hobbit in 1973",
+            "source_fragment": "published in 1937",
             "description": "The source says 1937.",
             "difficulty": "obvious"
           },
@@ -372,6 +391,7 @@
             "id": "e2",
             "category": "wrong-number",
             "fragment": "join twelve dwarves",
+            "source_fragment": "join thirteen dwarves",
             "description": "The source says thirteen dwarves.",
             "difficulty": "subtle"
           },
@@ -379,6 +399,7 @@
             "id": "e3",
             "category": "factual-error",
             "fragment": "Bilbo finds a magic sword",
+            "source_fragment": "Bilbo finds a magic ring",
             "description": "Bilbo finds a magic ring.",
             "difficulty": "obvious"
           }
@@ -397,6 +418,7 @@
             "id": "e1",
             "category": "wrong-number",
             "fragment": "Animal Farm in 1954",
+            "source_fragment": "published in 1945",
             "description": "The source says 1945.",
             "difficulty": "obvious"
           },
@@ -404,6 +426,7 @@
             "id": "e2",
             "category": "misattribution",
             "fragment": "the pigs led by Snowball",
+            "source_fragment": "The pigs, led by Napoleon",
             "description": "The pigs are led by Napoleon.",
             "difficulty": "subtle"
           },
@@ -411,6 +434,7 @@
             "id": "e3",
             "category": "contradiction",
             "fragment": "can easily tell the pigs from the humans",
+            "source_fragment": "the animals cannot tell the pigs from the humans",
             "description": "The animals can no longer tell the pigs from the humans.",
             "difficulty": "subtle"
           }
@@ -429,6 +453,7 @@
             "id": "e1",
             "category": "wrong-number",
             "fragment": "Sea in 1925",
+            "source_fragment": "published in 1952",
             "description": "The source says 1952.",
             "difficulty": "obvious"
           },
@@ -436,6 +461,7 @@
             "id": "e2",
             "category": "wrong-number",
             "fragment": "forty-eight days",
+            "source_fragment": "caught no fish for eighty-four days",
             "description": "The source says eighty-four days.",
             "difficulty": "subtle"
           },
@@ -443,6 +469,7 @@
             "id": "e3",
             "category": "factual-error",
             "fragment": "Birds eat the fish",
+            "source_fragment": "Sharks eat the fish",
             "description": "It is sharks that eat the fish.",
             "difficulty": "obvious"
           }
@@ -461,6 +488,7 @@
             "id": "e1",
             "category": "wrong-number",
             "fragment": "Wonderland in 1856",
+            "source_fragment": "published in 1865",
             "description": "The source says 1865.",
             "difficulty": "obvious"
           },
@@ -468,6 +496,7 @@
             "id": "e2",
             "category": "factual-error",
             "fragment": "follows a black cat",
+            "source_fragment": "follows a white rabbit",
             "description": "Alice follows a white rabbit.",
             "difficulty": "obvious"
           },
@@ -475,6 +504,7 @@
             "id": "e3",
             "category": "contradiction",
             "fragment": "she stays in Wonderland forever",
+            "source_fragment": "she wakes up and finds that it was only a dream",
             "description": "At the end she wakes up; it was only a dream.",
             "difficulty": "subtle"
           }

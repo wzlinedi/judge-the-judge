@@ -32,6 +32,7 @@ function injectedSummary(book: DemoBook): string {
     if (!summary.includes(e.from)) throw new Error(`"${e.from}" is not in the summary of ${book.name}`);
     summary = summary.replace(e.from, e.to);
     if (!summary.includes(e.fragment)) throw new Error(`fragment "${e.fragment}" is not in the summary of ${book.name}`);
+    if (!book.source.includes(e.source)) throw new Error(`source fragment "${e.source}" is not in the source of ${book.name}`);
   }
   if (book.unrecorded) {
     if (!summary.includes(book.unrecorded.from)) throw new Error(`unrecorded change not found in ${book.name}`);
@@ -50,7 +51,7 @@ BOOKS.forEach((book, i) => {
     name: `${book.name} + 3 errors`,
     base: String(i + 1),
     fields: { source_text: book.source, summary: injectedSummary(book) },
-    expected_errors: book.errors.map((e, n) => ({ id: `e${n + 1}`, category: e.category, fragment: e.fragment, description: e.description, difficulty: e.difficulty })),
+    expected_errors: book.errors.map((e, n) => ({ id: `e${n + 1}`, category: e.category, fragment: e.fragment, source_fragment: e.source, description: e.description, difficulty: e.difficulty })),
   });
 });
 

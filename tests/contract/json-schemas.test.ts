@@ -59,7 +59,7 @@ describe('docs/schemas', () => {
     expect(Object.keys(schema.properties ?? {}).sort()).toEqual(['base', 'expected_errors', 'fields', 'name']);
     expect(schema.required).toEqual(['fields']);
     const errors = JSON.parse(published('case.schema.json')).properties.expected_errors.items as Schema;
-    expect(Object.keys(errors.properties ?? {}).sort()).toEqual(['category', 'description', 'difficulty', 'fragment']);
+    expect(Object.keys(errors.properties ?? {}).sort()).toEqual(['category', 'description', 'difficulty', 'fragment', 'source_fragment']);
     expect(errors.required).toEqual(['description']);
   });
 

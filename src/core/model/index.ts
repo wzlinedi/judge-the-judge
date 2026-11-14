@@ -67,7 +67,10 @@ export interface ExpectedError {
   id: string;
   description: string;
   category?: string;
+  /** The exact words of the judged text that show the error. */
   fragment?: string;
+  /** The exact words of another field (the source) that the error contradicts, shown beside the fragment (T250). */
+  source_fragment?: string;
   difficulty?: Difficulty;
 }
 

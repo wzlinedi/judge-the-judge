@@ -71,11 +71,12 @@ export function injectErrorsPrompt({ judgeSet, base, errors }: InjectErrorsInput
     '- Do not say in the text that anything was changed.',
     '- Give the fragment of each error exactly as it appears in the case, word for word, as short as possible while it still contains the error.',
     '- For an omission (something that is left out) the judged text has nothing to quote: give the fragment of another field that the judged text no longer covers.',
+    '- Give in "source_fragment" the exact words of another field (the source) that the error contradicts, word for word, so that the two passages can be shown side by side. Leave "source_fragment" out when no passage of another field corresponds to the error, or when the case has only one field.',
     '- Describe in "description" what was changed and why it is an error.',
   );
 
   const fieldsExample = Object.fromEntries(variables.map((v) => [v, '…text…']));
-  const errorsExample = errors.map((row) => ({ category: row.category, fragment: '…exact fragment…', description: '…what is wrong…', difficulty: row.difficulty === 'llm' ? 'obvious or subtle' : row.difficulty }));
+  const errorsExample = errors.map((row) => ({ category: row.category, fragment: '…exact fragment…', source_fragment: '…exact words of the source it contradicts…', description: '…what is wrong…', difficulty: row.difficulty === 'llm' ? 'obvious or subtle' : row.difficulty }));
   parts.push(
     '',
     'Answer only with JSON in this form, with a non-empty text for every field and one expected error for each error above:',

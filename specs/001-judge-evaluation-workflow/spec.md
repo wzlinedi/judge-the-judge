@@ -160,6 +160,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-14, third look, T247) How large are the dialogs that hold a long text, and how wide is the case window of Run? → A: One **standard large dialog**: about 90% of the screen in both directions, its buttons in a bar at the bottom. It is used by every "Show prompt" (Test cases, Run, the "From JSON" window after Recreate), by "Original prompt", by "Second opinion…" and by "Edit expected errors". Small questions (Rename, Remove, "Replace this reply?") keep the small dialog. The case window of Run and the case view of Results use the whole width of the screen.
 - Q: (Owner review 2026-11-14, third look, T248) How are the error categories shown and changed? → A: The table has the columns Name, **Description & examples** (one multi-line cell), Used by, and the buttons Rename and Remove. The "Example" button, its dialog and the separate short example are gone: an `example` in an older file is joined to the description when the file is loaded and is not written again (the catalog is in no version, so no version changes). **Remove** is enabled for every category; for a category in use it asks first, and the expected errors that used it stay and lose the category (the test cases version changes). The text box "Categories to add" is replaced by one button, **Add category**, which appends an editable row. "Used by" is computed from the test cases; in the demo "unsupported-claim" is used by one case, number 15. This replaces the T237 answer on "Example" and FR-015 on a disabled "Remove".
 - Q: (Owner review 2026-11-14, third look, T249) What do the windows for adding a case lose? → A: In "Case with errors" the part "Errors to prepare" is a table like the categories table, with the columns Category, Difficulty and Description (what should be wrong) and "Remove" in each row; the box "Your own instructions (optional)" is removed. In "Clean case" the box "Comment (optional)" is removed. The prompts for the LLM no longer have those two texts (FR-040, FR-083).
+- Q: (Owner review 2026-11-14, third look, T250) An error is shown with the text of the source beside the text that was judged ("lost his leg" beside "took his arm"). Where does the text of the source come from? → A: From a new optional key of an expected error, `source_fragment`: the exact words of another field that the error contradicts. The generation prompt asks the LLM for it, "From JSON", the import and "Edit expected errors" accept it, and the demo has it for every error. An error without it shows only its own side. It is not used for matching, and it is part of the test cases version only for an error that has it, so older files keep their version (FR-041).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -1304,6 +1305,10 @@ case and confirm the new case has the same fields and expected errors.
   with a note naming the difference. The tool MUST NOT have built-in rules that change text by
   themselves, and MUST make clear that what the LLM returns is a proposal to review, not a
   guaranteed result.
+  An expected error MAY carry `source_fragment` (T250): the exact words of another field, the
+  source, that the error contradicts. The prompt for the LLM asks for it, and tells the LLM to leave
+  it out when no passage of another field corresponds. It is shown beside the fragment and is never
+  used for matching; a `source_fragment` that is in no field of the case is a warning, not a problem.
 - **FR-042**: Merged into FR-085 and FR-080: the review of a case before saving happens in the list of
   expected errors under its JSON and the warnings of FR-080 (FR-085);
   "Compare with base", "Use selected text as fragment" and editing single expected errors are not

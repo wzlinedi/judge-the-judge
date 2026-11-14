@@ -53,6 +53,19 @@ describe('readTestProject', () => {
     expect(writeTestProject(result.value.evaluation, meta)).toBe(text);
   });
 
+  it('keeps the source_fragment of an expected error through a save and a load; a file without one is unchanged (T250)', async () => {
+    const { testCasesVersion } = await import('../../src/core/cases/version');
+    const cases = evaluation.dataset.cases.map((c, i) => (i === 1 ? { ...c, expected_errors: c.expected_errors.map((x, n) => (n === 0 ? { ...x, source_fragment: 'Anna is a baker' } : x)) } : c));
+    const file = JSON.parse(writeTestProject({ ...evaluation, dataset: { ...evaluation.dataset, cases } }, meta));
+    expect(file.dataset.cases[1].expected_errors[0].source_fragment).toBe('Anna is a baker');
+    expect(file.dataset.cases[1].expected_errors[1]).not.toHaveProperty('source_fragment');
+    expect(ok(file).value.evaluation.dataset.cases[1]?.expected_errors[0]?.source_fragment).toBe('Anna is a baker');
+    expect(text).not.toContain('source_fragment');
+    // the new key is part of the version only for a case that has it
+    expect(await testCasesVersion(cases)).not.toBe(await testCasesVersion(evaluation.dataset.cases));
+    expect(await testCasesVersion(ok(parsed()).value.evaluation.dataset.cases)).toBe(await testCasesVersion(evaluation.dataset.cases));
+  });
+
   it('starts an evaluation with no replies, decisions or model note', () => {
     const { evaluation: loaded } = ok(text).value;
     expect(loaded.replies).toEqual({});
