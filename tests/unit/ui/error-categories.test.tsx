@@ -67,6 +67,7 @@ describe('each category', () => {
   it('shows the description and example, editable, and how many test cases use it', () => {
     open();
     const row = rowOf('factual-error');
+    expect((within(row).getByLabelText('Description of factual-error') as HTMLInputElement).placeholder).toMatch(/What this kind of error is/);
     expect((within(row).getByLabelText('Description of factual-error') as HTMLInputElement).value).toMatch(/untrue/);
     expect(within(row).getByText('Used by 1 test case')).toBeTruthy();
     expect(within(rowOf('misattribution')).getByText('Used by 0 test cases')).toBeTruthy();

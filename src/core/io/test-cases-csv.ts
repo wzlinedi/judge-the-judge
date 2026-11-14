@@ -18,13 +18,31 @@ export interface CsvRead {
 
 const FIELD_PREFIX = /^field:/i;
 
+const QUOTE_FIX =
+  'A cell has a quote inside it that is not doubled, so the reader cannot tell where the cell ends. Write each quote that belongs to the text twice (for example "He said ""hi"""), or fix the cell in your spreadsheet program and save the file again.';
+
+/**
+ * One line per place in the file, not one per message of the reader: it repeats a message for every quote in a row. A quote error names the
+ * row (the position in the file, the header being row 1) and the name of the case there, and says what to write instead.
+ */
+function fatalProblems(errors: readonly Papa.ParseError[], data: readonly Record<string, string>[]): Array<{ message: string }> {
+  const lines = new Set<string>();
+  for (const e of errors) {
+    // Papa Parse counts the header line in the row of a quote error, and not in the row of any other error
+    const position = e.row === undefined ? undefined : e.code === 'InvalidQuotes' ? e.row + 1 : e.row + 2;
+    const record = e.row === undefined ? undefined : data[e.code === 'InvalidQuotes' ? e.row - 1 : e.row];
+    const name = Object.entries(record ?? {}).find(([column]) => column.toLowerCase() === 'name')?.[1]?.trim();
+    const where = position === undefined ? '' : `Row ${position}${name ? ` (${name})` : ''}: `;
+    lines.add(`${where}${e.code === 'InvalidQuotes' ? QUOTE_FIX : e.message}`);
+  }
+  return [...lines].map((message) => ({ message }));
+}
+
 export function readTestCasesCsv(text: string, variables: readonly string[]): ReadResult<CsvRead> {
   if (text.trim() === '') return { ok: false, problems: [{ message: 'The file is empty.' }] };
   const parsed = Papa.parse<Record<string, string>>(text, { header: true, transformHeader: (h) => h.trim() });
   const fatal = parsed.errors.filter((e) => e.type !== 'FieldMismatch' && e.code !== 'UndetectableDelimiter');
-  if (fatal.length > 0) {
-    return { ok: false, problems: fatal.map((e) => ({ message: `${e.row !== undefined ? `Row ${e.row + 2}: ` : ''}${e.message}` })) };
-  }
+  if (fatal.length > 0) return { ok: false, problems: fatalProblems(fatal, parsed.data) };
   const columns = parsed.meta.fields ?? [];
   const nameColumn = columns.find((c) => c.toLowerCase() === 'name');
   const fieldColumns = columns.filter((c) => FIELD_PREFIX.test(c));

@@ -1,5 +1,6 @@
 // The state and the checks behind the test case window for a case with injected errors (FR-040, FR-041, FR-080, FR-085).
 // The pasted JSON is not part of the state until the case is saved.
+import { normalizeCategoryName } from '../../core/cases/catalog';
 import { textListCheck, type ListCheck } from '../../core/cases/text-list-check';
 import { injectErrorsPrompt, type ErrorToPrepare, type PreparedDifficulty } from '../../core/generation/inject-errors-prompt';
 import type { TestCase } from '../../core/model';
@@ -42,7 +43,7 @@ export const cleanCasesOf = (state: AppState): TestCase[] => state.evaluation.da
 /** The one prompt for the user's LLM, rebuilt from the base and the rows (FR-040). */
 export function injectPrompt(state: AppState, draft: InjectDraft): string {
   const base = draft.base === '' ? undefined : state.evaluation.dataset.cases.find((c) => c.id === draft.base);
-  const errors: ErrorToPrepare[] = draft.rows.map((r) => ({ category: r.category.trim(), difficulty: r.difficulty, description: r.description }));
+  const errors: ErrorToPrepare[] = draft.rows.map((r) => ({ category: r.isNew ? normalizeCategoryName(r.category) : r.category.trim(), difficulty: r.difficulty, description: r.description }));
   return injectErrorsPrompt({ judgeSet: state.evaluation.judge_set, base, errors, instructions: draft.instructions });
 }
 

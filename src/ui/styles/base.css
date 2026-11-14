@@ -39,6 +39,8 @@ button.primary {
   font-weight: 600;
 }
 button.primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+/* A primary action that cannot be used yet is quiet, not a pale red; red stays the sign of the action to take (Principle VII) */
+button.primary:disabled { background: var(--surface-2); border-color: var(--border); color: var(--text-muted); opacity: 1; font-weight: 400; }
 
 input[type="text"], input:not([type]), textarea, select {
   background: var(--bg);

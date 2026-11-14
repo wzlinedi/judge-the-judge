@@ -87,7 +87,7 @@ select { width: auto; }
 mark.fragment { background: var(--warning-bg); color: var(--text); border-bottom: 2px solid var(--warning); padding: 0 2px; }
 mark.fragment-found { background: var(--success-bg); border-bottom-color: var(--success); }
 mark.fragment-missed { background: var(--error-bg); border-bottom-color: var(--error); }
-mark.fragment sup { font-size: 0.7em; margin-right: 2px; font-weight: 600; }
+mark.fragment sup { font-size: 0.7em; margin-right: 0.4em; font-weight: 600; }
 .field-label { display: block; margin: var(--space-3) 0 var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
 textarea.json { font-size: var(--text-sm); }
 
@@ -189,3 +189,13 @@ mark.finding-none { background: var(--error-bg); border-bottom-color: var(--erro
 .decide-actions { margin-top: var(--space-4); }
 .preview li { margin-bottom: var(--space-2); }
 .preview p, .decide-item .item-head .link-button { margin: 0; }
+
+/* Import window: the example file row, and the link under the summary (T209) */
+.download-row { margin: var(--space-3) 0; }
+.import-another { margin: var(--space-4) 0 0; }
+.why-disabled { font-size: var(--text-sm); color: var(--text-muted); }
+
+/* The table of test cases: header texts on one line at the same height, the actions of a row side by side (T210) */
+.cases-table th { white-space: nowrap; vertical-align: bottom; }
+.cases-table .sort-button { min-height: 0; line-height: inherit; }
+.cases-table .button-row { flex-wrap: nowrap; }

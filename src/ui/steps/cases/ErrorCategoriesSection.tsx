@@ -50,11 +50,11 @@ export function ErrorCategoriesSection({ state, open, onToggle, onEdit }: ErrorC
                   <strong>{category.name}</strong>
                   <label>
                     {`Description of ${category.name}`}
-                    <input type="text" value={category.description ?? ''} onInput={(event) => onEdit(setCategoryDetails(state, category.name, { description: (event.currentTarget as HTMLInputElement).value }))} />
+                    <input type="text" placeholder="What this kind of error is (optional)" value={category.description ?? ''} onInput={(event) => onEdit(setCategoryDetails(state, category.name, { description: (event.currentTarget as HTMLInputElement).value }))} />
                   </label>
                   <label>
                     {`Example of ${category.name}`}
-                    <input type="text" value={category.example ?? ''} onInput={(event) => onEdit(setCategoryDetails(state, category.name, { example: (event.currentTarget as HTMLInputElement).value }))} />
+                    <input type="text" placeholder="A short example (optional)" value={category.example ?? ''} onInput={(event) => onEdit(setCategoryDetails(state, category.name, { example: (event.currentTarget as HTMLInputElement).value }))} />
                   </label>
                   <span class="muted">{`Used by ${uses} test ${uses === 1 ? 'case' : 'cases'}`}</span>
                   <div class="button-row">

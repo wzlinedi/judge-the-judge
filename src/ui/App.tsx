@@ -349,7 +349,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           onDownloadExample={() => {
             const example = downloadExample(stateRef.current);
             download(example.fileName, example.text, 'text/csv');
-            if (example.note) say(example.note);
+            return { fileName: example.fileName, ...(example.note ? { note: example.note } : {}) };
           }}
           onImport={(prepared) => {
             setImporting(false);

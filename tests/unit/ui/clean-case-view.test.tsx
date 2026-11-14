@@ -48,6 +48,17 @@ describe('the answer', () => {
     expect(approve().disabled).toBe(true);
   });
 
+  it('the disabled Approve and close says what is needed, and the sentence goes when the answer is valid', () => {
+    start();
+    expect(approve().getAttribute('aria-describedby')).toBe('clean-approve-why');
+    expect(within(windowOf()).getByText('Paste the answer of your LLM to approve.')).toBeTruthy();
+    type('Answer of your LLM', '{\n "name": \n');
+    expect(within(windowOf()).getByText('Fix the problems listed under the answer to approve.')).toBeTruthy();
+    type('Answer of your LLM', answer());
+    expect(within(windowOf()).queryByText(/to approve\.$/)).toBeNull();
+    expect(approve().getAttribute('aria-describedby')).toBeNull();
+  });
+
   it('an answer with expected errors is a problem that points to Paste JSON', () => {
     start();
     type('Answer of your LLM', answer({ expected_errors: [{ description: 'x', fragment: 'tidy' }] }));

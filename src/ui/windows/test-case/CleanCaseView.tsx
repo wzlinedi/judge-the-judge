@@ -41,9 +41,16 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
       dirty={name !== '' || comment !== '' || like !== '' || answer !== ''}
       onClose={onClose}
       headerExtra={
-        <button type="button" class="primary" disabled={!valid} onClick={approve}>
-          {labels.approveAndClose}
-        </button>
+        <>
+          <button type="button" class="primary" disabled={!valid} aria-describedby={valid ? undefined : 'clean-approve-why'} onClick={approve}>
+            {labels.approveAndClose}
+          </button>
+          {valid ? null : (
+            <span id="clean-approve-why" class="why-disabled">
+              {check ? 'Fix the problems listed under the answer to approve.' : 'Paste the answer of your LLM to approve.'}
+            </span>
+          )}
+        </>
       }
       left={
         <>

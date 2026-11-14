@@ -106,7 +106,7 @@ export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) 
         {countText(shown.length, rows.length)}
       </p>
       <TableScroll label="Table of test cases">
-        <table aria-label="Test cases">
+        <table class="cases-table" aria-label="Test cases">
           <thead>
             <tr>
               {sortable('id', 'Id')}

@@ -47,6 +47,39 @@ describe('the import panel', () => {
     click.mockRestore();
   });
 
+  it('Explain describes the columns of the file: name, field: and the doubled quote', () => {
+    openPanel();
+    fireEvent.click(within(panel()).getByRole('button', { name: 'Explain' }));
+    const text = panel().textContent ?? '';
+    expect(text).toMatch(/One row is one test case/);
+    expect(text).toMatch(/name.*can be left empty/);
+    expect(text).toMatch(/field:source_text/);
+    expect(text).toContain('A quote that is part of a text is written twice ("")');
+  });
+
+  it('Download example file says in the window that the file was saved, and under what name', () => {
+    URL.createObjectURL = (() => 'blob:x') as typeof URL.createObjectURL;
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    openPanel();
+    expect(within(panel()).queryByRole('status', { name: 'Example file' })).toBeNull();
+    fireEvent.click(within(panel()).getByRole('button', { name: 'Download example file' }));
+    expect(within(panel()).getByRole('status', { name: 'Example file' }).textContent).toMatch(/Saved test-cases-example\.csv: look for it in your Downloads folder/);
+    click.mockRestore();
+  });
+
+  it('a CSV with quotes that are not doubled gives one line per row with the fix, not the same line four times', async () => {
+    const ports = openPanel();
+    ports.opener.next = { name: 'cases.csv', text: csv('Anna,"He said "hi" there","S"\nBert,"Say "no" now","S"\n') };
+    fireEvent.click(within(panel()).getByRole('button', { name: 'Choose file…' }));
+    const alert = await within(panel()).findByRole('alert');
+    expect(alert.textContent).toMatch(/Row 2 \(Anna\)/);
+    expect(alert.textContent).toMatch(/Row 3 \(Bert\)/);
+    expect(alert.textContent).toContain('twice');
+    expect(alert.textContent?.match(/not doubled/g)).toHaveLength(2);
+    expect(alert.textContent).not.toMatch(/Trailing quote/);
+  });
+
   it('Cancel closes it without changing anything', () => {
     openPanel();
     fireEvent.click(within(panel()).getByRole('button', { name: 'Cancel' }));
@@ -65,6 +98,17 @@ describe('the summary', () => {
     await choose(ports, { name: 'cases.json', text: JSON.stringify(file) });
     expect(within(panel()).getByText(/2 test cases can be imported/)).toBeTruthy();
     expect(within(panel()).getByText(/1 clean, 1 with injected errors/)).toBeTruthy();
+  });
+
+  it('warns about a new category that is not written in lower case with dashes, and still adds it as it is', async () => {
+    const ports = openPanel();
+    const file = { format: 'judge-the-judge-test-cases', schema_version: 1, cases: [
+      { name: 'Injected', fields: { source_text: 'S', summary: 'T2' }, expected_errors: [{ description: 'd', category: 'Tone Shift', fragment: 'T2' }, { description: 'e', category: 'ok-name', fragment: 'T2' }] },
+    ] };
+    await choose(ports, { name: 'cases.json', text: JSON.stringify(file) });
+    const note = within(panel()).getByText(/not written|are not:/);
+    expect(note.textContent).toContain('Tone Shift');
+    expect(note.textContent).not.toContain('ok-name');
   });
 
   it('lists an invalid row with its position and reason, and imports only the valid rows', async () => {

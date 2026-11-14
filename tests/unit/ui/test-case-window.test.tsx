@@ -71,6 +71,20 @@ describe('part 1: the errors to prepare', () => {
     expect(prompt()).toMatch(/new category/i);
   });
 
+  it('a new category name is written the way the catalog writes it, and the window says so, and the prompt uses it', () => {
+    start();
+    const row = within(within(win()).getByRole('group', { name: 'Error 1' }));
+    const prompt = () => (field('Prompt for your LLM') as HTMLTextAreaElement).value;
+    fireEvent.change(row.getByLabelText('Category'), { target: { value: '__new__' } });
+    fireEvent.input(row.getByLabelText('New category name'), { target: { value: ' Tone Shift ' } });
+    expect(row.getByText('It is written in lower case with dashes: tone-shift.')).toBeTruthy();
+    expect(prompt()).toContain('tone-shift');
+    expect(prompt()).not.toContain('Tone Shift');
+    fireEvent.input(row.getByLabelText('New category name'), { target: { value: 'tone-shift' } });
+    expect(row.queryByText(/lower case with dashes:/)).toBeNull();
+    expect(row.getByText(/describe it in Error categories/i)).toBeTruthy();
+  });
+
   it('difficulty, what should be wrong, the base and own instructions all reach the prompt', () => {
     start();
     const prompt = () => (field('Prompt for your LLM') as HTMLTextAreaElement).value;

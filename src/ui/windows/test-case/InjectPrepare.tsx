@@ -1,6 +1,7 @@
 import type { CaseEdit } from '../../../app/actions/cases';
 import { addRow, cleanCasesOf, injectPrompt, NEW_CATEGORY, removeRow, updateRow, type ErrorRow, type InjectDraft } from '../../../app/actions/test-case-window';
 import type { AppState } from '../../../app/store';
+import { normalizeCategoryName } from '../../../core/cases/catalog';
 import type { CaseJsonCheck } from '../../../core/model';
 import type { PreparedDifficulty } from '../../../core/generation/inject-errors-prompt';
 import { CopyButton } from '../../components/CopyButton';
@@ -62,6 +63,10 @@ function Row({ row, number, state, onChange, onRemove }: { row: ErrorRow; number
                 New category name
               </label>
               <input id={`${id}-new`} type="text" value={row.category} onInput={(event) => onChange({ category: (event.currentTarget as HTMLInputElement).value })} />
+              {row.category.trim() !== '' && normalizeCategoryName(row.category) !== row.category ? (
+                <p class="muted category-hint">{`It is written in lower case with dashes: ${normalizeCategoryName(row.category)}.`}</p>
+              ) : null}
+              <p class="muted category-hint">The category joins the catalog when the case is saved; describe it in Error categories afterwards.</p>
             </>
           ) : null}
         </div>

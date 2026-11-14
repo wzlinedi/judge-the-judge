@@ -88,4 +88,16 @@ describe('the shortened CSV', () => {
   it('skips empty lines', () => {
     expect(read('name,field:source_text,field:summary\n\nAnna,A,B\n\n\n').drafts.map((d) => d.position)).toEqual([3]);
   });
+
+  it('names a quote that is not doubled once per row, with the fix, and not Papa Parse\'s own line repeated', () => {
+    const found = problems('name,field:source_text,field:summary\nAnna,"He said "hi" there","S"\nBert,"Say "no" now","S"\nCara,ok,fine\n');
+    expect(found).toHaveLength(2);
+    expect(found[0]).toMatch(/^Row 2 \(Anna\):/);
+    expect(found[1]).toMatch(/^Row 3 \(Bert\):/);
+    for (const line of found) {
+      expect(line).toMatch(/quote/i);
+      expect(line).toContain('""');
+      expect(line).not.toMatch(/Trailing quote on quoted field is malformed/);
+    }
+  });
 });
