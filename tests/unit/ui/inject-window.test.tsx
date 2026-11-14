@@ -146,3 +146,25 @@ describe('saving', () => {
     expect(row.textContent).toContain('Clean');
   });
 });
+
+describe('the three parts say where the user is and what to do (T207, found by the T205 run)', () => {
+  it('part 1 says "Part 1 of 3", part 2 asks for the answer of the LLM, part 3 says what to check', () => {
+    render(<App ports={createFakePorts()} env={env} initialState={draftState()} />);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);
+    fireEvent.click(button('Case with injected errors'));
+    expect(within(win()).getByText(/Part 1 of 3/)).toBeTruthy();
+    fireEvent.click(button('Next'));
+    expect(within(win()).getByText(/Part 2 of 3/)).toBeTruthy();
+    expect(within(win()).getByText(/Paste the answer of your LLM into the box/)).toBeTruthy();
+    toCaseView(json('Anna is a doctor. She bought a second oven in 1998.', [doctor]));
+    expect(within(win()).getByText(/Part 3 of 3/)).toBeTruthy();
+    expect(within(win()).getByText(/Check the case, then save it/)).toBeTruthy();
+  });
+
+  it('part 3 names the base case, not only its number', () => {
+    open();
+    toCaseView(json('Anna is a doctor. She bought a second oven in 1998.', [doctor], { base: '1' }));
+    const baseName = sampleEvaluation().dataset.cases.find((c) => c.id === '1')!.name;
+    expect(within(win()).getByText(new RegExp(`Base: 1 \\(${baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\)`))).toBeTruthy();
+  });
+});

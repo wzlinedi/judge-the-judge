@@ -95,3 +95,15 @@ describe('the answer', () => {
     expect(screen.getByRole('dialog', { name: 'Close without saving?' })).toBeTruthy();
   });
 });
+
+describe('what the fields do (T207 and T208, found by the T205 run)', () => {
+  it('says that the comment only steers the prompt and is not saved with the case', () => {
+    start();
+    expect(windowOf().textContent).toMatch(/The comment is only used to write the prompt below\. It is not saved with the case\./);
+  });
+
+  it('says what "Like case" does', () => {
+    start();
+    expect(windowOf().textContent).toMatch(/The prompt shows your LLM the texts of this case as an example, so that the new case has the same kind of text\./);
+  });
+});

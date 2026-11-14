@@ -63,6 +63,8 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const [pending, setPending] = useState<FileAction | 'edit-judge-and-run-again' | null>(null);
   const [onlyAwaiting, setOnlyAwaiting] = useState(false);
   const [notice, setNotice] = useState('');
+  /** True when the message says that something was not done: it is shown as a refusal, with a word and a sign. */
+  const [refused, setRefused] = useState(false);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [categoriesOpen, setCategoriesOpen] = useState<boolean | undefined>(undefined);
   const [metricProblems, setMetricProblems] = useState<Problem[]>([]);
@@ -88,9 +90,10 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const go = (step: StepId) => setState((s) => goToStep(s, step));
   const change = (next: Evaluation) => setState((s) => ({ ...s, evaluation: next, unsaved: true }));
 
-  const say = (message: string | undefined) => {
+  const say = (message: string | undefined, refusal = false) => {
     setProblems([]);
     setNotice(message ?? '');
+    setRefused(refusal && message !== undefined);
   };
 
   const save = async (as: boolean, project = false): Promise<boolean> => {
@@ -112,9 +115,10 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   };
 
   const applyCase = (edit: CaseEdit) => {
-    setState(edit.state);
     setProblems([]);
-    say(edit.note);
+    // an edit that changed nothing and has a note is a refusal
+    say(edit.note, edit.state === stateRef.current);
+    setState(edit.state);
   };
 
   const applyCatalog = (edit: CatalogEdit) => {
@@ -246,7 +250,13 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
       <div class="app-page" inert={windowOpen}>
       {browserSupported(browser) ? null : <BrowserNotice />}
       <Header state={state} onGo={go} onFileAction={onFile} />
-      <div role="status" aria-label="Message" class="notice-line" aria-live="polite">
+      <div role="status" aria-label="Message" class={`notice-line${notice ? ' has-message' : ''}${refused ? ' refusal' : ''}`} aria-live="polite">
+        {refused && notice ? (
+          <>
+            <span aria-hidden="true">✕ </span>
+            <strong>Not done: </strong>
+          </>
+        ) : null}
         {notice}
       </div>
       <ErrorMessage problems={problems} title="The file was not loaded. Nothing has changed." />

@@ -7,7 +7,7 @@ import { CaseWindowFrame } from '../../components/CaseWindowFrame';
 import { CopyButton } from '../../components/CopyButton';
 import { JsonBox } from '../../components/JsonBox';
 import { labels } from '../../labels';
-import { CaseData, CheckLine, ErrorList } from './CaseData';
+import { baseNameOf, CaseData, CheckLine, ErrorList } from './CaseData';
 
 export interface CaseReadOnlyProps {
   state: AppState;
@@ -62,7 +62,7 @@ export function CaseReadOnly({ state, caseId, onNavigate, onClone, onCorrect, on
       }
       left={
         <>
-          <CaseData testCase={testCase} judged={judge_set.judged_text} uncovered={list?.uncovered ?? []} strong={strong} rootRef={textRef} />
+          <CaseData testCase={testCase} judged={judge_set.judged_text} uncovered={list?.uncovered ?? []} strong={strong} rootRef={textRef} baseName={baseNameOf(state, testCase.base)} />
           <label class="field-label" for="read-prompt">
             Complete judge prompt
           </label>

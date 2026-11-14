@@ -1,8 +1,16 @@
 import type { RefObject } from 'preact';
 import type { ChangedPlace, ListCheck } from '../../../core/cases/text-list-check';
+import type { AppState } from '../../../app/store';
 import type { TestCase } from '../../../core/model';
 import { labels } from '../../labels';
 import { MarkedFields } from '../case-window/MarkedFields';
+
+/** The name of the case another case was made from, for "Base: 4 (Anna)". */
+export function baseNameOf(state: AppState, base: string | undefined): string | undefined {
+  if (base === undefined) return undefined;
+  const found = state.evaluation.dataset.cases.find((c) => c.id === base);
+  return found && found.name.trim() !== '' ? found.name : undefined;
+}
 
 type Shown = Omit<TestCase, 'id'> & { id?: string };
 
@@ -12,10 +20,12 @@ export interface CaseDataProps {
   uncovered?: readonly ChangedPlace[];
   strong?: string | null;
   rootRef?: RefObject<HTMLDivElement | null>;
+  /** The name of the base case, shown beside its number. */
+  baseName?: string | undefined;
 }
 
 /** A case read-only: its fields, with the fragments of the expected errors highlighted and numbered. */
-export function CaseData({ testCase, judged, uncovered = [], strong, rootRef }: CaseDataProps) {
+export function CaseData({ testCase, judged, uncovered = [], strong, rootRef, baseName }: CaseDataProps) {
   return (
     <div class="case-data">
       {testCase.name.trim() !== '' ? (
@@ -27,7 +37,7 @@ export function CaseData({ testCase, judged, uncovered = [], strong, rootRef }: 
       <p>
         <span class="muted">Kind: </span>
         <strong>{testCase.expected_errors.length === 0 ? 'Clean' : 'Injected errors'}</strong>
-        {testCase.base ? <span class="muted">{` · Base: ${testCase.base}`}</span> : null}
+        {testCase.base ? <span class="muted">{` · Base: ${testCase.base}${baseName ? ` (${baseName})` : ''}`}</span> : null}
       </p>
       <MarkedFields testCase={testCase} judged={judged} effective={null} uncovered={uncovered} strong={strong} rootRef={rootRef} />
     </div>

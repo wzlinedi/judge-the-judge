@@ -7,7 +7,7 @@ import { findVariables } from '../../../core/judge/variables';
 import type { CaseJsonCheck, TestCase } from '../../../core/model';
 import { JsonBox } from '../../components/JsonBox';
 import { labels } from '../../labels';
-import { CaseData, CheckLine, ErrorList } from './CaseData';
+import { baseNameOf, CaseData, CheckLine, ErrorList } from './CaseData';
 import { SaveCaseButton } from './SaveCaseButton';
 import { TestCaseFrame } from './TestCaseFrame';
 
@@ -86,8 +86,15 @@ export function JsonCaseView({ state, mode, caseId, initialText, onTextChange, b
     element?.focus();
   };
 
+  const hint =
+    mode === 'inject'
+      ? stage === 'json'
+        ? 'Part 2 of 3. Paste the answer of your LLM into the box. It is checked as you paste it, and Next is enabled when it is valid.'
+        : 'Part 3 of 3. Check the case, then save it. To change anything, change the JSON in the box.'
+      : undefined;
   const box = (
     <>
+      {hint && stage === 'json' ? <p class="muted">{hint}</p> : null}
       <JsonBox label="Case JSON" value={text} onChange={change} check={() => check?.problems ?? []} rows={stage === 'json' ? 18 : 12} />
       {check ? <Status check={check} /> : null}
     </>
@@ -122,7 +129,7 @@ export function JsonCaseView({ state, mode, caseId, initialText, onTextChange, b
         ) : shown ? (
           <>
             {outOfDate ? <p class="out-of-date warning-text">Out of date</p> : null}
-            <CaseData testCase={shown} judged={judged} uncovered={list?.uncovered ?? []} strong={strong} rootRef={textRef} />
+            <CaseData testCase={shown} judged={judged} uncovered={list?.uncovered ?? []} strong={strong} rootRef={textRef} baseName={baseNameOf(state, shown.base)} />
           </>
         ) : (
           <p class="muted">The JSON is not valid yet. Fix it in the box on the right.</p>
@@ -131,6 +138,7 @@ export function JsonCaseView({ state, mode, caseId, initialText, onTextChange, b
       right={
         stage === 'json' ? undefined : (
           <>
+            {hint ? <p class="muted">{hint}</p> : null}
             {shown && list ? (
               <>
                 <CheckLine list={list} testCase={shown} />

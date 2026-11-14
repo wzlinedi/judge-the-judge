@@ -62,7 +62,7 @@ test('Clone, Rename and Remove work from the row buttons, and a base in use cann
   await row(page, `${firstName} (copy)`).getByRole('button', { name: 'Rename' }).click();
   await page.getByLabel('New name').fill(firstName.toUpperCase());
   await page.getByRole('dialog', { name: 'Rename test case' }).getByRole('button', { name: 'Rename' }).click();
-  await expect(page.getByRole('status', { name: 'Message' })).toContainText('already used by case 1');
+  await expect(page.getByRole('dialog', { name: 'Rename test case' }).getByRole('alert')).toContainText('already used by case 1');
   await page.getByLabel('New name').fill('Free name');
   await page.getByRole('dialog', { name: 'Rename test case' }).getByRole('button', { name: 'Rename' }).click();
   await expect(row(page, 'Free name')).toBeVisible();

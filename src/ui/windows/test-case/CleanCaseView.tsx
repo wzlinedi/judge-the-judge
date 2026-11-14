@@ -55,6 +55,7 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
             Comment (optional)
           </label>
           <textarea id="clean-comment" rows={3} value={comment} onInput={(event) => setComment((event.currentTarget as HTMLTextAreaElement).value)} />
+          <p class="muted">The comment is only used to write the prompt below. It is not saved with the case.</p>
           <label class="field-label" for="clean-like">
             Like case (optional)
           </label>
@@ -66,6 +67,7 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
               </option>
             ))}
           </select>
+          <p class="muted">The prompt shows your LLM the texts of this case as an example, so that the new case has the same kind of text.</p>
           <label class="field-label" for="clean-prompt">
             Prompt for your LLM
           </label>

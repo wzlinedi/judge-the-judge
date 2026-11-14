@@ -32,7 +32,7 @@ export function ReadOnlyCaseView({ evaluation, reviewed, caseId, onNavigate, onC
       <p>
         <span class="muted">Kind: </span>
         <strong>{testCase.expected_errors.length === 0 ? 'Clean' : 'Injected errors'}</strong>
-        {testCase.base ? <span class="muted">{` · Base: ${testCase.base}`}</span> : null}
+        {testCase.base ? <span class="muted">{` · Base: ${testCase.base}${evaluation.dataset.cases.find((c) => c.id === testCase.base)?.name ? ` (${evaluation.dataset.cases.find((c) => c.id === testCase.base)?.name})` : ''}`}</span> : null}
       </p>
       <MarkedFields testCase={testCase} judged={evaluation.judge_set.judged_text} effective={effective} uncovered={[]} rootRef={textRef} />
       <label class="field-label" for="read-only-prompt">

@@ -110,6 +110,7 @@ export function InjectPrepare({ state, draft, onDraft, onNext, text, check, dirt
       }
       left={
         <>
+          <p class="muted">Part 1 of 3. Choose a base case and list the errors to prepare, then copy the prompt into your LLM. Press Next when you have its answer.</p>
           <label class="field-label" for="inject-base">
             Base case (optional)
           </label>

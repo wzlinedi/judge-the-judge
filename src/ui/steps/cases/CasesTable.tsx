@@ -29,6 +29,8 @@ export interface CasesTableProps {
 export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) {
   const [renaming, setRenaming] = useState<TestCase | null>(null);
   const [newName, setNewName] = useState('');
+  /** A refused rename is said inside the window, where the user is looking. */
+  const [renameRefusal, setRenameRefusal] = useState<string | null>(null);
   const [removing, setRemoving] = useState<TestCase | null>(null);
   const [view, setView] = useState<CaseView>(DEFAULT_VIEW);
   const { dataset } = state.evaluation;
@@ -59,8 +61,12 @@ export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) 
   const submitRename = () => {
     if (!renaming) return;
     const result = renameCase(state, renaming.id, newName);
+    if (result.state === state) {
+      setRenameRefusal(`${result.note ?? 'The name was not accepted.'} The name was not changed.`);
+      return;
+    }
     onEdit(result);
-    if (result.state !== state) setRenaming(null);
+    setRenaming(null);
   };
 
   return (
@@ -144,6 +150,7 @@ export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) 
                         disabled={hasReply}
                         onClick={() => {
                           setNewName(c.name);
+                          setRenameRefusal(null);
                           setRenaming(c);
                         }}
                       >
@@ -179,7 +186,21 @@ export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) 
         <label class="field-label" for="rename-input">
           New name
         </label>
-        <input id="rename-input" type="text" value={newName} onInput={(event) => setNewName((event.currentTarget as HTMLInputElement).value)} />
+        <input
+          id="rename-input"
+          type="text"
+          value={newName}
+          onInput={(event) => {
+            setNewName((event.currentTarget as HTMLInputElement).value);
+            setRenameRefusal(null);
+          }}
+        />
+        {renameRefusal ? (
+          <p role="alert" class="error-message">
+            <span aria-hidden="true">✕ </span>
+            {renameRefusal}
+          </p>
+        ) : null}
       </Dialog>
       <Dialog
         open={removing !== null}

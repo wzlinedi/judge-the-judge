@@ -67,9 +67,11 @@ describe('Open, Rename and Remove', () => {
     const dialog = screen.getByRole('dialog', { name: 'Rename test case' });
     fireEvent.input(within(dialog).getByLabelText('New name'), { target: { value: ' anna + 2 ERRORS ' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Rename' }));
-    expect(screen.getByRole('status', { name: 'Message' }).textContent).toMatch(/already used by case 2/);
+    // the refusal is said inside the window that was acted in, where it is seen, and says that the name was not changed
+    expect(within(dialog).getByRole('alert').textContent).toMatch(/already used by case 2.*not changed/i);
     expect(screen.getByRole('dialog', { name: 'Rename test case' })).toBeTruthy();
     fireEvent.input(within(dialog).getByLabelText('New name'), { target: { value: 'Bakery' } });
+    expect(within(dialog).queryByRole('alert')).toBeNull(); // typing a new name takes the refusal away
     fireEvent.click(within(dialog).getByRole('button', { name: 'Rename' }));
     expect(screen.queryByRole('dialog', { name: 'Rename test case' })).toBeNull();
     expect(screen.getByText('Bakery')).toBeTruthy();
