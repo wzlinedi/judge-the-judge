@@ -7,10 +7,10 @@ import { exportReport } from '../app/actions/export';
 import { modelDetailsEdit, pasteReplyFromClipboard, saveReply, type ReplyOutcome } from '../app/actions/replies';
 import type { CaseEdit } from '../app/actions/cases';
 import type { CatalogEdit } from '../app/actions/catalog';
-import { loadMetricDefinition, replaceLoadedMetric, startFromMetric, type JudgeEdit } from '../app/actions/judge';
+import type { JudgeEdit } from '../app/actions/judge';
 import { continueWork, loadEvaluation, loadTestProject, saveEvaluation, saveEvaluationAs, saveTestProject, saveTestProjectAs, type FileEnv } from '../app/actions/files';
 import { guardFor, installBeforeUnload, type GuardedAction } from '../app/guard';
-import { metricFor, sessionRegistry } from '../app/metrics';
+import { metricFor } from '../app/metrics';
 import { browserSupported, type BrowserEnv } from '../app/ports/browser';
 import { createBrowserPorts } from '../app/ports';
 import type { Ports } from '../app/ports/types';
@@ -41,8 +41,6 @@ import { TestCaseWindow, type TestWindowView } from './windows/test-case/TestCas
 import { ImportWindow } from './windows/import/ImportWindow';
 import { applyImport, downloadExample, exportTestCases, prepareImport } from '../app/actions/test-cases-file';
 import { download } from './components/download';
-import { DEMO, LoadExampleWindow } from './windows/load-example/LoadExampleWindow';
-import type { MetricDefinition } from '../core/metrics/types';
 
 export interface AppProps {
   ports?: Ports;
@@ -59,7 +57,6 @@ const REAL_FILE_ENV: FileEnv = { now: () => new Date().toISOString(), toolVersio
 export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileAction }: AppProps) {
   const browser = env ?? (globalThis as unknown as BrowserEnv);
   const [state, setState] = useState<AppState>(initialState ?? createState());
-  const [showExamples, setShowExamples] = useState(false);
   const [pending, setPending] = useState<FileAction | 'edit-judge-and-run-again' | null>(null);
   const [onlyAwaiting, setOnlyAwaiting] = useState(false);
   const [notice, setNotice] = useState('');
@@ -67,9 +64,6 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const [refused, setRefused] = useState(false);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [categoriesOpen, setCategoriesOpen] = useState<boolean | undefined>(undefined);
-  const [metricProblems, setMetricProblems] = useState<Problem[]>([]);
-  const [pendingReplace, setPendingReplace] = useState<{ metric: MetricDefinition; message: string } | null>(null);
-  const [metricsVersion, setMetricsVersion] = useState(0);
   const [testWindow, setTestWindow] = useState<TestWindowView | null>(null);
   const [importing, setImporting] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
@@ -126,20 +120,6 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     say(edit.note);
   };
 
-  const loadMetric = async () => {
-    setPendingReplace(null);
-    const result = await loadMetricDefinition(portsRef.current);
-    if (result.outcome === 'invalid') setMetricProblems(result.problems);
-    else if (result.outcome === 'exists') {
-      setMetricProblems([]);
-      setPendingReplace({ metric: result.metric, message: result.message });
-    } else if (result.outcome === 'loaded') {
-      setMetricProblems([]);
-      setMetricsVersion((v) => v + 1);
-      say(`The metric ${result.metric.name} was loaded. Choose it in the list to start from it.`);
-    }
-  };
-
   const applyJudge = (result: JudgeEdit) => {
     const corrected = correctRules(stateRef.current, result, metric);
     setState(corrected.state);
@@ -183,7 +163,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
 
   const perform = (action: FileAction | 'edit-judge-and-run-again') => {
     if (action === 'edit-judge-and-run-again') rerun();
-    else if (action === 'load-example') setShowExamples(true);
+    else if (action === 'load-example') loadDemo();
     else if (action === 'start-new-evaluation') {
       setState((s) => startNewEvaluation(s, portsRef.current));
       say('Started a new evaluation.');
@@ -202,18 +182,9 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     else perform(action);
   };
 
-  const chooseExample = (example: string) => {
-    setShowExamples(false);
-    setMetricProblems([]);
-    setPendingReplace(null);
-    if (example === DEMO) {
-      setState((s) => loadExample(s, demoEvaluation, portsRef.current, metricFor('accuracy')));
-      say('The demo was loaded.');
-    } else {
-      const metric = metricFor(example);
-      setState((s) => startFromMetric(s, metric, portsRef.current));
-      say(`${metric.name} was loaded as the start of a new test project.`);
-    }
+  const loadDemo = () => {
+    setState((s) => loadExample(s, demoEvaluation, portsRef.current));
+    say('The demo was loaded. It opens on the Judge step.');
   };
 
   const windowOpen = (state.step === 'run' && state.openCase !== null) || (state.step === 'results' && viewCase !== null) || testWindow !== null;
@@ -357,34 +328,6 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           onClose={() => setImporting(false)}
         />
       ) : null}
-      <LoadExampleWindow
-        key={metricsVersion}
-        open={showExamples}
-        metrics={sessionRegistry().metrics.map((m) => ({ id: m.id, name: m.name, description: m.description }))}
-        onChoose={chooseExample}
-        onLoadMetric={() => void loadMetric()}
-        onClose={() => {
-          setShowExamples(false);
-          setMetricProblems([]);
-          setPendingReplace(null);
-        }}
-        problems={metricProblems}
-        replace={
-          pendingReplace
-            ? {
-                message: pendingReplace.message,
-                onKeep: () => setPendingReplace(null),
-                onReplace: () => {
-                  if (replaceLoadedMetric(pendingReplace.metric)) {
-                    setMetricsVersion((v) => v + 1);
-                    say(`The metric ${pendingReplace.metric.name} was replaced.`);
-                  }
-                  setPendingReplace(null);
-                },
-              }
-            : undefined
-        }
-      />
       <Dialog
         open={pending !== null}
         title="Unsaved changes"

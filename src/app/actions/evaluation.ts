@@ -11,8 +11,8 @@ export function firstUnfinishedStep(evaluation: Evaluation, metric?: Pick<Metric
   return resumePoint(evaluation, metric).step;
 }
 
-/** "Load example…" with the demo: both remembered files are forgotten (FR-076) and the demo opens where work is unfinished. */
-export function loadExample(state: AppState, evaluationText: string, ports: Ports, metric?: MetricDefinition): AppState {
+/** "Load demo…": both remembered files are forgotten (FR-076) and the demo opens on the Judge step (T243). */
+export function loadExample(state: AppState, evaluationText: string, ports: Ports): AppState {
   const read = readEvaluation(evaluationText);
   if (!read.ok) throw new Error('The bundled example could not be read: ' + read.problems.map((p) => p.message).join(' '));
   forgetBothFiles(ports);
@@ -27,6 +27,6 @@ export function loadExample(state: AppState, evaluationText: string, ports: Port
     hasFile: false,
     openCase: null,
     judgeOpen: false,
-    step: firstUnfinishedStep(evaluation, metric),
+    step: 'judge',
   };
 }

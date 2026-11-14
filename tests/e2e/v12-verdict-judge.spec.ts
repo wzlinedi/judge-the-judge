@@ -12,6 +12,8 @@ const metricText = readFileSync('examples/metrics/bias-verdict-example.json', 'u
 const metric = JSON.parse(metricText);
 const checksText = readFileSync('examples/metrics/checks-example.json', 'utf8');
 const { clean_base_cases: _clean, ...judgeSet } = metric.judge_set;
+const { name, description, limitations, output_format, parameters, measures } = metric;
+const definition = { name, description, limitations, output_format, parameters, measures };
 
 const textCase = (id: string, name: string, errors: TestCase['expected_errors'] = []): TestCase => ({ id, name, fields: { text: `Text of case ${id}.` }, expected_errors: errors });
 const cases = [
@@ -26,7 +28,7 @@ const cases = [
 
 async function projectFile(): Promise<string> {
   return writeTestProject(
-    { judge_set: judgeSet, dataset: { name: 'Bias texts', finalized: true, cases }, metric: { id: metric.id, parameters: {} }, checks: JSON.parse(readFileSync('src/core/metrics/builtin/checks.default.json', 'utf8')) },
+    { judge_set: judgeSet, dataset: { name: 'Bias texts', finalized: true, cases }, metric: { id: metric.id, parameters: {}, definition: definition as never }, checks: JSON.parse(readFileSync('src/core/metrics/builtin/checks.default.json', 'utf8')) },
     { toolVersion: 'test', testCasesVersion: await testCasesVersion(cases) },
   );
 }
@@ -44,25 +46,20 @@ async function pasteReply(page: Page, reply: string) {
 
 test('a verdict judge: the Judge step says so, replies decide whole cases, the Summary counts cases, and a correction that switches the way is named', async ({ page }) => {
   const memory = await installMemoryFiles(page);
-  memory.files.set('bias-verdict-example.json', metricText);
   memory.files.set('bias-texts.json', await projectFile());
   memory.files.set('checks-example.json', checksText);
   await page.goto('/');
 
-  // the metric is loaded without any other change; its example starts a project, and the Judge step says how it is counted
-  memory.chooseOpenName('bias-verdict-example.json');
-  await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  const examples = page.getByRole('dialog', { name: 'Load demo…' });
-  await examples.getByRole('button', { name: 'Load metric definition…' }).click();
-  await examples.getByRole('button', { name: /^Bias/ }).filter({ hasText: /verdict/i }).first().click();
-  await expect(page.getByRole('status', { name: 'Way of counting' })).toContainText('evaluated per case');
-
-  // the test project with its cases is loaded and opens on Run
+  // the test project with its cases and its metric is loaded and opens on Run
   memory.chooseOpenName('bias-texts.json');
   await page.getByRole('button', { name: 'File' }).click();
   await page.getByRole('menuitem', { name: 'Load test project…' }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
+
+  // the file carried its metric: the Judge step says how it is counted, with no other step
+  await page.getByRole('button', { name: /1\s*Judge/ }).click();
+  await expect(page.getByRole('status', { name: 'Way of counting' })).toContainText('evaluated per case');
+  await page.getByRole('button', { name: /3\s*Run/ }).click();
   await next(page).getByRole('button', { name: 'Continue' }).click();
   const win = caseWindow(page);
 

@@ -1,4 +1,4 @@
-// The two ready examples (FR-019): Accuracy and Completeness are ordinary definitions in the registry.
+// The built-in metric (FR-019): Accuracy is an ordinary definition in the registry.
 import { describe, expect, it } from 'vitest';
 import { listExamples } from '../../../src/core/metrics/registry';
 import { BUILT_IN_REGISTRY, metricFor } from '../../../src/app/metrics';
@@ -9,12 +9,11 @@ import { findVariables } from '../../../src/core/judge/variables';
 import { validateRules } from '../../../src/core/judge/rules';
 
 describe('built-in metrics', () => {
-  it('lists Accuracy and Completeness', () => {
-    expect(listExamples(BUILT_IN_REGISTRY).map((m) => m.id)).toEqual(['accuracy', 'completeness']);
-    expect(metricFor('completeness').name).toBe('Completeness');
+  it('lists Accuracy only (Completeness was removed, T243)', () => {
+    expect(listExamples(BUILT_IN_REGISTRY).map((m) => m.id)).toEqual(['accuracy']);
   });
 
-  it.each(['accuracy', 'completeness'])('%s: starter prompt, rules and clean cases agree with each other', (id) => {
+  it.each(['accuracy'])('%s: starter prompt, rules and clean cases agree with each other', (id) => {
     const metric = metricFor(id);
     const set = metric.judge_set;
     const variables = findVariables(set.prompt);
@@ -32,11 +31,5 @@ describe('built-in metrics', () => {
     expect(validateRules(set.error_rules, recognized).every((v) => v.usable)).toBe(true);
     const found = findFindings(set.sample_reply ?? '', set.error_rules, set.reply_mapping.finding_text, recognized);
     expect(found.readable && found.findings.length).toBe(1);
-  });
-
-  it('Completeness has the five categories of the spec', () => {
-    expect(metricFor('completeness').judge_set.error_catalog.map((c) => c.name)).toEqual([
-      'missing-information', 'missing-step', 'omitted-requirement', 'partial-answer', 'missing-caveat',
-    ]);
   });
 });

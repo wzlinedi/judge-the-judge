@@ -73,15 +73,14 @@ describe('header', () => {
     expect(document.activeElement).toBe(button);
   });
 
-  it('opens the "Load demo…" window with the ready examples and "Load metric definition…"', async () => {
+  it('"Load demo…" loads the demo at once, with no window, and opens the Judge step (T243)', async () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: labels.file }));
     fireEvent.click(screen.getByRole('menuitem', { name: labels.loadExample }));
-    const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByRole('button', { name: /Accuracy/ })).toBeTruthy();
-    expect(within(dialog).getByRole('button', { name: /Completeness/ })).toBeTruthy();
-    expect(within(dialog).getByRole('button', { name: /demo/i })).toBeTruthy();
-    expect(within(dialog).getByRole('button', { name: labels.loadMetricDefinition })).toBeTruthy();
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect((await screen.findByRole('button', { name: /1\s*Judge/ })).getAttribute('aria-current')).toBe('step');
+    expect((screen.getByLabelText('Judge prompt') as HTMLTextAreaElement).value).toContain('{{source_text}}');
+    expect(screen.getByRole('status', { name: 'Message' }).textContent).toMatch(/demo was loaded/i);
   });
 });
 

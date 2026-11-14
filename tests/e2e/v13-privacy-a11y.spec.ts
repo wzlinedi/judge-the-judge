@@ -36,10 +36,11 @@ const luminance = ([r, g, b]: Rgb) => {
   return 0.2126 * c(r) + 0.7152 * c(g) + 0.0722 * c(b);
 };
 
-/** The Load demo dialog first, then the demo: a finished run with five cases waiting for the user. */
+/** The demo: a finished run with five cases waiting for the user. It opens on the Judge step (T243); this goes on to Run. */
 async function loadDemo(page: Page) {
   await menu(page, 'Load demo…');
-  await page.getByRole('dialog', { name: 'Load demo…' }).getByRole('button', { name: /Demo/ }).click();
+  await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step');
+  await page.getByRole('button', { name: /3\s*Run/ }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
 }
 
@@ -79,11 +80,7 @@ for (const scheme of ['light', 'dark'] as const) {
     await check('Test cases (empty)');
     await step(page, /1\s*Judge/);
 
-    await menu(page, 'Load demo…');
-    await expect(openWindow(page)).toBeVisible();
-    await check('Load demo dialog');
-    await page.getByRole('dialog', { name: 'Load demo…' }).getByRole('button', { name: /Demo/ }).click();
-    await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
+    await loadDemo(page);
     await check('Run');
 
     await step(page, /1\s*Judge/);
@@ -217,14 +214,9 @@ test('every action is reachable with the keyboard alone: the File menu, a dialog
   await expect(page.getByRole('menuitem', { name: 'Load demo…' })).toBeVisible();
   await page.getByRole('menuitem', { name: 'Load demo…' }).focus();
   await page.keyboard.press('Enter');
-  const dialog = page.getByRole('dialog', { name: 'Load demo…' });
-  await expect(dialog).toBeVisible();
-  // focus is inside the window and Tab does not leave it
-  for (let i = 0; i < 12; i++) {
-    await page.keyboard.press('Tab');
-    expect(await page.evaluate(() => document.activeElement?.closest('dialog') !== null)).toBe(true);
-  }
-  await dialog.getByRole('button', { name: /Demo/ }).focus();
+  // the demo needs no window: it opens on the Judge step, and the step bar goes on to Run by keyboard
+  await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step');
+  await page.getByRole('button', { name: /3\s*Run/ }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
 

@@ -43,7 +43,8 @@ export function writeEvaluation(evaluation: Evaluation, results: Results | null,
     ...(evaluation.reply_counted_per !== undefined ? { reply_counted_per: evaluation.reply_counted_per } : {}),
     rules_corrected_after_replies: corrected,
     model_note: evaluation.model_note,
-    metric: evaluation.metric,
+    // the definition of a metric travels in the test project only (T243)
+    metric: { id: evaluation.metric.id, parameters: evaluation.metric.parameters },
     dataset: {
       name: evaluation.dataset.name,
       version: meta.testCasesVersion,

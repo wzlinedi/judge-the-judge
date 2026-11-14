@@ -1,5 +1,6 @@
 // The evaluation file (file-formats.md, section 5).
 import { z } from 'zod';
+import { metricDetailsSchema } from './metric';
 import { judgeSetSchema } from './judge-set';
 import { testCasesSchema } from './test-case';
 
@@ -34,7 +35,7 @@ export const checksSchema = z.object({
   rules: z.array(z.object({ measure: z.string(), comparison: z.enum(['at_least', 'at_most']), value: z.number().min(0).max(1) })),
 });
 
-export const metricRefSchema = z.object({ id: z.string(), parameters: z.record(z.string(), z.number()).default({}) });
+export const metricRefSchema = z.object({ id: z.string(), parameters: z.record(z.string(), z.number()).default({}), definition: metricDetailsSchema.optional() });
 
 export const evaluationSchema = z.object({
   tool_version: z.string().optional(),
@@ -45,7 +46,7 @@ export const evaluationSchema = z.object({
   reply_counted_per: z.enum(['expected_error', 'case']).optional(),
   rules_corrected_after_replies: z.boolean().optional(),
   model_note: z.string().default(''),
-  metric: metricRefSchema,
+  metric: metricRefSchema.omit({ definition: true }),
   dataset: testCasesSchema,
   replies: z.record(z.string(), z.object({ prompt: z.string(), reply: z.string().min(1) })).default({}),
   decisions: z.record(z.string(), caseDecisionsSchema).default({}),

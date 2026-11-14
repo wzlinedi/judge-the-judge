@@ -72,7 +72,7 @@ const readers: Record<string, { read: (path: string) => Outcome; allowedNotes?: 
   'examples/demo/expected-results.json': { read: (p) => ({ ok: typeof JSON.parse(text(p)) === 'object' }) },
 };
 
-const builtIns = ['src/core/metrics/builtin/accuracy.json', 'src/core/metrics/builtin/completeness.json'];
+const builtIns = ['src/core/metrics/builtin/accuracy.json'];
 
 describe('the examples of the Help', () => {
   const imported = files('src/ui/help')

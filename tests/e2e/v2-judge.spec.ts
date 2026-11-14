@@ -84,15 +84,15 @@ test('the Judge step builds a judge from scratch, shows the preview, and survive
   await expect(page.getByText(/^Judge version: /)).toHaveText(version as string);
 });
 
-test('the ready examples fill the Judge step', async ({ page }) => {
+test('Load demo… loads the demo with no window and opens the Judge step with its judge filled in (T243)', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Completeness' }).click();
-  await expect(page.getByLabel('Judge prompt', { exact: true })).toHaveValue(/strict reviewer/);
-  await expect(page.getByLabel('Name of rule 1')).toHaveValue('Missing element');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step');
+  await expect(page.getByLabel('Judge prompt', { exact: true })).toHaveValue(/\{\{source_text\}\}/);
+  await expect(page.getByLabel('Name of rule 1')).not.toHaveValue('');
   await expect(page.getByRole('status', { name: 'Readability' })).toHaveCount(0);
-  await expect(page.getByRole('region', { name: 'What next' })).toContainText('The judge is ready');
 });
 
 test('the Judge step has no accessibility violations', async ({ page }) => {

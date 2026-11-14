@@ -1,7 +1,6 @@
-// The "Error categories" section and "Load metric definition…" (FR-015, FR-087, Principle VI).
-import { readFileSync } from 'node:fs';
+// The "Error categories" section (FR-015, FR-087, Principle VI).
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/preact';
+import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
 import { resetRegistry } from '../../../src/app/metrics';
 import { createFakePorts, type FakePorts } from '../../../src/app/ports/fakes';
@@ -113,53 +112,5 @@ describe('each category', () => {
     expect(screen.getByRole('listitem', { name: 'tone' })).toBeTruthy();
     expect(screen.getByRole('status', { name: 'Message' }).textContent).toMatch(/Added: tone\. Already in the catalog: factual-error/);
     expect((screen.getByLabelText('Categories to add') as HTMLTextAreaElement).value).toBe('');
-  });
-});
-
-describe('Load metric definition…', () => {
-  const bias = readFileSync('examples/metrics/bias-example.json', 'utf8');
-  const openWindow = () => {
-    fireEvent.click(screen.getByRole('button', { name: 'File' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Load demo…' }));
-    return screen.getByRole('dialog', { name: 'Load demo…' });
-  };
-
-  it('adds a new example to the window, which starts a test project with a single field', async () => {
-    const ports = createFakePorts();
-    show(stateWith(), ports);
-    let dialog = openWindow();
-    ports.opener.next = { name: 'bias.json', text: bias };
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Load metric definition…' }));
-    await waitFor(() => expect(within(screen.getByRole('dialog', { name: 'Load demo…' })).getByRole('button', { name: 'Bias' })).toBeTruthy());
-    dialog = screen.getByRole('dialog', { name: 'Load demo…' });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Bias' }));
-    expect(screen.queryByRole('dialog', { name: 'Load demo…' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: /1\s*Judge/ }));
-    expect((screen.getByLabelText('Judge prompt') as HTMLTextAreaElement).value).toContain('{{text}}');
-  });
-
-  it('shows the problems of an invalid file in the window and registers nothing', async () => {
-    const ports = createFakePorts();
-    show(stateWith(), ports);
-    const dialog = openWindow();
-    ports.opener.next = { name: 'bad.json', text: '{ "format": ' };
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Load metric definition…' }));
-    const alert = await within(screen.getByRole('dialog', { name: 'Load demo…' })).findByRole('alert');
-    expect(alert.textContent).toMatch(/not readable JSON/);
-    expect(within(screen.getByRole('dialog', { name: 'Load demo…' })).queryByRole('button', { name: 'Bias' })).toBeNull();
-  });
-
-  it('asks before replacing a definition loaded earlier', async () => {
-    const ports = createFakePorts();
-    show(stateWith(), ports);
-    for (let i = 0; i < 2; i++) {
-      ports.opener.next = { name: 'bias.json', text: bias };
-      fireEvent.click(within(screen.queryByRole('dialog', { name: 'Load demo…' }) ?? openWindow()).getByRole('button', { name: 'Load metric definition…' }));
-      await waitFor(() => expect(ports.opener.next).toBeNull());
-    }
-    const dialog = screen.getByRole('dialog', { name: 'Load demo…' });
-    expect(await within(dialog).findByText(/already loaded/)).toBeTruthy();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Replace' }));
-    await waitFor(() => expect(within(screen.getByRole('dialog', { name: 'Load demo…' })).queryByText(/already loaded/)).toBeNull());
   });
 });

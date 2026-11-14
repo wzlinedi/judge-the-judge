@@ -1,17 +1,14 @@
 // T222: a refusal or a warning is shown where the user acted, and stays in view when the page is scrolled (found by the T221 run).
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
-import { installMemoryFiles } from '../helpers/memory-files';
+import { installMemoryFiles, type MemoryFiles } from '../helpers/memory-files';
+import { startFromAccuracy } from '../helpers/start-project';
 
 const accuracy = JSON.parse(readFileSync('src/core/metrics/builtin/accuracy.json', 'utf8'));
 const base = accuracy.judge_set.clean_base_cases[0] as { name: string; fields: { source_text: string; summary: string } };
 
-async function start(page: Page) {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Accuracy' }).click();
-  await page.getByRole('button', { name: /2\s*Test cases/ }).click();
+async function start(page: Page, memory?: MemoryFiles) {
+  await startFromAccuracy(page, memory);
 }
 const row = (page: Page, name: string) => page.getByRole('row').filter({ hasText: name }).first();
 const message = (page: Page) => page.getByRole('status', { name: 'Message' });
@@ -51,8 +48,8 @@ test('removing a base case is refused in a banner that is in view where the butt
 });
 
 test('a message of the tool is a visible banner, not small grey text', async ({ page }) => {
-  await installMemoryFiles(page);
-  await start(page);
+  const memory = await installMemoryFiles(page);
+  await start(page, memory);
   await page.getByRole('button', { name: 'File' }).click();
   await page.getByRole('menuitem', { name: 'Export test cases…' }).click();
   const banner = message(page);

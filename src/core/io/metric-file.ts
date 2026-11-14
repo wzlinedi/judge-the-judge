@@ -13,25 +13,14 @@ import { METRIC_FORMAT, METRIC_KEYS, METRIC_SCHEMA_VERSION, metricSchema } from 
 
 const REQUIRED = ['detection_rate', 'false_positive_rate'];
 
-export function readMetric(text: string): ReadResult<MetricDefinition> {
-  const extracted = extractJson(text);
-  if (!extracted.ok) {
-    return { ok: false, problems: [{ message: `The file is not readable JSON. ${extracted.message}`, line: extracted.line, column: extracted.column }] };
-  }
-  const envelope = checkEnvelope(extracted.value, { format: METRIC_FORMAT, schemaVersion: METRIC_SCHEMA_VERSION, knownKeys: METRIC_KEYS });
-  if (!envelope.ok) return envelope;
-  const parsed = metricSchema.safeParse(envelope.value);
-  if (!parsed.success) return { ok: false, problems: zodProblems(parsed.error, envelope.value) };
+type MeasureLike = { id: string; operation: string; numerator?: string | undefined; denominator?: string | undefined; of?: string | undefined; interval?: string | undefined };
 
-  const metric = parsed.data;
+/** The problems of the measures of a definition, in a metric file or inside a test project or an evaluation file (T243). */
+export function measureProblems(measures: readonly MeasureLike[], prefix: string): Problem[] {
   const problems: Problem[] = [];
-  const set = metric.judge_set;
-  const variables = findVariables(set.prompt);
-
-  // measures
   const ids = new Set<string>();
-  metric.measures.forEach((m, i) => {
-    const at = `measures[${i}]`;
+  measures.forEach((m, i) => {
+    const at = `${prefix}[${i}]`;
     if (ids.has(m.id)) problems.push({ message: `The measure id "${m.id}" is used twice; ids must be unique.`, path: `${at}.id` });
     ids.add(m.id);
     if (m.operation !== 'ratio' && m.operation !== 'complement') {
@@ -50,14 +39,33 @@ export function readMetric(text: string): ReadResult<MetricDefinition> {
       problems.push({ message: 'An interval can only be "wilson95" on a "ratio".', path: `${at}.interval` });
     }
   });
-  metric.measures.forEach((m, i) => {
+  measures.forEach((m, i) => {
     if (m.operation === 'complement' && (m.of === undefined || !ids.has(m.of))) {
-      problems.push({ message: `The measure "${m.id}" is the complement of "${m.of ?? ''}", which is not a measure of this file.`, path: `measures[${i}].of` });
+      problems.push({ message: `The measure "${m.id}" is the complement of "${m.of ?? ''}", which is not a measure of this file.`, path: `${prefix}[${i}].of` });
     }
   });
   for (const required of REQUIRED) {
-    if (!ids.has(required)) problems.push({ message: `The measure "${required}" is required: the overall result rests on it.`, path: 'measures' });
+    if (!ids.has(required)) problems.push({ message: `The measure "${required}" is required: the overall result rests on it.`, path: prefix });
   }
+  return problems;
+}
+
+export function readMetric(text: string): ReadResult<MetricDefinition> {
+  const extracted = extractJson(text);
+  if (!extracted.ok) {
+    return { ok: false, problems: [{ message: `The file is not readable JSON. ${extracted.message}`, line: extracted.line, column: extracted.column }] };
+  }
+  const envelope = checkEnvelope(extracted.value, { format: METRIC_FORMAT, schemaVersion: METRIC_SCHEMA_VERSION, knownKeys: METRIC_KEYS });
+  if (!envelope.ok) return envelope;
+  const parsed = metricSchema.safeParse(envelope.value);
+  if (!parsed.success) return { ok: false, problems: zodProblems(parsed.error, envelope.value) };
+
+  const metric = parsed.data;
+  const problems: Problem[] = [];
+  const set = metric.judge_set;
+  const variables = findVariables(set.prompt);
+
+  problems.push(...measureProblems(metric.measures, 'measures'));
 
   // judge set
   if (set.judged_text !== undefined && !variables.includes(set.judged_text)) {

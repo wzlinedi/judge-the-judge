@@ -11,7 +11,8 @@ async function loadDemo(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
+  await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
+  await page.getByRole('button', { name: /3\s*Run/ }).click();
 }
 
 test('correcting a rule after replies keeps the replies, changes the judge version, and the Results step, the file and the report say so', async ({ page }, testInfo) => {

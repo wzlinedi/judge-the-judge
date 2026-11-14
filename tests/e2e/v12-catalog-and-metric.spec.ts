@@ -1,24 +1,15 @@
-// quickstart.md V12, steps 1 and 2: another metric and my own catalog (SC-005, User Story 14).
+// quickstart.md V12, steps 1 and 2: another metric (carried by the test project, T243) and my own catalog (SC-005, User Story 14).
 // Steps 3 and 4 belong to User Stories 9 and 14 (part 2).
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
-import { installMemoryFiles } from '../helpers/memory-files';
+import { startFromMetricFile } from '../helpers/start-project';
 
-const bias = readFileSync('examples/metrics/bias-example.json', 'utf8');
+const biasMetric = JSON.parse(readFileSync('examples/metrics/bias-example.json', 'utf8'));
 const testWindow = (page: Page) => page.getByRole('dialog', { name: 'Test case' });
 
-test('a new metric is offered after loading its file, with no other change, and starts a project with one field', async ({ page }) => {
-  const memory = await installMemoryFiles(page);
-  memory.files.set('bias-example.json', bias);
-  memory.chooseOpenName('bias-example.json');
-  await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  const window = page.getByRole('dialog', { name: 'Load demo…' });
-  await expect(window.getByRole('button', { name: 'Bias' })).toHaveCount(0);
-  await window.getByRole('button', { name: 'Load metric definition…' }).click();
-  await window.getByRole('button', { name: 'Bias', exact: true }).click();
-
+test('a project that carries its own metric starts with one field, and Load test project needs no other step (T243)', async ({ page }) => {
+  await startFromMetricFile(page, biasMetric);
+  await page.getByRole('button', { name: /1\s*Judge/ }).click();
   await expect(page.getByLabel('Judge prompt', { exact: true })).toHaveValue(/\{\{text\}\}/);
   await expect(page.getByRole('list', { name: 'Variables' }).getByRole('listitem')).toHaveCount(1);
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
@@ -27,29 +18,8 @@ test('a new metric is offered after loading its file, with no other change, and 
   await expect(page.getByRole('dialog', { name: /Case 1/ }).getByRole('heading', { name: /^text/ })).toBeVisible();
 });
 
-test('an invalid metric file is explained and nothing changes', async ({ page }) => {
-  const memory = await installMemoryFiles(page);
-  memory.files.set('bad.json', '{ "format": "judge-the-judge-metric", "schema_version": 1, "id": "Bad Id" }');
-  memory.chooseOpenName('bad.json');
-  await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  const window = page.getByRole('dialog', { name: 'Load demo…' });
-  await window.getByRole('button', { name: 'Load metric definition…' }).click();
-  await expect(window.getByRole('alert')).toContainText('Nothing has changed');
-  await expect(window.getByRole('button', { name: 'Accuracy' })).toBeVisible();
-});
-
 test('the Error categories section: a new category from a case, rename, remove', async ({ page }) => {
-  const memory = await installMemoryFiles(page);
-  memory.files.set('bias-example.json', bias);
-  memory.chooseOpenName('bias-example.json');
-  await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  const window = page.getByRole('dialog', { name: 'Load demo…' });
-  await window.getByRole('button', { name: 'Load metric definition…' }).click();
-  await window.getByRole('button', { name: 'Bias', exact: true }).click();
+  await startFromMetricFile(page, biasMetric);
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
 
   // starts collapsed, with the count

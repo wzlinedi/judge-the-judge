@@ -1,7 +1,8 @@
 // quickstart.md V5: import and export test cases (SC-015 to SC-020, User Story 5). Steps 5 belongs to User Stories 9 and 11.
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { installMemoryFiles } from '../helpers/memory-files';
+import { installMemoryFiles, type MemoryFiles } from '../helpers/memory-files';
+import { startFromAccuracy } from '../helpers/start-project';
 
 const importWindow = (page: Page) => page.getByRole('dialog', { name: 'Import test cases…' });
 const rows = (page: Page) => page.getByRole('row');
@@ -9,17 +10,12 @@ const menu = async (page: Page, item: string) => {
   await page.getByRole('button', { name: 'File' }).click();
   await page.getByRole('menuitem', { name: item, exact: true }).click();
 };
-async function startAccuracy(page: Page) {
-  await page.goto('/');
-  await menu(page, 'Load demo…');
-  await page.getByRole('dialog').getByRole('button', { name: 'Accuracy' }).click();
-  await page.getByRole('button', { name: /2\s*Test cases/ }).click();
-}
+const startAccuracy = (page: Page, memory: MemoryFiles) => startFromAccuracy(page, memory);
 const csv = (lines: string[]) => `name,field:source_text,field:summary\n${lines.join('\n')}\n`;
 
 test('the example file, a CSV with an invalid row and Polish characters, and a JSON file with a new category and a used identifier', async ({ page }) => {
   const memory = await installMemoryFiles(page);
-  await startAccuracy(page);
+  await startAccuracy(page, memory);
 
   await menu(page, 'Import test cases…');
   expect(await new AxeBuilder({ page }).analyze().then((r) => r.violations.map((v) => v.id))).toEqual([]);
@@ -52,7 +48,7 @@ test('the example file, a CSV with an invalid row and Polish characters, and a J
 
 test('Export test cases, a new evaluation, Import test cases; and the test project reloads identical', async ({ page }) => {
   const memory = await installMemoryFiles(page);
-  await startAccuracy(page);
+  await startAccuracy(page, memory);
 
   memory.chooseSaveName('exported.json');
   await menu(page, 'Export test cases…');
@@ -93,7 +89,8 @@ test('one more case after the first reply starts as Not run, and 100 cases are s
   const memory = await installMemoryFiles(page);
   await page.goto('/');
   await menu(page, 'Load demo…');
-  await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
+  await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
+  await page.getByRole('button', { name: /3\s*Run/ }).click();
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
   const before = await rows(page).count();
 

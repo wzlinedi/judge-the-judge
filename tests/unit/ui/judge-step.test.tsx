@@ -5,10 +5,9 @@ import { useState } from 'preact/hooks';
 import { JudgeStep } from '../../../src/ui/steps/judge/JudgeStep';
 import { nextAction } from '../../../src/app/selectors';
 import { createState, type AppState } from '../../../src/app/store';
-import { startFromMetric } from '../../../src/app/actions/judge';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { metricFor } from '../../../src/app/metrics';
-import { sampleEvaluation } from '../../helpers/fixtures';
+import { sampleEvaluation, startFromMetric } from '../../helpers/fixtures';
 
 const SAMPLE = JSON.stringify({ claims: [{ text: 'The hero is a doctor', verdict: 'contradicted' }, { text: 'The hero is a baker', verdict: 'supported' }] });
 

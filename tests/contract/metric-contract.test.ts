@@ -15,7 +15,6 @@ import type { MeasureValue, MetricDefinition } from '../../src/core/metrics/type
 
 const FILES = [
   'src/core/metrics/builtin/accuracy.json',
-  'src/core/metrics/builtin/completeness.json',
   'examples/metrics/bias-example.json',
   'examples/metrics/bias-verdict-example.json',
 ];

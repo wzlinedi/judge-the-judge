@@ -3,6 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { startFromAccuracy } from '../helpers/start-project';
 
 const accuracy = JSON.parse(readFileSync('src/core/metrics/builtin/accuracy.json', 'utf8'));
 const base = accuracy.judge_set.clean_base_cases[0] as { name: string; fields: { source_text: string; summary: string } };
@@ -21,11 +22,7 @@ const withErrors = (fragments: [string, string]) => {
 };
 
 async function start(page: Page) {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Accuracy' }).click();
-  await page.getByRole('button', { name: /2\s*Test cases/ }).click();
+  await startFromAccuracy(page);
 }
 const axe = async (page: Page) => (await new AxeBuilder({ page }).analyze()).violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ') + ' ' + (n.any[0]?.message ?? '')).join(' | ')}`);
 
@@ -135,7 +132,8 @@ test('after finalizing only the expected errors of a case without a reply can be
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
+  await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
+  await page.getByRole('button', { name: /3\s*Run/ }).click();
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
 
   // a case added after the first reply has no reply

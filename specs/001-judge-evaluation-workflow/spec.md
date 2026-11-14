@@ -149,6 +149,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Clarify, prototype v16 review) Which marks does "Apply opinion" overwrite? → A: Every mark the opinion gives an answer for, including marks set by hand and marks from an earlier opinion; the preview lists each change, those that replace a mark set by hand included, before the user applies it. Items the opinion does not answer keep their marks (FR-063).
 - Q: (Clarify, prototype v16 review) Are the category and difficulty of a finding added by hand counted in the results, or only shown with the finding? → A: Both. They are shown with the finding (case window, Test case list, report), and Error analysis and the report get a table of additional findings per category and per difficulty (real errors and false positives, counts only), kept apart from the rates of the expected errors; findings without them are counted under "(no category)" and "(not set)" (FR-062, FR-070).
 - Q: (Clarify, prototype v16 review) May the second opinion add findings that are not in the list, for example when the reply was not JSON? → A: Yes. The verification prompt also asks for findings the reply contains that are not in the list (text, real error or false positive, reason, optional category and difficulty). The preview shows each as "+ new finding", and "Apply opinion" adds it as a finding added by hand, with "Remove", marked with the source "LLM opinion, approved by the user". An opinion that classifies no item and adds no finding changes nothing (FR-062, FR-063).
+- Q: (Owner review 2026-11-14, second look, T243) What does "Load demo…" do, and how is a metric loaded? → A: "Load demo…" loads the demo (book summaries) at once, with no window, and opens the Judge step. Accuracy and Completeness as ready examples and "Load metric definition…" are removed ("only Load test project, which holds everything"). A test project (only the test project, not the evaluation file) may carry the definition of a metric that is not built in, in `metric.definition` (name, description, limitations, output_format, parameters, measures); loading the file registers it for the session, replacing an earlier one with the same id without a question, and never replacing the built-in Accuracy. Completeness is no longer built in. The metric file format and `examples/metrics/*` stay as examples to copy from (FR-019, FR-026).
 - Q: (Owner review 2026-11-14, second look, T245) How are buttons named? → A: One list (FR-008), sentence case, verb and noun, and "…" when the button opens a dialog or a file picker: "Load test project…", "Load evaluation…", "Save test project as…", "Save evaluation as…", "Import test cases…", "Export test cases…", "Load demo…", "New evaluation", "Add test case…", "From JSON", "Case with errors", "Save case" (also for a clean case), "Edit expected errors", "Reopen test cases", "Finalize test cases…", "Add categories", "Show prompt", "Show the issue", "Previous case" and "Next case", "Paste reply", "Keep as text", "Missed", "False positive", "Add finding…", "Load check settings…", "Export HTML report…" and "Run again with a new judge…". The state words in tables and the report ("Issue: missed") are not buttons and stay. "Approve", "Save reply", "Clone" and "Back" have no button; their labels stay in the code only until the Help is rewritten (T225).
 
 ## User Scenarios & Testing *(mandatory)*
@@ -223,11 +224,10 @@ the findings shown for the sample are correct.
 5. **Given** a sample reply that is not valid JSON, **When** it is pasted, **Then** the tool
    shows the problem and where it is (line and column) under the box, keeps the text and changes
    nothing else.
-6. **Given** nothing is loaded, **When** the user chooses "Load demo…" in the File menu and picks
-   Accuracy, **Then** a new test project is filled: the prompt, the sample reply and the rules on the
-   Judge step, the error catalog and a few clean cases on the Test cases step; the
-   tool asks first when something would be replaced. The Judge step has no example or welcome
-   section.
+6. **Given** nothing is loaded, **When** the user chooses "Load demo…" in the File menu, **Then** the
+   demo is loaded at once, with no window, and the Judge step opens with its prompt, sample reply and
+   rules; the tool asks first when something would be replaced. The Judge step has no example or
+   welcome section.
 7. **Given** a prompt with several variables, **When** the variables are listed, **Then** the last
    one is proposed as the judged text (the output the judge evaluates) and the user can mark another
    one instead.
@@ -1011,7 +1011,7 @@ case and confirm the new case has the same fields and expected errors.
   list", and the actions "Export HTML report…", "Load check settings…" and "Run again with a new judge…". Removing
   something (a rule, condition, category, error to prepare or test case) is always named "Remove".
   Available at any time, in the header: the indicator of unsaved changes, the "File" menu with
-  "Load demo…" (Accuracy, Completeness, the demo, and "Load metric definition…" in its window),
+  "Load demo…" (the demo, loaded at once),
   "Load test project", "Save test project", "Save test project as", "Load evaluation", "Import
   test cases", "Export test cases" and "New evaluation"; and Help. "Save evaluation" and
   "Save evaluation as" are only on the Run step and in the case window of Run (FR-076).
@@ -1128,14 +1128,13 @@ case and confirm the new case has the same fields and expected errors.
   base cases at once, with its count, topic and review of every proposed case, is not offered. A
   clean case is made one at a time (FR-083); many clean cases come in with "Import test cases"
   (FR-027).
-- **FR-019**: The system MUST offer two ready examples, Accuracy and Completeness, through one
-  "Load demo…" item of the File menu; the Judge step has no example section. The item opens a
-  small window that lists the two examples, the demo (FR-026) and any example added by "Load metric
-  definition…" in the same window, each with one line saying what it fills. An example starts a new
-  test project: it fills the judge prompt, a sample reply with its reply mapping and the error
-  rules on the Judge step, the error catalog and a few clean cases on the Test
-  cases step, and forgets both remembered files (FR-076); the tool MUST ask before replacing existing content. The
-  examples and the demo are the only built-in starting points.
+- **FR-019**: The system MUST offer one ready starting point, the demo (FR-026), through the
+  "Load demo…" item of the File menu. The item loads it at once, with no window, and opens the Judge
+  step; the tool MUST ask before replacing existing content, and both remembered files are forgotten
+  (FR-076). There are no other examples, no starter of its own (Accuracy and Completeness as examples
+  were removed, T243) and no separate "Load metric definition…": a metric that is not built in is carried
+  by the test project file in `metric.definition` (the evaluation file keeps only the metric id and parameters), and loading the test project registers it
+  (T243). The judge, the catalog and the cases come from the file the user loads.
 - **FR-020**: "Save test project" MUST write the judge set and the test cases to one file, at any
   time, whether or not the test cases are finalized: the judge prompt with its judged text, the sample
   reply and reply mapping, the error rules, the error catalog, the test project

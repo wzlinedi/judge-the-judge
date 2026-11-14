@@ -4,8 +4,8 @@ import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
-import { startFromMetric } from '../../../src/app/actions/judge';
 import { metricFor } from '../../../src/app/metrics';
+import { startFromMetric } from '../../helpers/fixtures';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 const initial = (): AppState => ({ ...startFromMetric(createState(), metricFor('accuracy'), createFakePorts()), step: 'cases' });

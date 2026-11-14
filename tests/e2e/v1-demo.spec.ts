@@ -10,7 +10,9 @@ async function loadDemo(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
+  await page.getByRole('button', { name: /3\s*Run/ }).click();
 }
 
 const item = (page: Page, kind: 'expected' | 'additional', id: string) => page.locator(`[data-${kind}="${id}"]`);
@@ -21,7 +23,7 @@ test('the Judge step has no welcome section', async ({ page }) => {
   await expect(page.getByRole('region', { name: 'What next' }).getByRole('button')).toHaveCount(1);
 });
 
-test('the demo opens on Run with 15 of 20 cases decided, and Continue opens the first case awaiting verification', async ({ page }) => {
+test('the demo opens on Judge, and Run shows 15 of 20 cases decided, and Continue opens the first case awaiting verification', async ({ page }) => {
   await loadDemo(page);
   const next = page.getByRole('region', { name: 'What next' });
   await expect(next).toContainText('15 of 20 cases decided');

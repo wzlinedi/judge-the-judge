@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { writeEvaluation } from '../../src/core/io/evaluation-file';
 import { readTestProject, writeTestProject } from '../../src/core/io/test-project-file';
-import { sampleEvaluation } from '../helpers/fixtures';
+import { embeddedDefinition, sampleEvaluation } from '../helpers/fixtures';
 
 const meta = { toolVersion: '1.0.0', testCasesVersion: '3fa9c2d41b07' };
 const evaluation = sampleEvaluation();
@@ -135,5 +135,42 @@ describe('readTestProject', () => {
     const file = { ...parsed(), extra_key: 1, other_key: 2 };
     const result = ok(file);
     expect(result.notes.filter((n) => /extra_key/.test(n))).toHaveLength(1);
+  });
+});
+
+describe('a metric definition inside the file (T243)', () => {
+  const definition = embeddedDefinition();
+  const withDefinition = () => {
+    const file = parsed();
+    file['metric'] = { id: 'bias-verdict', parameters: {}, definition };
+    return file;
+  };
+
+  it('is read, kept, and written again unchanged', () => {
+    const result = ok(withDefinition());
+    expect(result.value.evaluation.metric.definition?.measures.map((m) => m.id)).toContain('case_detection_rate');
+    const again = writeTestProject(result.value.evaluation, meta);
+    expect(JSON.parse(again)['metric'].definition).toEqual(definition);
+  });
+
+  it('says nothing about an unregistered metric when the file carries its definition', () => {
+    const result = readTestProject(JSON.stringify(withDefinition()), () => false);
+    if (!result.ok) throw new Error('not read');
+    expect(result.notes.join(' ')).not.toMatch(/not registered/);
+  });
+
+  it('refuses a measure with an unknown operation and names where it is', () => {
+    const file = withDefinition();
+    file['metric'].definition.measures[0].operation = 'median';
+    const result = read(file);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.problems[0]).toMatchObject({ path: 'metric.definition.measures[0].operation' });
+  });
+
+  it('refuses a definition without the measures the overall result rests on', () => {
+    const file = withDefinition();
+    file['metric'].definition.measures = file['metric'].definition.measures.filter((m: { id: string }) => m.id !== 'detection_rate');
+    const result = read(file);
+    expect(result.ok).toBe(false);
   });
 });

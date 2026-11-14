@@ -9,7 +9,8 @@ const item = (page: Page, kind: 'expected' | 'additional', id: string) => page.l
 async function loadDemo(page: Page) {
   await page.getByRole('button', { name: 'File' }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
+  await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
+  await page.getByRole('button', { name: /3\s*Run/ }).click();
 }
 
 /** Case 3 awaits verification in the demo: marking its extra finding a false positive is a change to save. */
@@ -113,7 +114,7 @@ test('Save test project with replies keeps the indicator on, and "Save evaluatio
   const warning = page.getByRole('dialog', { name: 'Unsaved changes' });
   await expect(warning.getByRole('button')).toHaveText(['Cancel', 'Discard', 'Save evaluation first']);
   await warning.getByRole('button', { name: 'Save evaluation first' }).click();
-  await expect(page.getByRole('dialog', { name: /Load demo/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step');
   expect(memory.files.get('run.json')).toContain('"replies"');
 });
 

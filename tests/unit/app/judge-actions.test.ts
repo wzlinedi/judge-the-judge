@@ -2,11 +2,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   addCondition, addRule, removeCondition, removeRule, setJudgedText, setRuleWhere, setPrompt, setSampleReply,
-  startFromMetric, updateCondition, updateRule,
+  updateCondition, updateRule,
 } from '../../../src/app/actions/judge';
-import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
-import { metricFor } from '../../../src/app/metrics';
 import { sampleEvaluation } from '../../helpers/fixtures';
 
 const SAMPLE = JSON.stringify({ claims: [{ text: 'A', verdict: 'contradicted' }, { text: 'B', verdict: 'supported' }] });
@@ -169,34 +167,5 @@ describe('rules', () => {
     const state: AppState = { ...fresh(), evaluation: sampleEvaluation() };
     const next = addRule(state).state;
     expect(next.evaluation.judge_set.error_rules.length).toBe(state.evaluation.judge_set.error_rules.length + 1);
-  });
-});
-
-describe('starting from a ready example (FR-019)', () => {
-  it.each(['accuracy', 'completeness'])('%s starts a new test project with its judge, catalog and clean cases', (id) => {
-    const ports = createFakePorts();
-    ports.evaluationTarget.fileName = 'old.json';
-    ports.testProjectTarget.fileName = 'old-project.json';
-    const metric = metricFor(id);
-    const state = startFromMetric({ ...fresh(), unsaved: true, evaluationFile: 'old.json' }, metric, ports);
-    const e = state.evaluation;
-    expect(e.judge_set.prompt).toBe(metric.judge_set.prompt);
-    expect(e.judge_set.error_catalog).toEqual(metric.judge_set.error_catalog);
-    expect(e.dataset.cases.map((c) => c.name)).toEqual(metric.judge_set.clean_base_cases.map((c) => c.name));
-    expect(e.dataset.cases.every((c) => c.expected_errors.length === 0)).toBe(true);
-    expect(e.dataset.cases.map((c) => c.id)).toEqual(['1', '2', '3']);
-    expect(e.dataset.finalized).toBe(false);
-    expect(e.metric.id).toBe(id);
-    expect(e.metric.parameters).toEqual({ match_clear_share: 0.6, match_partial_share: 0.3, match_min_word_length: 4 });
-    expect(e.replies).toEqual({});
-    expect(state).toMatchObject({ step: 'judge', unsaved: false, evaluationFile: null, testProjectFile: null, hasFile: false });
-    expect([ports.testProjectTarget.fileName, ports.evaluationTarget.fileName]).toEqual([null, null]);
-  });
-
-  it('does not share objects with the definition', () => {
-    const metric = metricFor('accuracy');
-    const state = startFromMetric(fresh(), metric, createFakePorts());
-    state.evaluation.judge_set.error_rules[0]!.name = 'changed';
-    expect(metric.judge_set.error_rules[0]!.name).not.toBe('changed');
   });
 });

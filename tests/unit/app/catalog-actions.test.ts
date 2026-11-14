@@ -1,11 +1,6 @@
-// The catalog actions and the loading of a metric definition (FR-015, FR-024, Principle VI).
-import { readFileSync } from 'node:fs';
-import { afterEach, describe, expect, it } from 'vitest';
+// The catalog actions (FR-015, FR-024).
+import { describe, expect, it } from 'vitest';
 import { addCategoriesFromText, removeCategory, renameCategoryAction, setCategoryDetails } from '../../../src/app/actions/catalog';
-import { loadMetricDefinition } from '../../../src/app/actions/judge';
-import { listExamples } from '../../../src/core/metrics/registry';
-import { metricFor, resetRegistry, sessionRegistry } from '../../../src/app/metrics';
-import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
 import { sampleEvaluation } from '../../helpers/fixtures';
 
@@ -55,44 +50,5 @@ describe('catalog actions', () => {
     const used = removeCategory(open(), 'factual-error');
     expect(used.note).toBe('Used by 1 test case. Remove that test case first, or rename the category.');
     expect(used.state.evaluation.judge_set.error_catalog.some((c) => c.name === 'factual-error')).toBe(true);
-  });
-});
-
-describe('loadMetricDefinition', () => {
-  afterEach(() => resetRegistry());
-  const bias = readFileSync('examples/metrics/bias-example.json', 'utf8');
-  const withFile = (text: string) => {
-    const ports = createFakePorts();
-    ports.opener.next = { name: 'bias.json', text };
-    return ports;
-  };
-
-  it('registers the definition so that it is offered as an example and used by metricFor', async () => {
-    const r = await loadMetricDefinition(withFile(bias));
-    expect(r.outcome).toBe('loaded');
-    expect(listExamples(sessionRegistry()).map((m) => m.id)).toEqual(['accuracy', 'completeness', 'bias']);
-    expect(metricFor('bias').name).toBe('Bias');
-  });
-
-  it('refuses an invalid file with the problems and registers nothing', async () => {
-    const r = await loadMetricDefinition(withFile('{ "format": '));
-    expect(r.outcome).toBe('invalid');
-    expect(listExamples(sessionRegistry())).toHaveLength(2);
-  });
-
-  it('is cancelled when no file is chosen', async () => {
-    expect((await loadMetricDefinition(createFakePorts())).outcome).toBe('cancelled');
-  });
-
-  it('asks before replacing a definition loaded earlier, and never replaces a built-in', async () => {
-    await loadMetricDefinition(withFile(bias));
-    const again = await loadMetricDefinition(withFile(bias));
-    expect(again.outcome).toBe('exists');
-    const replaced = await loadMetricDefinition(withFile(bias), { replace: true });
-    expect(replaced.outcome).toBe('loaded');
-    const builtIn = JSON.parse(bias);
-    builtIn.id = 'accuracy';
-    const refused = await loadMetricDefinition(withFile(JSON.stringify(builtIn)), { replace: true });
-    expect(refused.outcome).toBe('invalid');
   });
 });

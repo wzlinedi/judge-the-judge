@@ -22,7 +22,7 @@ TestProject ──────────────────────�
 
 reply ──rules──> Findings ──matching──> CaseReview ──+ decisions──> CaseStatus ──> Results
 case JSON (pasted, LLM answer, Show JSON) ──check──> TestCase (new, or corrected expected errors)
-MetricDefinition ──registered in──> MetricRegistry ──"Load demo…"──> TestProject
+MetricDefinition ──registered in──> MetricRegistry <──registered by── a loaded test project (metric.definition)
 ```
 
 A clean base case is simply a clean test case (no expected errors): any clean case can be the
@@ -209,7 +209,7 @@ written whole to the evaluation file (FR-073).
 | `model_note` | text | Optional multi-line free text, shown as "Model details": the model and the settings that ran the judge, in any form; never read or checked (FR-058). |
 | save files | two file handles, not stored | One for the test project and one for the evaluation (FR-076): chosen by the first "Save …" or by "Save … as", or the file opened by the matching load through the picker (not a dropped file). Held in memory only (research.md, section 25). "Load test project" forgets the evaluation file; "Load evaluation" forgets the test project file; "New evaluation", "Load demo…" and "Run again with a new judge…" forget both; "Reopen test cases" keeps both. |
 | unsaved changes | yes/no, not stored | One flag (FR-051): set by any change; cleared by "Save evaluation", and by "Save test project" while no reply exists. |
-| `metric` | id and parameters | The active metric and the matching parameters in use; written to the test project file and the evaluation file so a result can be reproduced (Principle V). |
+| `metric` | id, parameters and, for a metric that is not built in, its definition | The active metric and the matching parameters in use; written (with `definition`) to the test project file and the evaluation file so a result can be reproduced (Principle V). |
 | reply draft | case id → text, not stored | Text changed in the always-visible reply box and not yet saved; moving or closing asks first (FR-055). |
 | replies since save | number, derived, not stored | Replies saved since the last "Save evaluation"; shown on Run and in the case window, with a reminder every 25 (FR-059). |
 | `reply_judge_version` | text | The judge version when the first reply was saved; cleared when replies are cleared (research.md, section 14). |
@@ -389,7 +389,7 @@ replies, and opens the first step with unfinished work.
 Defined in [contracts/metric-and-checks.md](./contracts/metric-and-checks.md). A MetricDefinition
 supplies a complete starter judge set, matching parameters and the list of measures. A
 CheckConfiguration supplies the thresholds. The MetricRegistry holds the two built-in definitions
-and any loaded during the session; its entries are the choices of the "Load demo…" window.
+and any carried by a loaded test project during the session (T243).
 
 ## Summaries shown before something is accepted
 

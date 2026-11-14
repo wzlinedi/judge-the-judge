@@ -100,8 +100,12 @@ metric and the thresholds, with no replies, decisions, results or model details.
   finalized test project comes back finalized and the Run step opens; "Reopen test cases" opens it
   again while no reply exists (FR-053).
 - `metric` and `checks` are restored on load, so every run of one test project counts the same
-  way. When the metric is not registered, its stored parameters are still used and the user is
-  told. `checks` has the layout of the check configuration (metric-and-checks.md, section 2)
+  way. `metric.definition` is optional: for a metric that is not built in it holds `name`,
+  `description`, `limitations`, `output_format`, `parameters` and `measures` (the layout of the
+  metric file without `judge_set`), is checked like a metric file (a problem names its path, for
+  example `metric.definition.measures[0].operation`), and loading the file registers the metric for
+  the session (T243); a definition of the built-in Accuracy is ignored. The evaluation file never holds it: its `metric` is the id and the parameters, and a metric is found in the session from the test project loaded before (or is not registered, and the stored parameters are used). When the metric is neither
+  built in nor carried by the file, its stored parameters are still used and the user is told. `checks` has the layout of the check configuration (metric-and-checks.md, section 2)
   without `format`; the fixed minimum test size is never stored here.
 - Loading starts a new evaluation with no replies after the unsaved-work question (FR-020, FR-051),
   and an evaluation file given to "Load test project" is refused with a message that names "Load

@@ -18,9 +18,10 @@ Chrome and Microsoft Edge (FR-003).
   as**, **Import test cases**, **Export test cases**, **Load demo…** and **Start new
   evaluation**, with the remembered file name of the test project. **Save evaluation** and **Save
   evaluation as** are only on the Run step and in the header of the case window of Run.
-- **Load demo…** opens a small window listing the ready examples Accuracy and Completeness
-  (each starts a new test project with its judge, catalog and a few clean cases), the demo (a
-  finished run of book summaries) and **Load metric definition…** (FR-008, FR-019, FR-026).
+- **Load demo…** loads the demo (a finished run of book summaries) at once, with no window, and
+  opens the Judge step. There is no list of examples and no **Load metric definition…**: a metric
+  that is not built in travels in `metric.definition` of the test project file
+  (FR-008, FR-019, FR-026).
 - **Saving the two files** (FR-076): **Save test project** and **Save evaluation** behave alike.
   The first save asks for a file name and folder; later ones overwrite that file without asking;
   **Save test project as** and **Save evaluation as** pick a new file; after a load through the

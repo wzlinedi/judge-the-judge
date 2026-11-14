@@ -3,12 +3,8 @@
 import { ruleList } from '../../core/judge/findings';
 import { proposeFindingText, recognizeFields, validFindingTextField, type RecognizedFields } from '../../core/judge/fields';
 import { findVariables, proposeJudgedText } from '../../core/judge/variables';
-import type { Condition, ErrorRule, Evaluation, JudgeSet, Problem, ReplyMapping, TestCase } from '../../core/model';
-import { readMetric } from '../../core/io/metric-file';
-import type { MetricDefinition } from '../../core/metrics/types';
-import { registerMetric } from '../metrics';
-import type { Ports } from '../ports/types';
-import { DEFAULT_CHECKS, edit, forgetBothFiles, promptLocked, type AppState } from '../store';
+import type { Condition, ErrorRule, JudgeSet, ReplyMapping } from '../../core/model';
+import { edit, promptLocked, type AppState } from '../store';
 
 export interface JudgeEdit {
   state: AppState;
@@ -171,45 +167,4 @@ export function updateCondition(state: AppState, ruleIndex: number, conditionInd
 
 export function removeCondition(state: AppState, ruleIndex: number, conditionIndex: number): JudgeEdit {
   return { state: changeRule(state, ruleIndex, (r) => ({ ...r, conditions: r.conditions.filter((_, i) => i !== conditionIndex) })) };
-}
-
-/** A ready example starts a new test project: its judge, its catalog and its clean cases; both remembered files are forgotten (FR-019, FR-076). */
-export function startFromMetric(state: AppState, metric: MetricDefinition, ports: Ports): AppState {
-  forgetBothFiles(ports);
-  const { clean_base_cases, ...judgeSet } = structuredClone(metric.judge_set);
-  const cases: TestCase[] = clean_base_cases.map((c, i) => ({ id: String(i + 1), name: c.name, fields: c.fields, expected_errors: [] }));
-  const evaluation: Evaluation = {
-    judge_set: judgeSet,
-    dataset: { name: 'Untitled test cases', finalized: false, cases },
-    metric: { id: metric.id, parameters: Object.fromEntries(Object.entries(metric.parameters).map(([k, v]) => [k, v.default])) },
-    checks: structuredClone(DEFAULT_CHECKS),
-    model_note: '',
-    replies: {},
-    decisions: {},
-  };
-  return { ...state, evaluation, step: 'judge', unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: null, hasFile: false, openCase: null, judgeOpen: false };
-}
-
-export type MetricLoad =
-  | { outcome: 'cancelled' }
-  | { outcome: 'invalid'; problems: Problem[] }
-  | { outcome: 'loaded'; metric: MetricDefinition; notes: string[] }
-  /** The id belongs to a metric loaded earlier; the user chooses whether to replace it. */
-  | { outcome: 'exists'; metric: MetricDefinition; message: string };
-
-/** "Load metric definition…": the file is read, validated and registered. Nothing else in the tool changes (SC-005). */
-export async function loadMetricDefinition(ports: Ports, options: { replace?: boolean } = {}): Promise<MetricLoad> {
-  const picked = await ports.opener.open();
-  if (!picked) return { outcome: 'cancelled' };
-  const read = readMetric(picked.text);
-  if (!read.ok) return { outcome: 'invalid', problems: read.problems };
-  const registered = registerMetric(read.value, options);
-  if (registered.ok) return { outcome: 'loaded', metric: read.value, notes: read.notes };
-  if (registered.canReplace) return { outcome: 'exists', metric: read.value, message: registered.reason };
-  return { outcome: 'invalid', problems: [{ message: registered.reason, path: 'id' }] };
-}
-
-/** The user chose to replace the metric loaded earlier. */
-export function replaceLoadedMetric(metric: MetricDefinition): boolean {
-  return registerMetric(metric, { replace: true }).ok;
 }

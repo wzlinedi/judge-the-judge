@@ -8,7 +8,7 @@ import { readEvaluation, writeEvaluation } from '../../core/io/evaluation-file';
 import { readTestProject, writeTestProject } from '../../core/io/test-project-file';
 import { judgeVersion } from '../../core/judge/version';
 import type { Problem } from '../../core/model';
-import { metricFor, sessionRegistry } from '../metrics';
+import { metricFor, registerEmbeddedMetric, sessionRegistry } from '../metrics';
 import { findMetric } from '../../core/metrics/registry';
 import type { Ports } from '../ports/types';
 import {
@@ -89,6 +89,7 @@ export async function loadTestProject(state: AppState, ports: Ports, _env?: File
   if (!picked) return { state, outcome: 'cancelled', notes: [] };
   const read = readTestProject(picked.text, (id) => findMetric(sessionRegistry(), id) !== undefined);
   if (!read.ok) return { state, outcome: 'invalid', message: describeProblems(read.problems), problems: read.problems, notes: [] };
+  registerEmbeddedMetric(read.value.evaluation.metric);
   ports.testProjectTarget.useLoaded(picked.handle);
   const next = atResumePoint(applyLoadedTestProject(state, read.value.evaluation, ports));
   return { state: next, outcome: 'loaded', message: joinNotes(read.notes, 'The test project was loaded.'), notes: read.notes };

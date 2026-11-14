@@ -1,16 +1,13 @@
 // quickstart.md V3: clean cases and the table (SC-021, SC-034, User Story 3). The CSV import belongs to User Story 5.
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { startFromAccuracy } from '../helpers/start-project';
 
 const answer = (over: Record<string, unknown> = {}) =>
   JSON.stringify({ name: 'Lighthouse keeper', fields: { source_text: 'A keeper lights the lamp every evening and writes in a log.', summary: 'The keeper lights the lamp each evening and keeps a log.' }, expected_errors: [], ...over });
 
 async function start(page: Page) {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Accuracy' }).click();
-  await page.getByRole('button', { name: /2\s*Test cases/ }).click();
+  await startFromAccuracy(page);
 }
 const testWindow = (page: Page) => page.getByRole('dialog', { name: 'Test case' });
 const row = (page: Page, name: string) => page.getByRole('row').filter({ hasText: name });

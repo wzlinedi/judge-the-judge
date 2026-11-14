@@ -1,6 +1,8 @@
 import accuracy from '../../src/core/metrics/builtin/accuracy.json';
 import checksDefault from '../../src/core/metrics/builtin/checks.default.json';
-import type { Evaluation, JudgeSet } from '../../src/core/model';
+import type { Evaluation, JudgeSet, TestCase } from '../../src/core/model';
+import type { Ports } from '../../src/app/ports/types';
+import { DEFAULT_CHECKS, forgetBothFiles, type AppState } from '../../src/app/store';
 import type { MetricDefinition } from '../../src/core/metrics/types';
 
 export const accuracyMetric = accuracy as unknown as MetricDefinition;
@@ -98,4 +100,27 @@ export function verdictEvaluation(): Evaluation {
     },
     reply_judge_version: 'aaaaaaaaaaaa',
   };
+}
+
+/** A fixture for tests: a new test project from a metric's judge, catalog and clean cases (the app no longer offers this, T243). */
+export function startFromMetric(state: AppState, metric: MetricDefinition, ports: Ports): AppState {
+  forgetBothFiles(ports);
+  const { clean_base_cases, ...judgeSet } = structuredClone(metric.judge_set);
+  const cases: TestCase[] = clean_base_cases.map((c, i) => ({ id: String(i + 1), name: c.name, fields: c.fields, expected_errors: [] }));
+  const evaluation: Evaluation = {
+    judge_set: judgeSet,
+    dataset: { name: 'Untitled test cases', finalized: false, cases },
+    metric: { id: metric.id, parameters: Object.fromEntries(Object.entries(metric.parameters).map(([k, v]) => [k, v.default])) },
+    checks: structuredClone(DEFAULT_CHECKS),
+    model_note: '',
+    replies: {},
+    decisions: {},
+  };
+  return { ...state, evaluation, step: 'judge', unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: null, hasFile: false, openCase: null, judgeOpen: false };
+}
+
+/** The part of a metric definition a test project or an evaluation file may carry (T243). */
+export function embeddedDefinition(metric: MetricDefinition = biasVerdictMetric) {
+  const { name, description, limitations, output_format, parameters, measures } = structuredClone(metric);
+  return { name, description, limitations, output_format, parameters, measures };
 }

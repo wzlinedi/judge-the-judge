@@ -3,6 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { installMemoryFiles, type MemoryFiles } from '../helpers/memory-files';
+import { accuracyStarterProject, startFromAccuracy } from '../helpers/start-project';
 
 const demoProject = readFileSync('examples/demo/test-project.json', 'utf8');
 const demoEvaluation = readFileSync('examples/demo/evaluation.json', 'utf8');
@@ -77,10 +78,7 @@ test('a test project given to Load evaluation, and an evaluation given to Load t
 
 test('a test-case file that would make 501 cases, and a case with a field of 100,001 characters, import nothing and say why', async ({ page }) => {
   const memory = await installMemoryFiles(page);
-  await page.goto('/');
-  await menu(page, 'Load demo…');
-  await page.getByRole('dialog').getByRole('button', { name: 'Accuracy' }).click();
-  await page.getByRole('button', { name: /2\s*Test cases/ }).click();
+  await startFromAccuracy(page, memory);
   const before = await snapshot(page);
   const importWindow = page.getByRole('dialog', { name: 'Import test cases…' });
 
@@ -106,21 +104,13 @@ test('a test-case file that would make 501 cases, and a case with a field of 100
   expect(await snapshot(page)).toEqual(before);
 });
 
-test('a metric definition with an unknown operation is refused in Load demo, which stays as it was', async ({ page }) => {
-  const memory = await installMemoryFiles(page);
-  await page.goto('/');
+test('a metric definition with an unknown operation, inside a test project, is refused by Load test project and the work stays as it was (T243)', async ({ page }) => {
+  const memory = await openDemo(page);
   const before = await snapshot(page);
-  const bad = { ...biasMetric, measures: biasMetric.measures.map((m, i) => (i === 0 ? { ...m, operation: 'median' } : m)) };
-  memory.files.set('bad-metric.json', JSON.stringify(bad));
-  memory.chooseOpenName('bad-metric.json');
-
-  await menu(page, 'Load demo…');
-  const window = page.getByRole('dialog', { name: 'Load demo…' });
-  await window.getByRole('button', { name: 'Load metric definition…' }).click();
-  await expect(window.getByRole('alert')).toContainText('The metric definition was not loaded. Nothing has changed.');
-  await expect(window.getByRole('alert')).toContainText(/median/);
-  await expect(window.getByRole('button', { name: 'Accuracy' })).toBeVisible();
-  await expect(window.getByRole('button', { name: 'Bias' })).toHaveCount(0);
-  await window.getByRole('button', { name: 'Cancel' }).click();
+  const file = JSON.parse(accuracyStarterProject());
+  file.metric = { id: 'bias', parameters: {}, definition: { ...biasMetric, measures: biasMetric.measures.map((m, i) => (i === 0 ? { ...m, operation: 'median' } : m)) } };
+  const message = await refusedBy(page, memory, 'Load test project…', 'bad-metric.json', JSON.stringify(file));
+  expect(message).toMatch(/median/);
+  expect(message).toMatch(/metric\.definition\.measures\[0\]\.operation/);
   expect(await snapshot(page)).toEqual(before);
 });

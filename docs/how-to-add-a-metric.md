@@ -1,6 +1,6 @@
 # How to add a metric
 
-A **metric** is one kind of judge evaluation. Accuracy asks whether every claim of a summary is supported by its source. Completeness asks whether every element of the source is present in the summary. You can add your own, for example a judge that looks for biased sentences, **without changing the tool**: you write one JSON file and load it.
+A **metric** is one kind of judge evaluation. Accuracy asks whether every claim of a summary is supported by its source. You can add your own, for example a judge that looks for biased sentences, **without changing the tool**: you add a definition to your test project file.
 
 A **measure** is a number the tool computes from the results, such as the detection rate. A **check** is a pass-or-fail rule on a measure, such as "the detection rate is at least 80%".
 
@@ -8,11 +8,13 @@ A definition file is data only. It cannot contain or run code.
 
 ## How to use a definition
 
-1. Open the **File** menu and choose **Load example…**.
-2. Press **Load metric definition…** and pick your file. If something is wrong, the window says what and where, and nothing changes.
-3. Your metric appears in the list. Choose it to start a new test project from its judge prompt, sample reply, error rules, error categories and clean cases.
+The tool has no separate step for loading a metric: **the test project file carries its metric**, and **Load test project…** registers it. The evaluation file keeps only the metric's id and parameters, so load the test project first when you open an evaluation of a metric of your own.
 
-A file with the same `id` as a metric you loaded earlier is replaced only after you confirm. The built-in metrics cannot be replaced.
+1. Take a definition file such as the ones in the examples below (they are metric files: `judge_set` is the judge, the rest is the metric).
+2. Put the judge (`judge_set`, without `clean_base_cases`) and the test cases in a test project, and copy `name`, `description`, `limitations`, `output_format`, `parameters` and `measures` into `metric.definition` of that file, next to `metric.id` (the same `id` as the definition) and `metric.parameters`.
+3. Open the file with **File**, then **Load test project…**. If something in `metric.definition` is wrong, the window says what and where (for example `metric.definition.measures[0].operation`), and nothing changes.
+
+A file whose `metric.id` is the id of a metric loaded earlier replaces it, because the file you load is the one you mean. The built-in metric (Accuracy) cannot be replaced.
 
 ## What the file holds
 

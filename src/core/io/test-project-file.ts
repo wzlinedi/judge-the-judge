@@ -1,6 +1,7 @@
 // Reading and writing the test project file (file-formats.md, section 1; FR-020).
 // The file holds the work that stays the same for every run: no replies, decisions, results or model details.
-import type { Evaluation, ReadResult } from '../model';
+import { measureProblems } from './metric-file';
+import type { Evaluation, MetricRef, ReadResult } from '../model';
 import { extractJson } from '../judge/extract-json';
 import { recognizeFields } from '../judge/fields';
 import { validateRules } from '../judge/rules';
@@ -58,6 +59,9 @@ export function readTestProject(text: string, isMetricRegistered: (id: string) =
   const parsed = testProjectSchema.safeParse(envelope.value);
   if (!parsed.success) return { ok: false, problems: zodProblems(parsed.error, envelope.value) };
 
+  const definitionProblems = parsed.data.metric.definition ? measureProblems(parsed.data.metric.definition.measures, 'metric.definition.measures') : [];
+  if (definitionProblems.length > 0) return { ok: false, problems: definitionProblems };
+
   const notes = [...envelope.notes];
   const rawChecks = envelope.value['checks'] as Record<string, unknown> | undefined;
   if (rawChecks && 'minimum_sample' in rawChecks) {
@@ -88,14 +92,14 @@ export function readTestProject(text: string, isMetricRegistered: (id: string) =
     }
   }
 
-  if (!isMetricRegistered(p.metric.id)) {
+  if (p.metric.definition === undefined && !isMetricRegistered(p.metric.id)) {
     notes.push(`The metric "${p.metric.id}" is not registered in this tool. Its stored parameters are used.`);
   }
 
   const evaluation: Evaluation = {
     judge_set: judgeSet,
     dataset: { name: p.dataset.name, ...(p.dataset.version !== undefined ? { version: p.dataset.version } : {}), finalized: p.dataset.finalized, cases: assignExpectedIds(p.dataset.cases) },
-    metric: p.metric,
+    metric: p.metric as MetricRef,
     checks: p.checks,
     model_note: '',
     replies: {},

@@ -38,7 +38,7 @@ features.
 
 ### V1. First run with demo data (SC-001, SC-009, SC-010, User Stories 1 and 9)
 
-1. Open the tool; in the File menu choose "Load demo…", then the demo.
+1. Open the tool; in the File menu choose "Load demo…". The demo is loaded at once and the Judge step opens; go on to Run.
 2. On Results choose "Export HTML report". Then press "Continue" in the "what next" line and
    decide each case it opens. Open Results and export again.
 
@@ -254,14 +254,14 @@ unchanged every time.
 
 ### V12. Another metric and my own catalog (SC-005, User Story 14)
 
-1. "Load demo…", "Load metric definition…" with `examples/metrics/bias-example.json`, then load
-   that example.
+1. Load a test project that carries the metric of `examples/metrics/bias-example.json` in
+   `metric.definition` ("Load test project…"); no other step is needed.
 2. On Test cases expand "Error categories"; type a new category name for an error to prepare in a
    case with injected errors and save the case; rename a used category; try to remove it; remove an
    unused one.
 3. "Load check settings" with `examples/metrics/checks-example.json`.
-4. "Load demo…", "Load metric definition…" with `examples/metrics/bias-verdict-example.json`,
-   load that example, add cases with expected errors, finalize, and paste replies
+4. Load a test project that carries the metric of `examples/metrics/bias-verdict-example.json`,
+   add cases with expected errors, finalize, and paste replies
    `{"biased": true}` and `{"biased": false}` for cases with errors and for clean cases. Then change
    a rule so that it uses a list field.
 

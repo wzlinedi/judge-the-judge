@@ -239,6 +239,102 @@
           "additionalProperties": {
             "type": "number"
           }
+        },
+        "definition": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": {
+              "type": "string"
+            },
+            "limitations": {
+              "type": "string"
+            },
+            "output_format": {
+              "type": "string"
+            },
+            "parameters": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "default": {
+                    "type": "number"
+                  },
+                  "description": {
+                    "default": "",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "default"
+                ]
+              }
+            },
+            "measures": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": {
+                    "default": "",
+                    "type": "string"
+                  },
+                  "operation": {
+                    "type": "string"
+                  },
+                  "numerator": {
+                    "type": "string"
+                  },
+                  "denominator": {
+                    "type": "string"
+                  },
+                  "of": {
+                    "type": "string"
+                  },
+                  "interval": {
+                    "type": "string"
+                  },
+                  "better": {
+                    "type": "string",
+                    "enum": [
+                      "higher",
+                      "lower"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "operation",
+                  "better"
+                ]
+              }
+            }
+          },
+          "required": [
+            "name",
+            "description",
+            "limitations",
+            "output_format",
+            "parameters",
+            "measures"
+          ]
         }
       },
       "required": [

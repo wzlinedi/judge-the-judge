@@ -37,7 +37,8 @@ test('another judge version on the same test cases, then the same test with anot
   const memory = await installMemoryFiles(page);
   await page.goto('/');
   await file(page, 'Load demo…');
-  await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
+  await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
+  await page.getByRole('button', { name: /3\s*Run/ }).click();
 
   // the first run: both files saved, a report exported
   const first = await versions(page);
@@ -116,7 +117,8 @@ test('with unsaved changes it asks first: Cancel keeps everything, Save evaluati
   const memory = await installMemoryFiles(page);
   await page.goto('/');
   await file(page, 'Load demo…');
-  await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
+  await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
+  await page.getByRole('button', { name: /3\s*Run/ }).click();
   await page.getByLabel('Model details').fill('changed after loading');
   await expect(page.getByText('Unsaved changes').first()).toBeVisible();
   await page.getByRole('button', { name: /4\s*Results/ }).click();

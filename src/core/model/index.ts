@@ -1,5 +1,7 @@
 // Types of the core (data-model.md). No behavior here: only the shapes every module shares.
 
+import type { MetricDetails } from '../metrics/types';
+
 /** A problem found while reading user data: a plain sentence and where it is (FR-084). */
 export interface Problem {
   message: string;
@@ -109,6 +111,8 @@ export interface MetricParameters {
 export interface MetricRef {
   id: string;
   parameters: Record<string, number>;
+  /** The definition of a metric that is not built in; the file that holds it registers it when it is loaded (T243). */
+  definition?: MetricDetails;
 }
 
 export interface CheckRule {

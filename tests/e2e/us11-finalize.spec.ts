@@ -1,7 +1,8 @@
 // User Story 11: mix hand-made and loaded cases, then finalize (FR-004, FR-052, FR-053; quickstart V5 step 5).
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
-import { installMemoryFiles } from '../helpers/memory-files';
+import { installMemoryFiles, type MemoryFiles } from '../helpers/memory-files';
+import { startFromAccuracy } from '../helpers/start-project';
 
 const accuracy = JSON.parse(readFileSync('src/core/metrics/builtin/accuracy.json', 'utf8'));
 const base = accuracy.judge_set.clean_base_cases[0] as { name: string; fields: { source_text: string; summary: string } };
@@ -15,12 +16,8 @@ const summary = (page: Page) => page.getByRole('dialog', { name: 'Finalize the t
 const json = (over: Record<string, unknown> = {}) => JSON.stringify({ name: 'A case', fields: base.fields, expected_errors: [], ...over });
 const buttons = async (page: Page) => (await next(page).getByRole('button').allTextContents()).map((t) => t.trim());
 
-async function start(page: Page) {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Accuracy' }).click();
-  await page.getByRole('button', { name: /2\s*Test cases/ }).click();
+async function start(page: Page, memory?: MemoryFiles) {
+  await startFromAccuracy(page, memory);
 }
 async function pasteCase(page: Page, text: string) {
   await page.getByRole('button', { name: 'Add test case…' }).click();
@@ -50,7 +47,7 @@ async function openDemoRun(page: Page) {
 test('cases from a file and cases made by hand join one test project; the summary comes first, and finalizing fixes the prompt but leaves Add test case', async ({ page }) => {
   const memory = await installMemoryFiles(page);
   memory.files.set('ten.csv', ['name,field:source_text,field:summary', ...Array.from({ length: 10 }, (_, i) => `Imported ${i + 1},Source text ${i + 1},Summary text ${i + 1}`)].join('\n'));
-  await start(page);
+  await start(page, memory);
   await expect(card(page)).toContainText('3 test cases');
 
   await importRows(page, memory, 'ten.csv');
@@ -129,8 +126,8 @@ test('Reopen test cases stands in the "what next" line of Run and Add test case 
 });
 
 test('leaving the page with unsaved cases warns; after saving the test project it does not (FR-004)', async ({ page }) => {
-  await installMemoryFiles(page);
-  await start(page);
+  const memory = await installMemoryFiles(page);
+  await start(page, memory);
   await pasteCase(page, json({ name: 'Unsaved case', fields: { ...base.fields, summary: `${base.fields.summary} (unsaved)` } }));
   await expect(page.getByText('Unsaved changes').first()).toBeVisible();
 

@@ -35,3 +35,5 @@ export const metricSchema = z.object({
 });
 
 export const METRIC_KEYS = ['format', 'schema_version', 'id', 'name', 'description', 'limitations', 'output_format', 'judge_set', 'parameters', 'measures'] as const;
+
+export const metricDetailsSchema = metricSchema.pick({ name: true, description: true, limitations: true, output_format: true, parameters: true, measures: true });
