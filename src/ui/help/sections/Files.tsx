@@ -32,6 +32,14 @@ export function Files() {
         and where.
       </p>
       <p>
+        <strong>Reproducing and auditing a result.</strong> Loading an evaluation recalculates the numbers from the judge, the cases, the replies and your
+        decisions in the file, with the metric settings and thresholds it holds, and compares them with the numbers it stored. They should be identical, and
+        so should the judge version and the test cases version. If they are not, for example because the file was changed by hand, the tool says so on load,
+        on the Results step and in the report, names what was stored and what the recomputation gives, and shows the recomputed numbers. When the error
+        rules or the reply mapping were corrected after the replies were received, the Results step and the report name both judge versions, and they list
+        the cases that were added or whose expected errors were corrected after the first reply.
+      </p>
+      <p>
         <strong>Testing another version of the judge.</strong> When the result shows that the judge needs a change, use{' '}
         <strong>{labels.editJudgeAndRunAgain}</strong> on the Results step. The test cases are kept exactly as they were, so the two judges meet the same
         test. The replies and decisions are cleared, and the judge prompt is open for changes until you enter the first reply of the new run. If there are

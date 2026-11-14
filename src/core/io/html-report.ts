@@ -3,6 +3,7 @@
 // Every value is escaped. Details are collapsible on screen and expanded in print.
 import { composePrompt } from '../judge/compose';
 import type { Evaluation } from '../model';
+import { differenceNote, rulesCorrectedAfterReplies, type Difference } from '../evaluation/recompute';
 import { countingSwitchNote, PER_CASE_SENTENCE, PER_CASE_WHY } from '../evaluation/counting-note';
 import { errorAnalysis, falsePositiveShares, type GroupRow } from '../evaluation/analysis';
 import { measuresInUse } from '../evaluation/measures';
@@ -197,7 +198,9 @@ function judgeSet(evaluation: Evaluation): string {
   ].join('\n');
 }
 
-export function buildHtmlReport(evaluation: Evaluation, results: Results, reviewed: ReviewedCase[], meta: EvaluationMeta): string {
+const MAX_LISTED_DIFFERENCES = 20;
+
+export function buildHtmlReport(evaluation: Evaluation, results: Results, reviewed: ReviewedCase[], meta: EvaluationMeta, differences: readonly Difference[] = []): string {
   const c = results.counters;
   const name = evaluation.dataset.name;
   const head = [
@@ -214,9 +217,16 @@ export function buildHtmlReport(evaluation: Evaluation, results: Results, review
   if (results.provisional) {
     head.push(`<p class="provisional">Provisional. ${plural(results.undecided, 'case is', 'cases are')} not decided (${c.cases_not_run} not run, ${c.cases_awaiting} awaiting verification), so the numbers can still change.</p>`);
   }
-  if (evaluation.reply_judge_version !== undefined && evaluation.reply_judge_version !== meta.judgeVersion) {
+  if (rulesCorrectedAfterReplies(evaluation.reply_judge_version, meta.judgeVersion)) {
     head.push(
       `<p class="note">The rules were corrected after the replies were received (the error rules or the reply mapping changed). The judge version in force when the replies were received was ${esc(evaluation.reply_judge_version)}; the current one is ${esc(meta.judgeVersion)}.</p>`,
+    );
+  }
+  const mismatch = differenceNote(differences);
+  if (mismatch) {
+    head.push(
+      `<p class="note">${esc(mismatch)}</p>`,
+      `<ul class="differences">${differences.slice(0, MAX_LISTED_DIFFERENCES).map((d) => `<li>${esc(d.what)}: stored ${esc(d.stored)}, recomputed ${esc(d.recomputed)}</li>`).join('')}</ul>`,
     );
   }
   const switched = countingSwitchNote(results);

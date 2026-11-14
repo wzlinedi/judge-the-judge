@@ -2,6 +2,7 @@
 // Each returns the next state and what to tell the user; nothing here touches the page.
 import { testCasesVersion } from '../../core/cases/version';
 import { computeResults } from '../../core/evaluation/results';
+import { differenceNote, recompute } from '../../core/evaluation/recompute';
 import { resumePoint } from '../../core/evaluation/resume';
 import { readEvaluation, writeEvaluation } from '../../core/io/evaluation-file';
 import { readTestProject, writeTestProject } from '../../core/io/test-project-file';
@@ -71,8 +72,16 @@ export async function loadEvaluation(state: AppState, ports: Ports, _env?: FileE
   const read = readEvaluation(picked.text);
   if (!read.ok) return { state, outcome: 'invalid', message: describeProblems(read.problems), problems: read.problems, notes: [] };
   ports.evaluationTarget.useLoaded(picked.handle);
-  const next = atResumePoint(applyLoadedEvaluation(state, read.value.evaluation, ports));
-  return { state: next, outcome: 'loaded', message: joinNotes(read.notes, 'The evaluation was loaded.'), notes: read.notes };
+  // Recomputing is how a file is audited: the numbers it stored must follow from what it holds (SC-003).
+  const { evaluation } = read.value;
+  const checked = recompute(read.value, metricFor(evaluation.metric.id), {
+    judgeVersion: await judgeVersion(evaluation.judge_set),
+    testCasesVersion: await testCasesVersion(evaluation.dataset.cases),
+  });
+  const next = atResumePoint(applyLoadedEvaluation(state, evaluation, ports, checked.differences));
+  const warning = differenceNote(checked.differences);
+  const notes = warning === null ? read.notes : [...read.notes, warning];
+  return { state: next, outcome: 'loaded', message: joinNotes(notes, 'The evaluation was loaded.'), notes };
 }
 
 export async function loadTestProject(state: AppState, ports: Ports, _env?: FileEnv): Promise<LoadResult> {

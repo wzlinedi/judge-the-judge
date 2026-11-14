@@ -1,6 +1,7 @@
 // Reading and writing the evaluation file (file-formats.md, section 5; FR-072, FR-073, FR-075).
 import type { Evaluation, ReadResult } from '../model';
 import { extractJson } from '../judge/extract-json';
+import { resultsForFile, rulesCorrectedAfterReplies } from '../evaluation/recompute';
 import { MINIMUM_SAMPLE, type Results } from '../evaluation/results';
 import type { MinimumSample } from '../evaluation/overall';
 import { checkEnvelope } from '../schemas/common';
@@ -29,23 +30,8 @@ export interface LoadedEvaluation {
   storedResults: Record<string, unknown>;
 }
 
-function resultsForFile(results: Results | null): Record<string, unknown> {
-  if (!results || results.counters.cases_decided === 0) return {};
-  const measures = Object.fromEntries(
-    Object.entries(results.measures).map(([id, m]) => [id, { value: m.value, numerator: m.numerator ?? null, denominator: m.denominator ?? null, interval: m.interval }]),
-  );
-  return {
-    evaluated_per: results.evaluated_per,
-    counted_per_before_correction: results.counted_per_before_correction,
-    counters: results.counters,
-    measures,
-    overall: results.overall,
-    cases: results.cases,
-  };
-}
-
 export function writeEvaluation(evaluation: Evaluation, results: Results | null, meta: EvaluationMeta): string {
-  const corrected = evaluation.reply_judge_version !== undefined && evaluation.reply_judge_version !== meta.judgeVersion;
+  const corrected = rulesCorrectedAfterReplies(evaluation.reply_judge_version, meta.judgeVersion);
   const file = {
     format: EVALUATION_FORMAT,
     schema_version: EVALUATION_SCHEMA_VERSION,

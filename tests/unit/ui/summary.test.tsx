@@ -104,3 +104,26 @@ describe('Summary', () => {
     expect(screen.getByRole('tab', { name: 'Summary' }).getAttribute('aria-selected')).toBe('true');
   });
 });
+
+describe('Results: a loaded file whose numbers differ (SC-003)', () => {
+  const differences = [{ what: 'results.measures.detection_rate.value', stored: '0.99', recomputed: '0.9' }];
+
+  it('shows both numbers in the notices, and no notice when nothing differs', () => {
+    const { unmount } = render(<ResultsStep results={final} {...finalContext} {...props} differences={differences} />);
+    const notices = screen.getByRole('region', { name: 'Notices' });
+    expect(notices.textContent).toContain('results.measures.detection_rate.value was 0.99 in the file and is 0.9 when recomputed');
+    unmount();
+    render(<ResultsStep results={final} {...finalContext} {...props} />);
+    expect(screen.queryByRole('region', { name: 'Notices' })).toBeNull();
+  });
+
+  it('names the first five and counts the rest', () => {
+    const many = Array.from({ length: 8 }, (_, i) => ({ what: `results.counters.n${i}`, stored: '1', recomputed: '2' }));
+    render(<ResultsStep results={final} {...finalContext} {...props} differences={many} />);
+    const text = screen.getByRole('region', { name: 'Notices' }).textContent ?? '';
+    expect(text).toContain('results.counters.n4');
+    expect(text).not.toContain('results.counters.n5');
+    expect(text).toContain('and 3 more');
+  });
+});
+

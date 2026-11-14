@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks';
 import type { ReviewedCase } from '../../../core/evaluation/results';
+import { differenceNote, type Difference } from '../../../core/evaluation/recompute';
 import { countingSwitchNote } from '../../../core/evaluation/counting-note';
 import type { Results } from '../../../core/evaluation/results';
 import type { Evaluation } from '../../../core/model';
@@ -29,10 +30,12 @@ export interface ResultsStepProps {
   onThreshold: (measure: string, value: number) => void;
   onLoadChecks: () => void;
   onOpenCase: (caseId: string) => void;
+  /** What recomputing the loaded file gave differently from what it stored (SC-003); empty when nothing differs. */
+  differences?: readonly Difference[];
 }
 
 /** The Results step is read-only: nothing here changes a reply, decision, expected error, rule or mapping. Only the thresholds do (FR-065). */
-export function ResultsStep({ results, evaluation, reviewed, onContinue, onRerun, onExport, onThreshold, onLoadChecks, onOpenCase }: ResultsStepProps) {
+export function ResultsStep({ results, evaluation, reviewed, onContinue, onRerun, onExport, onThreshold, onLoadChecks, onOpenCase, differences = [] }: ResultsStepProps) {
   const [view, setView] = useState<View>('summary');
   const versions = useVersions(evaluation);
   const c = results.counters;
@@ -48,7 +51,8 @@ export function ResultsStep({ results, evaluation, reviewed, onContinue, onRerun
   const fixed = changed('corrected');
   const named = (list: Evaluation['dataset']['cases']) => list.map((t) => `case ${t.id} (${t.name})`).join(', ');
   const switchNote = countingSwitchNote(results);
-  const hasNotices = corrected || switchNote !== null || added.length > 0 || fixed.length > 0;
+  const mismatch = differenceNote(differences);
+  const hasNotices = corrected || switchNote !== null || mismatch !== null || added.length > 0 || fixed.length > 0;
 
   return (
     <div class="results-step">
@@ -64,6 +68,7 @@ export function ResultsStep({ results, evaluation, reviewed, onContinue, onRerun
             <p class="notice warn">{`The rules were corrected after the replies were received (the error rules or the reply mapping changed). The judge version in force when the replies were received was ${evaluation.reply_judge_version}; the current one is ${versions.judge}.`}</p>
           ) : null}
           {switchNote ? <p class="notice warn">{switchNote}</p> : null}
+          {mismatch ? <p class="notice warn">{mismatch}</p> : null}
           {added.length > 0 ? <p class="notice">{`Cases added after the first reply: ${named(added)}.`}</p> : null}
           {fixed.length > 0 ? <p class="notice">{`Cases corrected after the first reply: ${named(fixed)}.`}</p> : null}
         </section>

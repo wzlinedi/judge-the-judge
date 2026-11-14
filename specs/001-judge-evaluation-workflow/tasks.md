@@ -60,7 +60,7 @@ install an in-memory save file with an init script and grant clipboard permissio
 - [X] T007 [P] Create `index.html` (`lang="en"`, title "Judge the Judge") with a Content Security Policy meta tag `default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'` (research.md, section 13; FR-002, FR-003); system fonts only, no inline `<style>` or `<script>`, no external resources
 - [X] T008 [P] Create `src/ui/styles/tokens.css`, the single source of colors, spacing, type sizes, radii, shadows and motion, in black and red (FR-007; research.md, section 30): red is the one accent (primary action, current step, focus ring); the dark scheme has a black background, the light scheme a white or near-white one with black text; success, warning and error colors of their own; light values by default, dark values under `prefers-color-scheme: dark` and under `[data-theme="dark"]`, light under `[data-theme="light"]`; every text pair at least 4.5:1 in both schemes. Create `src/ui/styles/base.css` (resets, visible focus ring, tables scroll inside their own container, usable from 360 px, `prefers-reduced-motion` respected, and the rule that `.fail`, `.error` and `.pass` marks always carry a sign such as ✕ or ✓ besides their color) (Principle VII)
 - [X] T009 [P] Update `.gitignore` with `node_modules/`, `dist/`, `test-results/`, `playwright-report/`
-- [ ] T010 Delete the answered prototypes `prototypes/ui-prototype/` and `prototypes/ui-prototype-v6/` to `prototypes/ui-prototype-v16/` (those that exist); keep `prototypes/ui-prototype-v17/` as the reference and make sure its header states its question (Principle I; research.md, section 22)
+- [X] T010 Delete the answered prototypes `prototypes/ui-prototype/` and `prototypes/ui-prototype-v6/` to `prototypes/ui-prototype-v16/` (those that exist); keep `prototypes/ui-prototype-v17/` as the reference and make sure its header states its question (Principle I; research.md, section 22)
 
 ---
 
@@ -615,10 +615,12 @@ first run's test project) has the first judge version, test cases version and mo
 
 **Independent Test**: quickstart.md V8 and V9 steps 2 and 3.
 
-- [ ] T187 [US13] Write `tests/e2e/v8-corrections.spec.ts` (quickstart.md V8) and `tests/e2e/v9-reproduce.spec.ts` (V9 steps 2, 3 and 5)
-- [ ] T188 [P] [US13] Write `tests/unit/core/evaluation/recompute.test.ts`: identical inputs give identical numbers with the stored metric parameters; a differing stored `results` is reported with both; `rules_corrected_after_replies` exactly when the two judge versions differ (FR-075, SC-003)
-- [ ] T189 [US13] Implement `src/core/evaluation/recompute.ts` to pass T188 and call it from `loadEvaluation`
-- [ ] T190 [US13] Show in `ResultsStep.tsx` and in the report header (`src/core/io/html-report.ts`) the note that rules or mapping were corrected after replies, naming both versions, the list of cases added or corrected after the first reply, and the note when recomputed numbers differ, to pass T187
+- [X] T187 [US13] Write `tests/e2e/v8-corrections.spec.ts` (quickstart.md V8) and `tests/e2e/v9-reproduce.spec.ts` (V9 steps 2, 3 and 5)
+- [X] T188 [P] [US13] Write `tests/unit/core/evaluation/recompute.test.ts`: identical inputs give identical numbers with the stored metric parameters; a differing stored `results` is reported with both; `rules_corrected_after_replies` exactly when the two judge versions differ (FR-075, SC-003)
+- [X] T189 [US13] Implement `src/core/evaluation/recompute.ts` to pass T188 and call it from `loadEvaluation`
+- [X] T190 [US13] Show in `ResultsStep.tsx` and in the report header (`src/core/io/html-report.ts`) the note that rules or mapping were corrected after replies, naming both versions, the list of cases added or corrected after the first reply, and the note when recomputed numbers differ, to pass T187
+
+**Done 2026-11-14**: `recompute` (`src/core/evaluation/recompute.ts`) recalculates a loaded evaluation with the stored metric parameters, thresholds and minimum size, and lists every difference from the stored `results`, the judge version and the test cases version (numbers compared to 1e-9). `loadEvaluation` runs it, says so in the load message and keeps the differences in `AppState.loadCheck`, which applies only while the work is exactly what was loaded (`recomputeDifferences`). The Results step and the report header show the note with both numbers; `rulesCorrectedAfterReplies` is the one rule for "judge versions differ" (file, Results, report). The notes about rules corrected after replies and the lists of cases added or corrected were already in place from Phases 9–12 and are now covered by `v8-corrections.spec.ts`. Help explains reproducing and auditing. Tests: `recompute.test.ts` (14), `load-recompute.test.ts` (5), summary and help additions, `v8-corrections.spec.ts` (1) and `v9-reproduce.spec.ts` (3).
 
 ---
 

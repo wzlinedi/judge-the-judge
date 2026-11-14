@@ -160,6 +160,20 @@ describe('Help for testing another version of the judge (US12)', () => {
   });
 });
 
+describe('Help for reproducing and auditing a result (US13)', () => {
+  it('explains the recomputation on load, what is compared and what is shown when it differs', () => {
+    render(<HelpStep />);
+    const section = screen.getByRole('heading', { name: 'Files: the test project and the evaluation' }).closest('section')!;
+    const text = (section.textContent ?? '').replace(/\s+/g, ' ');
+    expect(within(section).getByText('Reproducing and auditing a result.')).toBeTruthy();
+    expect(text).toMatch(/recalculates the numbers/);
+    expect(text).toMatch(/judge version and the test cases version/);
+    expect(text).toMatch(/shows the recomputed numbers/);
+    expect(text).toMatch(/corrected after the replies were received/);
+    expect(text).toMatch(/added or whose expected errors were corrected after the first reply/);
+  });
+});
+
 describe('Help for marking after each reply (US8)', () => {
   it('names the buttons and what each one does', () => {
     render(<HelpStep />);

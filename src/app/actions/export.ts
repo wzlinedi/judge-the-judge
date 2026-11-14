@@ -4,7 +4,7 @@ import { computeResults, reviewEvaluation } from '../../core/evaluation/results'
 import { buildHtmlReport } from '../../core/io/html-report';
 import { judgeVersion } from '../../core/judge/version';
 import type { MetricDefinition } from '../../core/metrics/types';
-import type { AppState } from '../store';
+import { recomputeDifferences, type AppState } from '../store';
 import type { FileEnv } from './files';
 
 export interface ReportExport {
@@ -24,7 +24,7 @@ export async function exportReport(state: AppState, env: FileEnv, metric: Metric
     toolVersion: env.toolVersion,
     judgeVersion: await judgeVersion(evaluation.judge_set),
     testCasesVersion: await testCasesVersion(evaluation.dataset.cases),
-  });
+  }, recomputeDifferences(state));
   const provisional = results.provisional;
   return {
     fileName: `${safeName(evaluation.dataset.name)} - report${provisional ? ' (provisional)' : ''}.html`,

@@ -1,6 +1,7 @@
 // The session state and its named actions (contracts/core-api.md, Application state).
 // Actions never change the old state: they return the next one. Derived values are never stored.
 import type { CheckConfiguration, Evaluation } from '../core/model';
+import type { Difference } from '../core/evaluation/recompute';
 import type { Ports, SaveResult, SaveTarget } from './ports/types';
 
 export type StepId = 'judge' | 'cases' | 'run' | 'results' | 'help';
@@ -35,6 +36,16 @@ export interface AppState {
   openCase: string | null;
   /** "Edit the judge and run again" opened the judge prompt for the next run; it closes with the first new reply (FR-074). */
   judgeOpen: boolean;
+  /**
+   * What a loaded evaluation file said differently from what recomputing it gives (SC-003). It belongs to that one
+   * evaluation: once any change makes a new evaluation, it no longer applies (see `recomputeDifferences`).
+   */
+  loadCheck: { evaluation: Evaluation; differences: Difference[] } | null;
+}
+
+/** The differences found on load, while the work is still exactly what was loaded. */
+export function recomputeDifferences(state: Pick<AppState, 'evaluation' | 'loadCheck'>): Difference[] {
+  return state.loadCheck !== null && state.loadCheck.evaluation === state.evaluation ? state.loadCheck.differences : [];
 }
 
 export function emptyEvaluation(): Evaluation {
@@ -50,7 +61,7 @@ export function emptyEvaluation(): Evaluation {
 }
 
 export function createState(): AppState {
-  return { step: 'judge', evaluation: emptyEvaluation(), unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: null, hasFile: false, openCase: null, judgeOpen: false };
+  return { step: 'judge', evaluation: emptyEvaluation(), unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: null, hasFile: false, openCase: null, judgeOpen: false, loadCheck: null };
 }
 
 export function goToStep(state: AppState, step: StepId): AppState {
@@ -162,9 +173,19 @@ export function applyLoadedTestProject(state: AppState, evaluation: Evaluation, 
 }
 
 /** "Load evaluation": exactly the saved state. Forgets the test project file (FR-076). */
-export function applyLoadedEvaluation(state: AppState, evaluation: Evaluation, ports: Ports): AppState {
+export function applyLoadedEvaluation(state: AppState, evaluation: Evaluation, ports: Ports, differences: Difference[] = []): AppState {
   ports.testProjectTarget.forget();
-  return { ...state, evaluation, unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: ports.evaluationTarget.fileName, hasFile: true, judgeOpen: false };
+  return {
+    ...state,
+    evaluation,
+    unsaved: false,
+    repliesSinceSave: 0,
+    testProjectFile: null,
+    evaluationFile: ports.evaluationTarget.fileName,
+    hasFile: true,
+    judgeOpen: false,
+    loadCheck: differences.length > 0 ? { evaluation, differences } : null,
+  };
 }
 
 /** "Load example…" and "Start new evaluation" forget both files (FR-076). */

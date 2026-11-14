@@ -17,7 +17,7 @@ import type { Ports } from '../app/ports/types';
 import { nextAction, stepGate, type NextIntent } from '../app/selectors';
 import { editJudgeAndRunAgain } from '../app/actions/rerun';
 import { editTestCases, finalize } from '../app/actions/finalize';
-import { createState, goToStep, startNewEvaluation, type AppState, type StepId } from '../app/store';
+import { createState, goToStep, recomputeDifferences, startNewEvaluation, type AppState, type StepId } from '../app/store';
 import { computeResults, reviewEvaluation } from '../core/evaluation/results';
 import type { Evaluation, Problem } from '../core/model';
 import { Dialog } from './components/Dialog';
@@ -266,6 +266,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
             onThreshold={(measure, value) => setState((s) => changeThreshold(s, measure, value))}
             onLoadChecks={() => void loadChecks()}
             onOpenCase={setViewCase}
+            differences={recomputeDifferences(state)}
           />
         ) : (
           <>
