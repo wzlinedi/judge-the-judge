@@ -1,4 +1,4 @@
-// T206: a refusal or a warning is shown where the user acted, and stays in view when the page is scrolled (found by the T205 run).
+// T222: a refusal or a warning is shown where the user acted, and stays in view when the page is scrolled (found by the T221 run).
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { installMemoryFiles } from '../helpers/memory-files';

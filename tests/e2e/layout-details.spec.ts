@@ -1,4 +1,4 @@
-// T209 and T210: small layout and wording details found by the T205 run, measured in the browser at 1280 px.
+// T209 and T210: small layout and wording details found by the T221 run, measured in the browser at 1280 px.
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { installMemoryFiles } from '../helpers/memory-files';

@@ -147,7 +147,7 @@ describe('saving', () => {
   });
 });
 
-describe('the three parts say where the user is and what to do (T207, found by the T205 run)', () => {
+describe('the three parts say where the user is and what to do (T223, found by the T221 run)', () => {
   it('part 1 says "Part 1 of 3", part 2 asks for the answer of the LLM, part 3 says what to check', () => {
     render(<App ports={createFakePorts()} env={env} initialState={draftState()} />);
     fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);

@@ -107,7 +107,7 @@ describe('the answer', () => {
   });
 });
 
-describe('what the fields do (T207 and T208, found by the T205 run)', () => {
+describe('what the fields do (T223 and T224, found by the T221 run)', () => {
   it('says that the comment only steers the prompt and is not saved with the case', () => {
     start();
     expect(windowOf().textContent).toMatch(/The comment is only used to write the prompt below\. It is not saved with the case\./);
