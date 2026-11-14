@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import { addRow, cleanCasesOf, injectPrompt, NEW_CATEGORY, removeRow, updateRow, type ErrorRow, type InjectDraft } from '../../../app/actions/test-case-window';
 import type { AppState } from '../../../app/store';
 import { normalizeCategoryName } from '../../../core/cases/catalog';
@@ -10,6 +11,8 @@ export interface InjectPartsProps {
   state: AppState;
   draft: InjectDraft;
   onDraft: (draft: InjectDraft) => void;
+  /** "Test case name", first in part 1 (T239). */
+  nameField?: ComponentChildren;
 }
 
 const DIFFICULTIES: ReadonlyArray<{ value: PreparedDifficulty; label: string }> = [
@@ -92,7 +95,7 @@ function Row({ row, number, state, onChange, onRemove }: { row: ErrorRow; number
 }
 
 /** Parts 1 to 3 of a case with injected errors (FR-040): the base, the errors to prepare, and the prompt for the user's LLM. */
-export function InjectParts({ state, draft, onDraft }: InjectPartsProps) {
+export function InjectParts({ state, draft, onDraft, nameField }: InjectPartsProps) {
   const clean = cleanCasesOf(state);
   const base = draft.base === '' ? undefined : state.evaluation.dataset.cases.find((c) => c.id === draft.base);
   const prompt = injectPrompt(state, draft);
@@ -101,6 +104,7 @@ export function InjectParts({ state, draft, onDraft }: InjectPartsProps) {
     <>
       <Part number={1} title="Base case">
         <div class="form-grid">
+          {nameField}
           <label class="field-label" for="inject-base">
             Base case (optional)
           </label>

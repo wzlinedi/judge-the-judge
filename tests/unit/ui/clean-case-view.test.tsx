@@ -74,7 +74,7 @@ describe('the answer', () => {
 
   it('a valid answer shows its fields read-only and Save case saves under the typed name and closes', () => {
     start();
-    type('Name', 'My clean case');
+    type('Test case name', 'My clean case');
     type('Answer of your LLM', answer());
     expect(within(windowOf()).getByText('A tidy summary about a baker.')).toBeTruthy();
     expect(approve().disabled).toBe(false);
@@ -93,7 +93,7 @@ describe('the answer', () => {
 
   it('a taken name is a problem', () => {
     start();
-    type('Name', 'short story, CLEAN');
+    type('Test case name', 'short story, CLEAN');
     type('Answer of your LLM', answer());
     expect(screen.getByText(/already used by case 1/)).toBeTruthy();
     expect(approve().disabled).toBe(true);

@@ -1,3 +1,4 @@
+import { defaultCaseName } from '../../../core/cases/identifiers';
 import { listCheckOf, uncoveredLines } from '../../../app/actions/test-case-window';
 import type { AppState } from '../../../app/store';
 import { findVariables } from '../../../core/judge/variables';
@@ -35,6 +36,27 @@ export function Status({ check, hideCleanKind = false }: { check: CaseJsonCheck;
 }
 
 export { Part } from '../../components/CasePart';
+
+/** What the user typed in "Test case name"; null while the field was not touched (T239). */
+export type TypedName = string | null;
+
+/** The name that goes to the check and to Save case: only what the user typed, so that a name in the JSON still counts while the field is untouched. */
+export const typedNameOf = (typed: TypedName): string | undefined => (typed !== null && typed.trim() !== '' ? typed : undefined);
+
+/** "Test case name" at the top of part 1: "Case N" (N the identifier the case will get), the name in the pasted JSON while the user has not typed, or what the user typed. */
+export function NameField({ state, check, typed, onTyped }: { state: AppState; check: CaseJsonCheck | undefined; typed: TypedName; onTyped: (name: string) => void }) {
+  const automatic = check?.case?.name ?? defaultCaseName(state.evaluation.dataset.cases);
+  return (
+    <>
+      <label class="field-label" for="case-name">
+        Test case name
+      </label>
+      <div>
+        <input id="case-name" type="text" value={typed ?? automatic} placeholder={automatic} onInput={(event) => onTyped((event.currentTarget as HTMLInputElement).value)} />
+      </div>
+    </>
+  );
+}
 
 export interface AnswerBoxProps {
   label: string;

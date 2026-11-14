@@ -96,6 +96,11 @@ describe('fields and expected errors', () => {
     expect(named.problems).toEqual([]);
     expect(named.case?.name).toBe('Case 3');
   });
+
+  it('names a case after the identifier it will get, not after the number of cases (T239)', () => {
+    const gap = check(one({ name: '' }), { existingCases: [{ id: '1', name: 'a', fields: {}, expected_errors: [] }, { id: '5', name: 'b', fields: {}, expected_errors: [] }] });
+    expect(gap.case?.name).toBe('Case 6');
+  });
 });
 
 describe('modes', () => {

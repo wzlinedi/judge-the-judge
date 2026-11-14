@@ -55,7 +55,8 @@ describe('From JSON', () => {
 
   it('has one JSON box; Save case is enabled only while the JSON is valid', () => {
     start();
-    expect(within(windowOf()).getAllByRole('textbox')).toHaveLength(1);
+    expect(within(windowOf()).getAllByRole('textbox')).toHaveLength(2); // the name (T239) and the JSON box
+    expect(within(windowOf()).getByLabelText('Case JSON')).toBeTruthy();
     expect(save().disabled).toBe(true);
     paste('{ "name": ');
     expect(screen.getByText(/Line 1, column/)).toBeTruthy();
@@ -176,5 +177,51 @@ describe('the read-only view (Open)', () => {
     fireEvent.click(within(windowOf()).getByRole('button', { name: 'Save case' }));
     expect(screen.queryByRole('dialog', { name: 'Test case' })).toBeNull();
     expect(screen.getByText('Unsaved changes')).toBeTruthy();
+  });
+});
+
+describe('"Test case name" (T239)', () => {
+  const start = () => {
+    show();
+    openChoice();
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'From JSON' }));
+  };
+  const save = () => within(windowOf()).getByRole('button', { name: 'Save case' }) as HTMLButtonElement;
+  const field = () => within(windowOf()).getByLabelText('Test case name') as HTMLInputElement;
+  const typeName = (value: string) => fireEvent.input(field(), { target: { value } });
+
+  it('is filled with "Case N", N being the identifier the case will get, in From JSON', () => {
+    start();
+    expect(field().value).toBe(`Case ${Number(sampleEvaluation().dataset.cases.at(-1)!.id) + 1}`);
+  });
+
+  it('takes the name of the pasted JSON while the user has not typed, and keeps what the user typed after that', () => {
+    start();
+    paste(valid());
+    expect(field().value).toBe('Fresh');
+    typeName('My own name');
+    expect(field().value).toBe('My own name');
+    paste(valid({ name: 'Another' }));
+    expect(field().value).toBe('My own name');
+  });
+
+  it('saves the case under the typed name, also when the JSON has another', () => {
+    start();
+    typeName('Typed name');
+    paste(valid());
+    fireEvent.click(save());
+    expect(screen.queryByRole('dialog', { name: 'Test case' })).toBeNull();
+    expect(screen.getByRole('row', { name: /Typed name/ })).toBeTruthy();
+  });
+
+  it('is in Case with errors too, and a name typed there reaches the case', () => {
+    show();
+    openChoice();
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Case with errors' }));
+    expect(field().value).toMatch(/^Case \d+$/);
+    typeName('Prepared case');
+    paste(valid({ name: 'From the LLM' }));
+    fireEvent.click(save());
+    expect(screen.getByRole('row', { name: /Prepared case/ })).toBeTruthy();
   });
 });

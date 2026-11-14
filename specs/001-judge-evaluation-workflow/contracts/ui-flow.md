@@ -147,17 +147,18 @@ which asks first when something was pasted or typed.
   are no two columns, no **Next**, no **Back** and no "Part N of 3". The header holds only the
   title, the save button with the reason beside it while it is disabled, and **Close without saving** (Escape too); there is no bottom bar. Each part is in a frame, labels are in a left column and fields on the right, and the description of the category stands under the whole error row. The parts are numbered from 1 in each window.
 - **From JSON** (FR-090): 1. the box for a case JSON (file-formats.md, section 2), checked as it
-  changes, with problems under it (line and column, or field path); 2. the expected errors,
+  changes, with problems under it (line and column, or field path), and **Test case name** above it (see below); 2. the expected errors,
   read-only. The window names the kind the case will have (clean without expected errors, injected
   errors with at least one); a JSON with no expected errors says "No expected errors: this will be
   saved as a clean case." **Save case** is in the header. There is no **Clone**: a copy is made with **Show JSON**, **Copy JSON** and this window.
-- **Clean case** (FR-083): 1. **Name**, an optional **Comment** and an optional **Like case**
+- **Test case name** (T239), the first field of part 1 in every way of adding a case (not in **Edit expected errors**, where the name cannot change): filled with "Case N", N being the identifier the case will get; a name in the pasted JSON replaces it while the user has not typed in the field; what the user typed wins over the JSON.
+- **Clean case** (FR-083): 1. **Test case name** (see below), an optional **Comment** and an optional **Like case**
   (an existing clean case whose fields go into the prompt as a model); 2. the prompt for the
   user's LLM with **Copy prompt**; 3. the box for the LLM's answer, checked as it changes. When
   valid its fields are shown read-only and **Save case** (in the header, primary) saves and
   closes; an answer with expected errors is a problem that points to **From JSON**.
 - **Case with errors**, five parts (FR-040, FR-041, FR-085):
-  1. **Base case**: the optional base (any clean case, or none) with its fields.
+  1. **Test case name** (see below) and the **Base case**: the optional base (any clean case, or none) with its fields.
   2. **Errors to prepare**: one horizontal row per error (category from the catalog or typed as a
      new name, difficulty obvious / subtle / left to the LLM, what should be wrong, **Remove**),
      **Add error**, and optional own instructions.

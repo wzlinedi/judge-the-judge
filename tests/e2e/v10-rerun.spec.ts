@@ -46,6 +46,7 @@ test('another judge version on the same test cases, then the same test with anot
   await page.getByRole('button', { name: 'Save evaluation', exact: true }).click();
   memory.chooseSaveName('run-1-project.json');
   await page.getByRole('button', { name: 'Save test project', exact: true }).click();
+  await expect.poll(() => memory.files.has('run-1-project.json') && memory.files.has('run-1-evaluation.json')).toBe(true);
   expect(memory.asked()).toBe(2);
   const projectOfFirstRun = memory.files.get('run-1-project.json')!;
   const evaluationOfFirstRun = memory.files.get('run-1-evaluation.json')!;
@@ -71,6 +72,7 @@ test('another judge version on the same test cases, then the same test with anot
   // the first save of each file of the new run asks for a file and leaves the earlier run alone
   memory.chooseSaveName('run-2-project.json');
   await page.getByRole('button', { name: 'Save test project', exact: true }).click();
+  await expect.poll(() => memory.files.has('run-2-project.json')).toBe(true);
   expect(memory.asked()).toBe(3);
   await enterFirstReply(page);
   await page.getByRole('button', { name: /1\s*Judge/ }).click();

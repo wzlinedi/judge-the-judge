@@ -18,7 +18,7 @@ test('a clean case is made from a prompt and an answer, and checked as it is pas
   await page.getByRole('button', { name: 'Add test case…' }).click();
   await testWindow(page).getByRole('button', { name: 'Clean case' }).click();
 
-  await testWindow(page).getByLabel('Name').fill('Keeper');
+  await testWindow(page).getByLabel('Test case name').fill('Keeper');
   await testWindow(page).getByLabel('Comment (optional)').fill('About a lighthouse');
   await testWindow(page).getByLabel('Like case (optional)').selectOption({ index: 1 });
   const prompt = testWindow(page).getByRole('textbox', { name: 'Prompt for your LLM' });

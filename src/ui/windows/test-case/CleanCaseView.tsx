@@ -7,7 +7,7 @@ import { CopyButton } from '../../components/CopyButton';
 import { JsonBox } from '../../components/JsonBox';
 import { labels } from '../../labels';
 import { CaseData } from './CaseData';
-import { contextOf, Part, Status } from './CaseParts';
+import { contextOf, NameField, Part, Status, typedNameOf, type TypedName } from './CaseParts';
 import { TestCaseFrame } from './TestCaseFrame';
 
 export interface CleanCaseViewProps {
@@ -18,7 +18,8 @@ export interface CleanCaseViewProps {
 
 /** The clean case view (FR-083): the prompt for the user's LLM, the answer checked as it is pasted, then Save case. */
 export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
-  const [name, setName] = useState('');
+  const [typed, setTyped] = useState<TypedName>(null);
+  const name = typedNameOf(typed) ?? '';
   const [comment, setComment] = useState('');
   const [like, setLike] = useState('');
   const [answer, setAnswer] = useState('');
@@ -38,7 +39,7 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
   return (
     <TestCaseFrame
       title={labels.cleanCase}
-      dirty={name !== '' || comment !== '' || like !== '' || answer !== ''}
+      dirty={typed !== null || comment !== '' || like !== '' || answer !== ''}
       onClose={onClose}
       headerAction={
         <>
@@ -55,12 +56,7 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
     >
       <Part number={1} title="About the case">
         <div class="form-grid">
-          <label class="field-label" for="clean-name">
-            Name
-          </label>
-          <div>
-            <input id="clean-name" type="text" value={name} onInput={(event) => setName((event.currentTarget as HTMLInputElement).value)} />
-          </div>
+          <NameField state={state} check={check} typed={typed} onTyped={setTyped} />
           <label class="field-label" for="clean-comment">
             Comment (optional)
           </label>

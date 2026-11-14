@@ -8,6 +8,11 @@ export function nextCaseId(existing: readonly Pick<TestCase, 'id'>[], taken: Rea
   return String(n);
 }
 
+/** The name a new case gets when nobody gives one: "Case N", N being the identifier it will get (T239). */
+export function defaultCaseName(existing: readonly Pick<TestCase, 'id'>[]): string {
+  return `Case ${nextCaseId(existing)}`;
+}
+
 type Draft = Omit<TestCase, 'id' | 'expected_errors'> & { id?: string; expected_errors: Array<Omit<ExpectedError, 'id'> & { id?: string }> };
 
 /** Gives every case without an identifier the next free one, and every expected error one within its case. */

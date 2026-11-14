@@ -1,6 +1,7 @@
 // The one case JSON layout and its check (file-formats.md, section 2; FR-031, FR-041, FR-083, FR-084, FR-089, FR-090).
 import { extractJson } from '../judge/extract-json';
 import type { CaseJsonCheck, CaseJsonCheckContext, Difficulty, ExpectedError, Problem, TestCase } from '../model';
+import { defaultCaseName } from './identifiers';
 import { validateCase } from './validate';
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -135,7 +136,7 @@ export function checkCaseJson(input: string, context: CaseJsonCheckContext): Cas
 
   if (name === '') {
     const baseName = base !== undefined ? context.existingCases.find((c) => c.id === base)?.name : undefined;
-    name = baseName !== undefined && errors.length > 0 ? `${baseName} + ${errors.length} ${errors.length === 1 ? 'error' : 'errors'}` : `Case ${nextNumber(context.existingCases)}`;
+    name = baseName !== undefined && errors.length > 0 ? `${baseName} + ${errors.length} ${errors.length === 1 ? 'error' : 'errors'}` : defaultCaseName(context.existingCases);
   }
 
   const others = context.mode === 'correct' && context.original ? context.existingCases.filter((c) => c.id !== context.original?.id) : context.existingCases;
@@ -159,6 +160,3 @@ export function checkCaseJson(input: string, context: CaseJsonCheckContext): Cas
   return problems.length > 0 ? { problems, warnings, notes, kind } : { problems, warnings, notes, kind, case: candidate };
 }
 
-function nextNumber(cases: readonly TestCase[]): number {
-  return cases.length + 1;
-}
