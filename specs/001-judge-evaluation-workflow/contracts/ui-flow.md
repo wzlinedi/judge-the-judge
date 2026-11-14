@@ -334,7 +334,7 @@ offers no action that changes the case, and **Open on Run** leads to the case wi
 - All colors, spacing, type sizes and radii come from `tokens.css`; no one-off values.
 - Black and red (FR-007): red is the one accent color (primary action, current step, focus); the
   dark scheme has a black background, the light scheme a white or near-white one with black text.
-  Light and dark follow the system setting and can be switched; contrast meets WCAG AA in both.
+  Light and dark follow the system setting and there is no switch in the tool; contrast meets WCAG AA in both.
 - Because red is the accent, an error, a failure or "Fail" always carries a word or a sign
   (✕, ✓) as well; "Pass" and "Fail" differ without color.
 - Everything works with the keyboard alone; focus is visible; windows trap and return focus; status

@@ -5,7 +5,9 @@
 Everything the tool reads or writes. These layouts are the contract for the schemas in
 `src/core/schemas`, the JSON Schema files published in `docs/schemas/`, the example files in
 `examples/`, and the Help examples. Prototype v17 (`prototypes/ui-prototype-v17`) writes these
-layouts; where it differs, this contract wins.
+layouts; where it differs, this contract wins. The build puts `examples/`, `docs/schemas/` and
+`docs/how-to-add-a-metric.md` on the published site at the same paths, so a user of the site can
+open the files the Help names (T220).
 
 ## Common rules
 
