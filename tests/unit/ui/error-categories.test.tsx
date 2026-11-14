@@ -106,10 +106,10 @@ describe('each category', () => {
     expect(within(rowOf('wrong-fact')).getByText('Used by 1 test case')).toBeTruthy();
   });
 
-  it('Add category adds one category per line and reports what was skipped', () => {
+  it('Add categories adds one category per line and reports what was skipped', () => {
     open();
     fireEvent.input(screen.getByLabelText('Categories to add'), { target: { value: 'Tone - the wrong tone\nfactual-error' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Add category' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add categories' }));
     expect(screen.getByRole('listitem', { name: 'tone' })).toBeTruthy();
     expect(screen.getByRole('status', { name: 'Message' }).textContent).toMatch(/Added: tone\. Already in the catalog: factual-error/);
     expect((screen.getByLabelText('Categories to add') as HTMLTextAreaElement).value).toBe('');
@@ -120,8 +120,8 @@ describe('Load metric definition…', () => {
   const bias = readFileSync('examples/metrics/bias-example.json', 'utf8');
   const openWindow = () => {
     fireEvent.click(screen.getByRole('button', { name: 'File' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Load example…' }));
-    return screen.getByRole('dialog', { name: 'Load example…' });
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Load demo…' }));
+    return screen.getByRole('dialog', { name: 'Load demo…' });
   };
 
   it('adds a new example to the window, which starts a test project with a single field', async () => {
@@ -130,10 +130,10 @@ describe('Load metric definition…', () => {
     let dialog = openWindow();
     ports.opener.next = { name: 'bias.json', text: bias };
     fireEvent.click(within(dialog).getByRole('button', { name: 'Load metric definition…' }));
-    await waitFor(() => expect(within(screen.getByRole('dialog', { name: 'Load example…' })).getByRole('button', { name: 'Bias' })).toBeTruthy());
-    dialog = screen.getByRole('dialog', { name: 'Load example…' });
+    await waitFor(() => expect(within(screen.getByRole('dialog', { name: 'Load demo…' })).getByRole('button', { name: 'Bias' })).toBeTruthy());
+    dialog = screen.getByRole('dialog', { name: 'Load demo…' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Bias' }));
-    expect(screen.queryByRole('dialog', { name: 'Load example…' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Load demo…' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /1\s*Judge/ }));
     expect((screen.getByLabelText('Judge prompt') as HTMLTextAreaElement).value).toContain('{{text}}');
   });
@@ -144,9 +144,9 @@ describe('Load metric definition…', () => {
     const dialog = openWindow();
     ports.opener.next = { name: 'bad.json', text: '{ "format": ' };
     fireEvent.click(within(dialog).getByRole('button', { name: 'Load metric definition…' }));
-    const alert = await within(screen.getByRole('dialog', { name: 'Load example…' })).findByRole('alert');
+    const alert = await within(screen.getByRole('dialog', { name: 'Load demo…' })).findByRole('alert');
     expect(alert.textContent).toMatch(/not readable JSON/);
-    expect(within(screen.getByRole('dialog', { name: 'Load example…' })).queryByRole('button', { name: 'Bias' })).toBeNull();
+    expect(within(screen.getByRole('dialog', { name: 'Load demo…' })).queryByRole('button', { name: 'Bias' })).toBeNull();
   });
 
   it('asks before replacing a definition loaded earlier', async () => {
@@ -154,12 +154,12 @@ describe('Load metric definition…', () => {
     show(stateWith(), ports);
     for (let i = 0; i < 2; i++) {
       ports.opener.next = { name: 'bias.json', text: bias };
-      fireEvent.click(within(screen.queryByRole('dialog', { name: 'Load example…' }) ?? openWindow()).getByRole('button', { name: 'Load metric definition…' }));
+      fireEvent.click(within(screen.queryByRole('dialog', { name: 'Load demo…' }) ?? openWindow()).getByRole('button', { name: 'Load metric definition…' }));
       await waitFor(() => expect(ports.opener.next).toBeNull());
     }
-    const dialog = screen.getByRole('dialog', { name: 'Load example…' });
+    const dialog = screen.getByRole('dialog', { name: 'Load demo…' });
     expect(await within(dialog).findByText(/already loaded/)).toBeTruthy();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Replace' }));
-    await waitFor(() => expect(within(screen.getByRole('dialog', { name: 'Load example…' })).queryByText(/already loaded/)).toBeNull());
+    await waitFor(() => expect(within(screen.getByRole('dialog', { name: 'Load demo…' })).queryByText(/already loaded/)).toBeNull());
   });
 });

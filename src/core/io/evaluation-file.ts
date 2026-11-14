@@ -66,7 +66,7 @@ export function readEvaluation(text: string): ReadResult<LoadedEvaluation> {
   }
   const raw = extracted.value;
   if (raw !== null && typeof raw === 'object' && (raw as Record<string, unknown>)['format'] === TEST_PROJECT_FORMAT) {
-    return { ok: false, problems: [{ message: 'This is a test project file. Use "Load test project" to open it.', path: 'format' }] };
+    return { ok: false, problems: [{ message: 'This is a test project file. Use "Load test project…" to open it.', path: 'format' }] };
   }
   const envelope = checkEnvelope(raw, { format: EVALUATION_FORMAT, schemaVersion: EVALUATION_SCHEMA_VERSION, knownKeys: EVALUATION_KEYS });
   if (!envelope.ok) return envelope;

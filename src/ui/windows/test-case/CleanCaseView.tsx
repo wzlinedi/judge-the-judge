@@ -16,7 +16,7 @@ export interface CleanCaseViewProps {
   onClose: () => void;
 }
 
-/** The clean case view (FR-083): the prompt for the user's LLM, the answer checked as it is pasted, then Approve and close. */
+/** The clean case view (FR-083): the prompt for the user's LLM, the answer checked as it is pasted, then Save case. */
 export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
   const [name, setName] = useState('');
   const [comment, setComment] = useState('');
@@ -43,7 +43,7 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
       headerAction={
         <>
           <button type="button" class="primary" disabled={!valid} aria-describedby={valid ? undefined : 'clean-approve-why'} onClick={approve}>
-            {labels.approveAndClose}
+            {labels.saveCase}
           </button>
           {valid ? null : (
             <span id="clean-approve-why" class="why-disabled">

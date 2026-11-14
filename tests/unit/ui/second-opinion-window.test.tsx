@@ -49,10 +49,10 @@ describe('the second-opinion window', () => {
     const seen = openWindow('17');
     paste(opinionText('17'));
     const preview = within(dialog()).getByRole('list', { name: 'What will change' });
-    expect(preview.textContent).toContain('E2 undecided → Issue: missed');
+    expect(preview.textContent).toContain('E2 undecided → Missed');
     expect(preview.textContent).toContain('No finding is about the number of dwarves.');
     expect(preview.textContent).toContain('join twelve dwarves');
-    expect(preview.textContent).toContain('A1 undecided → Issue: false positive');
+    expect(preview.textContent).toContain('A1 undecided → False positive');
     expect(preview.textContent).toContain('Gandalf does persuade Bilbo');
     expect(apply().disabled).toBe(false);
     expect(seen).toEqual([]);
@@ -74,7 +74,7 @@ describe('the second-opinion window', () => {
     openWindow('17', e);
     paste(opinionText('17'));
     const preview = within(dialog()).getByRole('list', { name: 'What will change' }).textContent ?? '';
-    expect(preview).toContain('E2 Found → Issue: missed');
+    expect(preview).toContain('E2 Found → Missed');
     expect(preview).toContain('replaces a mark set by hand');
   });
 
@@ -84,7 +84,7 @@ describe('the second-opinion window', () => {
     openWindow('17', e);
     paste(JSON.stringify({ opinion: { id: '17', expected: [{ index: 2, found: false }], additional: [], new: [{ text: 'Bilbo is a hobbit', real: true, category: 'factual-error', difficulty: 'subtle' }] } }));
     const preview = within(dialog()).getByRole('list', { name: 'What will change' }).textContent ?? '';
-    expect(preview).toContain('E2 Issue: missed — no change');
+    expect(preview).toContain('E2 Missed — no change');
     expect(preview).toContain('+ new finding “Bilbo is a hobbit” → Real error');
     expect(preview).toContain('factual-error');
   });

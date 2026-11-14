@@ -13,9 +13,9 @@ file actions in the header; a black-and-red interface with one "what next" line 
 evaluated per case). Updated on 2026-11-13 for the reviews of v13 to v17: one user file named the
 **test project** (the word "dataset" and "test set" are gone from the interface); the error
 catalog as a collapsible "Error categories" section of the Test cases step; no clean-case section
-on the Judge step and no welcome section; every test case made from one **case JSON** (Paste JSON,
-Clean case, Case with injected errors in three parts), never edited after saving, with a
-read-only **Open**, **Show JSON** and **Correct expected errors**; adding and importing
+on the Judge step and no welcome section; every test case made from one **case JSON** (From JSON,
+Clean case, Case with errors in three parts), never edited after saving, with a
+read-only **Open**, **Show JSON** and **Edit expected errors**; adding and importing
 after finalizing; "Save evaluation" only on Run; on Run an always-visible reply box,
 **Add finding** with optional category and difficulty and **Remove**, and the second opinion as its
 own window with a preview and **Apply opinion**. Prototype v17 is now the reference.
@@ -83,7 +83,7 @@ context (HTTPS or `localhost`) and a click by the user.
 requirements, of which 86 are active (FR-018 and FR-082 removed, FR-035 and FR-042 merged), 15
 user stories, 39 success criteria; five screens (four steps and Help), three windows on one frame
 (the test case window; the case window of Run; the read-only case view of Results) and two small
-dialogs (Load example…; Second opinion); six JSON, CSV or HTML file formats and the pasted
+dialogs (Load demo…; Second opinion); six JSON, CSV or HTML file formats and the pasted
 layouts of contracts/file-formats.md.
 
 ## Constitution Check
@@ -97,7 +97,7 @@ layouts of contracts/file-formats.md.
 | III. Separated Core and Pluggable Judge Source | Core independent of the interface; one interface for the source of judge replies | PASS: `src/core` has no DOM access; `JudgeReplySource` has one adapter in this version (a reply pasted for one case). A batch-file adapter and a live LLM adapter can be added later without touching evaluation code |
 | IV. Portable File-Based Data | Open formats with documented, versioned schemas and validating loaders; no hidden state; mock data | PASS: six JSON, CSV or HTML formats (test project, test cases, evaluation, metric, checks, report) plus the one case JSON layout, each JSON format with `format` and `schema_version`, defined once as schemas and published as JSON Schema; the whole state is rebuilt from one evaluation file, and a test project file rebuilds the same test (judge, catalog, cases, metric, thresholds) for a new run; a fixed demo set doubles as test fixtures; the chosen save file is a file on the user's device, not browser storage |
 | V. Transparent and Reproducible | Same inputs give the same results; each result records what produced it | PASS: evaluation functions are pure and deterministic; the counting mode follows from the rules and is recorded, and a change of it is named; an evaluation file stores the judge set and its version, the judge version in force when replies were received, the model note, the test cases version, the cases added or corrected after the first reply, the tool version and the thresholds; on load the results are recomputed and any difference is reported; a report made while cases are undecided says it is provisional |
-| VI. Extensible Metrics and Configurable Checks | One metric contract and registry; declarative definition files; checks in configuration; guide, example, contract tests | PASS: see [contracts/metric-and-checks.md](./contracts/metric-and-checks.md). Accuracy and Completeness are the two built-in definitions and are what "Load example…" offers; others load from a file at run time. Thresholds come from a check configuration file and travel in the test project. Judges evaluated per case use two built-in case-level measures from two added counters, with no change to the contract's operations. The minimum test size (30 errors, 10 clean cases) is data in the bundled default configuration, but the spec fixes it, so a loaded configuration cannot change it |
+| VI. Extensible Metrics and Configurable Checks | One metric contract and registry; declarative definition files; checks in configuration; guide, example, contract tests | PASS: see [contracts/metric-and-checks.md](./contracts/metric-and-checks.md). Accuracy and Completeness are the two built-in definitions and are what "Load demo…" offers; others load from a file at run time. Thresholds come from a check configuration file and travel in the test project. Judges evaluated per case use two built-in case-level measures from two added counters, with no change to the contract's operations. The minimum test size (30 errors, 10 clean cases) is data in the bundled default configuration, but the spec fixes it, so a loaded configuration cannot change it |
 | VII. Modern, Clear UI | One purpose and one next action per screen; shared design tokens; responsive, accessible, light and dark; designed empty and error states | PASS: four-step flow with one "what next" line and one primary action each (FR-001); a fixed list of action names, every row and window action a visible button with no "More actions" menu (FR-008); a single token stylesheet with the black-and-red scheme in light and dark, red never the only sign of an error (FR-007, research.md section 30); axe-core and contrast checks in end-to-end tests; designed states for an empty or refused clipboard, an unwritable save file and an empty start |
 | VIII. Living Help | Help inside the application, plain language, examples valid against the schemas | PASS: Help is a screen of the application; its examples are the same files that the contract tests validate, so they cannot drift. Each phase writes the Help section of the feature it builds (including pasting from the clipboard, the second opinion per case, the two files, "Continue", judges evaluated per case and the supported browsers), and nothing is published before the Help is complete |
 | Constraints | English everywhere; simplest solution; no data to third parties | PASS: four runtime dependencies (Preact, Zod, Papa Parse, jsdiff) plus Vite as the build tool, each justified in research.md; the clipboard and the save file use built-in browser features, with no new dependency; a Content Security Policy blocks all outgoing connections. This revision removes more than it adds: no Compare, no result shelf, no batch files, no combined score |
@@ -117,7 +117,7 @@ v13 to v17: one case JSON layout for every way of adding a case adds no file for
 IV); the cases added or corrected after the first reply, the added findings with category and
 difficulty, and an applied LLM opinion are all stored in the evaluation file and recomputed on load
 (Principles IV and V); an LLM opinion still changes nothing until the user applies it after a
-preview of every change (Principle V, SC-028); the second opinion and **Load example…** are two
+preview of every change (Principle V, SC-028); the second opinion and **Load demo…** are two
 small dialogs, and every action of a row or window is a visible button (Principle VII); prototypes
 v13 to v16 answered their questions and join the setup removal (Principle I).
 
@@ -168,8 +168,8 @@ src/
 ├── ui/
 │   ├── labels.ts            # The action names of FR-008, used by every component
 │   ├── steps/               # judge/, cases/, run/, results/
-│   ├── windows/             # test-case/ (Paste JSON, Clean case, Case with injected errors,
-│   │                        # Open, Correct expected errors), case-window/ (Run, and the read-only
+│   ├── windows/             # test-case/ (From JSON, Clean case, Case with errors,
+│   │                        # Open, Edit expected errors), case-window/ (Run, and the read-only
 │   │                        # case view of Results on the same frame), second-opinion/, load-example/
 │   ├── help/
 │   ├── components/          # Shared controls, tables, dialogs, the "what next" line, the
@@ -178,7 +178,7 @@ src/
 └── main.tsx
 
 examples/                    # Shipped with the site and used as test fixtures
-├── demo/                    # evaluation.json (the demo of "Load example…"), test-project.json,
+├── demo/                    # evaluation.json (the demo of "Load demo…"), test-project.json,
 │                            # expected-results.json
 ├── files/                   # test-cases-example.csv, test-cases-example.json, case-example.json
 └── metrics/                 # bias-example.json, bias-verdict-example.json (evaluated per
@@ -213,7 +213,7 @@ any editing screen exists.
 
 1. **Foundation**: project setup, design tokens (black and red, light and dark), application
    shell with the four steps, the header with the unsaved-changes indicator, the File menu and
-   **Load example…** (no save button: **Save evaluation** is on Run), the "what next" line, schemas and file identity (`format`,
+   **Load demo…** (no save button: **Save evaluation** is on Run), the "what next" line, schemas and file identity (`format`,
    `schema_version`), demo data files, removal of the answered prototypes.
 2. **Read and judge on demo data (User Stories 1 and 6, part of 8 and 9)**: load and save an evaluation file,
    opening the first step with unfinished work and **Continue**,
@@ -221,18 +221,18 @@ any editing screen exists.
    automatic decisions, case status, measures, overall result, the three result views.
 3. **Judge step (User Stories 2, 14)**: prompt, detected variables and the judged text, sample reply read as
    it changes with line and column for problems, finding text per list, rule editor with live
-   preview, the two ready examples in **Load example…**, save and load the test project (with the
+   preview, the two ready examples in **Load demo…**, save and load the test project (with the
    metric and thresholds).
 4. **Test cases step (User Stories 3, 4, 5, 10, 11, 15)**: the collapsible **Error categories**
    section (uses per category, rename, remove refused with the reason), one table with **Open**,
-   **Rename** and **Remove**, the test case window (**Paste JSON**, **Clean case**,
-   **Case with injected errors** in three parts, the case view with **Show in text** and the check
-   line, the read-only **Open** with **Show JSON** and **Correct expected errors**), one case JSON
+   **Rename** and **Remove**, the test case window (**From JSON**, **Clean case**,
+   **Case with errors** in three parts, the case view with **Show the issue** and the check
+   line, the read-only **Open** with **Show JSON** and **Edit expected errors**), one case JSON
    check with line and column or field path, **Import test cases** (adding, also after
    finalizing) and **Export test cases**, feedback and test-size summary, finalize, and **Edit test
    cases** before the first reply.
 5. **Run with decisions (User Stories 7, 8, 9)**: the two-column case window with Previous and
-   Next, the always-visible reply box and "Paste reply from clipboard" with the reset of the case,
+   Next, the always-visible reply box and "Paste reply" with the reset of the case,
    the judge summary and the multi-line model details, marks right after each reply, **Add
    finding** with optional category and difficulty and **Remove**, the **Second opinion** window
    (prompt, one box, preview, **Apply opinion**), **Approve**, the count of unsaved replies with

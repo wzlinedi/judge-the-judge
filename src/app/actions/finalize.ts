@@ -22,7 +22,7 @@ export function finalize(state: AppState): FinalizeEdit {
 export function editTestCases(state: AppState): FinalizeEdit {
   if (!state.evaluation.dataset.finalized) return { state, note: 'The test cases are not finalized, so they are already open.' };
   if (hasReplies(state)) {
-    return { state, note: 'Edit test cases is no longer possible: the first reply is entered. Use "Edit the judge and run again" or "Start new evaluation" to change the test.' };
+    return { state, note: 'Reopen test cases is no longer possible: the first reply is entered. Use "Run again with a new judge…" or "New evaluation" to change the test.' };
   }
   const next = edit(state, (e) => ({ ...e, dataset: { ...e.dataset, finalized: false } }));
   return {

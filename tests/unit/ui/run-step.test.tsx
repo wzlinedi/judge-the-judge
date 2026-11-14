@@ -63,7 +63,7 @@ describe('the Run step', () => {
     render(<RunStep {...props} fileName="run.json" />);
     const card = screen.getByRole('region', { name: 'Evaluation file' });
     expect(within(card).getByRole('button', { name: 'Save evaluation' })).toBeTruthy();
-    expect(within(card).getByRole('button', { name: 'Save evaluation as' })).toBeTruthy();
+    expect(within(card).getByRole('button', { name: 'Save evaluation as…' })).toBeTruthy();
     expect(card.textContent).toContain('run.json');
   });
 
@@ -105,7 +105,7 @@ describe('a test project that is not finalized', () => {
 describe('the case window of Run, without a reply', () => {
   const open = (ports = createFakePorts(), evaluation = noReplies()) => renderApp(ports, stateOn(evaluation, { openCase: '1' }));
 
-  it('shows "Judge reply" with only Paste reply from clipboard above the always visible box: no steps, no Save reply, no "More actions" (T235)', () => {
+  it('shows "Judge reply" with only Paste reply above the always visible box: no steps, no Save reply, no "More actions" (T235)', () => {
     open();
     const win = windowOf();
     expect(within(win).getByRole('heading', { name: 'Judge reply', level: 4 })).toBeTruthy();
@@ -113,38 +113,38 @@ describe('the case window of Run, without a reply', () => {
     expect(win.querySelectorAll('details')).toHaveLength(0);
     expect(replyBox().value).toBe('');
     const pane = win.querySelector('.reply-pane') as HTMLElement;
-    expect(within(pane).getAllByRole('button').map((b) => b.textContent)).toEqual(['Paste reply from clipboard']);
+    expect(within(pane).getAllByRole('button').map((b) => b.textContent)).toEqual(['Paste reply']);
     expect(within(win).queryByRole('button', { name: 'Save reply' })).toBeNull();
     expect(win.textContent).not.toMatch(/More actions|Readable JSON/);
   });
 
-  it('part 1 has Show the full prompt, which opens the whole prompt with only Close, and Copy prompt (T235)', () => {
+  it('part 1 has Show prompt, which opens the whole prompt with only Close, and Copy prompt (T235)', () => {
     open();
     const win = windowOf();
     const part = win.querySelector('.case-part') as HTMLElement;
     expect(within(part).getByRole('button', { name: 'Copy prompt' })).toBeTruthy();
-    fireEvent.click(within(part).getByRole('button', { name: 'Show the full prompt' }));
+    fireEvent.click(within(part).getByRole('button', { name: 'Show prompt' }));
     const dialog = screen.getByRole('dialog', { name: 'Complete judge prompt' });
     expect((within(dialog).getByRole('textbox', { name: 'Complete judge prompt' }) as HTMLTextAreaElement).value).toContain('SUMMARY');
     expect(within(dialog).getAllByRole('button').map((b) => b.textContent)).toEqual(['Close']);
   });
 
-  it('makes Copy prompt the primary button until it was pressed for this case, then Paste reply from clipboard', () => {
+  it('makes Copy prompt the primary button until it was pressed for this case, then Paste reply', () => {
     open();
     const win = windowOf();
     const copy = within(win).getByRole('button', { name: 'Copy prompt' });
-    const paste = within(win).getByRole('button', { name: 'Paste reply from clipboard' });
+    const paste = within(win).getByRole('button', { name: 'Paste reply' });
     expect(copy.classList.contains('primary')).toBe(true);
     expect(paste.classList.contains('primary')).toBe(false);
     fireEvent.click(copy);
     expect(within(win).getByRole('button', { name: 'Copy prompt' }).classList.contains('primary')).toBe(false);
-    expect(within(win).getByRole('button', { name: 'Paste reply from clipboard' }).classList.contains('primary')).toBe(true);
+    expect(within(win).getByRole('button', { name: 'Paste reply' }).classList.contains('primary')).toBe(true);
   });
 
   it('puts the header in order: Previous, position, Next, status, the unsaved count, Save evaluation and Save evaluation as', () => {
     open(createFakePorts(), noReplies());
     const win = windowOf();
-    for (const name of ['Previous test case', 'Next test case', 'Save evaluation', 'Save evaluation as']) expect(within(win).getByRole('button', { name })).toBeTruthy();
+    for (const name of ['Previous case', 'Next case', 'Save evaluation', 'Save evaluation as…']) expect(within(win).getByRole('button', { name })).toBeTruthy();
     expect(within(win).getByText('1 of 2')).toBeTruthy();
     expect(within(win).getByText(/Not run/)).toBeTruthy();
     expect(within(win).getByText('0 not saved')).toBeTruthy();
@@ -154,7 +154,7 @@ describe('the case window of Run, without a reply', () => {
     const ports = createFakePorts();
     ports.clipboard = createFakeClipboard(reply);
     open(ports);
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste reply from clipboard' }));
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste reply' }));
     await waitFor(() => expect(replyBox().value).toBe(reply));
     expect(within(windowOf()).getByText('1 not saved')).toBeTruthy();
     expect(within(windowOf()).getByText(/Pass/)).toBeTruthy();
@@ -166,7 +166,7 @@ describe('the case window of Run, without a reply', () => {
     const ports = createFakePorts();
     ports.clipboard = createFakeClipboard('');
     open(ports);
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste reply from clipboard' }));
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste reply' }));
     expect(await within(windowOf()).findByText(/clipboard is empty/i)).toBeTruthy();
     expect(replyBox().value).toBe('');
     expect(within(windowOf()).getByText('0 not saved')).toBeTruthy();
@@ -178,7 +178,7 @@ describe('the case window of Run, without a reply', () => {
     clipboard.refuse = true;
     ports.clipboard = clipboard;
     open(ports);
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste reply from clipboard' }));
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste reply' }));
     expect(await within(windowOf()).findByText(/Paste the reply into the box with Ctrl\+V/)).toBeTruthy();
     expect(replyBox().value).toBe('');
   });
@@ -222,7 +222,7 @@ describe('replacing a reply', () => {
     const ports = createFakePorts();
     ports.clipboard = createFakeClipboard('pasted reply');
     open('2', ports);
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste reply from clipboard' }));
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste reply' }));
     const question = await screen.findByRole('dialog', { name: /Replace this reply/ });
     fireEvent.click(within(question).getByRole('button', { name: 'Replace reply' }));
     await waitFor(() => expect(replyBox().value).toBe('pasted reply'));
@@ -240,10 +240,10 @@ describe('moving or closing with a reply that was typed and not saved', () => {
   const type = (text: string) => fireEvent.input(replyBox(), { target: { value: text } });
   const guard = () => screen.findByRole('dialog', { name: /not saved/ });
 
-  it('asks before Next test case, and stays on the case when the user cancels', async () => {
+  it('asks before Next case, and stays on the case when the user cancels', async () => {
     open();
     type('half a reply');
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Next test case' }));
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Next case' }));
     const question = await guard();
     fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
     expect(screen.getByRole('dialog', { name: /^Case 1/ })).toBeTruthy();
@@ -253,7 +253,7 @@ describe('moving or closing with a reply that was typed and not saved', () => {
   it('moves on and drops the draft when the user discards it', async () => {
     open();
     type('half a reply');
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Next test case' }));
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Next case' }));
     fireEvent.click(within(await guard()).getByRole('button', { name: 'Discard reply' }));
     expect(screen.getByRole('dialog', { name: /^Case 2/ })).toBeTruthy();
     expect(replyBox().value).toBe('');
@@ -271,7 +271,7 @@ describe('moving or closing with a reply that was typed and not saved', () => {
 
   it('moves without asking when nothing was typed', () => {
     open();
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Next test case' }));
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Next case' }));
     expect(screen.getByRole('dialog', { name: /^Case 2/ })).toBeTruthy();
   });
 });

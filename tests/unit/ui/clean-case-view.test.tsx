@@ -15,11 +15,11 @@ const answer = (over: Record<string, unknown> = {}) =>
 
 function start() {
   render(<App ports={createFakePorts()} env={env} initialState={initial()} />);
-  fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);
+  fireEvent.click(screen.getAllByRole('button', { name: 'Add test case…' })[0]!);
   fireEvent.click(within(windowOf()).getByRole('button', { name: 'Clean case' }));
 }
 const type = (label: string, value: string) => fireEvent.input(within(windowOf()).getByLabelText(label), { target: { value } });
-const approve = () => within(windowOf()).getByRole('button', { name: 'Approve and close' }) as HTMLButtonElement;
+const approve = () => within(windowOf()).getByRole('button', { name: 'Save case' }) as HTMLButtonElement;
 const promptText = () => (within(windowOf()).getByRole('textbox', { name: 'Prompt for your LLM' }) as HTMLTextAreaElement).value;
 
 describe('the prompt', () => {
@@ -40,7 +40,7 @@ describe('the prompt', () => {
 });
 
 describe('the answer', () => {
-  it('is checked as it is pasted, with line and column; Approve and close stays disabled', () => {
+  it('is checked as it is pasted, with line and column; Save case stays disabled', () => {
     start();
     expect(approve().disabled).toBe(true);
     type('Answer of your LLM', '{\n "name": \n');
@@ -48,7 +48,7 @@ describe('the answer', () => {
     expect(approve().disabled).toBe(true);
   });
 
-  it('the disabled Approve and close says what is needed, and the sentence goes when the answer is valid', () => {
+  it('the disabled Save case says what is needed, and the sentence goes when the answer is valid', () => {
     start();
     expect(approve().getAttribute('aria-describedby')).toBe('clean-approve-why');
     expect(within(windowOf()).getByText('Paste the answer of your LLM to approve.')).toBeTruthy();
@@ -59,10 +59,10 @@ describe('the answer', () => {
     expect(approve().getAttribute('aria-describedby')).toBeNull();
   });
 
-  it('an answer with expected errors is a problem that points to Paste JSON', () => {
+  it('an answer with expected errors is a problem that points to From JSON', () => {
     start();
     type('Answer of your LLM', answer({ expected_errors: [{ description: 'x', fragment: 'tidy' }] }));
-    expect(screen.getByText(/Use "Paste JSON"/)).toBeTruthy();
+    expect(screen.getByText(/Use "From JSON"/)).toBeTruthy();
     expect(approve().disabled).toBe(true);
   });
 
@@ -72,7 +72,7 @@ describe('the answer', () => {
     expect(screen.getByText(/fields\.summary/)).toBeTruthy();
   });
 
-  it('a valid answer shows its fields read-only and Approve and close saves under the typed name and closes', () => {
+  it('a valid answer shows its fields read-only and Save case saves under the typed name and closes', () => {
     start();
     type('Name', 'My clean case');
     type('Answer of your LLM', answer());

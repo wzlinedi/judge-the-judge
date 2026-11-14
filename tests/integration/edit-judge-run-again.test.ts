@@ -18,7 +18,7 @@ const done = (over: Partial<AppState> = {}): AppState => ({ ...createState(), st
 const rerun = (state: AppState, ports: Ports = createFakePorts()) => editJudgeAndRunAgain(state, ports);
 const reply = sampleEvaluation().replies['1']!.reply;
 
-describe('Edit the judge and run again keeps the test and clears the run', () => {
+describe('Run again with a new judge… keeps the test and clears the run', () => {
   it('keeps the finalized cases exactly, clears replies, decisions and the judge version of the replies, and opens the Judge step', async () => {
     const before = done();
     const result = rerun(before);
@@ -53,7 +53,7 @@ describe('Edit the judge and run again keeps the test and clears the run', () =>
 });
 
 describe('the prompt may change until the first new reply', () => {
-  it('is editable after Edit the judge and run again, and fixed again by the first new reply', async () => {
+  it('is editable after Run again with a new judge…, and fixed again by the first new reply', async () => {
     const start = rerun(done()).state;
     expect(promptLocked(start)).toBe(false);
     const edited = setPrompt(start, `${start.evaluation.judge_set.prompt}\nBe strict about numbers.`);
@@ -92,7 +92,7 @@ describe('the prompt may change until the first new reply', () => {
     expect(await judgeVersion(start.evaluation.judge_set)).toBe(await judgeVersion(before.evaluation.judge_set));
   });
 
-  it('Edit test cases after the reopening works as before and the flag does no harm', () => {
+  it('Reopen test cases after the reopening works as before and the flag does no harm', () => {
     const start = rerun(done()).state;
     expect(promptLocked({ ...start, evaluation: { ...start.evaluation, dataset: { ...start.evaluation.dataset, finalized: false } } })).toBe(false);
   });

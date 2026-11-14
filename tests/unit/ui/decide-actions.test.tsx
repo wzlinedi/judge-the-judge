@@ -21,8 +21,8 @@ const open = (caseId: string, start: Evaluation = demo) => {
 const win = () => screen.getByRole('dialog', { name: /^Case / });
 const item = (kind: 'expected' | 'additional', id: string) => document.querySelector<HTMLElement>(`[data-${kind}="${id}"]`) as HTMLElement;
 const addFinding = (text: string, category = '', difficulty = '') => {
-  fireEvent.click(within(win()).getByRole('button', { name: 'Add finding' }));
-  const dialog = screen.getByRole('dialog', { name: 'Add finding' });
+  fireEvent.click(within(win()).getByRole('button', { name: 'Add finding…' }));
+  const dialog = screen.getByRole('dialog', { name: 'Add finding…' });
   fireEvent.input(within(dialog).getByLabelText('Text of the finding'), { target: { value: text } });
   if (category) fireEvent.input(within(dialog).getByLabelText('Category (optional)'), { target: { value: category } });
   if (difficulty) fireEvent.change(within(dialog).getByLabelText('Difficulty (optional)'), { target: { value: difficulty } });
@@ -32,7 +32,7 @@ const addFinding = (text: string, category = '', difficulty = '') => {
 describe('the buttons under the list', () => {
   it('keeps Add finding and Second opinion… always visible, never in a collapsed section', () => {
     open('3');
-    for (const name of ['Add finding', 'Second opinion…']) {
+    for (const name of ['Add finding…', 'Second opinion…']) {
       const button = within(win()).getByRole('button', { name });
       expect(button.closest('details')).toBeNull();
     }
@@ -49,11 +49,11 @@ describe('the buttons under the list', () => {
   });
 });
 
-describe('Add finding', () => {
+describe('Add finding…', () => {
   it('opens a dialog with the text, an optional category from the catalog and an optional difficulty', () => {
     open('3');
-    fireEvent.click(within(win()).getByRole('button', { name: 'Add finding' }));
-    const dialog = screen.getByRole('dialog', { name: 'Add finding' });
+    fireEvent.click(within(win()).getByRole('button', { name: 'Add finding…' }));
+    const dialog = screen.getByRole('dialog', { name: 'Add finding…' });
     expect(within(dialog).getByLabelText('Text of the finding')).toBeTruthy();
     const options = [...dialog.querySelectorAll('datalist option')].map((o) => o.getAttribute('value'));
     expect(options).toContain('factual-error');
@@ -127,8 +127,8 @@ describe('the source of every mark', () => {
   it('keeps the marks of single items visible after pressing them', () => {
     open('17');
     const e2 = item('expected', 'e2');
-    fireEvent.click(within(e2).getByRole('button', { name: 'Issue: missed' }));
-    expect(within(item('expected', 'e2')).getByRole('button', { name: 'Issue: missed' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(e2).getByRole('button', { name: 'Missed' }));
+    expect(within(item('expected', 'e2')).getByRole('button', { name: 'Missed' }).getAttribute('aria-pressed')).toBe('true');
   });
 });
 
@@ -142,11 +142,11 @@ describe('what the Run step does not have', () => {
 });
 
 describe('only the cases that await verification', () => {
-  it('limits Next test case to them when the box of the window is ticked', () => {
+  it('limits Next case to them when the box of the window is ticked', () => {
     open('3');
     fireEvent.click(within(win()).getByLabelText('Only cases awaiting verification'));
     expect(within(win()).getByText('1 of 5')).toBeTruthy();
-    fireEvent.click(within(win()).getByRole('button', { name: 'Next test case' }));
+    fireEvent.click(within(win()).getByRole('button', { name: 'Next case' }));
     expect(screen.getByRole('dialog', { name: /^Case 10 / })).toBeTruthy();
   });
 });

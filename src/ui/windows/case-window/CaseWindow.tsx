@@ -254,7 +254,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
               </>
             }
           >
-            <p>The text in the box is not JSON and was not saved. Press Save as text anyway to keep it, or go on and the text is lost.</p>
+            <p>The text in the box is not JSON and was not saved. Press Keep as text to keep it, or go on and the text is lost.</p>
           </Dialog>
         </>
       }

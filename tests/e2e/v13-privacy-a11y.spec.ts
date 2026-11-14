@@ -7,7 +7,7 @@ import { installMemoryFiles } from '../helpers/memory-files';
 
 const demoProject = readFileSync('examples/demo/test-project.json', 'utf8');
 /** The confirming buttons of a window the user opened and must answer (ui-flow.md, Rules for every screen). */
-const CONFIRMING = ['Save case', 'Approve and close', 'Apply opinion', 'Import test cases', 'Approve'];
+const CONFIRMING = ['Save case', 'Save case', 'Apply opinion', 'Import test cases…', 'Approve'];
 /** Inside a window the action needed next is the primary one: before a file is chosen, that is choosing it. */
 const NEEDED_NEXT: Record<string, string[]> = { 'Import window': ['Choose file…'] };
 
@@ -36,10 +36,10 @@ const luminance = ([r, g, b]: Rgb) => {
   return 0.2126 * c(r) + 0.7152 * c(g) + 0.0722 * c(b);
 };
 
-/** The Load example dialog first, then the demo: a finished run with five cases waiting for the user. */
+/** The Load demo dialog first, then the demo: a finished run with five cases waiting for the user. */
 async function loadDemo(page: Page) {
-  await menu(page, 'Load example…');
-  await page.getByRole('dialog', { name: 'Load example…' }).getByRole('button', { name: /Demo/ }).click();
+  await menu(page, 'Load demo…');
+  await page.getByRole('dialog', { name: 'Load demo…' }).getByRole('button', { name: /Demo/ }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
 }
 
@@ -79,10 +79,10 @@ for (const scheme of ['light', 'dark'] as const) {
     await check('Test cases (empty)');
     await step(page, /1\s*Judge/);
 
-    await menu(page, 'Load example…');
+    await menu(page, 'Load demo…');
     await expect(openWindow(page)).toBeVisible();
-    await check('Load example dialog');
-    await page.getByRole('dialog', { name: 'Load example…' }).getByRole('button', { name: /Demo/ }).click();
+    await check('Load demo dialog');
+    await page.getByRole('dialog', { name: 'Load demo…' }).getByRole('button', { name: /Demo/ }).click();
     await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
     await check('Run');
 
@@ -90,18 +90,18 @@ for (const scheme of ['light', 'dark'] as const) {
     await check('Judge (demo)');
     await step(page, /2\s*Test cases/);
     await check('Test cases');
-    await page.getByRole('button', { name: 'Add test case' }).click();
+    await page.getByRole('button', { name: 'Add test case…' }).click();
     await expect(page.getByRole('dialog', { name: 'Test case' })).toBeVisible();
     await check('Test case window');
-    await page.getByRole('dialog', { name: 'Test case' }).getByRole('button', { name: 'Paste JSON' }).click();
+    await page.getByRole('dialog', { name: 'Test case' }).getByRole('button', { name: 'From JSON' }).click();
     await check('Test case window, paste JSON');
     await page.keyboard.press('Escape');
     await expect(openWindow(page)).toHaveCount(0);
 
-    await menu(page, 'Import test cases');
-    await expect(page.getByRole('dialog', { name: 'Import test cases' })).toBeVisible();
+    await menu(page, 'Import test cases…');
+    await expect(page.getByRole('dialog', { name: 'Import test cases…' })).toBeVisible();
     await check('Import window');
-    await page.getByRole('dialog', { name: 'Import test cases' }).getByRole('button', { name: 'Cancel' }).click();
+    await page.getByRole('dialog', { name: 'Import test cases…' }).getByRole('button', { name: 'Cancel' }).click();
 
     await step(page, /3\s*Run/);
     await next(page).getByRole('button', { name: 'Continue' }).click();
@@ -171,13 +171,13 @@ test('no request leaves the page or carries user data while the demo is loaded, 
   page.on('request', (request) => requests.push({ url: request.url(), method: request.method(), body: request.postData() }));
 
   await page.goto('/');
-  await menu(page, 'Load test project');
+  await menu(page, 'Load test project…');
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
   await next(page).getByRole('button', { name: 'Continue' }).click();
   const caseWindow = page.getByRole('dialog', { name: /^Case \d+ / });
   await caseWindow.getByRole('button', { name: 'Copy prompt' }).click();
   await page.evaluate(() => navigator.clipboard.writeText('{"claims": []}'));
-  await caseWindow.getByRole('button', { name: 'Paste reply from clipboard' }).click();
+  await caseWindow.getByRole('button', { name: 'Paste reply' }).click();
   await caseWindow.getByRole('button', { name: 'Close' }).click();
   await page.getByRole('button', { name: 'Save evaluation', exact: true }).click();
   await expect.poll(() => memory.files.size).toBeGreaterThan(1);
@@ -214,10 +214,10 @@ test('every action is reachable with the keyboard alone: the File menu, a dialog
   await reach('File');
   expect(await focusRing()).not.toBe('none');
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('menuitem', { name: 'Load example…' })).toBeVisible();
-  await page.getByRole('menuitem', { name: 'Load example…' }).focus();
+  await expect(page.getByRole('menuitem', { name: 'Load demo…' })).toBeVisible();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).focus();
   await page.keyboard.press('Enter');
-  const dialog = page.getByRole('dialog', { name: 'Load example…' });
+  const dialog = page.getByRole('dialog', { name: 'Load demo…' });
   await expect(dialog).toBeVisible();
   // focus is inside the window and Tab does not leave it
   for (let i = 0; i < 12; i++) {
@@ -280,7 +280,7 @@ test.describe('at 360 px wide', () => {
     await measure('Judge (demo)');
     await step(page, /2\s*Test cases/);
     await measure('Test cases');
-    await page.getByRole('button', { name: 'Add test case' }).click();
+    await page.getByRole('button', { name: 'Add test case…' }).click();
     await measure('Test case window');
     await page.keyboard.press('Escape');
     await step(page, /4\s*Results/);

@@ -45,7 +45,7 @@ describe('the case window of Run: three parts from top to bottom', () => {
   it('part 2 is a row with Add finding, Second opinion…, the meter and the status of the case', () => {
     open('14');
     const bar = part(2).querySelector('.decide-bar') as HTMLElement;
-    expect(within(bar).getByRole('button', { name: 'Add finding' })).toBeTruthy();
+    expect(within(bar).getByRole('button', { name: 'Add finding…' })).toBeTruthy();
     expect(within(bar).getByRole('button', { name: 'Second opinion…' })).toBeTruthy();
     expect(within(bar).getByText(meterOf('14'))).toBeTruthy();
     expect(within(bar).getByText(/Awaiting verification/)).toBeTruthy();
@@ -76,17 +76,17 @@ describe('the case window of Run: three parts from top to bottom', () => {
     expect(within(columns[1] as HTMLElement).getByRole('heading', { name: 'Errors' })).toBeTruthy();
   });
 
-  it('the left column has only Paste reply from clipboard above the reply box; the prompt buttons are in part 1 (T235)', () => {
+  it('the left column has only Paste reply above the reply box; the prompt buttons are in part 1 (T235)', () => {
     open('11');
     const left = part(3).querySelectorAll<HTMLElement>('.case-half > section')[0] as HTMLElement;
     expect(left.querySelector('ol')).toBeNull();
     expect(left.querySelector('details')).toBeNull();
     expect(within(left).queryByRole('button', { name: 'Copy prompt' })).toBeNull();
-    const paste = within(left).getByRole('button', { name: 'Paste reply from clipboard' });
+    const paste = within(left).getByRole('button', { name: 'Paste reply' });
     const box = within(left).getByLabelText('Judge reply');
     expect(paste.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(part(1)).getByRole('button', { name: 'Copy prompt' })).toBeTruthy();
-    expect(within(part(1)).getByRole('button', { name: 'Show the full prompt' })).toBeTruthy();
+    expect(within(part(1)).getByRole('button', { name: 'Show prompt' })).toBeTruthy();
   });
 
   it('the three parts are in frames', () => {
@@ -107,7 +107,7 @@ describe('the case window of Run: three parts from top to bottom', () => {
     delete e.replies['3'];
     delete e.decisions['3'];
     open('3', e);
-    expect(within(part(2)).queryByRole('button', { name: 'Add finding' })).toBeNull();
+    expect(within(part(2)).queryByRole('button', { name: 'Add finding…' })).toBeNull();
     expect(within(part(2)).getByText(/Not run/)).toBeTruthy();
     expect(within(part(3)).getByText('The errors appear here when the judge’s reply is saved.')).toBeTruthy();
   });

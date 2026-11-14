@@ -28,78 +28,78 @@ const dialog = () => screen.getByRole('dialog', { name: 'Finalize the test cases
 
 describe('the "what next" line before finalizing', () => {
   it('offers Finalize test cases as the one primary action of Test cases', () => {
-    expect(nextAction(stateOf('cases'), 'cases').action.label).toBe('Finalize test cases');
+    expect(nextAction(stateOf('cases'), 'cases').action.label).toBe('Finalize test cases…');
     show(stateOf('cases'));
-    expect(barButtons()).toEqual(['Finalize test cases']);
-    expect(within(bar()).getByRole('button', { name: 'Finalize test cases' }).className).toContain('primary');
+    expect(barButtons()).toEqual(['Finalize test cases…']);
+    expect(within(bar()).getByRole('button', { name: 'Finalize test cases…' }).className).toContain('primary');
   });
 });
 
 describe('the summary and the confirmation', () => {
   it('opens a summary with the counts, the balance, the test size and every warning, and changes nothing yet', () => {
     show(stateOf('cases'));
-    fireEvent.click(within(bar()).getByRole('button', { name: 'Finalize test cases' }));
+    fireEvent.click(within(bar()).getByRole('button', { name: 'Finalize test cases…' }));
     const d = dialog();
     expect(d.textContent).toContain('2 test cases: 1 with injected errors, 1 clean');
     expect(d.textContent).toContain('1 case with 2 errors');
     expect(within(d).getByRole('group', { name: 'Test size' }).textContent).toContain('Injected errors: 2 of 30 (28 missing)');
     expect(within(d).getByRole('list', { name: 'Warnings' }).textContent).toMatch(/Inconclusive/);
     expect(d.textContent).toMatch(/fixed/);
-    expect(d.textContent).toMatch(/Edit test cases/);
-    expect(barButtons()).toEqual(['Finalize test cases']);
+    expect(d.textContent).toMatch(/Reopen test cases/);
+    expect(barButtons()).toEqual(['Finalize test cases…']);
   });
 
   it('Cancel closes it and the test cases stay open', () => {
     show(stateOf('cases'));
-    fireEvent.click(within(bar()).getByRole('button', { name: 'Finalize test cases' }));
+    fireEvent.click(within(bar()).getByRole('button', { name: 'Finalize test cases…' }));
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('dialog', { name: 'Finalize the test cases?' })).toBeNull();
-    expect(barButtons()).toEqual(['Finalize test cases']);
+    expect(barButtons()).toEqual(['Finalize test cases…']);
   });
 
-  it('confirming fixes the test cases and the line then offers Continue, Edit test cases, and says what is fixed', () => {
+  it('confirming fixes the test cases and the line then offers Continue, Reopen test cases, and says what is fixed', () => {
     show(stateOf('cases'));
-    fireEvent.click(within(bar()).getByRole('button', { name: 'Finalize test cases' }));
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Finalize test cases' }));
+    fireEvent.click(within(bar()).getByRole('button', { name: 'Finalize test cases…' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Finalize test cases…' }));
     expect(screen.queryByRole('dialog', { name: 'Finalize the test cases?' })).toBeNull();
-    expect(barButtons()).toEqual(['Continue', 'Edit test cases']);
+    expect(barButtons()).toEqual(['Continue', 'Reopen test cases']);
     expect(bar().textContent).toMatch(/finalized/);
     expect(screen.getByRole('status', { name: 'Message' }).textContent).toMatch(/finalized/);
   });
 
   it('with an empty judge prompt it says why and cannot be confirmed', () => {
     show(stateOf('cases', { prompt: '' }));
-    fireEvent.click(within(bar()).getByRole('button', { name: 'Finalize test cases' }));
+    fireEvent.click(within(bar()).getByRole('button', { name: 'Finalize test cases…' }));
     expect(dialog().textContent).toMatch(/judge prompt is empty/i);
-    expect((within(dialog()).getByRole('button', { name: 'Finalize test cases' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((within(dialog()).getByRole('button', { name: 'Finalize test cases…' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('Escape closes it like Cancel', () => {
     show(stateOf('cases'));
-    fireEvent.click(within(bar()).getByRole('button', { name: 'Finalize test cases' }));
+    fireEvent.click(within(bar()).getByRole('button', { name: 'Finalize test cases…' }));
     fireEvent.keyDown(dialog(), { key: 'Escape' });
     expect(screen.queryByRole('dialog', { name: 'Finalize the test cases?' })).toBeNull();
   });
 });
 
 describe('the "what next" line after finalizing', () => {
-  it('Test cases: Continue, and Edit test cases while no reply exists; Add test case is already above the table', () => {
+  it('Test cases: Continue, and Reopen test cases while no reply exists; Add test case is already above the table', () => {
     const next = nextAction(stateOf('cases', { finalized: true }), 'cases');
     expect(next.action).toMatchObject({ label: 'Continue', go: 'run' });
-    expect(next.others?.map((o) => o.label)).toEqual(['Edit test cases']);
+    expect(next.others?.map((o) => o.label)).toEqual(['Reopen test cases']);
     expect(nextAction(stateOf('cases', { finalized: true, replies: true }), 'cases').others ?? []).toEqual([]);
   });
 
-  it('Judge: says what is fixed and what may still change, with Edit test cases beside Continue and no Add test case (T228)', () => {
+  it('Judge: says what is fixed and what may still change, with Reopen test cases beside Continue and no Add test case (T228)', () => {
     const next = nextAction(stateOf('judge', { finalized: true }), 'judge');
     expect(next.sentence).toMatch(/fixed/);
     expect(next.detail).toMatch(/reply mapping and the error rules/);
-    expect(next.others?.map((o) => o.label)).toEqual(['Edit test cases']);
+    expect(next.others?.map((o) => o.label)).toEqual(['Reopen test cases']);
     expect(nextAction(stateOf('judge', { finalized: true, replies: true }), 'judge').others ?? []).toEqual([]);
   });
 
-  it('Run: Edit test cases beside the primary action, no Add test case in the bar (T228); no Edit after the first reply', () => {
-    expect(nextAction(stateOf('run', { finalized: true }), 'run').others?.map((o) => o.label)).toEqual(['Edit test cases']);
+  it('Run: Reopen test cases beside the primary action, no Add test case in the bar (T228); no Edit after the first reply', () => {
+    expect(nextAction(stateOf('run', { finalized: true }), 'run').others?.map((o) => o.label)).toEqual(['Reopen test cases']);
     expect(nextAction(stateOf('run', { finalized: true, replies: true }), 'run').others ?? []).toEqual([]);
   });
 
@@ -108,37 +108,37 @@ describe('the "what next" line after finalizing', () => {
     expect(nextAction(stateOf('results', { finalized: true }), 'results').others ?? []).toEqual([]);
   });
 
-  it('Edit test cases opens the test cases again and the line offers Finalize test cases', () => {
+  it('Reopen test cases opens the test cases again and the line offers Finalize test cases', () => {
     show(stateOf('cases', { finalized: true }));
-    fireEvent.click(within(bar()).getByRole('button', { name: 'Edit test cases' }));
-    expect(barButtons()).toEqual(['Finalize test cases']);
+    fireEvent.click(within(bar()).getByRole('button', { name: 'Reopen test cases' }));
+    expect(barButtons()).toEqual(['Finalize test cases…']);
     expect(screen.getByRole('status', { name: 'Message' }).textContent).toMatch(/open again/i);
   });
 
-  it('on Judge, Edit test cases makes the prompt editable again', () => {
+  it('on Judge, Reopen test cases makes the prompt editable again', () => {
     show(stateOf('judge', { finalized: true }));
     expect(screen.getByText(/The prompt is fixed/)).toBeTruthy();
-    fireEvent.click(within(bar()).getByRole('button', { name: 'Edit test cases' }));
+    fireEvent.click(within(bar()).getByRole('button', { name: 'Reopen test cases' }));
     expect(screen.queryByText(/The prompt is fixed/)).toBeNull();
   });
 
-  it('on Run, Edit test cases goes back to Test cases', () => {
+  it('on Run, Reopen test cases goes back to Test cases', () => {
     show(stateOf('run', { finalized: true }));
-    fireEvent.click(within(bar()).getByRole('button', { name: 'Edit test cases' }));
+    fireEvent.click(within(bar()).getByRole('button', { name: 'Reopen test cases' }));
     expect(screen.getByRole('table', { name: 'Test cases' })).toBeTruthy();
   });
 
   it('on Run, Add test case stands above the table of cases, not in the bar, and opens the window (T228)', () => {
     show(stateOf('run', { finalized: true }));
-    expect(within(bar()).queryByRole('button', { name: 'Add test case' })).toBeNull();
+    expect(within(bar()).queryByRole('button', { name: 'Add test case…' })).toBeNull();
     const cases = screen.getByRole('region', { name: 'Cases' });
-    fireEvent.click(within(cases).getByRole('button', { name: 'Add test case' }));
+    fireEvent.click(within(cases).getByRole('button', { name: 'Add test case…' }));
     expect(screen.getByRole('dialog', { name: 'Test case' })).toBeTruthy();
   });
 
   it('on Judge there is no Add test case button at all (T228)', () => {
     show(stateOf('judge', { finalized: true }));
-    expect(screen.queryByRole('button', { name: 'Add test case' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Add test case…' })).toBeNull();
   });
 
   it('on Run the button above the cases is disabled at the limit of cases (T228, FR-053)', () => {
@@ -146,7 +146,7 @@ describe('the "what next" line after finalizing', () => {
     const one = base.evaluation.dataset.cases[0]!;
     const cases = Array.from({ length: MAX_CASES }, (_, i) => ({ ...one, id: String(i + 1), name: `Case ${i + 1}` }));
     show({ ...base, evaluation: { ...base.evaluation, dataset: { ...base.evaluation.dataset, cases } } });
-    expect((within(screen.getByRole('region', { name: 'Cases' })).getByRole('button', { name: 'Add test case' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((within(screen.getByRole('region', { name: 'Cases' })).getByRole('button', { name: 'Add test case…' }) as HTMLButtonElement).disabled).toBe(true);
   });
 });
 

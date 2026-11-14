@@ -20,20 +20,20 @@ async function openRunWithoutReplies(page: Page) {
   memory.chooseOpenName('books.json');
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load test project' }).click();
+  await page.getByRole('menuitem', { name: 'Load test project…' }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
   return memory;
 }
 
-/** The three actions of one case: Copy prompt, Paste reply from clipboard, then the next case. */
+/** The three actions of one case: Copy prompt, Paste reply, then the next case. */
 async function runCase(page: Page, id: string, move: 'click' | 'key' | 'stay') {
   const win = caseWindow(page);
   await win.getByRole('button', { name: 'Copy prompt' }).click();
   await clip(page, replyOf(id));
-  await win.getByRole('button', { name: 'Paste reply from clipboard' }).click();
+  await win.getByRole('button', { name: 'Paste reply' }).click();
   await expect(box(page)).toHaveValue(replyOf(id));
   if (move === 'key') await page.keyboard.press('Alt+ArrowRight');
-  else if (move === 'click') await win.getByRole('button', { name: 'Next test case' }).click();
+  else if (move === 'click') await win.getByRole('button', { name: 'Next case' }).click();
 }
 
 test('the Run step shows the judge on one line, the model details and the evaluation file, and the case window runs a case in three actions', async ({ page }) => {
@@ -45,7 +45,7 @@ test('the Run step shows the judge on one line, the model details and the evalua
   await expect(summary).toContainText(/Test cases version [0-9a-f]{12}/);
   await expect(summary).toContainText('Judged text summary');
   await expect(summary).not.toContainText('SUMMARY');
-  await expect(page.getByRole('region', { name: 'Evaluation file' }).getByRole('button', { name: 'Save evaluation as' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Evaluation file' }).getByRole('button', { name: 'Save evaluation as…' })).toBeVisible();
   await expect(page.getByRole('banner').getByRole('button', { name: /Save evaluation/ })).toHaveCount(0);
   await expect(next(page)).toContainText('new conversation');
 
@@ -64,16 +64,16 @@ test('the Run step shows the judge on one line, the model details and the evalua
   await expect(win.getByRole('button', { name: 'Copy prompt' })).toHaveClass(/primary/);
   await expect(box(page)).toBeVisible();
 
-  // case 1: Copy prompt, Paste reply from clipboard, Next test case
+  // case 1: Copy prompt, Paste reply, Next case
   await win.getByRole('button', { name: 'Copy prompt' }).click();
-  await expect(win.getByRole('button', { name: 'Paste reply from clipboard' })).toHaveClass(/primary/);
+  await expect(win.getByRole('button', { name: 'Paste reply' })).toHaveClass(/primary/);
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('SUMMARY');
   await clip(page, replyOf('1'));
-  await win.getByRole('button', { name: 'Paste reply from clipboard' }).click();
+  await win.getByRole('button', { name: 'Paste reply' }).click();
   await expect(box(page)).toHaveValue(replyOf('1'));
   await expect(win).toContainText('1 not saved');
   await expect(win).toContainText('Pass');
-  await win.getByRole('button', { name: 'Next test case' }).click();
+  await win.getByRole('button', { name: 'Next case' }).click();
   await expect(win).toContainText('2 of 20');
 
   // case 2 with Alt + Right
@@ -96,7 +96,7 @@ test('replacing a reply asks only when decisions were set by hand, and an empty 
   const win = caseWindow(page);
   await runCase(page, '1', 'click');
   await runCase(page, '2', 'stay');
-  await win.getByRole('button', { name: 'Previous test case' }).click();
+  await win.getByRole('button', { name: 'Previous case' }).click();
   await expect(win).toContainText('1 of 20');
 
   // a case with only automatic decisions: the reply is replaced without a question
@@ -115,7 +115,7 @@ test('replacing a reply asks only when decisions were set by hand, and an empty 
 
   // an empty clipboard is explained and changes nothing
   await clip(page, '');
-  await win.getByRole('button', { name: 'Paste reply from clipboard' }).click();
+  await win.getByRole('button', { name: 'Paste reply' }).click();
   await expect(win).toContainText('The clipboard is empty');
   await expect(win).toContainText('4 not saved');
 
@@ -123,7 +123,7 @@ test('replacing a reply asks only when decisions were set by hand, and an empty 
   await page.evaluate(() => {
     navigator.clipboard.readText = () => Promise.reject(new DOMException('denied', 'NotAllowedError'));
   });
-  await win.getByRole('button', { name: 'Paste reply from clipboard' }).click();
+  await win.getByRole('button', { name: 'Paste reply' }).click();
   await expect(win).toContainText('Paste the reply into the box with Ctrl+V');
 
   // a reply that is not JSON, pasted into the box with Ctrl + V
@@ -136,7 +136,7 @@ test('replacing a reply asks only when decisions were set by hand, and an empty 
   await page.keyboard.press('Control+V');
   await expect(box(page)).toHaveValue('I looked at it and it seems fine to me.');
   await expect(win).toContainText(/This is not JSON/);
-  await win.getByRole('button', { name: 'Save as text anyway' }).click();
+  await win.getByRole('button', { name: 'Keep as text' }).click();
   await expect(win).toContainText('5 not saved');
   await expect(win).toContainText('Awaiting verification');
   await expect(win.getByRole('button', { name: 'No more findings' })).toHaveClass(/primary/);
@@ -149,7 +149,7 @@ test('a reply that was typed and not saved is not lost by moving; and the remind
   const win = caseWindow(page);
 
   await box(page).fill('half a reply');
-  await win.getByRole('button', { name: 'Next test case' }).click();
+  await win.getByRole('button', { name: 'Next case' }).click();
   const question = page.getByRole('dialog', { name: /not saved/ });
   await question.getByRole('button', { name: 'Cancel' }).click();
   await expect(win).toContainText('1 of 20');
@@ -160,7 +160,7 @@ test('a reply that was typed and not saved is not lost by moving; and the remind
   // after 20 cases the window is on the last case; replace five replies to reach 25 unsaved ones
   await expect(win).toContainText('20 not saved');
   for (let i = 0; i < 5; i++) {
-    await win.getByRole('button', { name: 'Previous test case' }).click();
+    await win.getByRole('button', { name: 'Previous case' }).click();
     await box(page).fill(`{"claims": [], "changed": ${i}}`);
     if (i < 4) await expect(win.getByRole('alert')).toHaveCount(0);
   }
@@ -179,7 +179,7 @@ test('the case window of Run is one page: the fields, the actions row, then the 
   const win = caseWindow(page);
   await win.getByRole('button', { name: 'Copy prompt' }).click();
   await clip(page, replyOf('1'));
-  await win.getByRole('button', { name: 'Paste reply from clipboard' }).click();
+  await win.getByRole('button', { name: 'Paste reply' }).click();
   await expect(box(page)).toHaveValue(replyOf('1'));
 
   const heading = (n: number) => win.locator('.case-part > h3').nth(n - 1);
@@ -194,7 +194,7 @@ test('the case window of Run is one page: the fields, the actions row, then the 
   await expect(win.getByRole('button', { name: 'Approve' })).toHaveCount(0);
   // T235: the prompt is in a dialog with only Close; the left column of part 3 has only the paste button above the box
   await expect(win.getByRole('textbox', { name: 'Complete judge prompt' })).toHaveCount(0);
-  await win.getByRole('button', { name: 'Show the full prompt' }).click();
+  await win.getByRole('button', { name: 'Show prompt' }).click();
   const prompt = page.getByRole('dialog', { name: 'Complete judge prompt' });
   await expect(prompt.getByRole('textbox', { name: 'Complete judge prompt' })).toHaveValue(/SUMMARY/);
   await expect(prompt.getByRole('button')).toHaveCount(1);

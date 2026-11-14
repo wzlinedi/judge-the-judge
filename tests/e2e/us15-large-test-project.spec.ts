@@ -28,7 +28,7 @@ async function openLarge(page: Page): Promise<number> {
   const took = await within(
     async () => {
       await page.getByRole('button', { name: 'File' }).click();
-      await page.getByRole('menuitem', { name: 'Load evaluation' }).click();
+      await page.getByRole('menuitem', { name: 'Load evaluation…' }).click();
     },
     () => expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step'),
   );

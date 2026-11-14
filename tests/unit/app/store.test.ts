@@ -135,7 +135,7 @@ describe('the remembered files', () => {
     expect(next.unsaved).toBe(false);
   });
 
-  it('"Start new evaluation" forgets both and starts empty', () => {
+  it('"New evaluation" forgets both and starts empty', () => {
     const ports = createFakePorts();
     ports.testProjectTarget.fileName = 'a.json';
     ports.evaluationTarget.fileName = 'b.json';

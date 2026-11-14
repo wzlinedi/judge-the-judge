@@ -15,7 +15,7 @@ const open = (evaluation: Evaluation, caseId = '1') =>
 const win = () => screen.getByRole('dialog', { name: /^Case / });
 const box = () => within(win()).getByRole('textbox', { name: 'Judge reply' }) as HTMLTextAreaElement;
 const type = (text: string) => fireEvent.input(box(), { target: { value: text } });
-const saveAnyway = () => within(win()).queryByRole('button', { name: 'Save as text anyway' });
+const saveAnyway = () => within(win()).queryByRole('button', { name: 'Keep as text' });
 const json = '{"claims": []}';
 
 describe('the reply box', () => {
@@ -56,7 +56,7 @@ describe('the reply box', () => {
     expect(saveAnyway()).toBeNull();
   });
 
-  it('says "This is not JSON" with the place of the problem, and offers Save as text anyway as the primary action', () => {
+  it('says "This is not JSON" with the place of the problem, and offers Keep as text as the primary action', () => {
     open(noReplies());
     type('{\n  "claims": [\n    1,,\n  ]\n}');
     expect(within(win()).getByText(/Line 3, column \d+: This is not JSON\./)).toBeTruthy();
@@ -66,7 +66,7 @@ describe('the reply box', () => {
     expect(within(win()).getByText('0 not saved')).toBeTruthy();
   });
 
-  it('does not save text that is not JSON by itself, and keeps it until Save as text anyway', async () => {
+  it('does not save text that is not JSON by itself, and keeps it until Keep as text', async () => {
     open(noReplies());
     type('It seems fine to me.');
     expect(within(win()).getByText('0 not saved')).toBeTruthy();

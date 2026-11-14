@@ -97,7 +97,7 @@ metric and the thresholds, with no replies, decisions, results or model details.
   is stored as `judge_set.error_catalog` so that a metric definition can carry a starter catalog in
   the same layout.
 - `dataset.cases` has the case layout of section 3. `dataset.finalized` is restored as saved: a
-  finalized test project comes back finalized and the Run step opens; "Edit test cases" opens it
+  finalized test project comes back finalized and the Run step opens; "Reopen test cases" opens it
   again while no reply exists (FR-053).
 - `metric` and `checks` are restored on load, so every run of one test project counts the same
   way. When the metric is not registered, its stored parameters are still used and the user is
@@ -133,8 +133,8 @@ Rules for `judge_set`:
 
 The one layout of a single test case (FR-031). It is what the user's LLM is asked to return (the
 clean case view, FR-083, and part 1 of a case with injected errors, FR-040), what is pasted with
-"Paste JSON" (FR-090) and in part 2 of a case with injected errors (FR-041), what "Show JSON" and
-"Copy JSON" give back (FR-086), and what "Correct expected errors"
+"From JSON" (FR-090) and in part 2 of a case with injected errors (FR-041), what "Show JSON" and
+"Copy JSON" give back (FR-086), and what "Edit expected errors"
 edits (FR-089).
 
 ```json
@@ -167,14 +167,14 @@ edits (FR-089).
   when the case is saved, and the window says so.
 - `name` must be unique in the test project (FR-079); empty means a name is made from the base and
   the number of errors. `id` is ignored: the case gets a new identifier when saved.
-- `base`: with "Paste JSON" it is used when it names a clean case of the test project (by
+- `base`: with "From JSON" it is used when it names a clean case of the test project (by
   identifier or exact name), otherwise the case has none and a note says so. In a case with
   injected errors the base picked in the window wins and a different `base` is named in a note.
   A case with expected errors identical to its base is refused (FR-080).
 - "Show JSON" writes `name`, `base` (only when there is one), `fields` and `expected_errors`
   (without `id`), so that the JSON pasted into a new case gives the same fields and expected
   errors (SC-036).
-- In "Correct expected errors" only `expected_errors` may change; a change to `name` or `fields`
+- In "Edit expected errors" only `expected_errors` may change; a change to `name` or `fields`
   is a problem.
 
 ## 3. Test-case file (JSON) and the stored case layout
@@ -272,7 +272,7 @@ name,field:source_text,field:summary
 ## 5. Evaluation file
 
 One format for "Save evaluation", "Save evaluation as" (both only on the Run step, FR-076), "Load
-evaluation", and the demo of "Load example…"; it is also the result as JSON (there is no separate
+evaluation", and the demo of "Load demo…"; it is also the result as JSON (there is no separate
 "Export JSON") (research.md, section 19).
 
 ```json
@@ -380,8 +380,8 @@ stays in its box when it cannot be used (FR-084). Text read from the clipboard (
 clipboard") is treated exactly like text pasted into a box.
 
 - **Clean case** (clean case view, FR-083): one case JSON (section 2) with `"expected_errors": []`.
-  An answer with expected errors is a problem that points to "Paste JSON".
-- **Case with injected errors** (part 2 of the test case window, FR-041): one case JSON (section 2)
+  An answer with expected errors is a problem that points to "From JSON".
+- **Case with errors** (part 2 of the test case window, FR-041): one case JSON (section 2)
   with one expected error per error to prepare; a different number is accepted with a note.
 - **Judge reply** (case window of Run, FR-056): any text is kept; when it is not readable JSON the
   line and column are shown under the box and nothing is marked automatically.

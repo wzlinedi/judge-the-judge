@@ -9,7 +9,7 @@ const expected = JSON.parse(readFileSync('examples/demo/expected-results.json', 
 async function loadDemo(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
 }
 
@@ -47,25 +47,25 @@ test('deciding the five cases gives the numbers of the expected results file', a
 
   // 3: a false positive
   await expect(page.getByRole('dialog', { name: /Case 3 /})).toBeVisible();
-  await item(page, 'additional', 'claims[]#2').getByRole('button', { name: 'Issue: false positive' }).click();
-  await page.getByRole('button', { name: 'Next test case' }).click();
+  await item(page, 'additional', 'claims[]#2').getByRole('button', { name: 'False positive' }).click();
+  await page.getByRole('button', { name: 'Next case' }).click();
 
   // 10: a reply that cannot be read; approve it
   await expect(page.getByRole('dialog', { name: /Case 10 /})).toBeVisible();
   await expect(page.getByText(/could not be read/i)).toBeVisible();
   await page.getByRole('button', { name: 'No more findings' }).click();
-  await page.getByRole('button', { name: 'Next test case' }).click();
+  await page.getByRole('button', { name: 'Next case' }).click();
 
   // 14: a partly matching finding is the error
   await expect(page.getByRole('dialog', { name: /Case 14 /})).toBeVisible();
   await item(page, 'expected', 'e2').getByRole('button', { name: 'Found' }).click();
-  await page.getByRole('button', { name: 'Next test case' }).click();
+  await page.getByRole('button', { name: 'Next case' }).click();
 
   // 17: a missed error and a false positive
   await expect(page.getByRole('dialog', { name: /Case 17 /})).toBeVisible();
-  await item(page, 'expected', 'e2').getByRole('button', { name: 'Issue: missed' }).click();
-  await item(page, 'additional', 'claims[]#2').getByRole('button', { name: 'Issue: false positive' }).click();
-  await page.getByRole('button', { name: 'Next test case' }).click();
+  await item(page, 'expected', 'e2').getByRole('button', { name: 'Missed' }).click();
+  await item(page, 'additional', 'claims[]#2').getByRole('button', { name: 'False positive' }).click();
+  await page.getByRole('button', { name: 'Next case' }).click();
 
   // 19: a real error that was not injected
   await expect(page.getByRole('dialog', { name: /Case 19 /})).toBeVisible();

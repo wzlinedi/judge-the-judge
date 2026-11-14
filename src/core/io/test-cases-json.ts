@@ -60,7 +60,7 @@ export function readTestCasesJson(text: string): ReadResult<ParsedCases> {
   }
   const raw = extracted.value;
   const kind = isObject(raw) ? raw['format'] : undefined;
-  if (kind === EVALUATION_FORMAT) return { ok: false, problems: [{ message: 'This is an evaluation file. Use "Load evaluation" to open it.', path: 'format' }] };
+  if (kind === EVALUATION_FORMAT) return { ok: false, problems: [{ message: 'This is an evaluation file. Use "Load evaluation…" to open it.', path: 'format' }] };
 
   let notes: string[] = [];
   let name: string | undefined;

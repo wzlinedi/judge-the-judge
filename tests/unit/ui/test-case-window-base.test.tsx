@@ -1,4 +1,4 @@
-// The test case window: the choice, Paste JSON, and the read-only view (FR-038, FR-078, FR-086, FR-090).
+// The test case window: the choice, From JSON, and the read-only view (FR-038, FR-078, FR-086, FR-090).
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
@@ -14,7 +14,7 @@ const withCases = (): AppState => {
 };
 const show = (state: AppState = withCases()) => render(<App ports={createFakePorts()} env={env} initialState={state} />);
 const windowOf = () => screen.getByRole('dialog', { name: 'Test case' });
-const openChoice = () => fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);
+const openChoice = () => fireEvent.click(screen.getAllByRole('button', { name: 'Add test case…' })[0]!);
 const paste = (value: string) => fireEvent.input(within(windowOf()).getByLabelText('Case JSON'), { target: { value } });
 const valid = (over: Record<string, unknown> = {}) =>
   JSON.stringify({ name: 'Fresh', fields: { source_text: 'Anna is a baker.', summary: 'Anna is a doctor.' }, expected_errors: [{ fragment: 'Anna is a doctor', description: 'Changed', category: 'factual-error' }], ...over });
@@ -23,7 +23,7 @@ describe('the choice', () => {
   it('offers three choices, all enabled, also when the test project has no case', () => {
     show({ ...createState(), step: 'cases' });
     openChoice();
-    for (const name of ['Paste JSON', 'Clean case', 'Case with injected errors']) {
+    for (const name of ['From JSON', 'Clean case', 'Case with errors']) {
       expect((within(windowOf()).getByRole('button', { name }) as HTMLButtonElement).disabled).toBe(false);
     }
   });
@@ -35,21 +35,21 @@ describe('the choice', () => {
     expect(screen.queryByRole('dialog', { name: 'Test case' })).toBeNull();
   });
 
-  it('Case with injected errors leads to part 1: the base and the errors to prepare', () => {
+  it('Case with errors leads to part 1: the base and the errors to prepare', () => {
     show();
     openChoice();
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Case with injected errors' }));
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Case with errors' }));
     expect(within(windowOf()).getByRole('button', { name: 'Close without saving' })).toBeTruthy();
     expect(within(windowOf()).getByLabelText('Base case (optional)')).toBeTruthy();
     expect(within(windowOf()).getByRole('group', { name: 'Error 1' })).toBeTruthy();
   });
 });
 
-describe('Paste JSON', () => {
+describe('From JSON', () => {
   const start = () => {
     show();
     openChoice();
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste JSON' }));
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'From JSON' }));
   };
   const save = () => within(windowOf()).getByRole('button', { name: 'Save case' }) as HTMLButtonElement;
 
@@ -106,24 +106,24 @@ describe('Paste JSON', () => {
 describe('the read-only view (Open)', () => {
   const open = (name: string) => fireEvent.click(within(screen.getAllByRole('row').find((r) => r.textContent?.includes(name)) as HTMLElement).getByRole('button', { name: 'Open' }));
 
-  it('shows fields, expected errors, the full prompt in a dialog and the position, with Previous and Next test case; no judge reply (T234)', () => {
+  it('shows fields, expected errors, the full prompt in a dialog and the position, with Previous and Next case; no judge reply (T234)', () => {
     show();
     open('Anna + 2 errors');
     const view = screen.getByRole('dialog', { name: /Anna \+ 2 errors/ });
     expect(within(view).getByText('2 of 2')).toBeTruthy();
     expect(within(view).getAllByRole('listitem').length).toBeGreaterThanOrEqual(2);
-    expect(within(view).getByRole('button', { name: 'Previous test case' })).toBeTruthy();
+    expect(within(view).getByRole('button', { name: 'Previous case' })).toBeTruthy();
     expect(within(view).queryByRole('textbox', { name: 'Complete judge prompt' })).toBeNull();
     expect(within(view).queryByLabelText('Judge’s reply')).toBeNull();
     expect(view.querySelectorAll('mark').length).toBe(2);
     expect(within(view).getByRole('button', { name: 'Copy prompt' })).toBeTruthy();
-    fireEvent.click(within(view).getByRole('button', { name: 'Show the full prompt' }));
+    fireEvent.click(within(view).getByRole('button', { name: 'Show prompt' }));
     const prompt = screen.getByRole('dialog', { name: 'Complete judge prompt' });
     expect((within(prompt).getByRole('textbox', { name: 'Complete judge prompt' }) as HTMLTextAreaElement).value).toContain('Anna is a doctor.');
     expect(within(prompt).getAllByRole('button').map((b) => b.textContent)).toEqual(['Close']);
     fireEvent.click(within(prompt).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog', { name: 'Complete judge prompt' })).toBeNull();
-    fireEvent.click(within(view).getByRole('button', { name: 'Previous test case' }));
+    fireEvent.click(within(view).getByRole('button', { name: 'Previous case' }));
     expect(screen.getByRole('dialog', { name: /Anna/ })).toBeTruthy();
   });
 
@@ -144,26 +144,26 @@ describe('the read-only view (Open)', () => {
     expect(within(screen.getByRole('dialog', { name: /Anna \+ 2 errors/ })).queryByRole('button', { name: 'Clone' })).toBeNull();
   });
 
-  it('Correct expected errors is offered after finalizing for a case without a reply, and says why when there is a reply', () => {
+  it('Edit expected errors is offered after finalizing for a case without a reply, and says why when there is a reply', () => {
     const s = withCases();
     const finalized: AppState = { ...s, evaluation: { ...s.evaluation, dataset: { ...s.evaluation.dataset, finalized: true } } };
     const { unmount } = show(finalized);
     open('Anna + 2 errors');
-    expect(screen.getByRole('button', { name: 'Correct expected errors' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Edit expected errors' })).toBeTruthy();
     unmount();
     const e = sampleEvaluation();
     show({ ...finalized, evaluation: { ...finalized.evaluation, replies: { '2': e.replies['2']! } } });
     open('Anna + 2 errors');
-    expect(screen.queryByRole('button', { name: 'Correct expected errors' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Edit expected errors' })).toBeNull();
     expect(within(screen.getByRole('dialog', { name: /Anna \+ 2 errors/ })).getByText(/has a reply/)).toBeTruthy();
   });
 
-  it('Correct expected errors saves a changed difficulty and refuses a changed field', () => {
+  it('Edit expected errors saves a changed difficulty and refuses a changed field', () => {
     const s = withCases();
     const finalized: AppState = { ...s, evaluation: { ...s.evaluation, dataset: { ...s.evaluation.dataset, finalized: true } } };
     show(finalized);
     open('Anna + 2 errors');
-    fireEvent.click(screen.getByRole('button', { name: 'Correct expected errors' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit expected errors' }));
     const box = within(windowOf()).getByLabelText('Case JSON') as HTMLTextAreaElement;
     const edited = JSON.parse(box.value);
     edited.fields.summary = 'changed';

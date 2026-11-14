@@ -36,7 +36,7 @@ describe('canChangeCase', () => {
     expect(canChangeCase(cases, {}, false, '1', 'rename')).toEqual({ allowed: true });
   });
 
-  it('refuses only Correct expected errors for a case with a reply, with the reason; Rename and Remove stay allowed (T234)', () => {
+  it('refuses only Edit expected errors for a case with a reply, with the reason; Rename and Remove stay allowed (T234)', () => {
     expect(canChangeCase(cases, e.replies, true, '2', 'correct')).toEqual({ allowed: false, reason: 'This case has a reply' });
     for (const action of ['rename', 'remove'] as const) expect(canChangeCase(cases, e.replies, true, '2', action)).toEqual({ allowed: true });
   });

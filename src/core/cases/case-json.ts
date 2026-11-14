@@ -28,7 +28,7 @@ export function caseToJson(testCase: TestCase): string {
 function pickOne(value: unknown, problems: Problem[]): unknown {
   if (Array.isArray(value)) {
     if (value.length === 1) return value[0];
-    problems.push({ message: value.length === 0 ? 'The list holds no case.' : `The JSON holds ${value.length} cases. Use "Import test cases" for more than one case.` });
+    problems.push({ message: value.length === 0 ? 'The list holds no case.' : `The JSON holds ${value.length} cases. Use "Import test cases…" for more than one case.` });
     return undefined;
   }
   if (isObject(value) && 'cases' in value && Array.isArray(value['cases'])) return pickOne(value['cases'], problems);
@@ -115,7 +115,7 @@ export function checkCaseJson(input: string, context: CaseJsonCheckContext): Cas
   }
 
   if (context.mode === 'clean' && errors.length > 0) {
-    problems.push({ message: 'A clean case has no expected errors. Use "Paste JSON" for a case with expected errors.', path: 'expected_errors' });
+    problems.push({ message: 'A clean case has no expected errors. Use "From JSON" for a case with expected errors.', path: 'expected_errors' });
   }
 
   if (context.mode === 'correct' && context.original) {

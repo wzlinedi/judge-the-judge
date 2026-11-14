@@ -1,4 +1,4 @@
-// The parts of "Case with injected errors" on one page (FR-040, FR-041, FR-085, FR-090, SC-035, T229).
+// The parts of "Case with errors" on one page (FR-040, FR-041, FR-085, FR-090, SC-035, T229).
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
@@ -17,8 +17,8 @@ const button = (name: string) => within(win()).getByRole('button', { name }) as 
 const field = (label: string) => within(win()).getByLabelText(label) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 const start = (state?: AppState) => {
   show(state);
-  fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);
-  fireEvent.click(button('Case with injected errors'));
+  fireEvent.click(screen.getAllByRole('button', { name: 'Add test case…' })[0]!);
+  fireEvent.click(button('Case with errors'));
 };
 const answer = (over: Record<string, unknown> = {}) =>
   JSON.stringify({
@@ -159,7 +159,7 @@ describe('part 5: the expected errors', () => {
 
   it('has none of the removed controls, and the only editable controls are the ones of parts 1 to 4', () => {
     toList();
-    for (const name of ['Modify', 'Edit by hand', 'Use selected text as fragment', 'Describe errors again', 'Compare with base', 'Save evaluation', 'Save test project', 'Show in text']) {
+    for (const name of ['Modify', 'Edit by hand', 'Use selected text as fragment', 'Describe errors again', 'Compare with base', 'Save evaluation', 'Save test project', 'Show the issue']) {
       expect(within(win()).queryByRole('button', { name })).toBeNull();
     }
     expect(within(within(win()).getByRole('list', { name: 'Expected errors' })).queryAllByRole('textbox')).toHaveLength(0);

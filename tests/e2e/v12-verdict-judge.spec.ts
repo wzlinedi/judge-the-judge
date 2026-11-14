@@ -38,7 +38,7 @@ const item = (page: Page, kind: 'expected' | 'additional', id: string) => page.l
 
 async function pasteReply(page: Page, reply: string) {
   await clip(page, reply);
-  await caseWindow(page).getByRole('button', { name: 'Paste reply from clipboard' }).click();
+  await caseWindow(page).getByRole('button', { name: 'Paste reply' }).click();
   await expect(caseWindow(page).getByRole('textbox', { name: 'Judge reply' })).toHaveValue(reply);
 }
 
@@ -52,8 +52,8 @@ test('a verdict judge: the Judge step says so, replies decide whole cases, the S
   // the metric is loaded without any other change; its example starts a project, and the Judge step says how it is counted
   memory.chooseOpenName('bias-verdict-example.json');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
-  const examples = page.getByRole('dialog', { name: 'Load example…' });
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
+  const examples = page.getByRole('dialog', { name: 'Load demo…' });
   await examples.getByRole('button', { name: 'Load metric definition…' }).click();
   await examples.getByRole('button', { name: /^Bias/ }).filter({ hasText: /verdict/i }).first().click();
   await expect(page.getByRole('status', { name: 'Way of counting' })).toContainText('evaluated per case');
@@ -61,7 +61,7 @@ test('a verdict judge: the Judge step says so, replies decide whole cases, the S
   // the test project with its cases is loaded and opens on Run
   memory.chooseOpenName('bias-texts.json');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load test project' }).click();
+  await page.getByRole('menuitem', { name: 'Load test project…' }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
   await next(page).getByRole('button', { name: 'Continue' }).click();
   const win = caseWindow(page);
@@ -74,22 +74,22 @@ test('a verdict judge: the Judge step says so, replies decide whole cases, the S
     await expect(item(page, 'expected', id)).toContainText('Automatic');
   }
   await expect(win).toContainText('Pass');
-  await win.getByRole('button', { name: 'Next test case' }).click();
+  await win.getByRole('button', { name: 'Next case' }).click();
 
   // an unflagged case with errors fails
   await pasteReply(page, '{"biased": false}');
   await expect(win).toContainText('The text was not flagged.');
-  await expect(item(page, 'expected', 'e1').getByRole('button', { name: 'Issue: missed' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(item(page, 'expected', 'e1').getByRole('button', { name: 'Missed' })).toHaveAttribute('aria-pressed', 'true');
   await expect(win).toContainText('Fail');
-  await win.getByRole('button', { name: 'Next test case' }).click();
+  await win.getByRole('button', { name: 'Next case' }).click();
 
   // a clean case that is not flagged passes; one that is flagged awaits the user's decision
   await pasteReply(page, '{"biased": false}');
   await expect(win).toContainText('Pass');
-  await win.getByRole('button', { name: 'Next test case' }).click();
+  await win.getByRole('button', { name: 'Next case' }).click();
   await pasteReply(page, '{"biased": true}');
   await expect(win).toContainText('Awaiting verification');
-  await item(page, 'additional', 'reply').getByRole('button', { name: 'Issue: false positive' }).click();
+  await item(page, 'additional', 'reply').getByRole('button', { name: 'False positive' }).click();
   await expect(win).toContainText('Fail');
   await win.getByRole('button', { name: 'Close' }).click();
 
@@ -105,7 +105,7 @@ test('a verdict judge: the Judge step says so, replies decide whole cases, the S
   await page.locator('details.details-section').getByText('Details', { exact: true }).click();
   await expect(page.getByLabel('Case detection rate: at least (%)')).toHaveValue('80');
   memory.chooseOpenName('checks-example.json');
-  await page.getByRole('button', { name: 'Load check settings' }).click();
+  await page.getByRole('button', { name: 'Load check settings…' }).click();
   await expect(page.getByLabel('Case detection rate: at least (%)')).toHaveValue('70');
   await page.getByRole('tab', { name: 'Error analysis' }).click();
   await expect(page.getByRole('table', { name: 'By category' })).toContainText('gender-bias');

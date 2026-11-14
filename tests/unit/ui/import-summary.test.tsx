@@ -12,12 +12,12 @@ const draft = (): AppState => {
   return { ...createState(), step: 'cases', evaluation: { ...e, dataset: { ...e.dataset, finalized: false }, replies: {}, decisions: {} } };
 };
 const csv = (rows: string) => `name,field:source_text,field:summary\n${rows}`;
-const panel = () => screen.getByRole('dialog', { name: 'Import test cases' });
+const panel = () => screen.getByRole('dialog', { name: 'Import test cases…' });
 
 function openPanel(ports: FakePorts = createFakePorts(), state: AppState = draft()) {
   render(<App ports={ports} env={env} initialState={state} />);
   fireEvent.click(screen.getByRole('button', { name: 'File' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Import test cases' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Import test cases…' }));
   return ports;
 }
 async function choose(ports: FakePorts, file: { name: string; text: string; bytes?: Uint8Array }) {
@@ -83,7 +83,7 @@ describe('the import panel', () => {
   it('Cancel closes it without changing anything', () => {
     openPanel();
     fireEvent.click(within(panel()).getByRole('button', { name: 'Cancel' }));
-    expect(screen.queryByRole('dialog', { name: 'Import test cases' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Import test cases…' })).toBeNull();
     expect(screen.queryByText('Unsaved changes')).toBeNull();
   });
 });
@@ -118,8 +118,8 @@ describe('the summary', () => {
     expect(invalid.textContent).toMatch(/Row 3/);
     expect(invalid.textContent).toMatch(/no text/i);
     expect(within(panel()).getByText(/2 test cases can be imported/)).toBeTruthy();
-    fireEvent.click(within(panel()).getByRole('button', { name: 'Import test cases' }));
-    expect(screen.queryByRole('dialog', { name: 'Import test cases' })).toBeNull();
+    fireEvent.click(within(panel()).getByRole('button', { name: 'Import test cases…' }));
+    expect(screen.queryByRole('dialog', { name: 'Import test cases…' })).toBeNull();
     expect(screen.getByText('Dora')).toBeTruthy();
     expect(screen.getByText('Anna 2')).toBeTruthy();
     expect(screen.getByText('Anna + 2 errors')).toBeTruthy(); // the cases already there are kept
@@ -167,14 +167,14 @@ describe('the summary', () => {
     fireEvent.click(within(panel()).getByRole('button', { name: 'Choose file…' }));
     expect(await within(panel()).findByText(/Line 1, column/)).toBeTruthy();
     expect(within(panel()).getByText(/Nothing has changed/)).toBeTruthy();
-    expect(within(panel()).queryByRole('button', { name: 'Import test cases' })).toBeNull();
+    expect(within(panel()).queryByRole('button', { name: 'Import test cases…' })).toBeNull();
   });
 
   it('Import test cases is disabled while no case is valid', async () => {
     const ports = openPanel();
     await choose(ports, { name: 'c.csv', text: csv('Bad,,\n') });
     expect(within(panel()).getByText(/Nothing can be imported/)).toBeTruthy();
-    expect((within(panel()).getByRole('button', { name: 'Import test cases' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((within(panel()).getByRole('button', { name: 'Import test cases…' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('Cancel after reading a file changes nothing', async () => {
@@ -191,7 +191,7 @@ describe('Export test cases', () => {
     const ports = createFakePorts();
     render(<App ports={ports} env={env} initialState={draft()} />);
     fireEvent.click(screen.getByRole('button', { name: 'File' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Export test cases' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Export test cases…' }));
     expect(await screen.findByText(/Exported 2 test cases/)).toBeTruthy();
     expect(ports.exportTarget.asked).toBe(1);
     expect(screen.queryByText('Unsaved changes')).toBeNull();

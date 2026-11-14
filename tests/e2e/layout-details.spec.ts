@@ -15,7 +15,7 @@ async function openDemoCases(page: Page) {
   memory.chooseOpenName('books.json');
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
-  await menu(page, 'Load test project');
+  await menu(page, 'Load test project…');
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
   await expect(page.getByRole('table', { name: 'Test cases' })).toBeVisible();
 }
@@ -48,11 +48,11 @@ test('the marker of a mark has room before the text it marks', async ({ page }) 
   expect(gap, 'pixels between the marker and the first letter').toBeGreaterThanOrEqual(3);
 });
 
-test('the disabled Approve and close is quiet, not pale red, and says what is needed', async ({ page }) => {
+test('the disabled Save case is quiet, not pale red, and says what is needed', async ({ page }) => {
   await openDemoCases(page);
-  await page.getByRole('button', { name: 'Add test case' }).click(); // cases can still be added after the test cases are finalized
+  await page.getByRole('button', { name: 'Add test case…' }).click(); // cases can still be added after the test cases are finalized
   await page.getByRole('button', { name: 'Clean case' }).click();
-  const approve = page.getByRole('button', { name: 'Approve and close' });
+  const approve = page.getByRole('button', { name: 'Save case' });
   await expect(approve).toBeDisabled();
   await expect(page.getByText('Paste the answer of your LLM to approve.')).toBeVisible();
   const background = await approve.evaluate((b) => getComputedStyle(b).backgroundColor);

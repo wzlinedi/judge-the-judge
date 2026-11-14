@@ -29,7 +29,7 @@ describe('Help (Principle VIII)', () => {
   it('names the buttons as they are labeled in the tool', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
-    for (const label of ['Load example…', 'Continue', 'Approve', 'Issue: missed', 'Issue: false positive', 'Real error']) expect(text).toContain(label);
+    for (const label of ['Load demo…', 'Continue', 'Approve', 'Issue: missed', 'Issue: false positive', 'Real error']) expect(text).toContain(label);
   });
 
   it('explains the two files, the indicator, "… as" and running the same test with another LLM', () => {
@@ -67,10 +67,10 @@ describe('Help (Principle VIII)', () => {
     expect(text).toMatch(/code fence/i);
   });
 
-  it('explains the two kinds of case, Paste JSON, Clean case, the case JSON layout and the row buttons', () => {
+  it('explains the two kinds of case, From JSON, Clean case, the case JSON layout and the row buttons', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
-    for (const label of ['Add test case', 'Paste JSON', 'Clean case', 'Show JSON', 'Clone', 'Rename', 'Remove', 'Open']) expect(text).toContain(label);
+    for (const label of ['Add test case', 'From JSON', 'Clean case', 'Show JSON', 'Clone', 'Rename', 'Remove', 'Open']) expect(text).toContain(label);
     expect(text).toMatch(/clean case/i);
     expect(text).toMatch(/case with injected errors/i);
     expect(text).toContain('expected_errors');
@@ -81,7 +81,7 @@ describe('Help (Principle VIII)', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
     expect(text).toMatch(/no file of its own/);
-    expect(text).toContain('Add category');
+    expect(text).toContain('Add categories');
     expect(text).toContain('Load metric definition…');
     expect(text).toContain('docs/how-to-add-a-metric.md');
     expect(text).toMatch(/graded ratings/);
@@ -102,7 +102,7 @@ describe('Help for running by hand (US7)', () => {
   it('names the buttons, the new conversation, the model details and the reminder at 25 replies', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
-    for (const label of ['Copy prompt', 'Paste reply from clipboard', 'Save reply', 'Model details', 'Next test case', 'Save evaluation']) expect(text).toContain(label);
+    for (const label of ['Copy prompt', 'Paste reply', 'Save reply', 'Model details', 'Next case', 'Save evaluation']) expect(text).toContain(label);
     expect(text).toMatch(/new conversation/);
     expect(text).toMatch(/every 25|25 replies/);
     expect(text).toMatch(/Alt \+ Right/);
@@ -133,11 +133,11 @@ describe('Help for running by hand (US7)', () => {
 });
 
 describe('Help for finalizing (US11)', () => {
-  it('names the buttons, what is fixed and what can still change, and when Edit test cases is offered', () => {
+  it('names the buttons, what is fixed and what can still change, and when Reopen test cases is offered', () => {
     render(<HelpStep />);
     const section = screen.getByRole('heading', { name: 'Finalizing, and editing before the first reply' }).closest('section')!;
     const text = section.textContent ?? '';
-    for (const label of ['Finalize test cases', 'Edit test cases', 'Add test case', 'Start new evaluation', 'Correct expected errors', 'Edit the judge and run again']) expect(text).toContain(label);
+    for (const label of ['Finalize test cases', 'Reopen test cases', 'Add test case', 'New evaluation', 'Edit expected errors', 'Run again with a new judge…']) expect(text).toContain(label);
     expect(text).toMatch(/10 cases imported from a file and 2 cases you add by hand make one test project of 12 cases/);
     expect(text).toMatch(/30 injected errors and 10 clean cases/);
     expect(text).toMatch(/After the first reply it is no longer offered/);
@@ -146,13 +146,13 @@ describe('Help for finalizing (US11)', () => {
 });
 
 describe('Help for testing another version of the judge (US12)', () => {
-  it('explains Edit the judge and run again and the same test with another LLM, in the files section', () => {
+  it('explains Run again with a new judge… and the same test with another LLM, in the files section', () => {
     render(<HelpStep />);
     const section = screen.getByRole('heading', { name: 'Files: the test project and the evaluation' }).closest('section')!;
     const text = (section.textContent ?? '').replace(/\s+/g, ' ');
     expect(within(section).getByText('Testing another version of the judge.')).toBeTruthy();
     expect(within(section).getByText('Running the same test with another LLM.')).toBeTruthy();
-    for (const label of ['Edit the judge and run again', 'Save evaluation first', 'Discard', 'Cancel', 'Load test project', 'Save evaluation as']) expect(text).toContain(label);
+    for (const label of ['Run again with a new judge…', 'Save evaluation first', 'Discard', 'Cancel', 'Load test project', 'Save evaluation as']) expect(text).toContain(label);
     expect(text).toMatch(/replies and decisions are cleared/);
     expect(text).toMatch(/test cases are kept/);
     expect(text).toMatch(/ask for a file again/);
@@ -192,7 +192,7 @@ describe('Help for marking after each reply (US8)', () => {
   it('names the buttons and what each one does', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
-    for (const label of ['Add finding', 'Remove', 'Second opinion…', 'Apply opinion', 'Ignore', 'Note', 'Approve', 'Issue: false positive', 'Real error']) expect(text).toContain(label);
+    for (const label of ['Add finding…', 'Remove', 'Second opinion…', 'Apply opinion', 'Ignore', 'Note', 'Approve', 'Issue: false positive', 'Real error']) expect(text).toContain(label);
     expect(text).toMatch(/replaces a mark set by hand/);
     expect(text).toMatch(/classifies none/);
     expect(text).toMatch(/one case at a time/);
@@ -281,11 +281,11 @@ describe('Help is complete before the first release (T195, FR-006, contracts/ui-
     const text = help();
     const names = [
       // adding and correcting test cases
-      'Paste JSON', 'Clean case', 'Case with injected errors', 'Show JSON', 'Clone', 'Correct expected errors', 'Edit test cases', 'Finalize test cases',
+      'From JSON', 'Clean case', 'Case with errors', 'Show JSON', 'Clone', 'Edit expected errors', 'Reopen test cases', 'Finalize test cases',
       // loading
       'Import test cases', 'Load check settings', 'Load example', 'Load metric definition',
       // marks of Run, the second opinion
-      'Found', 'Issue: missed', 'Issue: false positive', 'Real error', 'Ignore', 'Add finding', 'Second opinion', 'Apply opinion',
+      'Found', 'Issue: missed', 'Issue: false positive', 'Real error', 'Ignore', 'Add finding…', 'Second opinion', 'Apply opinion',
       // the two files, Continue, per case
       'Save test project', 'Save evaluation', 'Load test project', 'Load evaluation', 'Continue', 'evaluated per case',
       // results

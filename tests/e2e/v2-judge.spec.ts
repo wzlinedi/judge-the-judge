@@ -73,7 +73,7 @@ test('the Judge step builds a judge from scratch, shows the preview, and survive
   await page.reload();
   memory.chooseOpenName('judge.json');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load test project' }).click();
+  await page.getByRole('menuitem', { name: 'Load test project…' }).click();
   await expect(page.getByRole('button', { name: /2\s*Test cases/ })).toHaveAttribute('aria-current', 'step');
 
   await page.getByRole('button', { name: /1\s*Judge/ }).click();
@@ -87,7 +87,7 @@ test('the Judge step builds a judge from scratch, shows the preview, and survive
 test('the ready examples fill the Judge step', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Completeness' }).click();
   await expect(page.getByLabel('Judge prompt', { exact: true })).toHaveValue(/strict reviewer/);
   await expect(page.getByLabel('Name of rule 1')).toHaveValue('Missing element');

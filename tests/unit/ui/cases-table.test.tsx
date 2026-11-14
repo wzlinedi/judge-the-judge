@@ -30,7 +30,7 @@ describe('the table', () => {
 
   it('puts Add test case above the table, and no details panel or menu in a row', () => {
     show();
-    const add = screen.getByRole('button', { name: 'Add test case' });
+    const add = screen.getByRole('button', { name: 'Add test case…' });
     const table = screen.getByRole('table', { name: 'Test cases' });
     expect(add.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.queryByRole('menu')).toBeNull();
@@ -110,7 +110,7 @@ describe('Open, Rename and Remove', () => {
 describe('after finalizing (FR-053)', () => {
   it('keeps Open, Rename, Remove and Add test case enabled, also for a case with a reply (T234)', () => {
     show(stateOf(true, true));
-    expect((screen.getByRole('button', { name: 'Add test case' }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole('button', { name: 'Add test case…' }) as HTMLButtonElement).disabled).toBe(false);
     const withReply = rowOf('Anna + 2 errors');
     const without = rowOf('Anna');
     for (const row of [withReply, without]) {
@@ -122,14 +122,14 @@ describe('after finalizing (FR-053)', () => {
 describe('the "what next" line', () => {
   it('offers a disabled Finalize test cases with no cases (Add test case is above the list, T228), and Finalize test cases otherwise', () => {
     const empty = { ...createState(), step: 'cases' as const };
-    expect(nextAction(empty, 'cases').action).toMatchObject({ label: 'Finalize test cases', disabled: true });
+    expect(nextAction(empty, 'cases').action).toMatchObject({ label: 'Finalize test cases…', disabled: true });
     expect(nextAction(empty, 'cases').sentence).toMatch(/button below/);
-    expect(nextAction(stateOf(), 'cases').action.label).toBe('Finalize test cases');
+    expect(nextAction(stateOf(), 'cases').action.label).toBe('Finalize test cases…');
   });
 
   it('shows an empty state with Add test case available when there are no cases', () => {
     render(<App ports={createFakePorts()} env={env} initialState={{ ...createState(), step: 'cases' }} />);
-    expect(screen.getAllByRole('button', { name: 'Add test case' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'Add test case…' }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('table', { name: 'Test cases' })).toBeNull();
   });
 });

@@ -29,7 +29,7 @@ describe('where saving lives (FR-076, SC-038)', () => {
   it('shows Save evaluation and Save evaluation as only on Run, with the remembered file name', () => {
     const { unmount } = renderApp(createFakePorts(), stateOn('run', sampleEvaluation(), { evaluationFile: 'run-1.json' }));
     expect(screen.getByRole('button', { name: 'Save evaluation' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Save evaluation as' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save evaluation as…' })).toBeTruthy();
     expect(screen.getByText('run-1.json')).toBeTruthy();
     unmount();
     for (const step of ['judge', 'cases', 'results', 'help'] as const) {
@@ -43,7 +43,7 @@ describe('where saving lives (FR-076, SC-038)', () => {
     renderApp(createFakePorts(), stateOn('run', sampleEvaluation(), { openCase: '1' }));
     const dialog = screen.getByRole('dialog', { name: /Case 1/ });
     expect(within(dialog).getByRole('button', { name: 'Save evaluation' })).toBeTruthy();
-    expect(within(dialog).getByRole('button', { name: 'Save evaluation as' })).toBeTruthy();
+    expect(within(dialog).getByRole('button', { name: 'Save evaluation as…' })).toBeTruthy();
   });
 });
 
@@ -74,7 +74,7 @@ describe('loading', () => {
   it('Load evaluation opens the first step with unfinished work and says how far the work is', async () => {
     const ports = createFakePorts();
     renderApp(ports);
-    await loadFile(ports, 'Load evaluation', demoText, 'demo-run.json');
+    await loadFile(ports, 'Load evaluation…', demoText, 'demo-run.json');
     await waitFor(() => expect(screen.getByRole('button', { name: /3\s*Run/ }).getAttribute('aria-current')).toBe('step'));
     const next = screen.getByRole('region', { name: 'What next' });
     expect(within(next).getByText('15 of 20 cases decided')).toBeTruthy();
@@ -88,7 +88,7 @@ describe('loading', () => {
     await saveTestProject(stateOn('judge'), saver, fileEnv);
     const ports = createFakePorts();
     renderApp(ports);
-    await loadFile(ports, 'Load test project', saver.testProjectTarget.lastText!, 'books.json');
+    await loadFile(ports, 'Load test project…', saver.testProjectTarget.lastText!, 'books.json');
     await waitFor(() => expect(screen.getByRole('button', { name: /3\s*Run/ }).getAttribute('aria-current')).toBe('step'));
     expect(screen.getByText(/Test project: books\.json/)).toBeTruthy();
     expect(within(screen.getByRole('region', { name: 'What next' })).getByText('0 of 2 cases decided')).toBeTruthy();
@@ -97,7 +97,7 @@ describe('loading', () => {
   it('an invalid file shows a message with where the problem is and changes nothing', async () => {
     const ports = createFakePorts();
     renderApp(ports, stateOn('judge', sampleEvaluation(), { testProjectFile: 'mine.json' }));
-    await loadFile(ports, 'Load evaluation', '{ "format": ');
+    await loadFile(ports, 'Load evaluation…', '{ "format": ');
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toMatch(/not readable JSON/);
     expect(alert.textContent).toMatch(/line 1/);
@@ -112,7 +112,7 @@ describe('loading', () => {
     file.metric = { id: 'bias', parameters: {} };
     const ports = createFakePorts();
     renderApp(ports);
-    await loadFile(ports, 'Load test project', JSON.stringify(file));
+    await loadFile(ports, 'Load test project…', JSON.stringify(file));
     expect(await screen.findByText(/not registered/)).toBeTruthy();
   });
 });
@@ -140,7 +140,7 @@ describe('Continue on Run and Results', () => {
     await saveEvaluation(stateOn('run'), saver, fileEnv);
     const ports = createFakePorts();
     renderApp(ports);
-    await loadFile(ports, 'Load evaluation', saver.evaluationTarget.lastText!, 'again.json');
+    await loadFile(ports, 'Load evaluation…', saver.evaluationTarget.lastText!, 'again.json');
     await waitFor(() => expect(screen.getByText('All changes saved (again.json)')).toBeTruthy());
     fireEvent.click(screen.getByRole('button', { name: /3\s*Run/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Save evaluation' }));

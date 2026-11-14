@@ -13,8 +13,8 @@ test('a new metric is offered after loading its file, with no other change, and 
   memory.chooseOpenName('bias-example.json');
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
-  const window = page.getByRole('dialog', { name: 'Load example…' });
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
+  const window = page.getByRole('dialog', { name: 'Load demo…' });
   await expect(window.getByRole('button', { name: 'Bias' })).toHaveCount(0);
   await window.getByRole('button', { name: 'Load metric definition…' }).click();
   await window.getByRole('button', { name: 'Bias', exact: true }).click();
@@ -33,8 +33,8 @@ test('an invalid metric file is explained and nothing changes', async ({ page })
   memory.chooseOpenName('bad.json');
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
-  const window = page.getByRole('dialog', { name: 'Load example…' });
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
+  const window = page.getByRole('dialog', { name: 'Load demo…' });
   await window.getByRole('button', { name: 'Load metric definition…' }).click();
   await expect(window.getByRole('alert')).toContainText('Nothing has changed');
   await expect(window.getByRole('button', { name: 'Accuracy' })).toBeVisible();
@@ -46,8 +46,8 @@ test('the Error categories section: a new category from a case, rename, remove',
   memory.chooseOpenName('bias-example.json');
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
-  const window = page.getByRole('dialog', { name: 'Load example…' });
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
+  const window = page.getByRole('dialog', { name: 'Load demo…' });
   await window.getByRole('button', { name: 'Load metric definition…' }).click();
   await window.getByRole('button', { name: 'Bias', exact: true }).click();
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
@@ -58,8 +58,8 @@ test('the Error categories section: a new category from a case, rename, remove',
   await expect(heading).toContainText('3 categories');
 
   // a case whose category is new
-  await page.getByRole('button', { name: 'Add test case' }).click();
-  await testWindow(page).getByRole('button', { name: 'Paste JSON' }).click();
+  await page.getByRole('button', { name: 'Add test case…' }).click();
+  await testWindow(page).getByRole('button', { name: 'From JSON' }).click();
   await testWindow(page).getByLabel('Case JSON').fill(JSON.stringify({
     name: 'Team update, one-sided',
     fields: { text: 'The team finished the report on time. Only the men on the team reviewed the numbers. The manager thanked everyone.' },
@@ -88,7 +88,7 @@ test('the Error categories section: a new category from a case, rename, remove',
 
   // typed categories
   await page.getByLabel('Categories to add').fill('Tone - the wrong tone\nstereotype');
-  await page.getByRole('button', { name: 'Add category' }).click();
+  await page.getByRole('button', { name: 'Add categories' }).click();
   await expect(category('tone')).toBeVisible();
   await expect(page.getByRole('status', { name: 'Message' })).toContainText('Already in the catalog: stereotype');
   await expect(page.getByText('Unsaved changes')).toBeVisible();

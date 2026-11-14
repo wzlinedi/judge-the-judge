@@ -11,7 +11,7 @@ const caseWindow = (page: Page) => page.getByRole('dialog', { name: /^Case \d+ /
 async function loadDemo(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
 }
 
@@ -57,7 +57,7 @@ test('three views, the read-only case view, thresholds in Details and Load check
 
   // Load check settings: the thresholds change and the minimum test size is reported as fixed
   memory.chooseOpenName('checks-example.json');
-  await details.getByRole('button', { name: 'Load check settings' }).click();
+  await details.getByRole('button', { name: 'Load check settings…' }).click();
   await expect(details.getByLabel('Detection rate: at least (%)')).toHaveValue('70');
   await expect(details.getByLabel('False-positive rate: at most (%)')).toHaveValue('15');
   await expect(page.getByRole('status', { name: 'Message' })).toContainText('minimum test size is fixed');
@@ -80,7 +80,7 @@ test('three views, the read-only case view, thresholds in Details and Load check
   await expect(view).toContainText('LLM opinion, approved by the user');
   await expect(view.getByRole('textbox', { name: 'Judge reply' })).toHaveAttribute('readonly', '');
   await expect(view.getByRole('button', { name: /Approve|Ignore|Found|Save/ })).toHaveCount(0);
-  await view.getByRole('button', { name: 'Next test case' }).click();
+  await view.getByRole('button', { name: 'Next case' }).click();
   await expect(view).toContainText('Case 4 ');
   await page.keyboard.press('Alt+ArrowLeft');
   await expect(view).toContainText('Case 3 ');
@@ -95,7 +95,7 @@ test('the report is exported while cases are undecided (provisional) and again w
   await goToResults(page);
   await expect(page.getByRole('region', { name: 'Report and next version' })).toContainText('provisional');
 
-  const [provisional] = await Promise.all([page.waitForEvent('download'), page.getByRole('region', { name: 'Report and next version' }).getByRole('button', { name: 'Export HTML report' }).click()]);
+  const [provisional] = await Promise.all([page.waitForEvent('download'), page.getByRole('region', { name: 'Report and next version' }).getByRole('button', { name: 'Export HTML report…' }).click()]);
   expect(provisional.suggestedFilename()).toBe('Book summaries, set A - report (provisional).html');
   const provisionalHtml = readFileSync((await provisional.path()) as string, 'utf8');
   expect(provisionalHtml).toContain('Provisional');
@@ -105,7 +105,7 @@ test('the report is exported while cases are undecided (provisional) and again w
   await page.getByRole('button', { name: /3\s*Run/ }).click();
   await decideEverything(page);
   await goToResults(page);
-  const [final] = await Promise.all([page.waitForEvent('download'), next(page).getByRole('button', { name: 'Export HTML report' }).click()]);
+  const [final] = await Promise.all([page.waitForEvent('download'), next(page).getByRole('button', { name: 'Export HTML report…' }).click()]);
   expect(final.suggestedFilename()).toBe('Book summaries, set A - report.html');
   const path = testInfo.outputPath('report.html');
   await final.saveAs(path);

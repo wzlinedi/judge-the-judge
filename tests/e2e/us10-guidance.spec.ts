@@ -12,13 +12,13 @@ const json = (over: Record<string, unknown> = {}) => JSON.stringify({ name: 'A c
 async function start(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Accuracy' }).click();
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
 }
 async function pasteCase(page: Page, text: string) {
-  await page.getByRole('button', { name: 'Add test case' }).click();
-  await win(page).getByRole('button', { name: 'Paste JSON' }).click();
+  await page.getByRole('button', { name: 'Add test case…' }).click();
+  await win(page).getByRole('button', { name: 'From JSON' }).click();
   await win(page).getByLabel('Case JSON').fill(text);
   await win(page).getByRole('button', { name: 'Save case' }).click();
 }
@@ -55,8 +55,8 @@ test('the card shows the counts and the test size; only clean cases warn; a case
 
 test('a category shows its description and example where it is chosen', async ({ page }) => {
   await start(page);
-  await page.getByRole('button', { name: 'Add test case' }).click();
-  await win(page).getByRole('button', { name: 'Case with injected errors' }).click();
+  await page.getByRole('button', { name: 'Add test case…' }).click();
+  await win(page).getByRole('button', { name: 'Case with errors' }).click();
   const first = accuracy.judge_set.error_catalog[0] as { name: string; description: string; example: string };
   const second = accuracy.judge_set.error_catalog[1] as { name: string; description: string; example: string };
   const row = win(page).getByRole('group', { name: 'Error 1' });
@@ -76,8 +76,8 @@ test('the limit of 500: the remaining capacity is shown, an import beyond it is 
 
   memory.chooseOpenName('too-many.csv');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Import test cases' }).click();
-  const importWindow = page.getByRole('dialog', { name: 'Import test cases' });
+  await page.getByRole('menuitem', { name: 'Import test cases…' }).click();
+  const importWindow = page.getByRole('dialog', { name: 'Import test cases…' });
   await importWindow.getByRole('button', { name: 'Choose file…' }).click();
   await expect(importWindow).toContainText('500');
   await importWindow.getByRole('button', { name: 'Cancel' }).click();
@@ -85,9 +85,9 @@ test('the limit of 500: the remaining capacity is shown, an import beyond it is 
 
   memory.chooseOpenName('exactly.csv');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Import test cases' }).click();
+  await page.getByRole('menuitem', { name: 'Import test cases…' }).click();
   await importWindow.getByRole('button', { name: 'Choose file…' }).click();
-  await importWindow.getByRole('button', { name: 'Import test cases' }).click();
+  await importWindow.getByRole('button', { name: 'Import test cases…' }).click();
   await expect(card(page)).toContainText('The limit of 500 test cases is reached. Remove a case before adding another.');
-  await expect(page.getByRole('button', { name: 'Add test case' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Add test case…' })).toBeDisabled();
 });

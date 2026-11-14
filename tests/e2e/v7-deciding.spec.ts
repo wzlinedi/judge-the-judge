@@ -15,7 +15,7 @@ const opinionBox = (page: Page) => opinionWindow(page).getByRole('textbox', { na
 async function loadDemo(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
 }
@@ -32,7 +32,7 @@ test('the Run step has no second-opinion card; a second opinion is previewed, ap
   await expect(finding).toContainText('This finding matches no expected error');
 
   // the three buttons under the list are visible without opening anything
-  for (const name of ['Add finding', 'Second opinion…']) await expect(win.getByRole('button', { name })).toBeVisible();
+  for (const name of ['Add finding…', 'Second opinion…']) await expect(win.getByRole('button', { name })).toBeVisible();
 
   // 1. the window: prompt, box, preview; nothing changes before Apply opinion
   await win.getByRole('button', { name: 'Second opinion…' }).click();
@@ -43,7 +43,7 @@ test('the Run step has no second-opinion card; a second opinion is previewed, ap
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('CASE "3"');
   await expect(dialog.getByRole('button', { name: 'Apply opinion' })).toBeDisabled();
   await opinionBox(page).fill(opinionText('3'));
-  await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('A1 undecided → Issue: false positive');
+  await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('A1 undecided → False positive');
   await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('The source says the prince speaks about the rose.');
   expect((await new AxeBuilder({ page }).include('dialog[open]').analyze()).violations).toEqual([]);
   await expect(finding).toContainText('This finding matches no expected error'); // still undecided behind the dialog
@@ -92,14 +92,14 @@ test('only the cases awaiting verification; a reply that could not be read: Add 
 
   await win.getByLabel('Only cases awaiting verification').check();
   await expect(win).toContainText('1 of 5');
-  await win.getByRole('button', { name: 'Next test case' }).click();
+  await win.getByRole('button', { name: 'Next case' }).click();
   await expect(win).toContainText('Case 10');
   await expect(win).toContainText('The reply could not be read');
   await expect(win).toContainText('press No more findings');
 
   // Add finding with a category and a difficulty
-  await win.getByRole('button', { name: 'Add finding' }).click();
-  const add = page.getByRole('dialog', { name: 'Add finding' });
+  await win.getByRole('button', { name: 'Add finding…' }).click();
+  const add = page.getByRole('dialog', { name: 'Add finding…' });
   await add.getByLabel('Text of the finding').fill('The summary says nothing about the book');
   await add.getByLabel('Category (optional)').fill('factual-error');
   await add.getByLabel('Difficulty (optional)').selectOption('subtle');
@@ -107,13 +107,13 @@ test('only the cases awaiting verification; a reply that could not be read: Add 
   const first = item(page, 'additional', 'added#1');
   await expect(first).toContainText('factual-error');
   await expect(first).toContainText('subtle');
-  await first.getByRole('button', { name: 'Issue: false positive' }).click();
-  await expect(first.getByRole('button', { name: 'Issue: false positive' })).toHaveAttribute('aria-pressed', 'true');
+  await first.getByRole('button', { name: 'False positive' }).click();
+  await expect(first.getByRole('button', { name: 'False positive' })).toHaveAttribute('aria-pressed', 'true');
 
   // a second added finding is removed again; the one read from the reply has no Remove
-  await win.getByRole('button', { name: 'Add finding' }).click();
-  await page.getByRole('dialog', { name: 'Add finding' }).getByLabel('Text of the finding').fill('A wrong guess');
-  await page.getByRole('dialog', { name: 'Add finding' }).getByRole('button', { name: 'Add', exact: true }).click();
+  await win.getByRole('button', { name: 'Add finding…' }).click();
+  await page.getByRole('dialog', { name: 'Add finding…' }).getByLabel('Text of the finding').fill('A wrong guess');
+  await page.getByRole('dialog', { name: 'Add finding…' }).getByRole('button', { name: 'Add', exact: true }).click();
   await item(page, 'additional', 'added#2').getByRole('button', { name: 'Remove' }).click();
   await expect(item(page, 'additional', 'added#2')).toHaveCount(0);
   await expect(win).toContainText('Awaiting verification');
@@ -123,7 +123,7 @@ test('only the cases awaiting verification; a reply that could not be read: Add 
   const dialog = opinionWindow(page);
   await opinionBox(page).fill(JSON.stringify({ opinion: { id: '10', expected: [], additional: [{ index: 1, real: true, reason: 'It is a real gap.' }], new: [{ text: 'The reply is not an analysis', real: true, reason: 'It has no claims.', category: 'omission', difficulty: 'obvious' }] } }));
   await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('+ new finding “The reply is not an analysis” → Real error');
-  await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('A1 Issue: false positive → Real error (replaces a mark set by hand)');
+  await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('A1 False positive → Real error (replaces a mark set by hand)');
   await dialog.getByRole('button', { name: 'Apply opinion' }).click();
   const added = item(page, 'additional', 'added#2');
   await expect(added).toContainText('The reply is not an analysis');

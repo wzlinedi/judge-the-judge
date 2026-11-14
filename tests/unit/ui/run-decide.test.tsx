@@ -64,7 +64,7 @@ describe('Run list', () => {
     expect(screen.getByText(/3 replies not saved to a file/)).toBeTruthy();
     expect(screen.getByText(/run\.json/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Save evaluation' }).classList.contains('primary')).toBe(true);
-    expect(screen.getByRole('button', { name: 'Save evaluation as' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save evaluation as…' })).toBeTruthy();
   });
 
   it('opens a case', () => {
@@ -85,14 +85,14 @@ describe('case window of Run, with a reply', () => {
     const finding = item('additional', 'claims[]#2');
     expect(finding.textContent).toContain('The prince speaks about the rose he loves.');
     expect(finding.textContent).toContain('Contradicted or unsupported claim');
-    for (const name of ['Issue: false positive', 'Real error', 'Ignore']) expect(within(finding).getByRole('button', { name })).toBeTruthy();
+    for (const name of ['False positive', 'Real error', 'Ignore']) expect(within(finding).getByRole('button', { name })).toBeTruthy();
     expect(finding.querySelector('[aria-pressed="true"]')).toBeNull();
   });
 
   it('shows each expected error with Found, Issue: missed and Ignore, its source and the reason when undecided', () => {
     render(<Window caseId="14" />);
     const e1 = item('expected', 'e1');
-    for (const name of ['Found', 'Issue: missed', 'Ignore']) expect(within(e1).getByRole('button', { name })).toBeTruthy();
+    for (const name of ['Found', 'Missed', 'Ignore']) expect(within(e1).getByRole('button', { name })).toBeTruthy();
     expect(within(e1).getByRole('button', { name: 'Found' }).getAttribute('aria-pressed')).toBe('true');
     expect(e1.textContent).toContain('Automatic');
     const e2 = item('expected', 'e2');
@@ -108,8 +108,8 @@ describe('case window of Run, with a reply', () => {
 
   it('takes a decision into account at once and shows who made it', () => {
     render(<Window caseId="3" />);
-    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Issue: false positive' }));
-    expect(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Issue: false positive' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'False positive' }));
+    expect(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'False positive' }).getAttribute('aria-pressed')).toBe('true');
     expect(item('additional', 'claims[]#2').textContent).toContain('Set by hand');
     expect(screen.getAllByText(/Fail/).length).toBeGreaterThan(0);
   });
@@ -123,7 +123,7 @@ describe('case window of Run, with a reply', () => {
   it('turns a partly matching finding into an additional finding when its error is marked missed', () => {
     render(<Window caseId="14" />);
     expect(document.querySelector('[data-additional]')).toBeNull();
-    fireEvent.click(within(item('expected', 'e2')).getByRole('button', { name: 'Issue: missed' }));
+    fireEvent.click(within(item('expected', 'e2')).getByRole('button', { name: 'Missed' }));
     expect(document.querySelector('[data-additional]')?.textContent).toContain('Victor and the creature');
   });
 
@@ -153,23 +153,23 @@ describe('case window of Run, with a reply', () => {
     render(<Window caseId="11" />);
     expect(screen.getByText(/Injected errors/)).toBeTruthy();
     expect(document.querySelectorAll('mark.fragment')).toHaveLength(3);
-    fireEvent.click(screen.getByRole('button', { name: 'Show the full prompt' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show prompt' }));
     expect((screen.getByRole('textbox', { name: 'Complete judge prompt' }) as HTMLTextAreaElement).value).toContain('SUMMARY:');
   });
 
   it('moves between cases with Previous and Next, and can be limited to cases awaiting verification', () => {
     render(<Window caseId="3" />);
     expect(screen.getByText('3 of 20')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Next test case' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next case' }));
     expect(screen.getByText('4 of 20')).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Only cases awaiting verification'));
-    fireEvent.click(screen.getByRole('button', { name: 'Next test case' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next case' }));
     expect(screen.getByText(/of 5/)).toBeTruthy();
   });
 
   it('keeps the save buttons in the header', () => {
     render(<Window caseId="3" />);
     expect(screen.getByRole('button', { name: 'Save evaluation' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Save evaluation as' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save evaluation as…' })).toBeTruthy();
   });
 });

@@ -82,8 +82,8 @@ describe('CaseWindowFrame', () => {
   it('shows the position and a header with Previous, Next and Close', () => {
     frame();
     expect(screen.getByText('2 of 3')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Previous test case' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Next test case' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Previous case' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Next case' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
     expect(screen.getByRole('dialog', { name: 'Case A' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Close' }).closest('.case-window-header')).not.toBeNull();
@@ -99,7 +99,7 @@ describe('CaseWindowFrame', () => {
 
   it('moves with the buttons and with Alt + Left and Alt + Right', () => {
     const h = frame();
-    fireEvent.click(screen.getByRole('button', { name: 'Next test case' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next case' }));
     expect(h.onNext).toHaveBeenCalledTimes(1);
     fireEvent.keyDown(document.body, { key: 'ArrowLeft', altKey: true });
     expect(h.onPrevious).toHaveBeenCalledTimes(1);
@@ -109,13 +109,13 @@ describe('CaseWindowFrame', () => {
 
   it('disables Previous on the first case and Next on the last', () => {
     frame({ index: 0 });
-    expect((screen.getByRole('button', { name: 'Previous test case' }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole('button', { name: 'Next test case' }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole('button', { name: 'Previous case' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Next case' }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it('disables Next on the last case, and Alt + arrow then does nothing', () => {
     const h = frame({ index: 2 });
-    expect((screen.getByRole('button', { name: 'Next test case' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Next case' }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.keyDown(document.body, { key: 'ArrowRight', altKey: true });
     expect(h.onNext).not.toHaveBeenCalled();
   });

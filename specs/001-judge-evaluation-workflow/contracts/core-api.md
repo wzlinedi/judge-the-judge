@@ -47,7 +47,7 @@ Names below describe behavior; exact TypeScript signatures are written with thei
 | `categoryUses(catalog, cases)` | Per category the number of test cases that use it (a case counts once) (FR-015). |
 | `canRemoveCategory(catalog, cases, replies, finalized, name)` | Allowed, or refused with the one-sentence reason of FR-015 ("Used by N test cases. Remove those test cases first, or rename the category." or, after finalizing when every such case has a reply, "… It can be renamed."). |
 | `renameCategory(catalog, cases, from, to)` | Catalog and cases with the new name in every expected error; refused when the new name exists. |
-| `canChangeCase(cases, replies, finalized, id, action)` | For **Rename**, **Remove** and **Correct expected errors**: allowed, or refused with the reason ("This case has a reply"; a base still in use, FR-017) (FR-025, FR-039, FR-089). |
+| `canChangeCase(cases, replies, finalized, id, action)` | For **Rename**, **Remove** and **Edit expected errors**: allowed, or refused with the reason ("This case has a reply"; a base still in use, FR-017) (FR-025, FR-039, FR-089). |
 | `checkCaseJson(text, context)` | file-formats.md, section 2. `context` = mode (`paste`, `clean`, `inject`, `correct`), variables, judged text, catalog, existing cases, picked base, number of errors to prepare, and the original case for `correct`. Returns problems (with line and column or field path), warnings, notes, the kind the case will have, and the case when valid (FR-031, FR-041, FR-083, FR-084, FR-089, FR-090). |
 | `textListCheck(testCase, base, judgedText)` | The line of FR-080: changed places not in the list (with their text, to highlight), expected errors not in the text, identical to base, errors with no fragment or category. |
 | `caseToJson(testCase)` | The case JSON of "Show JSON" and "Copy JSON" (no `id`; `base` only when set); `checkCaseJson` of its output gives the same fields and expected errors (SC-036). |
@@ -110,7 +110,7 @@ their inputs change.
 |---|---|
 | `createRegistry(builtIns)` | A registry holding the built-in definitions. |
 | `register(registry, definition)` | A new registry including the definition, or the reason it was refused. |
-| `listExamples(registry)` | What the "Load example…" window offers, besides the demo. |
+| `listExamples(registry)` | What the "Load demo…" window offers, besides the demo. |
 | `evaluateMeasure(measure, counters, computed)` | The value of one declarative measure. |
 | `evaluateChecks(measures, checks)` | Pass or fail per rule. |
 
@@ -130,7 +130,7 @@ ReplyBatch
 
 | Adapter | `request` | Used by |
 |---|---|---|
-| Pasted reply | one case identifier and the text read from the clipboard or typed into the always-visible box | The case window of Run ("Paste reply from clipboard", the box, "Save as text anyway") |
+| Pasted reply | one case identifier and the text read from the clipboard or typed into the always-visible box | The case window of Run ("Paste reply", the box, "Keep as text") |
 
 - The application passes every `ReplyBatch` to one function, `attachReplies(evaluation, batch,
   replaceChoice)`, which matches by identifier, stores each reply together with the prompt composed
@@ -162,17 +162,17 @@ parallel.
   close"; the window has no file save action, and **Close without saving** asks first when
   something was typed. An opinion in the second-opinion window changes nothing until "Apply
   opinion".
-- "Edit test cases" (FR-053) is an action that is allowed only while the test cases are finalized
+- "Reopen test cases" (FR-053) is an action that is allowed only while the test cases are finalized
   and no reply exists; it opens them and the prompt again and keeps both remembered files.
 - The unsaved-work guard asks before any action that would discard unsaved work, with **Save
   evaluation first**, **Discard** and **Cancel**: loading a test project or an evaluation over
-  existing work, "Load example…", "Start new evaluation" and "Edit the judge and run again"
+  existing work, "Load demo…", "New evaluation" and "Run again with a new judge…"
   (FR-051). Replacing a reply whose case has decisions set by hand or from an applied opinion asks
   separately, saying how many will be removed (FR-056).
 - **Ports** (`src/app/ports/`, research.md section 25): `SaveTarget`, one per file kind (test
   project, evaluation), (`save`, `saveAs`, `useLoaded`, `forget`, with the results "saved",
   "cancelled" and "file no longer writable"); "Load test project" forgets the evaluation target and
-  "Load evaluation" the test project target; "Start new evaluation", "Load example…" and "Edit the
+  "Load evaluation" the test project target; "New evaluation", "Load demo…" and "Edit the
   judge and run again" forget both (FR-076); and
   `ClipboardReader` (`readText`, with the results text, "empty", "refused" and "not available").
   Each has a browser adapter and a fake used by unit, component and integration tests; actions

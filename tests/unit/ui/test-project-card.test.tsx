@@ -101,7 +101,7 @@ describe('the Test cases step', () => {
   it('refuses to add beyond 500 cases: the button is disabled and the reason is beside it', () => {
     const many = Array.from({ length: 500 }, (_, i) => clean(String(i), `t${i}`));
     step(stateOf(draft({ dataset: { name: 'p', finalized: false, cases: many } })));
-    expect((screen.getByRole('button', { name: 'Add test case' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Add test case…' }) as HTMLButtonElement).disabled).toBe(true);
     expect(card().textContent).toContain('The limit of 500 test cases is reached. Remove a case before adding another.');
   });
 });
@@ -130,11 +130,11 @@ describe('adding beyond the limit', () => {
 describe('help for a category where it is chosen', () => {
   const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 
-  it('shows the description and the example of the chosen category in "Case with injected errors"', () => {
+  it('shows the description and the example of the chosen category in "Case with errors"', () => {
     const e = draft();
     render(<App ports={createFakePorts()} env={env} initialState={stateOf(e)} />);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);
-    fireEvent.click(within(screen.getByRole('dialog', { name: 'Test case' })).getByRole('button', { name: 'Case with injected errors' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Add test case…' })[0]!);
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Test case' })).getByRole('button', { name: 'Case with errors' }));
     const win = screen.getByRole('dialog', { name: 'Test case' });
     const first = e.judge_set.error_catalog[0]!;
     const row = within(win).getByRole('group', { name: 'Error 1' });
@@ -147,8 +147,8 @@ describe('help for a category where it is chosen', () => {
 
   it('shows no hint for a new category name', () => {
     render(<App ports={createFakePorts()} env={env} initialState={stateOf(draft())} />);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);
-    fireEvent.click(within(screen.getByRole('dialog', { name: 'Test case' })).getByRole('button', { name: 'Case with injected errors' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Add test case…' })[0]!);
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Test case' })).getByRole('button', { name: 'Case with errors' }));
     const win = screen.getByRole('dialog', { name: 'Test case' });
     fireEvent.change(within(win).getByLabelText('Category'), { target: { value: 'New category…' } });
     expect(within(win).queryByText(/Example:/)).toBeNull();

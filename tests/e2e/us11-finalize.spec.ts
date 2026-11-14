@@ -18,23 +18,23 @@ const buttons = async (page: Page) => (await next(page).getByRole('button').allT
 async function start(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Accuracy' }).click();
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
 }
 async function pasteCase(page: Page, text: string) {
-  await page.getByRole('button', { name: 'Add test case' }).click();
-  await win(page).getByRole('button', { name: 'Paste JSON' }).click();
+  await page.getByRole('button', { name: 'Add test case…' }).click();
+  await win(page).getByRole('button', { name: 'From JSON' }).click();
   await win(page).getByLabel('Case JSON').fill(text);
   await win(page).getByRole('button', { name: 'Save case' }).click();
 }
 async function importRows(page: Page, memory: Awaited<ReturnType<typeof installMemoryFiles>>, name: string) {
   memory.chooseOpenName(name);
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Import test cases' }).click();
-  const importWindow = page.getByRole('dialog', { name: 'Import test cases' });
+  await page.getByRole('menuitem', { name: 'Import test cases…' }).click();
+  const importWindow = page.getByRole('dialog', { name: 'Import test cases…' });
   await importWindow.getByRole('button', { name: 'Choose file…' }).click();
-  await importWindow.getByRole('button', { name: 'Import test cases' }).click();
+  await importWindow.getByRole('button', { name: 'Import test cases…' }).click();
 }
 async function openDemoRun(page: Page) {
   const memory = await installMemoryFiles(page);
@@ -42,7 +42,7 @@ async function openDemoRun(page: Page) {
   memory.chooseOpenName('books.json');
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load test project' }).click();
+  await page.getByRole('menuitem', { name: 'Load test project…' }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
   return memory;
 }
@@ -58,30 +58,30 @@ test('cases from a file and cases made by hand join one test project; the summar
   const words = Array.from(new Set(base.fields.summary.split(' '))).filter((w) => w.length > 3).slice(0, 2);
   await pasteCase(page, json({ name: 'By hand, two errors', fields: { ...base.fields, source_text: `${base.fields.source_text} (changed)` }, expected_errors: words.map((w, i) => ({ category: 'factual-error', fragment: w, description: `Change ${i + 1}`, difficulty: i === 0 ? 'subtle' : 'obvious' })) }));
   await expect(card(page)).toContainText('15 test cases: 1 with injected errors, 14 clean, 0 with a reply.');
-  expect(await buttons(page)).toEqual(['Finalize test cases']);
+  expect(await buttons(page)).toEqual(['Finalize test cases…']);
 
   // the summary first: counts, balance, test size and the warnings; Cancel changes nothing
-  await next(page).getByRole('button', { name: 'Finalize test cases' }).click();
+  await next(page).getByRole('button', { name: 'Finalize test cases…' }).click();
   await expect(summary(page)).toContainText('15 test cases: 1 with injected errors, 14 clean.');
   await expect(summary(page).getByRole('group', { name: 'Test size' })).toContainText('Injected errors: 2 of 30 (28 missing)');
   await expect(summary(page).getByRole('list', { name: 'Warnings' })).toContainText('Inconclusive');
   await summary(page).getByRole('button', { name: 'Cancel' }).click();
   await expect(summary(page)).toHaveCount(0);
-  expect(await buttons(page)).toEqual(['Finalize test cases']);
+  expect(await buttons(page)).toEqual(['Finalize test cases…']);
 
   // confirming fixes the test cases
-  await next(page).getByRole('button', { name: 'Finalize test cases' }).click();
-  await summary(page).getByRole('button', { name: 'Finalize test cases' }).click();
+  await next(page).getByRole('button', { name: 'Finalize test cases…' }).click();
+  await summary(page).getByRole('button', { name: 'Finalize test cases…' }).click();
   await expect(summary(page)).toHaveCount(0);
   await expect(card(page)).toContainText('The test cases are finalized');
-  expect(await buttons(page)).toEqual(['Continue', 'Edit test cases']);
+  expect(await buttons(page)).toEqual(['Continue', 'Reopen test cases']);
 
   // the prompt is fixed, and the way out is named
   await page.getByRole('button', { name: /1\s*Judge/ }).click();
   await expect(page.getByLabel('Judge prompt')).toHaveAttribute('readonly', '');
-  await expect(page.getByText(/The prompt is fixed/)).toContainText('Start new evaluation');
-  expect(await buttons(page)).toEqual(['Continue', 'Edit test cases']);
-  await expect(page.getByRole('button', { name: 'Add test case' })).toHaveCount(0); // T228: on Judge there is no such button
+  await expect(page.getByText(/The prompt is fixed/)).toContainText('New evaluation');
+  expect(await buttons(page)).toEqual(['Continue', 'Reopen test cases']);
+  await expect(page.getByRole('button', { name: 'Add test case…' })).toHaveCount(0); // T228: on Judge there is no such button
 
   // a case can still be added, and it joins the same project
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
@@ -91,15 +91,15 @@ test('cases from a file and cases made by hand join one test project; the summar
   await expect(card(page)).toContainText('The test cases are finalized');
 });
 
-test('Edit test cases stands in the "what next" line of Run and Add test case above its cases; Edit test cases keeps the file and opens the prompt again; after the first reply it is gone', async ({ page }) => {
+test('Reopen test cases stands in the "what next" line of Run and Add test case above its cases; Reopen test cases keeps the file and opens the prompt again; after the first reply it is gone', async ({ page }) => {
   const memory = await openDemoRun(page);
-  expect(await buttons(page)).toEqual(['Continue', 'Edit test cases']);
-  await expect(page.getByRole('region', { name: 'Cases' }).getByRole('button', { name: 'Add test case' })).toBeEnabled();
+  expect(await buttons(page)).toEqual(['Continue', 'Reopen test cases']);
+  await expect(page.getByRole('region', { name: 'Cases' }).getByRole('button', { name: 'Add test case…' })).toBeEnabled();
 
-  await next(page).getByRole('button', { name: 'Edit test cases' }).click();
+  await next(page).getByRole('button', { name: 'Reopen test cases' }).click();
   await expect(page.getByRole('button', { name: /2\s*Test cases/ })).toHaveAttribute('aria-current', 'step');
   await expect(page.getByRole('status', { name: 'Message' })).toContainText('open again');
-  expect(await buttons(page)).toEqual(['Finalize test cases']);
+  expect(await buttons(page)).toEqual(['Finalize test cases…']);
   await page.getByRole('button', { name: /1\s*Judge/ }).click();
   await expect(page.getByLabel('Judge prompt')).not.toHaveAttribute('readonly', '');
 
@@ -112,20 +112,20 @@ test('Edit test cases stands in the "what next" line of Run and Add test case ab
 
   // replies only after finalizing again
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
-  await next(page).getByRole('button', { name: 'Finalize test cases' }).click();
-  await summary(page).getByRole('button', { name: 'Finalize test cases' }).click();
+  await next(page).getByRole('button', { name: 'Finalize test cases…' }).click();
+  await summary(page).getByRole('button', { name: 'Finalize test cases…' }).click();
   await page.getByRole('button', { name: /3\s*Run/ }).click();
   await next(page).getByRole('button', { name: 'Continue' }).click();
   const caseWindow = page.getByRole('dialog', { name: /^Case \d+ / });
   const first = demo.dataset.cases[0]!.id;
   await page.evaluate((t) => navigator.clipboard.writeText(t), demo.replies[first]!.reply);
-  await caseWindow.getByRole('button', { name: 'Paste reply from clipboard' }).click();
+  await caseWindow.getByRole('button', { name: 'Paste reply' }).click();
   await expect(caseWindow.getByRole('textbox', { name: 'Judge reply' })).toHaveValue(demo.replies[first]!.reply);
   await caseWindow.getByRole('button', { name: 'Close' }).click();
 
-  expect(await buttons(page)).not.toContain('Edit test cases');
+  expect(await buttons(page)).not.toContain('Reopen test cases');
   expect(await buttons(page)).not.toContain('Add test case');
-  await expect(page.getByRole('region', { name: 'Cases' }).getByRole('button', { name: 'Add test case' })).toBeEnabled();
+  await expect(page.getByRole('region', { name: 'Cases' }).getByRole('button', { name: 'Add test case…' })).toBeEnabled();
 });
 
 test('leaving the page with unsaved cases warns; after saving the test project it does not (FR-004)', async ({ page }) => {

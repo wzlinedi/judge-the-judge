@@ -10,7 +10,7 @@ const notices = (page: Page) => page.getByRole('region', { name: 'Notices' });
 async function loadDemo(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
 }
 
@@ -47,7 +47,7 @@ test('correcting a rule after replies keeps the replies, changes the judge versi
 
   // the report says it too
   await page.getByRole('button', { name: /4\s*Results/ }).click();
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('region', { name: 'Report and next version' }).getByRole('button', { name: 'Export HTML report' }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('region', { name: 'Report and next version' }).getByRole('button', { name: 'Export HTML report…' }).click()]);
   const path = testInfo.outputPath('corrected-report.html');
   await download.saveAs(path);
   const html = readFileSync(path, 'utf8');

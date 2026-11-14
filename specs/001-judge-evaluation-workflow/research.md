@@ -11,7 +11,7 @@ keep the words of their time. After the reviews of prototypes v13 to v17 these n
 are superseded, and the spec, contracts/ui-flow.md, contracts/file-formats.md, data-model.md and
 section 22 win: "test set" is now the **test project** and "dataset" its **test cases**; there
 are no clean base cases on the Judge step and no catalog file (the catalog is the "Error
-categories" section of the Test cases step); "Load demo data" is the demo of **Load example…**;
+categories" section of the Test cases step); "Load demo data" is the demo of **Load demo…**;
 "Read sample reply", "Read clean base cases", "Modify" and "More actions" are gone; "Save
 evaluation" is only on the Run step; every test case is made from one case JSON and never edited
 after saving; the second opinion is its own window with a preview and **Apply opinion**, with no
@@ -402,7 +402,7 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
 ## 19. Reports and the evaluation file
 
 - **Decision**: One JSON format, the **evaluation file**, serves "Save evaluation", "Save
-  evaluation as", "Load evaluation" and the demo of "Load example…", and is the result as JSON. It holds the judge set, all cases, every prompt
+  evaluation as", "Load evaluation" and the demo of "Load demo…", and is the result as JSON. It holds the judge set, all cases, every prompt
   and reply, every decision and proposal, the model details, the active metric with its matching
   parameters, thresholds, versions and, once anything is decided, the computed results. Loading
   recomputes with the stored parameters, so the same file always gives the same numbers. The HTML report is one self-contained file: inline styles, no
@@ -418,11 +418,11 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
 
 - **Decision**: One window component built on the native `<dialog>` element shown as a modal that
   fills the viewport, used three times:
-  - **Case window of Run**, opened by "Open". The header holds "Previous test case", "Next test
+  - **Case window of Run**, opened by "Open". The header holds "Previous case", "Next test
     case", the position ("case 7 of 20"), the checkbox "only cases awaiting verification", the case
     name and status, the number of unsaved replies with "Save evaluation", and "Close". Left column:
     the data and the prompt; right column, headed "Judge's reply": the four steps in one line,
-    "Copy prompt" and "Paste reply from clipboard" with the one needed next as the primary button,
+    "Copy prompt" and "Paste reply" with the one needed next as the primary button,
     a collapsed box with "Save reply" for when the clipboard cannot be read, and, once the reply is
     saved, the reply, the differences and the decisions with "Approve"; adding a finding, the note,
     the second opinion for this case and replacing the reply sit under a collapsed "More actions"
@@ -507,8 +507,8 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
     is none; `saveAs(text)` always asks; `useLoaded(handle)` makes the file opened by the matching
     load ("Load test set", "Load evaluation"; `showOpenFilePicker`) the current one; `forget()`
     drops it. "Load test set" forgets the evaluation target and "Load evaluation" the test set
-    target, so that neither can overwrite the file of another test; "Start new evaluation", "Load
-    demo data" and "Edit the judge and run again" forget both. Such a handle is readable only, so the
+    target, so that neither can overwrite the file of another test; "New evaluation", "Load
+    demo data" and "Run again with a new judge…" forget both. Such a handle is readable only, so the
     first save to it asks the browser for write permission (`requestPermission` with
     `readwrite`), and Chrome or Edge shows its prompt once; a refusal is treated like a cancelled
     dialog. A file dropped onto the page is read as a plain file and does not become the current

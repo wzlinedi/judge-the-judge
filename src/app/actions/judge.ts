@@ -16,7 +16,7 @@ export interface JudgeEdit {
 }
 
 const refuse = (state: AppState, note: string): JudgeEdit => ({ state, note });
-const FIXED = 'The judge prompt is fixed once the test cases are finalized. Use "Edit test cases" to change it.';
+const FIXED = 'The judge prompt is fixed once the test cases are finalized. Use "Reopen test cases" to change it.';
 
 function withJudgeSet(state: AppState, change: (set: JudgeSet) => JudgeSet): AppState {
   return edit(state, (e) => ({ ...e, judge_set: change(e.judge_set) }));

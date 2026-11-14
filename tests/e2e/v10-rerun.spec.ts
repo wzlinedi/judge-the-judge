@@ -21,13 +21,13 @@ async function file(page: Page, item: string) {
 async function enterFirstReply(page: Page) {
   await next(page).getByRole('button', { name: 'Continue' }).click();
   await page.evaluate((t) => navigator.clipboard.writeText(t), firstReply);
-  await caseWindow(page).getByRole('button', { name: 'Paste reply from clipboard' }).click();
+  await caseWindow(page).getByRole('button', { name: 'Paste reply' }).click();
   await expect(caseWindow(page).getByRole('textbox', { name: 'Judge reply' })).toHaveValue(firstReply);
   await caseWindow(page).getByRole('button', { name: 'Close' }).click();
 }
 async function exportReport(page: Page, testInfo: { outputPath: (name: string) => string }, name: string): Promise<string> {
   await page.getByRole('button', { name: /4\s*Results/ }).click();
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('region', { name: 'Report and next version' }).getByRole('button', { name: 'Export HTML report' }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('region', { name: 'Report and next version' }).getByRole('button', { name: 'Export HTML report…' }).click()]);
   const path = testInfo.outputPath(name);
   await download.saveAs(path);
   return readFileSync(path, 'utf8');
@@ -36,7 +36,7 @@ async function exportReport(page: Page, testInfo: { outputPath: (name: string) =
 test('another judge version on the same test cases, then the same test with another LLM; the files of the first run are never overwritten', async ({ page }, testInfo) => {
   const memory = await installMemoryFiles(page);
   await page.goto('/');
-  await file(page, 'Load example…');
+  await file(page, 'Load demo…');
   await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
 
   // the first run: both files saved, a report exported
@@ -52,8 +52,8 @@ test('another judge version on the same test cases, then the same test with anot
   expect(report1).toContain(first.judge);
   expect(report1).toContain(first.cases);
 
-  // step 1: Edit the judge and run again. Nothing is unsaved, so it does not ask.
-  await next(page).getByRole('button', { name: 'Edit the judge and run again' }).click();
+  // step 1: Run again with a new judge…. Nothing is unsaved, so it does not ask.
+  await next(page).getByRole('button', { name: 'Run again with a new judge…' }).click();
   await expect(page.getByRole('dialog', { name: 'Unsaved changes' })).toHaveCount(0);
   await expect(page.getByRole('status', { name: 'Message' })).toContainText('replies and decisions were cleared');
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step');
@@ -90,7 +90,7 @@ test('another judge version on the same test cases, then the same test with anot
 
   // step 2: the first run's test project again, other model details and the replies of another LLM
   memory.chooseOpenName('run-1-project.json');
-  await file(page, 'Load test project');
+  await file(page, 'Load test project…');
   await expect(page.getByRole('dialog', { name: 'Unsaved changes' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
   const third = await versions(page);
@@ -115,13 +115,13 @@ test('another judge version on the same test cases, then the same test with anot
 test('with unsaved changes it asks first: Cancel keeps everything, Save evaluation first saves and then goes on', async ({ page }) => {
   const memory = await installMemoryFiles(page);
   await page.goto('/');
-  await file(page, 'Load example…');
+  await file(page, 'Load demo…');
   await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
   await page.getByLabel('Model details').fill('changed after loading');
   await expect(page.getByText('Unsaved changes').first()).toBeVisible();
   await page.getByRole('button', { name: /4\s*Results/ }).click();
 
-  await next(page).getByRole('button', { name: 'Edit the judge and run again' }).click();
+  await next(page).getByRole('button', { name: 'Run again with a new judge…' }).click();
   const ask = page.getByRole('dialog', { name: 'Unsaved changes' });
   await expect(ask.getByRole('button')).toHaveText(['Cancel', 'Discard', 'Save evaluation first']);
   await ask.getByRole('button', { name: 'Cancel' }).click();
@@ -129,7 +129,7 @@ test('with unsaved changes it asks first: Cancel keeps everything, Save evaluati
   expect(memory.asked()).toBe(0);
 
   memory.chooseSaveName('before-rerun.json');
-  await next(page).getByRole('button', { name: 'Edit the judge and run again' }).click();
+  await next(page).getByRole('button', { name: 'Run again with a new judge…' }).click();
   await page.getByRole('dialog', { name: 'Unsaved changes' }).getByRole('button', { name: 'Save evaluation first' }).click();
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step');
   expect(JSON.parse(memory.files.get('before-rerun.json')!).model_note).toBe('changed after loading');

@@ -2,18 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { labels } from '../../../src/ui/labels';
 
 const required = [
-  'Load test project', 'Save test project', 'Save test project as', 'Save evaluation', 'Save evaluation as',
-  'Save evaluation first', 'Discard', 'Import test cases', 'Export test cases', 'Load example…',
-  'Load metric definition…', 'Edit test cases', 'Continue', 'Explain', 'File', 'Add test case', 'Paste JSON',
-  'Clean case', 'Case with injected errors', 'Approve and close', 'Save case', 'Close without saving', 'Open',
-  'Rename', 'Show JSON', 'Copy JSON', 'Show in text', 'Correct expected errors',
-  'Paste reply from clipboard', 'Save reply', 'Add finding', 'Second opinion…', 'Apply opinion', 'Approve',
+  'Load test project…', 'Save test project', 'Save test project as…', 'Save evaluation', 'Save evaluation as…',
+  'Save evaluation first', 'Discard', 'Import test cases…', 'Export test cases…', 'Load demo…',
+  'Load metric definition…', 'Reopen test cases', 'Continue', 'Explain', 'File', 'Add test case…', 'From JSON',
+  'Clean case', 'Case with errors', 'Save case', 'Close without saving', 'Open',
+  'Rename', 'Show JSON', 'Copy JSON', 'Show the issue', 'Edit expected errors',
+  'Paste reply', 'Save reply', 'Add finding…', 'Second opinion…', 'Apply opinion', 'Approve',
   // the rest of FR-008
-  'Load evaluation', 'Start new evaluation', 'Add rule', 'Add condition', 'Remove', 'Add category',
-  'Finalize test cases', 'Download example file', 'Next', 'Copy prompt', 'Add error', 'Previous test case',
-  'Next test case', 'Found', 'Issue: missed', 'Issue: false positive', 'Real error', 'Ignore', 'Cancel',
-  'Summary', 'Error analysis', 'Test case list', 'Export HTML report', 'Load check settings',
-  'Edit the judge and run again', 'Help',
+  'Load evaluation…', 'New evaluation', 'Add rule', 'Add condition', 'Remove', 'Add categories',
+  'Finalize test cases…', 'Download example file', 'Next', 'Copy prompt', 'Add error', 'Previous case',
+  'Next case', 'Found', 'Missed', 'False positive', 'Real error', 'Ignore', 'Cancel',
+  'Summary', 'Error analysis', 'Test case list', 'Export HTML report…', 'Load check settings…',
+  'Run again with a new judge…', 'Help',
 ];
 
 const forbidden = [

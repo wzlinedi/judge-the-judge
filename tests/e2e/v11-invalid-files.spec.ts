@@ -27,13 +27,13 @@ async function openDemo(page: Page): Promise<MemoryFiles> {
   memory.files.set('books.json', demoProject);
   memory.chooseOpenName('books.json');
   await page.goto('/');
-  await menu(page, 'Load test project');
+  await menu(page, 'Load test project…');
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
   return memory;
 }
 
 /** Offers a file to a loader of the File menu and returns what the page says about it. */
-async function refusedBy(page: Page, memory: MemoryFiles, loader: 'Load evaluation' | 'Load test project', name: string, text: string): Promise<string> {
+async function refusedBy(page: Page, memory: MemoryFiles, loader: 'Load evaluation…' | 'Load test project…', name: string, text: string): Promise<string> {
   memory.files.set(name, text);
   memory.chooseOpenName(name);
   await menu(page, loader);
@@ -46,19 +46,19 @@ test('a broken JSON file, a newer schema version, a test project without a promp
   const memory = await openDemo(page);
   const before = await snapshot(page);
 
-  expect(await refusedBy(page, memory, 'Load evaluation', 'broken.json', '{ "format": "judge-the-judge-evaluation", ')).toMatch(/not readable JSON.*line \d+, column \d+/s);
+  expect(await refusedBy(page, memory, 'Load evaluation…', 'broken.json', '{ "format": "judge-the-judge-evaluation", ')).toMatch(/not readable JSON.*line \d+, column \d+/s);
   expect(await snapshot(page)).toEqual(before);
 
-  expect(await refusedBy(page, memory, 'Load test project', 'newer.json', JSON.stringify({ ...project, schema_version: 2 }))).toMatch(/schema version 2, which is newer than this tool knows.*up to 1/s);
+  expect(await refusedBy(page, memory, 'Load test project…', 'newer.json', JSON.stringify({ ...project, schema_version: 2 }))).toMatch(/schema version 2, which is newer than this tool knows.*up to 1/s);
   expect(await snapshot(page)).toEqual(before);
 
-  expect(await refusedBy(page, memory, 'Load test project', 'no-prompt.json', JSON.stringify({ ...project, judge_set: judgeWithoutPrompt }))).toMatch(/prompt/);
+  expect(await refusedBy(page, memory, 'Load test project…', 'no-prompt.json', JSON.stringify({ ...project, judge_set: judgeWithoutPrompt }))).toMatch(/prompt/);
   expect(await snapshot(page)).toEqual(before);
 
-  expect(await refusedBy(page, memory, 'Load evaluation', 'other.json', JSON.stringify({ format: 'judge-the-judge-something-else', schema_version: 1 }))).toMatch(/format "judge-the-judge-something-else".*reads "judge-the-judge-evaluation"/s);
+  expect(await refusedBy(page, memory, 'Load evaluation…', 'other.json', JSON.stringify({ format: 'judge-the-judge-something-else', schema_version: 1 }))).toMatch(/format "judge-the-judge-something-else".*reads "judge-the-judge-evaluation"/s);
   expect(await snapshot(page)).toEqual(before);
 
-  expect(await refusedBy(page, memory, 'Load test project', 'catalog.json', JSON.stringify({ format: 'judge-the-judge-error-catalog', schema_version: 1, categories: [] }))).toMatch(
+  expect(await refusedBy(page, memory, 'Load test project…', 'catalog.json', JSON.stringify({ format: 'judge-the-judge-error-catalog', schema_version: 1, categories: [] }))).toMatch(
     /format "judge-the-judge-error-catalog".*reads "judge-the-judge-test-project"/s,
   );
   expect(await snapshot(page)).toEqual(before);
@@ -68,26 +68,26 @@ test('a test project given to Load evaluation, and an evaluation given to Load t
   const memory = await openDemo(page);
   const before = await snapshot(page);
 
-  expect(await refusedBy(page, memory, 'Load evaluation', 'project.json', demoProject)).toContain('Use "Load test project" to open it.');
+  expect(await refusedBy(page, memory, 'Load evaluation…', 'project.json', demoProject)).toContain('Use "Load test project…" to open it.');
   expect(await snapshot(page)).toEqual(before);
 
-  expect(await refusedBy(page, memory, 'Load test project', 'evaluation.json', demoEvaluation)).toContain('Use "Load evaluation" to open it.');
+  expect(await refusedBy(page, memory, 'Load test project…', 'evaluation.json', demoEvaluation)).toContain('Use "Load evaluation…" to open it.');
   expect(await snapshot(page)).toEqual(before);
 });
 
 test('a test-case file that would make 501 cases, and a case with a field of 100,001 characters, import nothing and say why', async ({ page }) => {
   const memory = await installMemoryFiles(page);
   await page.goto('/');
-  await menu(page, 'Load example…');
+  await menu(page, 'Load demo…');
   await page.getByRole('dialog').getByRole('button', { name: 'Accuracy' }).click();
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
   const before = await snapshot(page);
-  const importWindow = page.getByRole('dialog', { name: 'Import test cases' });
+  const importWindow = page.getByRole('dialog', { name: 'Import test cases…' });
 
   // 3 cases are in the project: 498 more is the limit, 498 + 1 is not
   memory.files.set('501.json', casesFile(Array.from({ length: 498 }, (_, i) => aCase(i + 100))));
   memory.chooseOpenName('501.json');
-  await menu(page, 'Import test cases');
+  await menu(page, 'Import test cases…');
   await importWindow.getByRole('button', { name: 'Choose file…' }).click();
   await expect(importWindow.getByRole('alert')).toContainText('The file was not read. Nothing has changed.');
   await expect(importWindow.getByRole('alert')).toContainText(/501 test cases.*limit is 500\. Nothing was imported\./);
@@ -97,16 +97,16 @@ test('a test-case file that would make 501 cases, and a case with a field of 100
   const long = 'x'.repeat(100_001);
   memory.files.set('long.json', casesFile([aCase(1, { name: 'Too long', fields: { source_text: long, summary: 'Short' } })]));
   memory.chooseOpenName('long.json');
-  await menu(page, 'Import test cases');
+  await menu(page, 'Import test cases…');
   await importWindow.getByRole('button', { name: 'Choose file…' }).click();
   await expect(importWindow.getByRole('list', { name: 'Invalid rows' })).toContainText('Too long');
   await expect(importWindow.getByRole('list', { name: 'Invalid rows' })).toContainText(/100,000/);
-  await expect(importWindow.getByRole('button', { name: 'Import test cases' })).toBeDisabled();
+  await expect(importWindow.getByRole('button', { name: 'Import test cases…' })).toBeDisabled();
   await importWindow.getByRole('button', { name: 'Cancel' }).click();
   expect(await snapshot(page)).toEqual(before);
 });
 
-test('a metric definition with an unknown operation is refused in Load example, which stays as it was', async ({ page }) => {
+test('a metric definition with an unknown operation is refused in Load demo, which stays as it was', async ({ page }) => {
   const memory = await installMemoryFiles(page);
   await page.goto('/');
   const before = await snapshot(page);
@@ -114,8 +114,8 @@ test('a metric definition with an unknown operation is refused in Load example, 
   memory.files.set('bad-metric.json', JSON.stringify(bad));
   memory.chooseOpenName('bad-metric.json');
 
-  await menu(page, 'Load example…');
-  const window = page.getByRole('dialog', { name: 'Load example…' });
+  await menu(page, 'Load demo…');
+  const window = page.getByRole('dialog', { name: 'Load demo…' });
   await window.getByRole('button', { name: 'Load metric definition…' }).click();
   await expect(window.getByRole('alert')).toContainText('The metric definition was not loaded. Nothing has changed.');
   await expect(window.getByRole('alert')).toContainText(/median/);

@@ -38,7 +38,7 @@ features.
 
 ### V1. First run with demo data (SC-001, SC-009, SC-010, User Stories 1 and 9)
 
-1. Open the tool; in the File menu choose "Load example…", then the demo.
+1. Open the tool; in the File menu choose "Load demo…", then the demo.
 2. On Results choose "Export HTML report". Then press "Continue" in the "what next" line and
    decide each case it opens. Open Results and export again.
 
@@ -74,9 +74,9 @@ version, and the tool opens the Test cases step (the first step with unfinished 
 
 1. On Test cases choose "Add test case", then "Clean case"; type a name and a comment, pick a
    "Like case" when one exists, "Copy prompt", run it in an LLM, paste the answer into the box and
-   "Approve and close".
+   "Save case".
 2. Paste an answer with expected errors into a new clean case window.
-3. Make a copy of a clean case by hand ("Open", "Show JSON", then "Paste JSON" in a new case with a
+3. Make a copy of a clean case by hand ("Open", "Show JSON", then "From JSON" in a new case with a
    new name), "Save case"; "Rename" the copy to a name another case has, then to a free name;
    "Remove" the copy. There is no "Clone" button.
 4. Try to remove a clean case that another case uses as its base.
@@ -84,21 +84,21 @@ version, and the tool opens the Test cases step (the first step with unfinished 
 **Expected**: the prompt contains the judge prompt, its variables and judged text, the catalog,
 the comment and the fields of the picked case; the answer is checked as it is pasted, its fields
 are shown read-only and the case is saved under the typed name; the answer with expected errors is
-a problem that points to "Paste JSON"; the table shows Kind "Clean" and the buttons Open,
+a problem that points to "From JSON"; the table shows Kind "Clean" and the buttons Open,
 Rename and Remove on every row; the copy is a new case with no link to the original, the taken name is refused; the removal of the base is refused with the list of cases
 made from it.
 
 ### V4. A case with injected errors (SC-022 to SC-024, SC-031, SC-033, SC-035, SC-036, User Story 4)
 
-1. On Test cases choose "Add test case", then "Case with injected errors"; pick a base case; list
+1. On Test cases choose "Add test case", then "Case with errors"; pick a base case; list
    two errors to prepare (one with a new category name typed in); "Copy prompt".
 2. Run it, paste the answer into the box on the same page (there is no "Next").
 3. Read the list of expected errors under the box; change a fragment in the JSON so it
    no longer occurs; fix it; "Save case" (in the header of the window).
-4. "Add test case", "Paste JSON", paste a JSON identical to its base but with one expected error.
+4. "Add test case", "From JSON", paste a JSON identical to its base but with one expected error.
 5. "Open" a case with five expected errors at 1280 x 720; "Show JSON", "Copy JSON"; paste it into
-   a new case with "Paste JSON"; use "Next test case".
-6. Finalize; "Open" a case without a reply, "Correct expected errors", change one difficulty and
+   a new case with "From JSON"; use "Next case".
+6. Finalize; "Open" a case without a reply, "Edit expected errors", change one difficulty and
    save; try to change a field.
 
 **Expected**: the prompt contains the judge prompt, the base case, the judged text and each error
@@ -120,7 +120,7 @@ field change is a problem, and the test cases version changes.
 3. "Export test cases"; start a new evaluation and import the exported file.
 4. "Save test project", reload the page, "Load test project".
 5. Finalize, change a threshold in "Details" on Results, "Save test project", reload, "Load test
-   project"; then "Edit test cases" in the "what next" line.
+   project"; then "Reopen test cases" in the "what next" line.
 6. After entering one reply, import one more case.
 
 **Expected**: the example has `name` and one `field:` column per variable of the current prompt,
@@ -129,7 +129,7 @@ the imported cases are added to those already there; the unknown category is nam
 after consent; the used identifier gets a new one and the summary says so; the export holds every
 case and imports back with identical content and version; the reloaded cases are identical and
 open. The finalized test project comes back finalized on the Run step, with the changed threshold
-and the same metric; "Edit test cases" opens it again and nothing is lost. The case imported after
+and the same metric; "Reopen test cases" opens it again and nothing is lost. The case imported after
 the first reply starts as Not run, is marked "added after first reply", and the replies of the
 other cases are kept.
 
@@ -137,11 +137,11 @@ other cases are kept.
 
 1. Finalize the test cases. On Run write two lines of model details. Choose "Open" at the first
    case.
-2. "Copy prompt", copy a reply into the clipboard, "Paste reply from clipboard", "Next test case".
+2. "Copy prompt", copy a reply into the clipboard, "Paste reply", "Next case".
    Repeat with Alt + Right.
 3. Change the text of a saved reply in its box (a readable JSON is saved at once) for a case that
    has only automatic decisions, then for a case with a decision set by hand.
-4. With an empty clipboard press "Paste reply from clipboard"; then deny clipboard permission and
+4. With an empty clipboard press "Paste reply"; then deny clipboard permission and
    press it again; paste a reply that is not JSON into the box with Ctrl+V: it says "This is not JSON", and "Save as
    text anyway" keeps it.
 5. Save 25 replies without "Save evaluation".
@@ -151,9 +151,9 @@ version, judged text) with no prompt or rules, a multi-line "Model details" box 
 kept, and the evaluation file with "Save evaluation" and "Save evaluation as"; the page header has
 no save button. The window fills the screen at 1280 x 720 as one page of three parts (the case with its
 highlights; a row with "Add finding", "Second opinion…", "Marked N of M" and the status; then "Judge
-reply" with only "Paste reply from clipboard" above the box on the left and the errors on the right), which scrolls as a whole; "Copy prompt" (part 1) is the primary
-button until it is pressed, then "Paste reply from clipboard"; the reply box is always visible and
-never behind a collapsed section, and the complete prompt opens from "Show the full prompt" in a dialog with only "Close";
+reply" with only "Paste reply" above the box on the left and the errors on the right), which scrolls as a whole; "Copy prompt" (part 1) is the primary
+button until it is pressed, then "Paste reply"; the reply box is always visible and
+never behind a collapsed section, and the complete prompt opens from "Show prompt" in a dialog with only "Close";
 the reply is saved by the paste itself and the marks appear on the right, with no "Approve" and
 "Add finding" and "Second opinion…" as visible buttons; the position ("case 2 of 20") is always visible; one case takes no more than three
 actions; the first replacement happens without a question and the second asks, naming one
@@ -169,7 +169,7 @@ produced it; the number of unsaved replies is shown and a reminder to save appea
 2. Read the preview; "Apply opinion". Change one of the marks it set; "Ignore" one item.
 3. Open "Second opinion…" again and paste an opinion meant for another case; then one that answers
    no item; "Cancel".
-4. Tick "only cases awaiting verification" in the case window and use "Next test case".
+4. Tick "only cases awaiting verification" in the case window and use "Next case".
 5. For a reply that could not be read, "Add finding" with a category and difficulty; mark it;
    remove another added finding; "Second opinion…" with an opinion that adds a new finding;
    "No more findings".
@@ -198,15 +198,15 @@ were corrected after the replies were received.
 1. Part-way through Run, "Save evaluation" (choose a file), enter two more replies, "Save
    evaluation" again, then "Save evaluation as" to a second file. Reload the page. "Load
    evaluation" with the first file, enter a reply, "Save evaluation".
-2. Finish; on Results "Open" a case from the Test case list and use "Next test case"; change a
+2. Finish; on Results "Open" a case from the Test case list and use "Next case"; change a
    threshold in "Details". "Export HTML report" and "Save evaluation" on Run. Reload, load the
    evaluation file only (no test project).
 3. Open the HTML report in a browser without the tool and print it to PDF.
 4. Remove the saved file on disk and press "Save evaluation".
-5. "Save test project" twice; then "Edit the judge and run again", "Save test project" and "Save
+5. "Save test project" twice; then "Run again with a new judge…", "Save test project" and "Save
    evaluation".
 6. With replies entered and the indicator showing unsaved changes, "Save test project"; then
-   "Load example…" and choose "Save evaluation first".
+   "Load demo…" and choose "Save evaluation first".
 7. In the test case window paste a case JSON and press "Close without saving".
 
 **Expected**: the second "Save evaluation" overwrites the chosen file without asking for a file;
@@ -218,10 +218,10 @@ stopped. The header indicator says "All changes saved" with the file name after 
 evaluation". On Results the case opens read-only with Previous and Next, and only the threshold
 can be changed. The loaded JSON shows identical numbers, judge version and test cases version, and
 the report can be generated from it. There is no "Export JSON". The test project asks for a file
-once and then overwrites it, its name shown in the File menu; after "Edit the judge and run again"
+once and then overwrites it, its name shown in the File menu; after "Run again with a new judge…"
 the next "Save test project" and "Save evaluation" each ask for a new file, so the earlier run's
 files are untouched. "Save test project" with replies entered leaves the indicator on and says that
-replies are kept only by "Save evaluation"; the warning before "Load example…" offers "Save
+replies are kept only by "Save evaluation"; the warning before "Load demo…" offers "Save
 evaluation first", "Discard" and "Cancel", and the first saves before continuing. "Close without
 saving" asks first; no file save action is reachable while the window is open. The report follows
 the three views, contains every prompt, expected error, reply and decision with its source, the
@@ -230,7 +230,7 @@ says it cannot write and asks for a file; nothing on the page is lost.
 
 ### V10. Another version of the judge (User Story 12)
 
-1. On Results choose "Edit the judge and run again", change the prompt, run and verify again,
+1. On Results choose "Run again with a new judge…", change the prompt, run and verify again,
    export.
 2. Load the first run's test project again, write other model details, enter the replies of
    another LLM, "Save evaluation" to a new file, export.
@@ -254,13 +254,13 @@ unchanged every time.
 
 ### V12. Another metric and my own catalog (SC-005, User Story 14)
 
-1. "Load example…", "Load metric definition…" with `examples/metrics/bias-example.json`, then load
+1. "Load demo…", "Load metric definition…" with `examples/metrics/bias-example.json`, then load
    that example.
 2. On Test cases expand "Error categories"; type a new category name for an error to prepare in a
    case with injected errors and save the case; rename a used category; try to remove it; remove an
    unused one.
 3. "Load check settings" with `examples/metrics/checks-example.json`.
-4. "Load example…", "Load metric definition…" with `examples/metrics/bias-verdict-example.json`,
+4. "Load demo…", "Load metric definition…" with `examples/metrics/bias-verdict-example.json`,
    load that example, add cases with expected errors, finalize, and paste replies
    `{"biased": true}` and `{"biased": false}` for cases with errors and for clean cases. Then change
    a rule so that it uses a list field.
@@ -281,7 +281,7 @@ say which way was counted before and after.
 ### V13. Privacy, accessibility, layout (SC-006, Principle VII)
 
 1. Run the tool in Chrome and in Edge with the network inspector open and complete V1.
-2. Repeat key screens, the three windows and the two dialogs (Load example…, Second opinion) at
+2. Repeat key screens, the three windows and the two dialogs (Load demo…, Second opinion) at
    360 px width, in dark scheme, and with the keyboard only.
 3. Open the tool in another browser (for example Firefox).
 

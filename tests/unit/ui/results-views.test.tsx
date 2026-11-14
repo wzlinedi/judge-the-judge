@@ -51,7 +51,7 @@ describe('Details in the Summary', () => {
 
   it('has Load check settings', () => {
     const h = show(decided);
-    fireEvent.click(screen.getByRole('button', { name: 'Load check settings' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Load check settings…' }));
     expect(h.onLoadChecks).toHaveBeenCalled();
   });
 
@@ -77,7 +77,7 @@ describe('Details in the Summary', () => {
 
   it('is the only place that changes data: the Results step has no mark, approval or save button', () => {
     show(decided);
-    for (const name of ['Approve', 'Ignore', 'Found', 'Add finding', 'Remove', 'Save evaluation', 'Save reply']) expect(screen.queryByRole('button', { name })).toBeNull();
+    for (const name of ['Approve', 'Ignore', 'Found', 'Add finding…', 'Remove', 'Save evaluation', 'Save reply']) expect(screen.queryByRole('button', { name })).toBeNull();
     const inputs = [...document.querySelectorAll('input, textarea, select')].map((el) => el.getAttribute('aria-label') || el.id || el.closest('label')?.textContent);
     expect(inputs).toHaveLength(2);
   });
@@ -171,16 +171,16 @@ describe('the "Report and next version" card', () => {
     const card = screen.getByRole('region', { name: 'Report and next version' });
     expect(card.textContent).toMatch(/evaluation file/);
     expect(card.textContent).toMatch(/Save evaluation/);
-    fireEvent.click(within(screen.getByRole('region', { name: 'What next' })).getByRole('button', { name: 'Export HTML report' }));
+    fireEvent.click(within(screen.getByRole('region', { name: 'What next' })).getByRole('button', { name: 'Export HTML report…' }));
     expect(h.onExport).toHaveBeenCalledTimes(1);
-    expect(screen.getAllByRole('button', { name: 'Export HTML report' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Export HTML report…' })).toHaveLength(1);
   });
 
   it('has Export HTML report in the card while cases are undecided, and says the report is then provisional', () => {
     const h = show(loaded.value.evaluation);
     const card = screen.getByRole('region', { name: 'Report and next version' });
     expect(card.textContent).toMatch(/provisional/i);
-    fireEvent.click(within(card).getByRole('button', { name: 'Export HTML report' }));
+    fireEvent.click(within(card).getByRole('button', { name: 'Export HTML report…' }));
     expect(h.onExport).toHaveBeenCalled();
   });
 
@@ -223,14 +223,14 @@ describe('the read-only case view', () => {
   it('offers no action that changes the case: only Previous, Next, Open on Run and Close', () => {
     view('2');
     const names = within(screen.getByRole('dialog')).getAllByRole('button').map((b) => b.textContent);
-    expect(names.sort()).toEqual(['Close', 'Next test case', 'Open on Run', 'Previous test case']);
+    expect(names.sort()).toEqual(['Close', 'Next case', 'Open on Run', 'Previous case']);
   });
 
-  it('moves with Previous test case and Next test case, shows the position, and stops at the ends', () => {
+  it('moves with Previous case and Next case, shows the position, and stops at the ends', () => {
     const h = view('1');
     expect(screen.getByText('1 of 2')).toBeTruthy();
-    expect((screen.getByRole('button', { name: 'Previous test case' }) as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Next test case' }));
+    expect((screen.getByRole('button', { name: 'Previous case' }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Next case' }));
     expect(h.onNavigate).toHaveBeenCalledWith('2');
   });
 

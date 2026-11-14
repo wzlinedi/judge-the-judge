@@ -43,8 +43,8 @@ describe('header', () => {
     fireEvent.click(button);
     const items = screen.getAllByRole('menuitem').map((i) => i.textContent);
     expect(items).toEqual([
-      'Load evaluation', 'Load test project', 'Save test project', 'Save test project as',
-      'Import test cases', 'Export test cases', 'Load example…', 'Start new evaluation',
+      'Load evaluation…', 'Load test project…', 'Save test project', 'Save test project as…',
+      'Import test cases…', 'Export test cases…', 'Load demo…', 'New evaluation',
     ]);
     expect(screen.queryByRole('button', { name: /^Save evaluation/ })).toBeNull();
     expect(screen.queryByRole('menuitem', { name: /^Save evaluation/ })).toBeNull();
@@ -73,7 +73,7 @@ describe('header', () => {
     expect(document.activeElement).toBe(button);
   });
 
-  it('opens the "Load example…" window with the ready examples and "Load metric definition…"', async () => {
+  it('opens the "Load demo…" window with the ready examples and "Load metric definition…"', async () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: labels.file }));
     fireEvent.click(screen.getByRole('menuitem', { name: labels.loadExample }));

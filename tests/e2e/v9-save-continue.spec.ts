@@ -8,7 +8,7 @@ const item = (page: Page, kind: 'expected' | 'additional', id: string) => page.l
 
 async function loadDemo(page: Page) {
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
 }
 
@@ -16,7 +16,7 @@ async function loadDemo(page: Page) {
 async function decideCase3(page: Page) {
   await next(page).getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByRole('dialog', { name: /Case 3 / })).toBeVisible();
-  await item(page, 'additional', 'claims[]#2').getByRole('button', { name: 'Issue: false positive' }).click();
+  await item(page, 'additional', 'claims[]#2').getByRole('button', { name: 'False positive' }).click();
   await page.getByRole('button', { name: 'Close' }).click();
 }
 
@@ -43,7 +43,7 @@ test('Save evaluation asks for a file once, overwrites it later, and Load evalua
 
   // save as: asks, to a second file
   memory.chooseSaveName('run-2.json');
-  await page.getByRole('button', { name: 'Save evaluation as' }).click();
+  await page.getByRole('button', { name: 'Save evaluation as…' }).click();
   await expect(page.getByText('All changes saved (run-2.json)')).toBeVisible();
   expect(memory.asked()).toBe(2);
   expect([...memory.files.keys()].sort()).toEqual(['run-1.json', 'run-2.json']);
@@ -53,7 +53,7 @@ test('Save evaluation asks for a file once, overwrites it later, and Load evalua
   await expect(page.getByText('Nothing to save yet')).toBeVisible();
   memory.chooseOpenName('run-1.json');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load evaluation' }).click();
+  await page.getByRole('menuitem', { name: 'Load evaluation…' }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
   await expect(page.getByText('All changes saved (run-1.json)')).toBeVisible();
   await expect(next(page)).toContainText('of 20 cases decided');
@@ -93,7 +93,7 @@ test('when the file can no longer be written the work stays and the next save as
   expect(memory.asked()).toBe(asked + 1);
 });
 
-test('Save test project with replies keeps the indicator on, and "Save evaluation first" saves before Load example…', async ({ page }) => {
+test('Save test project with replies keeps the indicator on, and "Save evaluation first" saves before Load demo…', async ({ page }) => {
   const memory = await installMemoryFiles(page);
   memory.chooseSaveName('project.json');
   await page.goto('/');
@@ -109,11 +109,11 @@ test('Save test project with replies keeps the indicator on, and "Save evaluatio
 
   memory.chooseSaveName('run.json');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   const warning = page.getByRole('dialog', { name: 'Unsaved changes' });
   await expect(warning.getByRole('button')).toHaveText(['Cancel', 'Discard', 'Save evaluation first']);
   await warning.getByRole('button', { name: 'Save evaluation first' }).click();
-  await expect(page.getByRole('dialog', { name: /Load example/ })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: /Load demo/ })).toBeVisible();
   expect(memory.files.get('run.json')).toContain('"replies"');
 });
 
@@ -129,7 +129,7 @@ test('a saved test project loads back finalized on Run with no replies (quicksta
   await page.reload();
   memory.chooseOpenName('books.json');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load test project' }).click();
+  await page.getByRole('menuitem', { name: 'Load test project…' }).click();
   await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
   await expect(next(page)).toContainText('0 of 20 cases decided');
   await expect(page.getByText('Test project: books.json')).toBeVisible();

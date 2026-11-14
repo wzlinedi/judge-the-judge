@@ -16,12 +16,12 @@ const open = (name: string) => fireEvent.click(within(screen.getAllByRole('row')
 const view = () => screen.getByRole('dialog', { name: /Anna \+ 2 errors/ });
 
 describe('the read-only view', () => {
-  it('numbers and highlights the expected errors and offers Show in text for each', () => {
+  it('numbers and highlights the expected errors and offers Show the issue for each', () => {
     show();
     open('Anna + 2 errors');
     expect(view().querySelectorAll('mark[data-error]')).toHaveLength(2);
     Element.prototype.scrollIntoView = vi.fn();
-    fireEvent.click(within(view()).getAllByRole('button', { name: 'Show in text' })[0]!);
+    fireEvent.click(within(view()).getAllByRole('button', { name: 'Show the issue' })[0]!);
     expect(view().querySelector('mark.fragment-strong')?.textContent).toContain('Anna is a doctor');
   });
 
@@ -41,21 +41,21 @@ describe('the read-only view', () => {
     }
   });
 
-  it('Copy JSON then Paste JSON gives the same fields and expected errors', () => {
+  it('Copy JSON then From JSON gives the same fields and expected errors', () => {
     show();
     open('Anna + 2 errors');
     fireEvent.click(within(view()).getByRole('button', { name: 'Show JSON' }));
     const json = (within(view()).getByRole('textbox', { name: 'Case JSON' }) as HTMLTextAreaElement).value;
     fireEvent.click(within(view()).getByRole('button', { name: 'Close' }));
-    fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Add test case…' })[0]!);
     const win = () => screen.getByRole('dialog', { name: 'Test case' });
-    fireEvent.click(within(win()).getByRole('button', { name: 'Paste JSON' }));
+    fireEvent.click(within(win()).getByRole('button', { name: 'From JSON' }));
     fireEvent.input(within(win()).getByLabelText('Case JSON'), { target: { value: json.replace('Anna + 2 errors', 'Anna pasted') } });
     expect(within(within(win()).getByRole('list', { name: 'Expected errors' })).getAllByRole('listitem')).toHaveLength(2);
     expect(win().textContent).toContain('Anna pasted');
   });
 
-  it('has no Clone button: a wrong case is changed through Show JSON, Paste JSON and Remove (T218)', () => {
+  it('has no Clone button: a wrong case is changed through Show JSON, From JSON and Remove (T218)', () => {
     show();
     open('Anna + 2 errors');
     expect(within(view()).queryByRole('button', { name: 'Clone' })).toBeNull();

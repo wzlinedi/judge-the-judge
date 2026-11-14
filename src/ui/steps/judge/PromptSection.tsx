@@ -42,7 +42,7 @@ export function PromptSection({ state, onEdit }: SectionProps) {
         onInput={(event) => onEdit(setPrompt(state, (event.currentTarget as HTMLTextAreaElement).value))}
       />
       {state.judgeOpen && !locked ? <p class="muted">The prompt is open for the next run: the test cases are kept. It is fixed again by the first reply you enter.</p> : null}
-      {locked ? <p class="muted">The prompt is fixed because the test cases are finalized. To change it, use Edit test cases (before the first reply) or Start new evaluation in the File menu.</p> : null}
+      {locked ? <p class="muted">The prompt is fixed because the test cases are finalized. To change it, use Reopen test cases (before the first reply) or New evaluation in the File menu.</p> : null}
       {version ? <p class="muted">{`Judge version: ${version}`}</p> : null}
       {set.prompt.trim() !== '' && variables.length === 0 ? <p class="muted">Nothing from the test cases will reach the prompt.</p> : null}
       {variables.length > 0 ? (

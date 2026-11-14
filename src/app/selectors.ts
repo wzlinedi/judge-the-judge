@@ -59,7 +59,7 @@ function afterFinalizing(state: AppState): NextAction['others'] {
   const { dataset, replies } = state.evaluation;
   if (!dataset.finalized) return [];
   const others: NonNullable<NextAction['others']> = [];
-  if (Object.keys(replies).length === 0) others.push({ label: 'Edit test cases', intent: 'edit-cases' });
+  if (Object.keys(replies).length === 0) others.push({ label: 'Reopen test cases', intent: 'edit-cases' });
   return others;
 }
 
@@ -103,9 +103,9 @@ export function nextAction(state: AppState, step: StepId = state.step, reviewed:
         };
       }
       if (count === 0) {
-        return { sentence: 'Add your first test case with the button below, or import test cases from the File menu.', action: { label: 'Finalize test cases', intent: 'finalize', disabled: true } };
+        return { sentence: 'Add your first test case with the button below, or import test cases from the File menu.', action: { label: 'Finalize test cases…', intent: 'finalize', disabled: true } };
       }
-      return { sentence: 'Finalize the test cases when they are ready.', detail: `${count} test cases`, action: { label: 'Finalize test cases', intent: 'finalize' } };
+      return { sentence: 'Finalize the test cases when they are ready.', detail: `${count} test cases`, action: { label: 'Finalize test cases…', intent: 'finalize' } };
     case 'run': {
       const decided = reviewed.filter((r) => r.status === 'pass' || r.status === 'fail').length;
       const next = caseToContinue(reviewed);

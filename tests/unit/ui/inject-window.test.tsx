@@ -1,4 +1,4 @@
-// The checks of the case view of "Case with injected errors" (FR-040, FR-041, FR-080, FR-085, SC-022, SC-035).
+// The checks of the case view of "Case with errors" (FR-040, FR-041, FR-080, FR-085, SC-022, SC-035).
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
@@ -20,8 +20,8 @@ const json = (summary: string, errors: unknown[], over: Record<string, unknown> 
 const doctor = { category: 'factual-error', fragment: 'Anna is a doctor', description: 'Profession changed', difficulty: 'obvious' };
 const open = (state: AppState = draftState(), base: string | null = '1') => {
   render(<App ports={createFakePorts()} env={env} initialState={state} />);
-  fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);
-  fireEvent.click(button('Case with injected errors'));
+  fireEvent.click(screen.getAllByRole('button', { name: 'Add test case…' })[0]!);
+  fireEvent.click(button('Case with errors'));
   if (base) fireEvent.change(within(win()).getByLabelText('Base case (optional)'), { target: { value: base } });
 };
 const toCaseView = (text: string) => fireEvent.input(box(), { target: { value: text } });
@@ -124,8 +124,8 @@ describe('saving', () => {
 describe('the page says where the user is and what to do (T223, T229)', () => {
   it('has no "Part N of 3"; the headings are numbered and the answer is asked for under its own heading', () => {
     render(<App ports={createFakePorts()} env={env} initialState={draftState()} />);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);
-    fireEvent.click(button('Case with injected errors'));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Add test case…' })[0]!);
+    fireEvent.click(button('Case with errors'));
     expect(win().textContent).not.toMatch(/Part \d of 3/);
     expect(within(win()).getByRole('heading', { name: '4. Paste its answer' })).toBeTruthy();
     expect(within(win()).getByText(/Paste what your LLM returned into the box/)).toBeTruthy();

@@ -50,7 +50,7 @@ export function readTestProject(text: string, isMetricRegistered: (id: string) =
   }
   const raw = extracted.value;
   if (raw !== null && typeof raw === 'object' && (raw as Record<string, unknown>)['format'] === EVALUATION_FORMAT) {
-    return { ok: false, problems: [{ message: 'This is an evaluation file. Use "Load evaluation" to open it.', path: 'format' }] };
+    return { ok: false, problems: [{ message: 'This is an evaluation file. Use "Load evaluation…" to open it.', path: 'format' }] };
   }
   const envelope = checkEnvelope(raw, { format: TEST_PROJECT_FORMAT, schemaVersion: TEST_PROJECT_SCHEMA_VERSION, knownKeys: TEST_PROJECT_KEYS });
   if (!envelope.ok) return envelope;

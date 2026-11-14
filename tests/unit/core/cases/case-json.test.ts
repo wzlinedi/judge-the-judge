@@ -145,8 +145,8 @@ describe('modes', () => {
     expect(r.notes.join(' ')).toMatch(/tone-shift.*catalog/);
   });
 
-  it('clean: expected errors are a problem pointing to Paste JSON', () => {
-    expect(messages(check(one(), { mode: 'clean' }))).toMatch(/Paste JSON/);
+  it('clean: expected errors are a problem pointing to From JSON', () => {
+    expect(messages(check(one(), { mode: 'clean' }))).toMatch(/From JSON/);
     expect(check(one({ expected_errors: [] }), { mode: 'clean' }).problems).toEqual([]);
   });
 

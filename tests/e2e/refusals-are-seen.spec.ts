@@ -9,7 +9,7 @@ const base = accuracy.judge_set.clean_base_cases[0] as { name: string; fields: {
 async function start(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Accuracy' }).click();
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
 }
@@ -32,9 +32,9 @@ test('removing a base case is refused in a banner that is in view where the butt
   await page.setViewportSize({ width: 1280, height: 320 });
   await start(page);
   // make a case from case 1, so that case 1 is the base of another case
-  await page.getByRole('button', { name: 'Add test case' }).click();
+  await page.getByRole('button', { name: 'Add test case…' }).click();
   const win = page.getByRole('dialog', { name: 'Test case' });
-  await win.getByRole('button', { name: 'Paste JSON' }).click();
+  await win.getByRole('button', { name: 'From JSON' }).click();
   const changed = base.fields.summary.replace(/\b(\d{4})\b/, '1999');
   const summary = changed === base.fields.summary ? `${base.fields.summary} It happened in 1999.` : changed;
   await win.getByLabel('Case JSON').fill(JSON.stringify({ name: 'Made from case 1', base: '1', fields: { source_text: base.fields.source_text, summary }, expected_errors: [{ description: 'A changed year', fragment: '1999', category: 'wrong-number' }] }));
@@ -54,7 +54,7 @@ test('a message of the tool is a visible banner, not small grey text', async ({ 
   await installMemoryFiles(page);
   await start(page);
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Export test cases' }).click();
+  await page.getByRole('menuitem', { name: 'Export test cases…' }).click();
   const banner = message(page);
   await expect(banner).toContainText(/Exported/);
   const style = await banner.evaluate((e) => ({ border: getComputedStyle(e).borderTopWidth, size: parseFloat(getComputedStyle(e).fontSize) }));

@@ -229,7 +229,7 @@ describe('test project', () => {
 });
 
 describe('forgetting the remembered files (FR-076)', () => {
-  it('"Start new evaluation" and "Load example…" forget both', () => {
+  it('"New evaluation" and "Load demo…" forget both', () => {
     const ports = createFakePorts();
     ports.testProjectTarget.fileName = 'a.json';
     ports.evaluationTarget.fileName = 'b.json';

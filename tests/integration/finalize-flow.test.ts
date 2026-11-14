@@ -145,7 +145,7 @@ describe('what may still change after finalizing', () => {
   });
 });
 
-describe('Edit test cases', () => {
+describe('Reopen test cases', () => {
   it('while no reply exists it opens the test cases and the prompt again, loses nothing and keeps both remembered files', async () => {
     const state: AppState = { ...(await finalized()), testProjectFile: 'cases.json', evaluationFile: 'run.json', hasFile: true, step: 'run' };
     const edited = editTestCases(state);
@@ -171,7 +171,7 @@ describe('Edit test cases', () => {
     const edited = editTestCases(state);
     expect(edited.state).toBe(state);
     expect(edited.note).toMatch(/first reply/i);
-    expect(edited.note).toMatch(/Edit the judge and run again|Start new evaluation/);
+    expect(edited.note).toMatch(/Run again with a new judge…|New evaluation/);
   });
 
   it('the test cases are finalized again before replies can be entered', async () => {

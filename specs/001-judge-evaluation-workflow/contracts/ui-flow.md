@@ -15,10 +15,10 @@ Chrome and Microsoft Edge (FR-003).
 - **The header holds no save button** (FR-076). It shows the one indicator of unsaved changes
   ("Unsaved changes", or "All changes saved" with the file name; FR-051) and a **File** menu
   holding **Load evaluation**, **Load test project**, **Save test project**, **Save test project
-  as**, **Import test cases**, **Export test cases**, **Load example…** and **Start new
+  as**, **Import test cases**, **Export test cases**, **Load demo…** and **Start new
   evaluation**, with the remembered file name of the test project. **Save evaluation** and **Save
   evaluation as** are only on the Run step and in the header of the case window of Run.
-- **Load example…** opens a small window listing the ready examples Accuracy and Completeness
+- **Load demo…** opens a small window listing the ready examples Accuracy and Completeness
   (each starts a new test project with its judge, catalog and a few clean cases), the demo (a
   finished run of book summaries) and **Load metric definition…** (FR-008, FR-019, FR-026).
 - **Saving the two files** (FR-076): **Save test project** and **Save evaluation** behave alike.
@@ -26,14 +26,14 @@ Chrome and Microsoft Edge (FR-003).
   **Save test project as** and **Save evaluation as** pick a new file; after a load through the
   picker saving goes to the loaded file (the browser may ask once for permission to write); a
   file dropped onto the page is not remembered. **Load test project** forgets the evaluation file
-  and **Load evaluation** forgets the test project file. **Start new evaluation**, **Load
-  example…** and **Edit the judge and run again** forget both. The evaluation file alone is enough
+  and **Load evaluation** forgets the test project file. **New evaluation**, **Load
+  example…** and **Run again with a new judge…** forget both. The evaluation file alone is enough
   to show Results and generate the report.
 - **The indicator** clears after **Save evaluation**; while no reply exists it also clears after
   **Save test project**. Once replies exist, **Save test project** leaves it on and says that
   replies are kept only by **Save evaluation** (FR-051).
-- **Replacing work** (FR-051): before a load, **Start new evaluation**, **Load example…** and
-  **Edit the judge and run again**, when there are unsaved changes, one warning offers **Save
+- **Replacing work** (FR-051): before a load, **New evaluation**, **Load demo…** and
+  **Run again with a new judge…**, when there are unsaved changes, one warning offers **Save
   evaluation first**, **Discard** and **Cancel**. This offer is the only way to save the
   evaluation outside the Run step. Leaving or reloading the page with unsaved changes triggers the
   browser's own warning.
@@ -42,7 +42,7 @@ Chrome and Microsoft Edge (FR-003).
   action of the step. There is no welcome section. Explanations longer than one sentence are not
   on step screens; each section has a small **Explain** control that opens its explanation on
   demand.
-- **After a load** (**Load evaluation**, **Load test project**, **Load example…**) the tool opens
+- **After a load** (**Load evaluation**, **Load test project**, **Load demo…**) the tool opens
   the first step with unfinished work: Judge with no prompt, Test cases when not finalized, Run
   when any case is not run or awaits verification, otherwise Results. The "what next" line says
   how far the work is ("12 of 20 cases decided") and offers **Continue**, which on Run opens the
@@ -50,7 +50,7 @@ Chrome and Microsoft Edge (FR-003).
 - **No menus in rows or windows** (FR-008): a table row shows its actions as visible buttons, and
   no window holds a "More actions" section.
 - After finalizing, the "what next" line of Judge and Test cases says what is fixed and what can
-  still be changed; while no reply exists it offers **Edit test cases** (FR-053).
+  still be changed; while no reply exists it offers **Reopen test cases** (FR-053).
 - A footer with the tool version and the statement that data stays on this device.
 
 | Step | Available when | Primary action in the "what next" line |
@@ -131,7 +131,7 @@ Compare step and no result shelf.
   summary); name used twice (both cases show the warning); finalized (**Add test case**
   above the list and **Import test cases** stay available and new cases start as Not run; **Rename** and
   **Remove** stay enabled for every case (**Remove** of a case with a reply asks first and says its reply and decisions go with it); while no reply
-  exists, **Edit test cases** opens the test project again).
+  exists, **Reopen test cases** opens the test project again).
 
 ### Window: the test case window
 
@@ -140,12 +140,12 @@ FR-090). It fills the screen, has a header that never scrolls and two columns th
 their own. While something is being added, the header always shows **Close without saving**,
 which asks first when something was pasted or typed.
 
-- **Add test case** first offers three choices, all always available: **Paste JSON**, **Clean
-  case** and **Case with injected errors**.
+- **Add test case** first offers three choices, all always available: **From JSON**, **Clean
+  case** and **Case with errors**.
 - **One vertical page** (FR-085): every way of adding a case is one page from top to bottom; there
   are no two columns, no **Next**, no **Back** and no "Part N of 3". The header holds only the
   title, the save button with the reason beside it while it is disabled, and **Close without saving** (Escape too); there is no bottom bar. Each part is in a frame, labels are in a left column and fields on the right, and the description of the category stands under the whole error row. The parts are numbered from 1 in each window.
-- **Paste JSON** (FR-090): 1. the box for a case JSON (file-formats.md, section 2), checked as it
+- **From JSON** (FR-090): 1. the box for a case JSON (file-formats.md, section 2), checked as it
   changes, with problems under it (line and column, or field path); 2. the expected errors,
   read-only. The window names the kind the case will have (clean without expected errors, injected
   errors with at least one); a JSON with no expected errors says "No expected errors: this will be
@@ -153,9 +153,9 @@ which asks first when something was pasted or typed.
 - **Clean case** (FR-083): 1. **Name**, an optional **Comment** and an optional **Like case**
   (an existing clean case whose fields go into the prompt as a model); 2. the prompt for the
   user's LLM with **Copy prompt**; 3. the box for the LLM's answer, checked as it changes. When
-  valid its fields are shown read-only and **Approve and close** (in the header, primary) saves and
-  closes; an answer with expected errors is a problem that points to **Paste JSON**.
-- **Case with injected errors**, five parts (FR-040, FR-041, FR-085):
+  valid its fields are shown read-only and **Save case** (in the header, primary) saves and
+  closes; an answer with expected errors is a problem that points to **From JSON**.
+- **Case with errors**, five parts (FR-040, FR-041, FR-085):
   1. **Base case**: the optional base (any clean case, or none) with its fields.
   2. **Errors to prepare**: one horizontal row per error (category from the catalog or typed as a
      new name, difficulty obvious / subtle / left to the LLM, what should be wrong, **Remove**),
@@ -166,17 +166,17 @@ which asks first when something was pasted or typed.
   5. **Expected errors**: the name, kind and base ("Base: 4 (name)"), the line of FR-080 ("Text and
      list agree", or what does not), and the expected errors read-only (number, category,
      difficulty, fragment, description), each marked "not in the text" when its fragment is not
-     found. No fields with highlights and no **Show in text** here; while the JSON is invalid the
+     found. No fields with highlights and no **Show the issue** here; while the JSON is invalid the
      list is replaced by a line saying so.
   **Save case** is in the header, enabled only while the JSON is valid; with a mismatch of FR-080
   it asks for confirmation; a case identical to its base is refused.
 - **Open** (FR-086): the case read-only (its own layout, with highlighted fields), with **Previous test
-  case**, **Next test case** and the position ("case 7 of 20") in the header (Alt + Left/Right do
+  case**, **Next case** and the position ("case 7 of 20") in the header (Alt + Left/Right do
   the same), **Show JSON** (the case JSON with **Copy JSON**), and after finalizing,
-  for a case without a reply, **Correct expected errors**; also **Show the full prompt** (a dialog with
+  for a case without a reply, **Edit expected errors**; also **Show prompt** (a dialog with
   the whole composed prompt and only **Close**) with **Copy prompt**. No reply is shown (a reply belongs to Run).
   Sections are in frames and the expected errors are highlighted strongly. A saved case is never edited.
-- **Correct expected errors** (FR-089): the page of **Paste JSON** with the case's JSON, where only
+- **Edit expected errors** (FR-089): the page of **From JSON** with the case's JSON, where only
   `expected_errors` may change; a change to the name or the fields is a problem under the box.
   **Save case** gives a new test cases version.
 - **States**: malformed JSON (line and column, text kept); missing variable, empty field, missing
@@ -209,7 +209,7 @@ which asks first when something was pasted or typed.
 
 Opened by **Open** (FR-055, FR-060).
 
-- **Fills the screen.** A header that never scrolls: **Previous test case**, **Next test case**,
+- **Fills the screen.** A header that never scrolls: **Previous case**, **Next case**,
   the position, the checkbox "only cases awaiting verification", the case name with its
   identifier, "N not saved", **Save evaluation**, **Save evaluation as**, **Close**.
   Alt + Left and Alt + Right do the same as the two buttons. The status is in part 2.
@@ -218,14 +218,14 @@ Opened by **Open** (FR-055, FR-060).
 
 | Part | Content |
 |---|---|
-| **1. Case** | Kind and base; every field of the case, over the full width, with the fragments of the expected errors highlighted and numbered (and, after a reply, marked found, missed, undecided or ignored); then **Show the full prompt** (a dialog with the whole prompt and only **Close**) and **Copy prompt** (primary until pressed). |
+| **1. Case** | Kind and base; every field of the case, over the full width, with the fragments of the expected errors highlighted and numbered (and, after a reply, marked found, missed, undecided or ignored); then **Show prompt** (a dialog with the whole prompt and only **Close**) and **Copy prompt** (primary until pressed). |
 | **2. Marking** | One row: **Add finding** (text, optional category, optional difficulty), **Second opinion…**, the meter "Marked N of M" and the status of the case (Awaiting verification, Pass, Fail). **Without a reply** only the status is shown. There is no **Approve**. |
-| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: **Paste reply from clipboard** (primary once **Copy prompt** was pressed), then the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column. A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Save as text anyway** (primary) keeps it. **Right, "Errors"**: without a reply "The errors appear here when the judge’s reply is saved."; with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; **Expected errors**, each with its mark (**Found**, **Issue: missed**, **Ignore**), **Show in text**, the reason for anything undecided and the source of every mark; **Additional findings**, each with its mark (**Issue: false positive**, **Real error**, **Ignore**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**; then **Findings in the reply** with the words that go with their colours. |
+| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: **Paste reply** (primary once **Copy prompt** was pressed), then the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column. A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. **Right, "Errors"**: without a reply "The errors appear here when the judge’s reply is saved."; with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; **Expected errors**, each with its mark (**Found**, **Issue: missed**, **Ignore**), **Show the issue**, the reason for anything undecided and the source of every mark; **Additional findings**, each with its mark (**Issue: false positive**, **Real error**, **Ignore**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**; then **Findings in the reply** with the words that go with their colours. |
 
 - A decision made in the window takes effect at once and the window stays open.
 - A new reply resets the case: its decisions, the added findings included, are removed and the
   automatic marks are computed again (FR-056). Running one case takes three actions: **Open** or
-  **Next test case**, **Copy prompt**, **Paste reply from clipboard** (SC-002).
+  **Next case**, **Copy prompt**, **Paste reply** (SC-002).
 - **States**: first or last case (the matching button is disabled); changed but unsaved reply in
   the box when moving or closing (asks first); empty clipboard (says so, nothing changes);
   clipboard not readable (says so and points to the box); replacing a reply when the case has
@@ -260,7 +260,7 @@ collapsed section, for that case only.
 ### Window: read-only case view of Results
 
 Opened by **Open** in the Test case list (FR-071). The same frame as the case window of Run
-(header with **Previous test case**, **Next test case**, position, name, status, **Close**; two
+(header with **Previous case**, **Next case**, position, name, status, **Close**; two
 columns), showing the case's data, its judge prompt, the reply and every mark with its source. It
 offers no action that changes the case, and **Open on Run** leads to the case window.
 
@@ -296,7 +296,7 @@ offers no action that changes the case, and **Open on Run** leads to the case wi
 - **Actions** (in the "Report and next version" card; the primary one is in the "what next"
   line): **Export HTML report**, available at any time; while cases are not run or await
   verification the report is marked provisional and the card says so. The card also says that the
-  result as JSON is the evaluation file of **Save evaluation**. **Edit the judge and run again**
+  result as JSON is the evaluation file of **Save evaluation**. **Run again with a new judge…**
   (asks first as in "Replacing work", forgets both remembered files, FR-074).
 - **States**: nothing run yet; partial results; no findings at all (false-positive rate not
   available); sample below the minimum; loaded evaluation whose recomputed numbers differ from the
@@ -308,8 +308,8 @@ offers no action that changes the case, and **Open on Run** leads to the case wi
 - **Sections**: what the tool does and what one test case is; how many cases and errors a test
   needs, with a worked example; the four steps; the manual copy-and-paste workflow; variables and
   the judged text; the sample reply, field paths and error rules, with examples; the error
-  categories; adding test cases (Paste JSON, Clean case, Case with injected errors, the case JSON
-  layout, Open, Show JSON, Correct expected errors); importing test cases from a file;
+  categories; adding test cases (From JSON, Clean case, Case with errors, the case JSON
+  layout, Open, Show JSON, Edit expected errors); importing test cases from a file;
   pasting replies and what happens when a reply is replaced; marking after each reply, Add finding
   and Remove, the second opinion window and "Ignore"; the two files (the test project, reused for
   every run; the evaluation, the progress of one run), the indicator of unsaved changes, "… as",
@@ -326,7 +326,7 @@ offers no action that changes the case, and **Open on Run** leads to the case wi
 
 - One obvious primary action per step, in the "what next" line; the only other primary-colored
   controls are **Save evaluation** on the Run step and the confirming button of a window the user
-  has opened and must answer (**Save case**, **Approve and close**, **Apply opinion**, **Import
+  has opened and must answer (**Save case**, **Save case**, **Apply opinion**, **Import
   test cases** in the import summary, **No more findings** in the case window of a reply that
   cannot be read). Inside a window, the action
   needed next is the primary one.

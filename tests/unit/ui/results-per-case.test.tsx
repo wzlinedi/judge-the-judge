@@ -50,15 +50,15 @@ describe('the case window of Run', () => {
       expect(item.textContent).toContain('Automatic');
     }
     const first = document.querySelector<HTMLElement>('[data-expected="e1"]') as HTMLElement;
-    fireEvent.click(within(first).getByRole('button', { name: 'Issue: missed' }));
-    expect(within(first).getByRole('button', { name: 'Issue: missed' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(first).getByRole('button', { name: 'Missed' }));
+    expect(within(first).getByRole('button', { name: 'Missed' }).getAttribute('aria-pressed')).toBe('true');
   });
 
   it('leaves a flagged clean case to the user as an additional finding', () => {
     open('4');
     const finding = document.querySelector<HTMLElement>('[data-additional="reply"]') as HTMLElement;
     expect(finding.textContent).toContain('A finding about the whole reply');
-    expect(within(finding).getByRole('button', { name: 'Issue: false positive' })).toBeTruthy();
+    expect(within(finding).getByRole('button', { name: 'False positive' })).toBeTruthy();
     expect(win().textContent).toContain('Awaiting verification');
   });
 

@@ -16,11 +16,11 @@ const show = (state = finalized()) => render(<App ports={createFakePorts()} env=
 const open = (name: string) => fireEvent.click(within(screen.getAllByRole('row').find((r) => r.textContent?.includes(name)) as HTMLElement).getByRole('button', { name: 'Open' }));
 const win = () => screen.getByRole('dialog', { name: 'Test case' });
 
-describe('Correct expected errors', () => {
+describe('Edit expected errors', () => {
   it('opens the window with the case JSON and the list of expected errors', () => {
     show();
     open('Anna + 2 errors');
-    fireEvent.click(screen.getByRole('button', { name: 'Correct expected errors' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit expected errors' }));
     expect(within(within(win()).getByRole('list', { name: 'Expected errors' })).getAllByRole('listitem')).toHaveLength(2);
     expect(JSON.parse((within(win()).getByLabelText('Case JSON') as HTMLTextAreaElement).value).fields.summary).toContain('Anna is a doctor');
   });
@@ -29,14 +29,14 @@ describe('Correct expected errors', () => {
     show();
     open('Anna');
     const view = screen.getByRole('dialog', { name: /Anna/ });
-    expect(within(view).queryByRole('button', { name: 'Correct expected errors' })).toBeNull();
+    expect(within(view).queryByRole('button', { name: 'Edit expected errors' })).toBeNull();
     expect(within(view).getByText(/has a reply/)).toBeTruthy();
   });
 
   it('a change to the name or a field is a problem under the box and blocks Save case', () => {
     show();
     open('Anna + 2 errors');
-    fireEvent.click(screen.getByRole('button', { name: 'Correct expected errors' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit expected errors' }));
     const box = within(win()).getByLabelText('Case JSON') as HTMLTextAreaElement;
     const edited = JSON.parse(box.value);
     fireEvent.input(box, { target: { value: JSON.stringify({ ...edited, name: 'Another name' }) } });
@@ -47,7 +47,7 @@ describe('Correct expected errors', () => {
   it('saving changes only the expected errors, and marks the case "corrected after first reply" when replies exist', () => {
     show();
     open('Anna + 2 errors');
-    fireEvent.click(screen.getByRole('button', { name: 'Correct expected errors' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit expected errors' }));
     const box = within(win()).getByLabelText('Case JSON') as HTMLTextAreaElement;
     const edited = JSON.parse(box.value);
     edited.expected_errors[1].difficulty = 'obvious';

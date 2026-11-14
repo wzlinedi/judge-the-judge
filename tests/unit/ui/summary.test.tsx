@@ -94,7 +94,7 @@ describe('Summary', () => {
     const onExport = vi.fn();
     render(<ResultsStep results={final} {...finalContext} {...props} onExport={onExport} />);
     const next = screen.getByRole('region', { name: 'What next' });
-    fireEvent.click(within(next).getByRole('button', { name: 'Export HTML report' }));
+    fireEvent.click(within(next).getByRole('button', { name: 'Export HTML report…' }));
     expect(onExport).toHaveBeenCalled();
   });
 

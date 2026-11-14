@@ -1,4 +1,4 @@
-// quickstart.md V4: a case with injected errors on one page (T229), Open, Show JSON, Correct expected errors
+// quickstart.md V4: a case with injected errors on one page (T229), Open, Show JSON, Edit expected errors
 // (SC-022 to SC-024, SC-031, SC-033, SC-035, SC-036, User Story 4).
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
@@ -23,7 +23,7 @@ const withErrors = (fragments: [string, string]) => {
 async function start(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Accuracy' }).click();
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
 }
@@ -31,8 +31,8 @@ const axe = async (page: Page) => (await new AxeBuilder({ page }).analyze()).vio
 
 test('a case with injected errors on one page: base, errors, prompt, JSON, expected errors, save', async ({ page }) => {
   await start(page);
-  await page.getByRole('button', { name: 'Add test case' }).click();
-  await win(page).getByRole('button', { name: 'Case with injected errors' }).click();
+  await page.getByRole('button', { name: 'Add test case…' }).click();
+  await win(page).getByRole('button', { name: 'Case with errors' }).click();
 
   // part 1: a base, two errors (one with a new category), the prompt
   await win(page).getByLabel('Base case (optional)').selectOption({ index: 1 });
@@ -85,21 +85,21 @@ test('a case with injected errors on one page: base, errors, prompt, JSON, expec
   await expect(page.getByText('tone-shift', { exact: true }).first()).toBeVisible();
 });
 
-test('Paste JSON: a case identical to its base is refused with the reason', async ({ page }) => {
+test('From JSON: a case identical to its base is refused with the reason', async ({ page }) => {
   await start(page);
-  await page.getByRole('button', { name: 'Add test case' }).click();
-  await win(page).getByRole('button', { name: 'Paste JSON' }).click();
+  await page.getByRole('button', { name: 'Add test case…' }).click();
+  await win(page).getByRole('button', { name: 'From JSON' }).click();
   await win(page).getByLabel('Case JSON').fill(json({ name: 'Same', base: '1', expected_errors: [{ description: 'x', fragment: firstWord }] }));
   await expect(win(page).getByText(/identical to its base case 1/)).toBeVisible();
   await expect(win(page).getByRole('button', { name: 'Save case' })).toBeDisabled();
 });
 
-test('five expected errors are visible without scrolling, and Show JSON, Copy JSON and Paste JSON round-trip', async ({ page }) => {
+test('five expected errors are visible without scrolling, and Show JSON, Copy JSON and From JSON round-trip', async ({ page }) => {
   await start(page);
   const words = Array.from(new Set(base.fields.summary.split(' '))).filter((w) => w.length > 3).slice(0, 5);
   expect(words).toHaveLength(5);
-  await page.getByRole('button', { name: 'Add test case' }).click();
-  await win(page).getByRole('button', { name: 'Paste JSON' }).click();
+  await page.getByRole('button', { name: 'Add test case…' }).click();
+  await win(page).getByRole('button', { name: 'From JSON' }).click();
   await win(page).getByLabel('Case JSON').fill(json({ name: 'Five errors', expected_errors: words.map((w, i) => ({ category: 'factual-error', fragment: w, description: `Change ${i + 1}`, difficulty: i % 2 ? 'subtle' : 'obvious' })) }));
   await win(page).getByRole('button', { name: 'Save case' }).click();
   await page.getByRole('row').filter({ hasText: 'Five errors' }).getByRole('button', { name: 'Open' }).click();
@@ -116,38 +116,38 @@ test('five expected errors are visible without scrolling, and Show JSON, Copy JS
   expect(JSON.parse(copied).expected_errors).toHaveLength(5);
   await view.getByRole('button', { name: 'Close' }).click();
 
-  await page.getByRole('button', { name: 'Add test case' }).click();
-  await win(page).getByRole('button', { name: 'Paste JSON' }).click();
+  await page.getByRole('button', { name: 'Add test case…' }).click();
+  await win(page).getByRole('button', { name: 'From JSON' }).click();
   await win(page).getByLabel('Case JSON').fill(copied.replace('Five errors', 'Five errors pasted'));
   await expect(win(page).getByRole('list', { name: 'Expected errors' }).getByRole('listitem')).toHaveCount(5);
   await win(page).getByRole('button', { name: 'Save case' }).click();
   await expect(page.getByRole('row').filter({ hasText: 'Five errors pasted' })).toBeVisible();
 
-  // Next test case moves through the cases
+  // Next case moves through the cases
   await page.getByRole('row').filter({ hasText: 'Five errors pasted' }).getByRole('button', { name: 'Open' }).click();
   const position = page.locator('.case-window-position');
   await expect(position).toHaveText(/5 of 5/);
-  await page.getByRole('button', { name: 'Previous test case' }).click();
+  await page.getByRole('button', { name: 'Previous case' }).click();
   await expect(position).toHaveText(/4 of 5/);
 });
 
 test('after finalizing only the expected errors of a case without a reply can be corrected', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
 
   // a case added after the first reply has no reply
-  await page.getByRole('button', { name: 'Add test case' }).click();
-  await win(page).getByRole('button', { name: 'Paste JSON' }).click();
+  await page.getByRole('button', { name: 'Add test case…' }).click();
+  await win(page).getByRole('button', { name: 'From JSON' }).click();
   await win(page).getByLabel('Case JSON').fill(JSON.stringify({ name: 'Late case', fields: { source_text: 'A keeper lights the lamp every evening.', summary: 'A keeper lights the lamp each morning.' }, expected_errors: [{ category: 'factual-error', fragment: 'each morning', description: 'Evening became morning', difficulty: 'obvious' }] }));
   await win(page).getByRole('button', { name: 'Save case' }).click();
   const row = page.getByRole('row').filter({ hasText: 'Late case' });
   await expect(row).toContainText('added after first reply');
 
   await row.getByRole('button', { name: 'Open' }).click();
-  await page.getByRole('button', { name: 'Correct expected errors' }).click();
+  await page.getByRole('button', { name: 'Edit expected errors' }).click();
   const box = win(page).getByLabel('Case JSON');
   const original = await box.inputValue();
   await box.fill(original.replace('The expected', 'x').replace('"obvious"', '"subtle"'));
@@ -156,7 +156,7 @@ test('after finalizing only the expected errors of a case without a reply can be
 
   // a field cannot change
   await row.getByRole('button', { name: 'Open' }).click();
-  await page.getByRole('button', { name: 'Correct expected errors' }).click();
+  await page.getByRole('button', { name: 'Edit expected errors' }).click();
   await box.fill((await box.inputValue()).replace('each morning', 'each night'));
   await expect(win(page).getByText(/fields cannot change/i)).toBeVisible();
   await expect(win(page).getByRole('button', { name: 'Save case' })).toBeDisabled();
@@ -165,14 +165,14 @@ test('after finalizing only the expected errors of a case without a reply can be
   await win(page).getByRole('button', { name: 'Close without saving' }).click();
   await page.getByRole('dialog', { name: 'Close without saving?' }).getByRole('button', { name: 'Close without saving' }).click();
   await page.getByRole('row').nth(1).getByRole('button', { name: 'Open' }).click();
-  await expect(page.getByRole('button', { name: 'Correct expected errors' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Edit expected errors' })).toHaveCount(0);
   await expect(page.getByRole('dialog', { name: /Case 1/ }).getByText(/has a reply/)).toBeVisible();
 });
 
 test('the window is one page: the error row is on one line, nothing scrolls sideways, Save case is in the header, the parts are in frames (T229, T233)', async ({ page }) => {
   await start(page);
-  await page.getByRole('button', { name: 'Add test case' }).click();
-  await win(page).getByRole('button', { name: 'Case with injected errors' }).click();
+  await page.getByRole('button', { name: 'Add test case…' }).click();
+  await win(page).getByRole('button', { name: 'Case with errors' }).click();
   const row = win(page).getByRole('group', { name: 'Error 1' });
   // Category, Difficulty, What should be wrong and Remove sit side by side: their boxes overlap vertically
   const boxes = await row.locator('select, input, button').evaluateAll((items) => items.map((i) => ({ top: i.getBoundingClientRect().top, bottom: i.getBoundingClientRect().bottom })));

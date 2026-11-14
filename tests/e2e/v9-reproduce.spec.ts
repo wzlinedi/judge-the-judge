@@ -12,7 +12,7 @@ const summary = async (page: Page) => ((await page.getByRole('tabpanel').textCon
 async function loadDemo(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load example…' }).click();
+  await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Demo/ }).click();
 }
 
@@ -35,7 +35,7 @@ async function decideEverything(page: Page) {
 async function loadEvaluation(page: Page, memory: Awaited<ReturnType<typeof installMemoryFiles>>, name: string) {
   memory.chooseOpenName(name);
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Load evaluation' }).click();
+  await page.getByRole('menuitem', { name: 'Load evaluation…' }).click();
 }
 
 test('a finished result is reproduced from the evaluation file alone: identical numbers, versions and report (steps 2 and 3)', async ({ page, browser }, testInfo) => {
@@ -49,7 +49,7 @@ test('a finished result is reproduced from the evaluation file alone: identical 
   await page.getByRole('tab', { name: 'Test case list' }).click();
   await page.getByRole('table', { name: 'Test cases' }).getByRole('row').nth(3).getByRole('button', { name: 'Open' }).click();
   await expect(caseWindow(page)).toContainText('Case 3 ');
-  await caseWindow(page).getByRole('button', { name: 'Next test case' }).click();
+  await caseWindow(page).getByRole('button', { name: 'Next case' }).click();
   await expect(caseWindow(page)).toContainText('Case 4 ');
   await caseWindow(page).getByRole('button', { name: 'Close' }).click();
   await page.getByRole('tab', { name: 'Summary' }).click();
@@ -58,7 +58,7 @@ test('a finished result is reproduced from the evaluation file alone: identical 
   await details.getByLabel('Detection rate: at least (%)').fill('75');
   const numbers = await summary(page);
 
-  const [first] = await Promise.all([page.waitForEvent('download'), next(page).getByRole('button', { name: 'Export HTML report' }).click()]);
+  const [first] = await Promise.all([page.waitForEvent('download'), next(page).getByRole('button', { name: 'Export HTML report…' }).click()]);
   await first.saveAs(testInfo.outputPath('first.html'));
   await page.getByRole('button', { name: /3\s*Run/ }).click();
   await page.getByRole('button', { name: 'Save evaluation', exact: true }).click();
@@ -75,7 +75,7 @@ test('a finished result is reproduced from the evaluation file alone: identical 
   await expect(page.getByRole('region', { name: 'Notices' })).toHaveCount(0);
   await expect.poll(() => summary(page)).toBe(numbers);
   await page.getByRole('button', { name: /3\s*Run/ }).click();
-  await page.getByRole('button', { name: 'Save evaluation as' }).click();
+  await page.getByRole('button', { name: 'Save evaluation as…' }).click();
   await expect.poll(() => memory.files.has('again.json')).toBe(true);
   const again = JSON.parse(memory.files.get('again.json')!);
   expect(again.results).toEqual(saved.results);
@@ -84,7 +84,7 @@ test('a finished result is reproduced from the evaluation file alone: identical 
 
   // the report generated from the loaded file is the same report, and reads without the tool (step 3)
   await page.getByRole('button', { name: /4\s*Results/ }).click();
-  const [second] = await Promise.all([page.waitForEvent('download'), next(page).getByRole('button', { name: 'Export HTML report' }).click()]);
+  const [second] = await Promise.all([page.waitForEvent('download'), next(page).getByRole('button', { name: 'Export HTML report…' }).click()]);
   await second.saveAs(testInfo.outputPath('second.html'));
   const body = (file: string) => readFileSync(testInfo.outputPath(file), 'utf8').replace(/Exported [^<]*/, '');
   expect(body('second.html')).toBe(body('first.html'));
@@ -117,7 +117,7 @@ test('a file whose stored numbers do not follow from its data is loaded, and the
   await expect(notice).toContainText(`is ${rate} when recomputed`);
 
   // the report carries the same note
-  const [download] = await Promise.all([page.waitForEvent('download'), next(page).getByRole('button', { name: 'Export HTML report' }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), next(page).getByRole('button', { name: 'Export HTML report…' }).click()]);
   await download.saveAs(testInfo.outputPath('tampered.html'));
   const html = readFileSync(testInfo.outputPath('tampered.html'), 'utf8');
   expect(html).toContain('The numbers recomputed from this file differ');
@@ -131,7 +131,7 @@ test('a file whose stored numbers do not follow from its data is loaded, and the
   await expect(page.getByRole('region', { name: 'Notices' })).toHaveCount(0);
 });
 
-test('the earlier run is never overwritten: after Edit the judge and run again both files ask for a new name (step 5)', async ({ page }) => {
+test('the earlier run is never overwritten: after Run again with a new judge… both files ask for a new name (step 5)', async ({ page }) => {
   const memory = await installMemoryFiles(page);
   memory.chooseSaveName('project.json');
   await loadDemo(page);
@@ -146,7 +146,7 @@ test('the earlier run is never overwritten: after Edit the judge and run again b
 
   await page.getByRole('button', { name: 'Save evaluation', exact: true }).click();
   await page.getByRole('button', { name: /4\s*Results/ }).click();
-  await next(page).getByRole('button', { name: 'Edit the judge and run again' }).click();
+  await next(page).getByRole('button', { name: 'Run again with a new judge…' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0); // saved, so nothing is asked
 
   memory.chooseSaveName('project-2.json');

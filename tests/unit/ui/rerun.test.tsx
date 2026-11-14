@@ -1,4 +1,4 @@
-// "Edit the judge and run again" on the Results step (FR-074, FR-051; User Story 12).
+// "Run again with a new judge…" on the Results step (FR-074, FR-051; User Story 12).
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
@@ -10,9 +10,9 @@ const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: v
 const resultsState = (over: Partial<AppState> = {}): AppState => ({ ...createState(), step: 'results', evaluation: sampleEvaluation(), hasFile: true, ...over });
 const show = (state: AppState, ports = createFakePorts()) => render(<App ports={ports} env={env} initialState={state} />);
 const bar = () => screen.getByRole('region', { name: 'What next' });
-const rerunButton = () => within(bar()).getByRole('button', { name: 'Edit the judge and run again' });
+const rerunButton = () => within(bar()).getByRole('button', { name: 'Run again with a new judge…' });
 
-describe('the Results step offers Edit the judge and run again beside its one primary action', () => {
+describe('the Results step offers Run again with a new judge… beside its one primary action', () => {
   it('shows it as a quieter button; the primary action stays Export or Continue', () => {
     show(resultsState());
     expect(rerunButton().className).not.toContain('primary');

@@ -22,7 +22,7 @@ TestProject ──────────────────────�
 
 reply ──rules──> Findings ──matching──> CaseReview ──+ decisions──> CaseStatus ──> Results
 case JSON (pasted, LLM answer, Show JSON) ──check──> TestCase (new, or corrected expected errors)
-MetricDefinition ──registered in──> MetricRegistry ──"Load example…"──> TestProject
+MetricDefinition ──registered in──> MetricRegistry ──"Load demo…"──> TestProject
 ```
 
 A clean base case is simply a clean test case (no expected errors): any clean case can be the
@@ -131,16 +131,16 @@ The named collection of test cases of a test project.
 ```text
 (empty) ──add / import──> Open ──finalize (after summary + confirm)──> Finalized
    ^                                ^                                           │
-   └──── Start new evaluation ──────┴──── "Edit test cases" (no reply yet) ─────┘
+   └──── New evaluation ──────┴──── "Reopen test cases" (no reply yet) ─────┘
 Finalized ──add / import──> Finalized (new cases start Not run; "added after first reply"
                                     when replies exist; new test cases version)
 Finalized ──rename / remove a case without a reply, or correct its expected errors──> Finalized
                                     (new test cases version; "corrected after first reply" when
                                     replies exist)
-Finalized ──"Edit the judge and run again"──> Finalized (same cases, replies and decisions cleared,
+Finalized ──"Run again with a new judge…"──> Finalized (same cases, replies and decisions cleared,
                                               prompt editable until the first reply is saved)
 any ──"Load test project"──> the saved state (open or finalized), with no replies (after warning)
-any ──"Load evaluation" / "Load example…"──> exactly the saved state (open or finalized)
+any ──"Load evaluation" / "Load demo…"──> exactly the saved state (open or finalized)
 ```
 
 - **Open**: cases can be added, renamed and removed; the catalog and judge set can be
@@ -148,7 +148,7 @@ any ──"Load evaluation" / "Load example…"──> exactly the saved state (
   case is never edited: it is changed by copying its JSON into a new case, changing it and removing the
   original (FR-025, FR-086); there is no "Clone" (FR-078).
 - **Finalized**: the judge prompt and the fields and identifiers of every case are fixed. While no
-  reply exists, "Edit test cases" returns to Open without losing anything (FR-053). Cases may still
+  reply exists, "Reopen test cases" returns to Open without losing anything (FR-053). Cases may still
   be added and imported; a case without a reply may be renamed, removed or have its
   expected errors corrected through its JSON (FR-089); a case with a reply is not changed (an
   expected error that should not count is marked "Ignore" on Run). The reply mapping and the error
@@ -207,7 +207,7 @@ written whole to the evaluation file (FR-073).
 | `decisions` | case id → CaseDecisions | Only for cases with a reply. |
 | `checks` | CheckConfiguration | Thresholds in use; defaults from the bundled configuration, or restored from a loaded test project or evaluation. |
 | `model_note` | text | Optional multi-line free text, shown as "Model details": the model and the settings that ran the judge, in any form; never read or checked (FR-058). |
-| save files | two file handles, not stored | One for the test project and one for the evaluation (FR-076): chosen by the first "Save …" or by "Save … as", or the file opened by the matching load through the picker (not a dropped file). Held in memory only (research.md, section 25). "Load test project" forgets the evaluation file; "Load evaluation" forgets the test project file; "Start new evaluation", "Load example…" and "Edit the judge and run again" forget both; "Edit test cases" keeps both. |
+| save files | two file handles, not stored | One for the test project and one for the evaluation (FR-076): chosen by the first "Save …" or by "Save … as", or the file opened by the matching load through the picker (not a dropped file). Held in memory only (research.md, section 25). "Load test project" forgets the evaluation file; "Load evaluation" forgets the test project file; "New evaluation", "Load demo…" and "Run again with a new judge…" forget both; "Reopen test cases" keeps both. |
 | unsaved changes | yes/no, not stored | One flag (FR-051): set by any change; cleared by "Save evaluation", and by "Save test project" while no reply exists. |
 | `metric` | id and parameters | The active metric and the matching parameters in use; written to the test project file and the evaluation file so a result can be reproduced (Principle V). |
 | reply draft | case id → text, not stored | Text changed in the always-visible reply box and not yet saved; moving or closing asks first (FR-055). |
@@ -216,8 +216,8 @@ written whole to the evaluation file (FR-073).
 
 **Reply**: `prompt` (the composed judge prompt at the moment the reply was saved) and `reply` (text
 of any format, never rejected for its format, not empty) (FR-056, FR-057). It arrives from
-"Paste reply from clipboard" or from the always-visible box (a readable JSON is saved as soon as it is in the box; any
-other text with "Save as text anyway"); all have the same effect. The box is checked as it changes (line and column). Saving a new reply for a case resets
+"Paste reply" or from the always-visible box (a readable JSON is saved as soon as it is in the box; any
+other text with "Keep as text"); all have the same effect. The box is checked as it changes (line and column). Saving a new reply for a case resets
 it: its decisions, the added findings included, are removed and the automatic part is computed
 again. The tool asks first, saying how many will be removed, only when the case has
 decisions with source `manual` or `llm-approved`; with automatic results only it replaces the
@@ -389,13 +389,13 @@ replies, and opens the first step with unfinished work.
 Defined in [contracts/metric-and-checks.md](./contracts/metric-and-checks.md). A MetricDefinition
 supplies a complete starter judge set, matching parameters and the list of measures. A
 CheckConfiguration supplies the thresholds. The MetricRegistry holds the two built-in definitions
-and any loaded during the session; its entries are the choices of the "Load example…" window.
+and any loaded during the session; its entries are the choices of the "Load demo…" window.
 
 ## Summaries shown before something is accepted
 
 | Entity | Content |
 |---|---|
 | ImportSummary | For a test-case file: total, clean and injected-errors counts, invalid rows with position and reason, fields that match no variable, variables with no field, categories missing from the catalog, and the user's choice (import the valid rows, or cancel; add the categories, or cancel). Imported cases are added to those already here. A cancelled or failed import changes nothing (FR-027 to FR-029). |
-| CaseJsonCheck | For a pasted case JSON (Paste JSON, Clean case, Case with injected errors, Correct expected errors): problems with line and column or field path, warnings, notes, the kind the case will have, and its last valid state (FR-041, FR-084). |
+| CaseJsonCheck | For a pasted case JSON (From JSON, Clean case, Case with errors, Edit expected errors): problems with line and column or field path, warnings, notes, the kind the case will have, and its last valid state (FR-041, FR-084). |
 | OpinionPreview | For a pasted verification opinion: every change with the current and the new mark, new findings, unanswered items, and whether it can be applied (FR-063). |
 | FinalizeSummary | Counts, balance, test-size forecast and all warnings, and whether finalizing is allowed (FR-052). |
