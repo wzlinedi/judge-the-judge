@@ -9,7 +9,7 @@ describe('Help (Principle VIII)', () => {
   it('has the sections written so far, in plain headings', () => {
     render(<HelpStep />);
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Reading the results']);
+    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Error categories', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results']);
   });
 
   it('quotes the numbers of the demo from the demo files, so they cannot drift', () => {
@@ -75,5 +75,16 @@ describe('Help (Principle VIII)', () => {
     expect(text).toMatch(/case with injected errors/i);
     expect(text).toContain('expected_errors');
     expect(text).toContain('fragment');
+  });
+
+  it('explains the catalog (one place, no file of its own) and how to add a metric', () => {
+    render(<HelpStep />);
+    const text = document.body.textContent ?? '';
+    expect(text).toMatch(/no file of its own/);
+    expect(text).toContain('Add category');
+    expect(text).toContain('Load metric definition…');
+    expect(text).toContain('docs/how-to-add-a-metric.md');
+    expect(text).toMatch(/graded ratings/);
+    expect(text).toMatch(/30 expected errors and 10 clean cases/);
   });
 });

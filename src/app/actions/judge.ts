@@ -2,8 +2,10 @@
 // state and, when there is something to tell the user, one plain sentence. Refused actions return the same state.
 import { proposeFindingText, recognizeFields, validFindingTextField, type RecognizedFields } from '../../core/judge/fields';
 import { findVariables, proposeJudgedText } from '../../core/judge/variables';
-import type { Condition, ErrorRule, Evaluation, JudgeSet, ReplyMapping, TestCase } from '../../core/model';
+import type { Condition, ErrorRule, Evaluation, JudgeSet, Problem, ReplyMapping, TestCase } from '../../core/model';
+import { readMetric } from '../../core/io/metric-file';
 import type { MetricDefinition } from '../../core/metrics/types';
+import { registerMetric } from '../metrics';
 import type { Ports } from '../ports/types';
 import { DEFAULT_CHECKS, edit, forgetBothFiles, type AppState } from '../store';
 
@@ -155,4 +157,28 @@ export function startFromMetric(state: AppState, metric: MetricDefinition, ports
     decisions: {},
   };
   return { ...state, evaluation, step: 'judge', unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: null, hasFile: false, openCase: null };
+}
+
+export type MetricLoad =
+  | { outcome: 'cancelled' }
+  | { outcome: 'invalid'; problems: Problem[] }
+  | { outcome: 'loaded'; metric: MetricDefinition; notes: string[] }
+  /** The id belongs to a metric loaded earlier; the user chooses whether to replace it. */
+  | { outcome: 'exists'; metric: MetricDefinition; message: string };
+
+/** "Load metric definition…": the file is read, validated and registered. Nothing else in the tool changes (SC-005). */
+export async function loadMetricDefinition(ports: Ports, options: { replace?: boolean } = {}): Promise<MetricLoad> {
+  const picked = await ports.opener.open();
+  if (!picked) return { outcome: 'cancelled' };
+  const read = readMetric(picked.text);
+  if (!read.ok) return { outcome: 'invalid', problems: read.problems };
+  const registered = registerMetric(read.value, options);
+  if (registered.ok) return { outcome: 'loaded', metric: read.value, notes: read.notes };
+  if (registered.canReplace) return { outcome: 'exists', metric: read.value, message: registered.reason };
+  return { outcome: 'invalid', problems: [{ message: registered.reason, path: 'id' }] };
+}
+
+/** The user chose to replace the metric loaded earlier. */
+export function replaceLoadedMetric(metric: MetricDefinition): boolean {
+  return registerMetric(metric, { replace: true }).ok;
 }

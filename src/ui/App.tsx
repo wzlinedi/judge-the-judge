@@ -2,10 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import demoEvaluation from '../../examples/demo/evaluation.json?raw';
 import { loadExample } from '../app/actions/evaluation';
 import { cloneCase, type CaseEdit } from '../app/actions/cases';
-import { startFromMetric, type JudgeEdit } from '../app/actions/judge';
+import type { CatalogEdit } from '../app/actions/catalog';
+import { loadMetricDefinition, replaceLoadedMetric, startFromMetric, type JudgeEdit } from '../app/actions/judge';
 import { continueWork, loadEvaluation, loadTestProject, saveEvaluation, saveEvaluationAs, saveTestProject, saveTestProjectAs, type FileEnv } from '../app/actions/files';
 import { guardFor, installBeforeUnload, type GuardedAction } from '../app/guard';
-import { metricFor } from '../app/metrics';
+import { metricFor, sessionRegistry } from '../app/metrics';
 import { browserSupported, type BrowserEnv } from '../app/ports/browser';
 import { createBrowserPorts } from '../app/ports';
 import type { Ports } from '../app/ports/types';
@@ -29,7 +30,8 @@ import { JudgeStep } from './steps/judge/JudgeStep';
 import { RunStep } from './steps/run/RunStep';
 import { CaseWindow } from './windows/case-window/CaseWindow';
 import { TestCaseWindow, type TestWindowView } from './windows/test-case/TestCaseWindow';
-import { LoadExampleWindow, type ExampleId } from './windows/load-example/LoadExampleWindow';
+import { DEMO, LoadExampleWindow } from './windows/load-example/LoadExampleWindow';
+import type { MetricDefinition } from '../core/metrics/types';
 
 export interface AppProps {
   ports?: Ports;
@@ -51,6 +53,10 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const [onlyAwaiting, setOnlyAwaiting] = useState(false);
   const [notice, setNotice] = useState('');
   const [problems, setProblems] = useState<Problem[]>([]);
+  const [categoriesOpen, setCategoriesOpen] = useState<boolean | undefined>(undefined);
+  const [metricProblems, setMetricProblems] = useState<Problem[]>([]);
+  const [pendingReplace, setPendingReplace] = useState<{ metric: MetricDefinition; message: string } | null>(null);
+  const [metricsVersion, setMetricsVersion] = useState(0);
   const [testWindow, setTestWindow] = useState<TestWindowView | null>(null);
   const portsRef = useRef<Ports>(ports ?? createBrowserPorts(browser, () => stateRef.current.evaluation.dataset.name));
   const stateRef = useRef(state);
@@ -97,6 +103,25 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     say(edit.note);
   };
 
+  const applyCatalog = (edit: CatalogEdit) => {
+    setState(edit.state);
+    say(edit.note);
+  };
+
+  const loadMetric = async () => {
+    setPendingReplace(null);
+    const result = await loadMetricDefinition(portsRef.current);
+    if (result.outcome === 'invalid') setMetricProblems(result.problems);
+    else if (result.outcome === 'exists') {
+      setMetricProblems([]);
+      setPendingReplace({ metric: result.metric, message: result.message });
+    } else if (result.outcome === 'loaded') {
+      setMetricProblems([]);
+      setMetricsVersion((v) => v + 1);
+      say(`The metric ${result.metric.name} was loaded. Choose it in the list to start from it.`);
+    }
+  };
+
   const applyJudge = (result: JudgeEdit) => {
     setState(result.state);
     say(result.note);
@@ -120,9 +145,11 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     else perform(action);
   };
 
-  const chooseExample = (example: ExampleId) => {
+  const chooseExample = (example: string) => {
     setShowExamples(false);
-    if (example === 'demo') {
+    setMetricProblems([]);
+    setPendingReplace(null);
+    if (example === DEMO) {
       setState((s) => loadExample(s, demoEvaluation, portsRef.current, metricFor('accuracy')));
       say('The demo was loaded.');
     } else {
@@ -180,6 +207,9 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
             ) : state.step === 'cases' ? (
               <CasesStep
                 state={state}
+                categoriesOpen={categoriesOpen ?? state.evaluation.dataset.cases.length === 0}
+                onToggleCategories={() => setCategoriesOpen(!(categoriesOpen ?? state.evaluation.dataset.cases.length === 0))}
+                onCatalogEdit={applyCatalog}
                 onAdd={() => setTestWindow({ view: 'choice' })}
                 onOpen={(id) => setTestWindow({ view: 'open', id })}
                 onClone={(id) => setTestWindow({ view: 'paste', text: cloneCase(state, id) ?? '' })}
@@ -207,7 +237,34 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
         />
       ) : null}
       {testWindow ? <TestCaseWindow state={state} view={testWindow} onView={setTestWindow} onApply={applyCase} /> : null}
-      <LoadExampleWindow open={showExamples} enabled={['accuracy', 'completeness', 'demo']} onChoose={chooseExample} onLoadMetric={() => setShowExamples(false)} onClose={() => setShowExamples(false)} />
+      <LoadExampleWindow
+        key={metricsVersion}
+        open={showExamples}
+        metrics={sessionRegistry().metrics.map((m) => ({ id: m.id, name: m.name, description: m.description }))}
+        onChoose={chooseExample}
+        onLoadMetric={() => void loadMetric()}
+        onClose={() => {
+          setShowExamples(false);
+          setMetricProblems([]);
+          setPendingReplace(null);
+        }}
+        problems={metricProblems}
+        replace={
+          pendingReplace
+            ? {
+                message: pendingReplace.message,
+                onKeep: () => setPendingReplace(null),
+                onReplace: () => {
+                  if (replaceLoadedMetric(pendingReplace.metric)) {
+                    setMetricsVersion((v) => v + 1);
+                    say(`The metric ${pendingReplace.metric.name} was replaced.`);
+                  }
+                  setPendingReplace(null);
+                },
+              }
+            : undefined
+        }
+      />
       <Dialog
         open={pending !== null}
         title="Unsaved changes"

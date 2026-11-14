@@ -1,8 +1,10 @@
 import type { CaseEdit } from '../../../app/actions/cases';
+import type { CatalogEdit } from '../../../app/actions/catalog';
 import type { AppState } from '../../../app/store';
 import { EmptyState } from '../../components/EmptyState';
 import { labels } from '../../labels';
 import { CasesTable } from './CasesTable';
+import { ErrorCategoriesSection } from './ErrorCategoriesSection';
 
 export interface CasesStepProps {
   state: AppState;
@@ -10,13 +12,17 @@ export interface CasesStepProps {
   onOpen: (id: string) => void;
   onClone: (id: string) => void;
   onEdit: (edit: CaseEdit) => void;
+  categoriesOpen: boolean;
+  onToggleCategories: () => void;
+  onCatalogEdit: (edit: CatalogEdit) => void;
 }
 
 /** The Test cases step: Add test case above one table of every case (FR-025, FR-087). */
-export function CasesStep({ state, onAdd, onOpen, onClone, onEdit }: CasesStepProps) {
+export function CasesStep({ state, onAdd, onOpen, onClone, onEdit, categoriesOpen, onToggleCategories, onCatalogEdit }: CasesStepProps) {
   const empty = state.evaluation.dataset.cases.length === 0;
   return (
     <div class="cases-step">
+      <ErrorCategoriesSection state={state} open={categoriesOpen} onToggle={onToggleCategories} onEdit={onCatalogEdit} />
       <div class="list-head">
         <h2>Test cases</h2>
         <button type="button" onClick={onAdd}>
