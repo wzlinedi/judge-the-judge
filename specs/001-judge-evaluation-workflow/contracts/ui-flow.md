@@ -260,9 +260,12 @@ collapsed section, for that case only.
 ### Window: read-only case view of Results
 
 Opened by **Open** in the Test case list (FR-071). The same frame as the case window of Run
-(header with **Previous case**, **Next case**, position, name, status, **Close**; two
-columns), showing the case's data, its judge prompt, the reply and every mark with its source. It
-offers no action that changes the case, and **Open on Run** leads to the case window.
+(header with **Previous case**, **Next case**, position, name, **Close**, **Open on Run**), and
+the same page: four numbered parts, one below the other, each in a frame, nothing editable:
+1. Case (fields with the highlights, **Show prompt**, **Copy prompt**), 2. Result (the status and
+"Marked N of M", the note), 3. Judge reply (read-only), 4. Errors (each with its field, fragment,
+mark and the source of the mark). It offers no action that changes the case, and **Open on Run**
+leads to the case window.
 
 ## Step 4: Results
 

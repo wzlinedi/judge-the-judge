@@ -41,7 +41,7 @@ export interface ErrorsPaneProps {
 }
 
 /** Where the finding sits: "in summary", or that no field holds its text. Nothing for a finding with no text. */
-function Place({ field }: { field: string | undefined | null }) {
+export function Place({ field }: { field: string | undefined | null }) {
   if (field === null) return null;
   return field === undefined ? <p class="muted item-place not-found">not found in the case</p> : <p class="muted item-place">{`in ${field}`}</p>;
 }

@@ -210,7 +210,9 @@ describe('the read-only case view', () => {
   it('shows the case, its complete judge prompt, the reply and every mark with its source, all read-only', () => {
     view('2');
     const win = screen.getByRole('dialog', { name: /^Case 2 / });
-    expect((within(win).getByRole('textbox', { name: 'Complete judge prompt' }) as HTMLTextAreaElement).readOnly).toBe(true);
+    fireEvent.click(within(win).getByRole('button', { name: 'Show prompt' }));
+    expect((screen.getByRole('textbox', { name: 'Complete judge prompt' }) as HTMLTextAreaElement).readOnly).toBe(true);
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Complete judge prompt' })).getByRole('button', { name: 'Close' }));
     const replyBox = within(win).getByRole('textbox', { name: 'Judge reply' }) as HTMLTextAreaElement;
     expect(replyBox.readOnly).toBe(true);
     expect(replyBox.value).toContain('Anna is a doctor.');
@@ -220,10 +222,10 @@ describe('the read-only case view', () => {
     expect(win.textContent).toMatch(/factual-error · obvious/);
   });
 
-  it('offers no action that changes the case: only Previous, Next, Open on Run and Close', () => {
+  it('offers no action that changes the case: only Previous, Next, Open on Run, Close and the prompt buttons', () => {
     view('2');
     const names = within(screen.getByRole('dialog')).getAllByRole('button').map((b) => b.textContent);
-    expect(names.sort()).toEqual(['Close', 'Next case', 'Open on Run', 'Previous case']);
+    expect(names.sort()).toEqual(['Close', 'Copy prompt', 'Next case', 'Open on Run', 'Previous case', 'Show prompt']);
   });
 
   it('moves with Previous case and Next case, shows the position, and stops at the ends', () => {
@@ -240,6 +242,18 @@ describe('the read-only case view', () => {
     expect(h.onOpenOnRun).toHaveBeenCalledWith('2');
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(h.onClose).toHaveBeenCalled();
+  });
+
+  it('T241: is one page of four numbered parts in the order of Run: Case, Result, Judge reply, Errors', () => {
+    view('2');
+    const win = screen.getByRole('dialog', { name: /^Case 2 / });
+    const heads = Array.from(win.querySelectorAll('.case-part > h3')).map((h) => h.textContent);
+    expect(heads).toEqual(['1. Case', '2. Result', '3. Judge reply', '4. Errors']);
+    expect(win.querySelector('.case-columns')).toBeNull();
+    const result = within(win).getByRole('heading', { name: '2. Result' }).closest('.case-part') as HTMLElement;
+    expect(result.textContent).toMatch(/Marked \d+ of \d+/);
+    const errors = within(win).getByRole('heading', { name: '4. Errors' }).closest('.case-part') as HTMLElement;
+    expect(errors.textContent).toMatch(/in summary|in source_text|not found in the case/);
   });
 
   it('says so for a case without a reply', () => {
