@@ -1,4 +1,5 @@
 import { useRef, useState } from 'preact/hooks';
+import { addFinding, applyOpinionTo, removeFinding, setNote } from '../../../app/actions/decide';
 import { approveCase, setAddedMark, setAdditionalMark, setExpectedMark } from '../../../app/actions/decisions';
 import { reminderDue, type ReplyOutcome } from '../../../app/actions/replies';
 import type { ReviewedCase } from '../../../core/evaluation/results';
@@ -10,6 +11,8 @@ import { StatusMark } from '../../components/StatusMark';
 import { labels } from '../../labels';
 import { DecidePane } from './DecidePane';
 import { MarkedFields } from './MarkedFields';
+import { SecondOpinionWindow } from '../second-opinion/SecondOpinionWindow';
+import { AddFindingDialog } from './AddFindingDialog';
 import { ReplyPane } from './ReplyPane';
 
 /** What the case window asks of the application when the user enters a reply (FR-056). */
@@ -38,6 +41,8 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   const [message, setMessage] = useState('');
   const [replacing, setReplacing] = useState<{ text: string; count: number } | null>(null);
   const [leaving, setLeaving] = useState<(() => void) | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [opinionOpen, setOpinionOpen] = useState(false);
   const position = reviewed.findIndex((r) => r.testCase.id === caseId);
   const current = reviewed[position];
   if (!current) return null;
@@ -141,6 +146,11 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
           onAdditional={(item, state) => onChange(item.added !== undefined ? setAddedMark(evaluation, caseId, item.added, state) : setAdditionalMark(evaluation, caseId, item.key, state))}
           onApprove={() => onChange(approveCase(evaluation, caseId))}
           onShowInText={showInText}
+          onRemove={(item) => item.added !== undefined && onChange(removeFinding(evaluation, caseId, item.added))}
+          onAddFinding={() => setAdding(true)}
+          onSecondOpinion={() => setOpinionOpen(true)}
+          note={evaluation.decisions[caseId]?.note ?? ''}
+          onNote={(text) => onChange(setNote(evaluation, caseId, text))}
         />
       ) : null}
     </>
@@ -181,6 +191,27 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
       }
       overlay={
         <>
+          {adding ? (
+            <AddFindingDialog
+              catalog={evaluation.judge_set.error_catalog}
+              onAdd={(finding) => {
+                setAdding(false);
+                onChange(addFinding(evaluation, caseId, finding));
+              }}
+              onClose={() => setAdding(false)}
+            />
+          ) : null}
+          {opinionOpen ? (
+            <SecondOpinionWindow
+              evaluation={evaluation}
+              reviewed={current}
+              onApply={(plan) => {
+                setOpinionOpen(false);
+                onChange(applyOpinionTo(evaluation, caseId, plan));
+              }}
+              onClose={() => setOpinionOpen(false)}
+            />
+          ) : null}
           <Dialog
             open={replacing !== null}
             title="Replace this reply?"

@@ -5,6 +5,7 @@ import { Files } from './sections/Files';
 import { ImportingCases } from './sections/ImportingCases';
 import { FourSteps } from './sections/FourSteps';
 import { MetricsAndChecks } from './sections/MetricsAndChecks';
+import { MarkingAfterReplies } from './sections/MarkingAfterReplies';
 import { Privacy } from './sections/Privacy';
 import { WorkingByHand } from './sections/WorkingByHand';
 import { SampleReplyRules } from './sections/SampleReplyRules';
@@ -27,6 +28,7 @@ export function HelpStep() {
       <ImportingCases />
       <ErrorCategories />
       <WorkingByHand />
+      <MarkingAfterReplies />
       <Files />
       <Privacy />
       <DemoData />

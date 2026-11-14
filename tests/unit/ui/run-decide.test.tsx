@@ -109,7 +109,7 @@ describe('case window of Run, with a reply', () => {
     render(<Window caseId="3" />);
     fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Issue: false positive' }));
     expect(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Issue: false positive' }).getAttribute('aria-pressed')).toBe('true');
-    expect(item('additional', 'claims[]#2').textContent).toContain('Set by you');
+    expect(item('additional', 'claims[]#2').textContent).toContain('Set by hand');
     expect(screen.getAllByText(/Fail/).length).toBeGreaterThan(0);
   });
 

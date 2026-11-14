@@ -2,6 +2,7 @@ import type { Effective, EffectiveAdditional, EffectiveExpected } from '../../..
 import { markFindings } from '../../../core/evaluation/finding-marks';
 import type { ReviewedCase } from '../../../core/evaluation/results';
 import type { AdditionalState, ExpectedState, TestCase } from '../../../core/model';
+import { useState } from 'preact/hooks';
 import { SOURCE_LABELS } from '../../components/sources';
 import { labels } from '../../labels';
 
@@ -25,6 +26,12 @@ export interface DecidePaneProps {
   onAdditional: (item: EffectiveAdditional, state: AdditionalState) => void;
   onApprove: () => void;
   onShowInText: (expectedId: string) => void;
+  onRemove: (item: EffectiveAdditional) => void;
+  onAddFinding: () => void;
+  onSecondOpinion: () => void;
+  /** The note of the case, and a change of it. */
+  note: string;
+  onNote: (text: string) => void;
 }
 
 function ExpectedItem({ error, index, testCase, onMark, onShow }: { error: EffectiveExpected; index: number; testCase: TestCase; onMark: (s: ExpectedState) => void; onShow: () => void }) {
@@ -51,11 +58,16 @@ function ExpectedItem({ error, index, testCase, onMark, onShow }: { error: Effec
   );
 }
 
-function AdditionalItem({ item, onMark }: { item: EffectiveAdditional; onMark: (s: AdditionalState) => void }) {
+function AdditionalItem({ item, onMark, onRemove }: { item: EffectiveAdditional; onMark: (s: AdditionalState) => void; onRemove: () => void }) {
   return (
     <li data-additional={item.key} class="decide-item">
       <div class="item-head">
         <span>{item.text === '' ? 'A finding about the whole reply' : item.text}</span>
+        {item.added !== undefined ? (
+          <button type="button" class="link-button" onClick={onRemove}>
+            {labels.remove}
+          </button>
+        ) : null}
       </div>
       {item.rules.length > 0 ? <p class="muted">{`Rule: ${item.rules.join(', ')}`}</p> : null}
       {item.category || item.difficulty ? <p class="muted">{[item.category, item.difficulty].filter(Boolean).join(' · ')}</p> : null}
@@ -87,7 +99,8 @@ function FindingsInReply({ reviewed, unreadable }: { reviewed: ReviewedCase; unr
   );
 }
 
-export function DecidePane({ reviewed, effective, replyChanged, onExpected, onAdditional, onApprove, onShowInText }: DecidePaneProps) {
+export function DecidePane({ reviewed, effective, replyChanged, onExpected, onAdditional, onApprove, onShowInText, onRemove, onAddFinding, onSecondOpinion, note, onNote }: DecidePaneProps) {
+  const [noteOpen, setNoteOpen] = useState(note !== '');
   const unreadable = reviewed.review !== null && !reviewed.review.readable;
   const awaiting = reviewed.status === 'awaiting';
   return (
@@ -117,9 +130,30 @@ export function DecidePane({ reviewed, effective, replyChanged, onExpected, onAd
           <h4>Additional findings</h4>
           <ul class="decide-list" aria-label="Additional findings">
             {effective.additional.map((a) => (
-              <AdditionalItem key={a.key} item={a} onMark={(s) => onAdditional(a, s)} />
+              <AdditionalItem key={a.key} item={a} onMark={(s) => onAdditional(a, s)} onRemove={() => onRemove(a)} />
             ))}
           </ul>
+        </>
+      ) : null}
+
+      <div class="button-row decide-actions">
+        <button type="button" onClick={onAddFinding}>
+          {labels.addFinding}
+        </button>
+        <button type="button" aria-expanded={noteOpen} onClick={() => setNoteOpen(!noteOpen)}>
+          Note
+        </button>
+        <button type="button" onClick={onSecondOpinion}>
+          {labels.secondOpinion}
+        </button>
+      </div>
+      {unreadable ? <p class="muted">Add the findings you can see in this reply with Add finding. The case needs Approve.</p> : null}
+      {noteOpen ? (
+        <>
+          <label class="field-label" for="case-note">
+            Note
+          </label>
+          <textarea id="case-note" rows={3} value={note} onInput={(event) => onNote((event.currentTarget as HTMLTextAreaElement).value)} />
         </>
       ) : null}
     </div>

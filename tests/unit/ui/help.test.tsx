@@ -9,7 +9,7 @@ describe('Help (Principle VIII)', () => {
   it('has the sections written so far, in plain headings', () => {
     render(<HelpStep />);
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results']);
+    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Marking after each reply: Add finding, Remove, the second opinion and Ignore', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results']);
   });
 
   it('quotes the numbers of the demo from the demo files, so they cannot drift', () => {
@@ -129,5 +129,30 @@ describe('Help for running by hand (US7)', () => {
       }
     };
     expect(pre.map(compact)).toContain(compact(sample));
+  });
+});
+
+describe('Help for marking after each reply (US8)', () => {
+  it('names the buttons and what each one does', () => {
+    render(<HelpStep />);
+    const text = document.body.textContent ?? '';
+    for (const label of ['Add finding', 'Remove', 'Second opinion…', 'Apply opinion', 'Ignore', 'Note', 'Approve', 'Issue: false positive', 'Real error']) expect(text).toContain(label);
+    expect(text).toMatch(/replaces a mark set by hand/);
+    expect(text).toMatch(/classifies none/);
+    expect(text).toMatch(/one case at a time/);
+  });
+
+  it('quotes an opinion from the demo files, so the example cannot drift', () => {
+    render(<HelpStep />);
+    const opinions = JSON.parse(readFileSync('examples/demo/opinions.json', 'utf8')) as Record<string, { opinion: unknown }>;
+    const pre = [...document.querySelectorAll('pre.example')].map((p) => p.textContent ?? '');
+    const compact = (t: string) => {
+      try {
+        return JSON.stringify(JSON.parse(t));
+      } catch {
+        return undefined;
+      }
+    };
+    expect(pre.map(compact)).toContain(JSON.stringify(opinions['17']));
   });
 });

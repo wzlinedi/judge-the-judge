@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import demoEvaluation from '../../examples/demo/evaluation.json?raw';
 import { loadExample } from '../app/actions/evaluation';
+import { correctRules } from '../app/actions/decide';
 import { modelDetailsEdit, pasteReplyFromClipboard, saveReply, type ReplyOutcome } from '../app/actions/replies';
 import { cloneCase, type CaseEdit } from '../app/actions/cases';
 import type { CatalogEdit } from '../app/actions/catalog';
@@ -128,8 +129,9 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   };
 
   const applyJudge = (result: JudgeEdit) => {
-    setState(result.state);
-    say(result.note);
+    const corrected = correctRules(stateRef.current, result, metric);
+    setState(corrected.state);
+    say(corrected.note);
   };
 
   const applyReply = (outcome: ReplyOutcome): ReplyOutcome => {

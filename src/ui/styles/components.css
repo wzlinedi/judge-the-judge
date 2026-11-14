@@ -177,3 +177,8 @@ mark.finding-none { background: var(--error-bg); border-bottom-color: var(--erro
 .save-reminder { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--warn, var(--border)); border-radius: var(--radius); background: var(--surface); }
 .next-note { margin: var(--space-1) 0 0; }
 .reply-pane textarea { width: 100%; }
+
+/* US8: deciding after a reply */
+.decide-actions { margin-top: var(--space-4); }
+.preview li { margin-bottom: var(--space-2); }
+.preview p, .decide-item .item-head .link-button { margin: 0; }

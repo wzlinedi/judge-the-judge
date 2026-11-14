@@ -156,20 +156,15 @@ export interface CaseDecisions {
 export interface VerificationOpinion {
   id: string;
   expected: { index: number; found?: boolean; reason?: string; fragment?: string }[];
-  additional: { index?: number; text?: string; real?: boolean; reason?: string; fragment?: string }[];
+  additional: { index: number; real?: boolean; reason?: string; fragment?: string }[];
   new: {
     text: string;
-    real?: boolean;
+    real: boolean;
     reason?: string;
     fragment?: string;
     category?: string;
     difficulty?: Difficulty;
   }[];
-}
-
-export interface OpinionPlan {
-  canApply: boolean;
-  reason?: string;
 }
 
 export interface CaseJsonCheckContext {
