@@ -1,4 +1,5 @@
 import { DemoData } from './sections/DemoData';
+import { AddingCases } from './sections/AddingCases';
 import { Files } from './sections/Files';
 import { FourSteps } from './sections/FourSteps';
 import { Privacy } from './sections/Privacy';
@@ -18,6 +19,7 @@ export function HelpStep() {
       <FourSteps />
       <Variables />
       <SampleReplyRules />
+      <AddingCases />
       <Files />
       <Privacy />
       <DemoData />

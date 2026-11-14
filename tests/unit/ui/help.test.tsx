@@ -9,7 +9,7 @@ describe('Help (Principle VIII)', () => {
   it('has the sections written so far, in plain headings', () => {
     render(<HelpStep />);
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Reading the results']);
+    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Reading the results']);
   });
 
   it('quotes the numbers of the demo from the demo files, so they cannot drift', () => {
@@ -65,5 +65,15 @@ describe('Help (Principle VIII)', () => {
     expect(text).toMatch(/never proposes a rule|does not propose a rule/i);
     expect(text).toMatch(/broken/i);
     expect(text).toMatch(/code fence/i);
+  });
+
+  it('explains the two kinds of case, Paste JSON, Clean case, the case JSON layout and the row buttons', () => {
+    render(<HelpStep />);
+    const text = document.body.textContent ?? '';
+    for (const label of ['Add test case', 'Paste JSON', 'Clean case', 'Show JSON', 'Clone', 'Rename', 'Remove', 'Open']) expect(text).toContain(label);
+    expect(text).toMatch(/clean case/i);
+    expect(text).toMatch(/case with injected errors/i);
+    expect(text).toContain('expected_errors');
+    expect(text).toContain('fragment');
   });
 });

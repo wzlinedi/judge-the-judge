@@ -9,6 +9,7 @@ export interface JsonBoxProps {
   check: (text: string) => Problem[];
   rows?: number;
   placeholder?: string;
+  readOnly?: boolean;
 }
 
 export function problemText(problem: Problem): string {
@@ -18,7 +19,7 @@ export function problemText(problem: Problem): string {
 }
 
 /** A box checked as it changes; the text is always kept and problems say where they are (FR-084). */
-export function JsonBox({ label, value, onChange, check, rows = 10, placeholder }: JsonBoxProps) {
+export function JsonBox({ label, value, onChange, check, rows = 10, placeholder, readOnly }: JsonBoxProps) {
   const id = useId();
   const problems = value.trim() === '' ? [] : check(value);
   return (
@@ -30,6 +31,7 @@ export function JsonBox({ label, value, onChange, check, rows = 10, placeholder 
         rows={rows}
         value={value}
         placeholder={placeholder}
+        readOnly={readOnly}
         spellcheck={false}
         aria-invalid={problems.length > 0}
         aria-describedby={`${id}-problems`}

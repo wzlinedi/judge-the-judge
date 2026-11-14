@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import demoEvaluation from '../../examples/demo/evaluation.json?raw';
 import { loadExample } from '../app/actions/evaluation';
+import { cloneCase, type CaseEdit } from '../app/actions/cases';
 import { startFromMetric, type JudgeEdit } from '../app/actions/judge';
 import { continueWork, loadEvaluation, loadTestProject, saveEvaluation, saveEvaluationAs, saveTestProject, saveTestProjectAs, type FileEnv } from '../app/actions/files';
 import { guardFor, installBeforeUnload, type GuardedAction } from '../app/guard';
@@ -23,9 +24,11 @@ import { StepGate } from './components/shell/StepGate';
 import { HelpStep } from './help/HelpStep';
 import { labels } from './labels';
 import { ResultsStep } from './steps/results/ResultsStep';
+import { CasesStep } from './steps/cases/CasesStep';
 import { JudgeStep } from './steps/judge/JudgeStep';
 import { RunStep } from './steps/run/RunStep';
 import { CaseWindow } from './windows/case-window/CaseWindow';
+import { TestCaseWindow, type TestWindowView } from './windows/test-case/TestCaseWindow';
 import { LoadExampleWindow, type ExampleId } from './windows/load-example/LoadExampleWindow';
 
 export interface AppProps {
@@ -48,6 +51,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const [onlyAwaiting, setOnlyAwaiting] = useState(false);
   const [notice, setNotice] = useState('');
   const [problems, setProblems] = useState<Problem[]>([]);
+  const [testWindow, setTestWindow] = useState<TestWindowView | null>(null);
   const portsRef = useRef<Ports>(ports ?? createBrowserPorts(browser, () => stateRef.current.evaluation.dataset.name));
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -87,6 +91,12 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     } else if (result.outcome === 'loaded') say(result.message);
   };
 
+  const applyCase = (edit: CaseEdit) => {
+    setState(edit.state);
+    setProblems([]);
+    say(edit.note);
+  };
+
   const applyJudge = (result: JudgeEdit) => {
     setState(result.state);
     say(result.note);
@@ -122,12 +132,13 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     }
   };
 
-  const windowOpen = state.step === 'run' && state.openCase !== null;
+  const windowOpen = (state.step === 'run' && state.openCase !== null) || testWindow !== null;
   const gate = stepGate(state, state.step);
   const next = nextAction(state, state.step, reviewed);
   const runAction = () => {
     if (next.action.openCase) setState((s) => ({ ...s, openCase: next.action.openCase ?? null }));
     else if (next.action.go) go(next.action.go);
+    else if (state.step === 'cases' && next.action.label === labels.addTestCase) setTestWindow({ view: 'choice' });
   };
   const onResultsContinue = () => setState((s) => continueWork(s));
 
@@ -136,7 +147,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
       <div class="app-page" inert={windowOpen}>
       {browserSupported(browser) ? null : <BrowserNotice />}
       <Header state={state} onGo={go} onFileAction={onFile} />
-      <div role="status" class="notice-line" aria-live="polite">
+      <div role="status" aria-label="Message" class="notice-line" aria-live="polite">
         {notice}
       </div>
       <ErrorMessage problems={problems} title="The file was not loaded. Nothing has changed." />
@@ -166,6 +177,14 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
               />
             ) : state.step === 'judge' ? (
               <JudgeStep state={state} onEdit={applyJudge} />
+            ) : state.step === 'cases' ? (
+              <CasesStep
+                state={state}
+                onAdd={() => setTestWindow({ view: 'choice' })}
+                onOpen={(id) => setTestWindow({ view: 'open', id })}
+                onClone={(id) => setTestWindow({ view: 'paste', text: cloneCase(state, id) ?? '' })}
+                onEdit={applyCase}
+              />
             ) : (
               <section class="step-content" aria-label={state.step} />
             )}
@@ -187,6 +206,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           saveBar={{ fileName: state.evaluationFile, repliesSinceSave: state.repliesSinceSave, onSave: () => void save(false), onSaveAs: () => void save(true) }}
         />
       ) : null}
+      {testWindow ? <TestCaseWindow state={state} view={testWindow} onView={setTestWindow} onApply={applyCase} /> : null}
       <LoadExampleWindow open={showExamples} enabled={['accuracy', 'completeness', 'demo']} onChoose={chooseExample} onLoadMetric={() => setShowExamples(false)} onClose={() => setShowExamples(false)} />
       <Dialog
         open={pending !== null}

@@ -181,6 +181,8 @@ export interface CaseJsonCheckContext {
   base?: string;
   errorsToPrepare?: number;
   original?: TestCase;
+  /** A name typed in the window; it replaces the name in the JSON. */
+  name?: string;
 }
 
 /** The working session of one run (data-model.md, Evaluation). Save files are not part of it. */
