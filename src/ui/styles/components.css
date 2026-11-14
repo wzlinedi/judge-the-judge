@@ -242,6 +242,11 @@ mark.finding-none { background: var(--error-bg); border-bottom-color: var(--erro
 .cases-table .sort-button { min-height: 0; line-height: inherit; }
 .cases-table .button-row { flex-wrap: nowrap; }
 
-/* The table of error categories: the description is edited in its cell (T237) */
-.categories-table td input[type="text"] { width: 100%; min-width: 14rem; }
+/* The table of error categories: the description with its examples is edited in its cell, which takes the room that is left (T237, T248) */
+.categories-table { width: 100%; }
+.categories-table td { vertical-align: top; }
+.categories-table th:nth-child(2), .categories-table td:nth-child(2) { width: 100%; }
+.categories-table td textarea { width: 100%; min-width: 22rem; }
+.categories-table td input[type="text"] { width: 100%; min-width: 12rem; }
+.categories-table td:nth-child(3) { white-space: nowrap; }
 .categories-table .button-row { flex-wrap: nowrap; }

@@ -45,7 +45,6 @@ export interface ErrorRule {
 export interface Category {
   name: string;
   description?: string;
-  example?: string;
 }
 
 export interface ReplyMapping {

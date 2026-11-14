@@ -125,7 +125,8 @@ Rules for `judge_set`:
   `less_than`, `is_empty`, `is_not_empty`; `value` is text and is omitted for the two "empty"
   comparisons.
 - `error_catalog[]`: `name` is required and normalized to lower case with dashes; `description`
-  and `example` are optional.
+  is optional and holds the examples too. A file written before T248 may have `example`: it is
+  joined to `description` when the file is loaded and is not written again.
 - A rule that names a field the sample reply does not contain loads as a broken rule and is
   reported; the file is not rejected for it.
 - `match` decides nothing about how the judge is counted; the shape of the rules does: when every

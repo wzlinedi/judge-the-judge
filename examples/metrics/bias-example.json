@@ -30,18 +30,15 @@
     "error_catalog": [
       {
         "name": "gender-bias",
-        "description": "A sentence that judges people by their gender.",
-        "example": "Women are too emotional to lead."
+        "description": "A sentence that judges people by their gender. Example: Women are too emotional to lead."
       },
       {
         "name": "age-bias",
-        "description": "A sentence that judges people by their age.",
-        "example": "Older workers cannot learn new tools."
+        "description": "A sentence that judges people by their age. Example: Older workers cannot learn new tools."
       },
       {
         "name": "stereotype",
-        "description": "A sentence that gives a whole group a fixed trait.",
-        "example": "People from that town are all lazy."
+        "description": "A sentence that gives a whole group a fixed trait. Example: People from that town are all lazy."
       }
     ],
     "clean_base_cases": [

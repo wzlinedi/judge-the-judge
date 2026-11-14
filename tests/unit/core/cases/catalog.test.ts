@@ -1,6 +1,6 @@
 // FR-015: the error catalog.
 import { describe, expect, it } from 'vitest';
-import { addCategories, canRemoveCategory, categoryUses, normalizeCategoryName, parseCategoryList, renameCategory } from '../../../../src/core/cases/catalog';
+import { addCategories, categoryUses, joinCategoryExamples, removeCategoryEverywhere, normalizeCategoryName, parseCategoryList, renameCategory } from '../../../../src/core/cases/catalog';
 import { sampleEvaluation } from '../../../helpers/fixtures';
 
 const e = sampleEvaluation();
@@ -56,26 +56,35 @@ describe('categoryUses', () => {
   });
 });
 
-describe('canRemoveCategory', () => {
-  it('allows removing an unused category at once', () => {
-    expect(canRemoveCategory(catalog, cases, {}, false, 'misattribution')).toEqual({ allowed: true });
+describe('removeCategoryEverywhere (T248)', () => {
+  it('removes an unused category and changes no case', () => {
+    const r = removeCategoryEverywhere(catalog, cases, 'misattribution');
+    expect(r.catalog.map((c) => c.name)).not.toContain('misattribution');
+    expect(r.uses).toBe(0);
+    expect(r.cases.every((c, i) => c === cases[i])).toBe(true);
   });
 
-  it('refuses a used category with the way out', () => {
-    expect(canRemoveCategory(catalog, cases, {}, false, 'factual-error')).toEqual({
-      allowed: false,
-      reason: 'Used by 1 test case. Remove that test case first, or rename the category.',
-    });
+  it('removes a used category: the expected errors stay and lose the category, the others keep theirs', () => {
+    const r = removeCategoryEverywhere(catalog, cases, 'factual-error');
+    expect(r.uses).toBe(1);
+    expect(r.catalog.map((c) => c.name)).not.toContain('factual-error');
+    expect(r.cases[1]?.expected_errors).toHaveLength(cases[1]!.expected_errors.length);
+    expect(r.cases[1]?.expected_errors[0]).not.toHaveProperty('category');
+    expect(r.cases[1]?.expected_errors[0]?.description).toBe(cases[1]!.expected_errors[0]!.description);
+    expect(r.cases[1]?.expected_errors[1]?.category).toBe('wrong-number');
+    expect(cases[1]?.expected_errors[0]?.category).toBe('factual-error');
+  });
+});
+
+describe('joinCategoryExamples (T248)', () => {
+  it('joins the short example of an older file to the description, and drops the key', () => {
+    expect(joinCategoryExamples([{ name: 'a', description: 'A wrong year.', example: '1998 becomes 2005' }])).toEqual([{ name: 'a', description: 'A wrong year. Example: 1998 becomes 2005' }]);
+    expect(joinCategoryExamples([{ name: 'a', description: 'A wrong year', example: 'x' }])).toEqual([{ name: 'a', description: 'A wrong year. Example: x' }]);
+    expect(joinCategoryExamples([{ name: 'a', example: 'x' }])).toEqual([{ name: 'a', description: 'Example: x' }]);
   });
 
-  it('says "It can be renamed." after finalizing when every case that uses it has a reply', () => {
-    const r = canRemoveCategory(catalog, cases, e.replies, true, 'factual-error');
-    expect(r).toEqual({ allowed: false, reason: 'Used by 1 test case. It can be renamed.' });
-  });
-
-  it('uses the plural for several cases', () => {
-    const more = [...cases, { ...cases[1]!, id: '9', name: 'Other' }];
-    expect(canRemoveCategory(catalog, more, {}, false, 'factual-error')).toMatchObject({ allowed: false, reason: expect.stringContaining('Used by 2 test cases. Remove those test cases first') });
+  it('leaves a category without an example as it is', () => {
+    expect(joinCategoryExamples([{ name: 'a', description: ' kept as typed ' }, { name: 'b' }])).toEqual([{ name: 'a', description: ' kept as typed ' }, { name: 'b' }]);
   });
 });
 
@@ -90,7 +99,7 @@ describe('renameCategory', () => {
     expect(cases[1]?.expected_errors[0]?.category).toBe('factual-error');
   });
 
-  it('keeps the description and example', () => {
+  it('keeps the description', () => {
     const r = renameCategory(catalog, cases, 'wrong-number', 'bad-number');
     if (!r.ok) throw new Error(r.reason);
     expect(r.catalog.find((c) => c.name === 'bad-number')?.description).toBe(catalog.find((c) => c.name === 'wrong-number')?.description);

@@ -1,5 +1,6 @@
 // The error catalog of the test project (FR-015, FR-024). The tool never changes a category by itself.
-import { addCategories, canRemoveCategory, parseCategoryList, renameCategory } from '../../core/cases/catalog';
+import { markLate } from '../../core/cases/case-actions';
+import { normalizeCategoryName, removeCategoryEverywhere, renameCategory } from '../../core/cases/catalog';
 import type { Category } from '../../core/model';
 import { edit, type AppState } from '../store';
 
@@ -10,26 +11,19 @@ export interface CatalogEdit {
 
 const setCatalog = (state: AppState, catalog: Category[]): AppState => edit(state, (e) => ({ ...e, judge_set: { ...e.judge_set, error_catalog: catalog } }));
 
-/** Typed or pasted: one category per line, optionally `name - description`. Names already present are skipped and reported. */
-export function addCategoriesFromText(state: AppState, text: string): CatalogEdit {
-  const result = addCategories(state.evaluation.judge_set.error_catalog, parseCategoryList(text));
-  if (result.added.length === 0 && result.skipped.length === 0) return { state, note: 'Type one category per line.' };
-  const parts: string[] = [];
-  if (result.added.length > 0) parts.push(`Added: ${result.added.join(', ')}.`);
-  if (result.skipped.length > 0) parts.push(`Already in the catalog: ${result.skipped.join(', ')}.`);
-  return { state: result.added.length > 0 ? setCatalog(state, result.catalog) : state, note: parts.join(' ') };
+/** "Add category": one new row of the table. The name is written in lower case with dashes; an empty or a taken name is refused (T248). */
+export function addCategory(state: AppState, name: string, description: string): CatalogEdit {
+  const catalog = state.evaluation.judge_set.error_catalog;
+  const normal = normalizeCategoryName(name);
+  if (normal === '') return { state, note: 'Type a name for the category.' };
+  if (catalog.some((c) => c.name === normal)) return { state, note: `The category "${normal}" is already in the catalog.` };
+  const text = description.trim();
+  return { state: setCatalog(state, [...catalog, text === '' ? { name: normal } : { name: normal, description: text }]) };
 }
 
-export function setCategoryDetails(state: AppState, name: string, details: { description?: string; example?: string }): CatalogEdit {
-  const catalog = state.evaluation.judge_set.error_catalog.map((c) => {
-    if (c.name !== name) return c;
-    const next: Category = { name };
-    const description = details.description ?? c.description;
-    const example = details.example ?? c.example;
-    if (description) next.description = description;
-    if (example) next.example = example;
-    return next;
-  });
+/** The description of a category, which also holds its examples (T248). */
+export function setCategoryDetails(state: AppState, name: string, details: { description: string }): CatalogEdit {
+  const catalog = state.evaluation.judge_set.error_catalog.map((c) => (c.name !== name ? c : details.description === '' ? { name } : { name, description: details.description }));
   return { state: setCatalog(state, catalog) };
 }
 
@@ -46,9 +40,35 @@ export function renameCategoryAction(state: AppState, from: string, to: string):
   };
 }
 
+/**
+ * "Remove" works for every category (T248). The expected errors that used it stay and lose the category, and so do the
+ * findings added by hand; when a test case changes, the test cases version changes too.
+ */
 export function removeCategory(state: AppState, name: string): CatalogEdit {
   const { judge_set, dataset, replies } = state.evaluation;
-  const allowed = canRemoveCategory(judge_set.error_catalog, dataset.cases, replies, dataset.finalized, name);
-  if (!allowed.allowed) return { state, note: allowed.reason };
-  return { state: setCatalog(state, judge_set.error_catalog.filter((c) => c.name !== name)) };
+  if (!judge_set.error_catalog.some((c) => c.name === name)) return { state, note: `There is no category "${name}".` };
+  const result = removeCategoryEverywhere(judge_set.error_catalog, dataset.cases, name);
+  if (result.uses === 0) return { state: setCatalog(state, result.catalog) };
+  const late = Object.keys(replies).length > 0;
+  const cases = result.cases.map((c, i) => (c === dataset.cases[i] ? c : markLate(c, late, 'corrected')));
+  const next = edit(state, (e) => {
+    const { version: _stale, ...rest } = e.dataset;
+    const decisions = Object.fromEntries(
+      Object.entries(e.decisions).map(([id, d]) => [
+        id,
+        d.added_findings.some((f) => f.category === name)
+          ? {
+              ...d,
+              added_findings: d.added_findings.map((f) => {
+                if (f.category !== name) return f;
+                const { category: _gone, ...kept } = f;
+                return kept;
+              }),
+            }
+          : d,
+      ]),
+    );
+    return { ...e, judge_set: { ...e.judge_set, error_catalog: result.catalog }, dataset: { ...rest, cases }, decisions };
+  });
+  return { state: next, note: `Removed "${name}". The expected errors of ${result.uses} test ${result.uses === 1 ? 'case' : 'cases'} lost the category.` };
 }

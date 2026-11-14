@@ -61,7 +61,6 @@ export function injectErrorsPrompt({ judgeSet, base, errors, instructions }: Inj
     parts.push(`Error ${i + 1}`);
     if (entry) {
       parts.push(`- Category: ${entry.name}${entry.description ? `: ${entry.description}` : ''}`);
-      if (entry.example) parts.push(`- For example: ${entry.example}`);
     } else {
       parts.push(`- Category: ${row.category === '' ? '(none given)' : row.category} (a new category: describe in the description what it means)`);
     }

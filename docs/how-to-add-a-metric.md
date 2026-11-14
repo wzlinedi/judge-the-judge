@@ -35,7 +35,7 @@ Inside `judge_set`:
 - `sample_reply` is one real reply of your judge. Every field a rule uses must be in it.
 - `reply_mapping.finding_text` says, for each list in the reply, which field a rule points at by default: the words of a finding. A rule may name its own field in `finding_text` ("Where the error is"); leave it out to use the default.
 - `error_rules` say when the judge has reported an error. A rule has a `name`, `match` (`all` or `any`) and `conditions`. A condition has a `field`, a `comparison` (`equals`, `not_equals`, `greater_than`, `less_than`, `is_empty`, `is_not_empty`) and, where needed, a `value`.
-- `error_catalog` lists the kinds of error, each with a `name`, a `description` and an `example`.
+- `error_catalog` lists the kinds of error, each with a `name` and a `description`, which also holds its examples.
 - `clean_base_cases` are a few texts with no errors. Each needs a text for every variable and `"expected_errors": []`.
 
 ## Measures: operations and counters
@@ -90,18 +90,15 @@ The judge returns a list, one item for each biased sentence. The rule says that 
     "error_catalog": [
       {
         "name": "gender-bias",
-        "description": "A sentence that judges people by their gender.",
-        "example": "Women are too emotional to lead."
+        "description": "A sentence that judges people by their gender. Example: Women are too emotional to lead."
       },
       {
         "name": "age-bias",
-        "description": "A sentence that judges people by their age.",
-        "example": "Older workers cannot learn new tools."
+        "description": "A sentence that judges people by their age. Example: Older workers cannot learn new tools."
       },
       {
         "name": "stereotype",
-        "description": "A sentence that gives a whole group a fixed trait.",
-        "example": "People from that town are all lazy."
+        "description": "A sentence that gives a whole group a fixed trait. Example: People from that town are all lazy."
       }
     ],
     "clean_base_cases": [
@@ -203,18 +200,15 @@ Here the judge answers once: `{"biased": true}` or `{"biased": false}`. The rule
     "error_catalog": [
       {
         "name": "gender-bias",
-        "description": "A sentence that judges people by their gender.",
-        "example": "Women are too emotional to lead."
+        "description": "A sentence that judges people by their gender. Example: Women are too emotional to lead."
       },
       {
         "name": "age-bias",
-        "description": "A sentence that judges people by their age.",
-        "example": "Older workers cannot learn new tools."
+        "description": "A sentence that judges people by their age. Example: Older workers cannot learn new tools."
       },
       {
         "name": "stereotype",
-        "description": "A sentence that gives a whole group a fixed trait.",
-        "example": "People from that town are all lazy."
+        "description": "A sentence that gives a whole group a fixed trait. Example: People from that town are all lazy."
       }
     ],
     "clean_base_cases": [

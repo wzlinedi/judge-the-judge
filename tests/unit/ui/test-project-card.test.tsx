@@ -139,7 +139,6 @@ describe('help for a category where it is chosen', () => {
     const first = e.judge_set.error_catalog[0]!;
     const row = within(win).getByRole('group', { name: 'Error 1' });
     expect(row.textContent).toContain(first.description as string);
-    expect(row.textContent).toContain(first.example as string);
     const second = e.judge_set.error_catalog[1]!;
     fireEvent.change(within(row).getByLabelText('Category'), { target: { value: second.name } });
     expect(within(win).getByRole('group', { name: 'Error 1' }).textContent).toContain(second.description as string);

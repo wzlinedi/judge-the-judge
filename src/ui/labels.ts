@@ -33,7 +33,9 @@ export const labels = {
   addCondition: 'Add condition',
   remove: 'Remove',
   // Test cases
+  /** No button has this label any more (T248). It stays only because the Help still quotes it (T225). */
   addCategory: 'Add categories',
+  addOneCategory: 'Add category',
   rename: 'Rename',
   addTestCase: 'Add test case…',
   open: 'Open',
@@ -53,7 +55,6 @@ export const labels = {
   showInText: 'Show the issue',
   saveCase: 'Save case',
   closeWithoutSaving: 'Close without saving',
-  example: 'Example',
   recreateTestCase: 'Recreate the test case',
   copyAndRecreate: 'Copy and recreate',
   showJson: 'Show JSON',

@@ -1,6 +1,6 @@
 // The error catalog of the test project (FR-015, FR-016, FR-024). The tool never adds, renames or removes
 // a category by itself: every function here is called for one action of the user.
-import type { Category, Reply, TestCase } from '../model';
+import type { Category, TestCase } from '../model';
 
 /** Lower case with dashes. */
 export function normalizeCategoryName(name: string): string {
@@ -57,15 +57,43 @@ export function categoryUses(cases: readonly TestCase[], name: string): number {
   return cases.filter((c) => c.expected_errors.some((e) => e.category === name)).length;
 }
 
-export type RemoveCheck = { allowed: true } | { allowed: false; reason: string };
+export interface RemoveResult {
+  catalog: Category[];
+  cases: TestCase[];
+  /** The number of test cases that used the category. */
+  uses: number;
+}
 
-export function canRemoveCategory(_catalog: readonly Category[], cases: readonly TestCase[], replies: Readonly<Record<string, Reply>>, finalized: boolean, name: string): RemoveCheck {
-  const users = cases.filter((c) => c.expected_errors.some((e) => e.category === name));
-  if (users.length === 0) return { allowed: true };
-  const used = `Used by ${users.length} test ${users.length === 1 ? 'case' : 'cases'}.`;
-  if (finalized && users.every((c) => replies[c.id] !== undefined)) return { allowed: false, reason: `${used} It can be renamed.` };
-  const those = users.length === 1 ? 'that test case' : 'those test cases';
-  return { allowed: false, reason: `${used} Remove ${those} first, or rename the category.` };
+/** Removes a category from the catalog. The expected errors that used it stay and lose the category (T248). */
+export function removeCategoryEverywhere(catalog: readonly Category[], cases: readonly TestCase[], name: string): RemoveResult {
+  let uses = 0;
+  const next = cases.map((c) => {
+    if (!c.expected_errors.some((e) => e.category === name)) return c;
+    uses++;
+    return {
+      ...c,
+      expected_errors: c.expected_errors.map((e) => {
+        if (e.category !== name) return e;
+        const { category: _gone, ...rest } = e;
+        return rest;
+      }),
+    };
+  });
+  return { catalog: catalog.filter((c) => c.name !== name), cases: next, uses };
+}
+
+/**
+ * A file written before T248 kept a short example beside the description of a category. The two are one text now:
+ * the example is joined to the description when a file is read, and is not written again.
+ */
+export function joinCategoryExamples(catalog: ReadonlyArray<{ name: string; description?: string | undefined; example?: string | undefined }>): Category[] {
+  return catalog.map((c) => {
+    const example = (c.example ?? '').trim();
+    const description = c.description ?? '';
+    if (example === '') return description === '' ? { name: c.name } : { name: c.name, description };
+    const start = description.trim();
+    return { name: c.name, description: start === '' ? `Example: ${example}` : `${start}${/[.!?]$/.test(start) ? '' : '.'} Example: ${example}` };
+  });
 }
 
 export type RenameResult = { ok: true; catalog: Category[]; cases: TestCase[] } | { ok: false; reason: string };

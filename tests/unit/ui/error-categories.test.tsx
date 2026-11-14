@@ -1,4 +1,5 @@
 // The "Error categories" section (FR-015, FR-087, Principle VI).
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
@@ -63,46 +64,26 @@ describe('each category', () => {
     return view;
   };
 
-  it('is a table with the columns Name, Description, Used by and the buttons Example, Rename, Remove (T237)', () => {
+  it('is a table with the columns Name, Description & examples, Used by and the buttons Rename and Remove; no Example (T248)', () => {
     open();
     const table = screen.getByRole('table', { name: 'Categories' });
-    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent?.trim())).toEqual(['Name', 'Description', 'Used by', 'Actions']);
-    expect(within(rowOf('factual-error')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Example', 'Rename', 'Remove']);
-    expect(within(table).queryByLabelText('Example of factual-error')).toBeNull();
+    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent?.trim())).toEqual(['Name', 'Description & examples', 'Used by', 'Actions']);
+    expect(within(rowOf('factual-error')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Rename', 'Remove']);
+    expect(screen.queryByRole('button', { name: 'Example' })).toBeNull();
   });
 
-  it('shows the description, editable, and how many test cases use it', () => {
+  it('shows the description with its examples in one multi-line cell, editable, and how many test cases use it', () => {
     open();
     const row = rowOf('factual-error');
-    expect((within(row).getByLabelText('Description of factual-error') as HTMLInputElement).placeholder).toMatch(/What this kind of error is/);
-    expect((within(row).getByLabelText('Description of factual-error') as HTMLInputElement).value).toMatch(/untrue/);
+    const cell = within(row).getByLabelText('Description and examples of factual-error') as HTMLTextAreaElement;
+    expect(cell.tagName).toBe('TEXTAREA');
+    expect(cell.placeholder).toMatch(/What this kind of error is/);
+    expect(cell.value).toMatch(/untrue.*Example: /);
     expect(within(row).getByText('Used by 1 test case')).toBeTruthy();
     expect(within(rowOf('misattribution')).getByText('Used by 0 test cases')).toBeTruthy();
-    fireEvent.input(within(row).getByLabelText('Description of factual-error'), { target: { value: 'a new description' } });
-    expect((within(rowOf('factual-error')).getByLabelText('Description of factual-error') as HTMLInputElement).value).toBe('a new description');
+    fireEvent.input(cell, { target: { value: 'a new description' } });
+    expect((within(rowOf('factual-error')).getByLabelText('Description and examples of factual-error') as HTMLTextAreaElement).value).toBe('a new description');
     expect(screen.getByText('Unsaved changes')).toBeTruthy();
-  });
-
-  it('Example is disabled while no test case uses the category; otherwise it shows the cases one at a time with the fragment highlighted', () => {
-    open();
-    expect((within(rowOf('misattribution')).getByRole('button', { name: 'Example' }) as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.click(within(rowOf('factual-error')).getByRole('button', { name: 'Example' }));
-    const dialog = screen.getByRole('dialog', { name: 'Example: factual-error' });
-    expect(within(dialog).getByRole('status', { name: 'Position' }).textContent).toMatch(/^case 2 · Anna \+ 2 errors \(1 of 1\)$/);
-    expect(dialog.querySelectorAll('mark.fragment-strong').length).toBeGreaterThan(0);
-    expect(within(dialog).getByRole('list', { name: 'Errors of this category' }).textContent).toBeTruthy();
-    expect((within(dialog).getByRole('button', { name: 'Previous case' }) as HTMLButtonElement).disabled).toBe(true);
-    expect((within(dialog).getByRole('button', { name: 'Next case' }) as HTMLButtonElement).disabled).toBe(true);
-  });
-
-  it('Example holds the short example for prompts, edited there and kept in the catalog', () => {
-    open();
-    fireEvent.click(within(rowOf('factual-error')).getByRole('button', { name: 'Example' }));
-    const dialog = screen.getByRole('dialog', { name: 'Example: factual-error' });
-    fireEvent.input(within(dialog).getByLabelText('Short example for prompts'), { target: { value: 'a new example' } });
-    expect((within(screen.getByRole('dialog', { name: 'Example: factual-error' })).getByLabelText('Short example for prompts') as HTMLInputElement).value).toBe('a new example');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
-    expect(screen.queryByRole('dialog', { name: 'Example: factual-error' })).toBeNull();
   });
 
   it('Rename says first what it changes: the cases using the category, the version and the error analysis', () => {
@@ -114,20 +95,31 @@ describe('each category', () => {
     expect(text).toContain('error analysis of Results uses the new name');
   });
 
-  it('disables Remove for a used category with the reason beside it; an unused one is removed at once', () => {
+  it('Remove is enabled for every category: an unused one is removed at once, a used one asks first and then leaves its errors without the category (T248)', () => {
     open();
-    const used = rowOf('factual-error');
-    expect((within(used).getByRole('button', { name: 'Remove' }) as HTMLButtonElement).disabled).toBe(true);
-    expect(used.textContent).toContain('Used by 1 test case. Remove that test case first, or rename the category.');
     fireEvent.click(within(rowOf('misattribution')).getByRole('button', { name: 'Remove' }));
     expect(screen.queryByRole('row', { name: 'misattribution' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Remove category' })).toBeNull();
+
+    const used = rowOf('factual-error');
+    expect((within(used).getByRole('button', { name: 'Remove' }) as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(within(used).getByRole('button', { name: 'Remove' }));
+    const ask = screen.getByRole('dialog', { name: 'Remove category' });
+    expect(ask.textContent).toContain('1 test case use it. Their expected errors stay and lose the category. The test cases version changes.');
+    fireEvent.click(within(ask).getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('row', { name: 'factual-error' })).toBeTruthy();
+
+    fireEvent.click(within(rowOf('factual-error')).getByRole('button', { name: 'Remove' }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Remove category' })).getByRole('button', { name: 'Remove' }));
+    expect(screen.queryByRole('row', { name: 'factual-error' })).toBeNull();
+    expect(screen.getByRole('status', { name: 'Message' }).textContent).toContain('The expected errors of 1 test case lost the category.');
     fireEvent.click(heading());
-    expect(heading().textContent).toContain('4 categories');
+    expect(heading().textContent).toContain('3 categories');
   });
 
-  it('after finalizing, says a category with replies can be renamed', () => {
+  it('after finalizing, a category in use can still be removed and renamed', () => {
     open(stateWith({ finalized: true }));
-    expect(rowOf('factual-error').textContent).toContain('Used by 1 test case. It can be renamed.');
+    expect(within(rowOf('factual-error')).getAllByRole('button').every((b) => !(b as HTMLButtonElement).disabled)).toBe(true);
   });
 
   it('Rename applies to the cases and refuses a taken name', () => {
@@ -144,12 +136,48 @@ describe('each category', () => {
     expect(within(rowOf('wrong-fact')).getByText('Used by 1 test case')).toBeTruthy();
   });
 
-  it('Add categories adds one category per line and reports what was skipped', () => {
+  it('"Add category" appends one editable row to the table; "Add" puts it in the catalog and "Cancel" drops it (T248)', () => {
     open();
-    fireEvent.input(screen.getByLabelText('Categories to add'), { target: { value: 'Tone - the wrong tone\nfactual-error' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Add categories' }));
-    expect(screen.getByRole('row', { name: 'tone' })).toBeTruthy();
-    expect(screen.getByRole('status', { name: 'Message' }).textContent).toMatch(/Added: tone\. Already in the catalog: factual-error/);
-    expect((screen.getByLabelText('Categories to add') as HTMLTextAreaElement).value).toBe('');
+    expect(screen.queryByLabelText('Categories to add')).toBeNull();
+    const add = screen.getByRole('button', { name: 'Add category' }) as HTMLButtonElement;
+    fireEvent.click(add);
+    expect(add.disabled).toBe(true);
+    const row = rowOf('New category');
+    expect(screen.getByRole('table', { name: 'Categories' }).querySelector('tbody tr:last-child')).toBe(row);
+    fireEvent.input(within(row).getByLabelText('Name of the new category'), { target: { value: 'Wrong Tone' } });
+    expect(row.textContent).toContain('It is written in lower case with dashes: wrong-tone.');
+    fireEvent.input(within(rowOf('New category')).getByLabelText('Description and examples of the new category'), { target: { value: 'The tone does not fit. Example: slang in a formal letter.' } });
+    fireEvent.click(within(rowOf('New category')).getByRole('button', { name: 'Add' }));
+    expect(screen.queryByRole('row', { name: 'New category' })).toBeNull();
+    expect((within(rowOf('wrong-tone')).getByLabelText('Description and examples of wrong-tone') as HTMLTextAreaElement).value).toBe('The tone does not fit. Example: slang in a formal letter.');
+    expect(within(rowOf('wrong-tone')).getByText('Used by 0 test cases')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add category' }));
+    fireEvent.click(within(rowOf('New category')).getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('row', { name: 'New category' })).toBeNull();
+    expect(screen.getAllByRole('row')).toBeTruthy();
+  });
+
+  it('a new row with no name or a taken name is refused in the row, which stays open', () => {
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Add category' }));
+    fireEvent.click(within(rowOf('New category')).getByRole('button', { name: 'Add' }));
+    expect(within(rowOf('New category')).getByRole('alert').textContent).toBe('Type a name for the category.');
+    fireEvent.input(within(rowOf('New category')).getByLabelText('Name of the new category'), { target: { value: 'factual error' } });
+    fireEvent.click(within(rowOf('New category')).getByRole('button', { name: 'Add' }));
+    expect(within(rowOf('New category')).getByRole('alert').textContent).toBe('The category "factual-error" is already in the catalog.');
+  });
+
+  it('with no category yet, the button still adds the first row', () => {
+    const e = stateWith({ cases: false });
+    show({ ...e, evaluation: { ...e.evaluation, judge_set: { ...e.evaluation.judge_set, error_catalog: [] } } });
+    expect(screen.getByText('There are no categories yet.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Add category' }));
+    expect(rowOf('New category')).toBeTruthy();
+  });
+
+  it('counts "Used by" from the test cases: in the demo unsupported-claim is used by one case, number 15', () => {
+    const demo = JSON.parse(readFileSync('examples/demo/test-project.json', 'utf8')) as { dataset: { cases: Array<{ id: string; expected_errors: Array<{ category?: string }> }> } };
+    expect(demo.dataset.cases.filter((c) => c.expected_errors.some((x) => x.category === 'unsupported-claim')).map((c) => c.id)).toEqual(['15']);
   });
 });

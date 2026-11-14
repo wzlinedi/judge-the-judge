@@ -199,7 +199,7 @@ function judgeSet(evaluation: Evaluation): string {
     '<h3>Error catalog</h3>',
     set.error_catalog.length === 0
       ? '<p>The catalog is empty.</p>'
-      : `<ul>${set.error_catalog.map((c) => `<li>${esc(c.name)}${c.description ? `: ${esc(c.description)}` : ''}${c.example ? ` (example: ${esc(c.example)})` : ''}</li>`).join('')}</ul>`,
+      : `<ul>${set.error_catalog.map((c) => `<li>${esc(c.name)}${c.description ? `: ${esc(c.description)}` : ''}</li>`).join('')}</ul>`,
     '</section>',
   ].join('\n');
 }

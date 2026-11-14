@@ -21,7 +21,7 @@ export function cleanCasePrompt(judgeSet: JudgeSet, comment: string, likeCase?: 
   if (judgeSet.error_catalog.length > 0) {
     parts.push('', 'The case must contain none of these errors:');
     for (const c of judgeSet.error_catalog) {
-      parts.push(`- ${c.name}${c.description ? `: ${c.description}` : ''}${c.example ? ` (for example: ${c.example})` : ''}`);
+      parts.push(`- ${c.name}${c.description ? `: ${c.description}` : ''}`);
     }
   }
 

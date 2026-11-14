@@ -33,28 +33,23 @@
     "error_catalog": [
       {
         "name": "factual-error",
-        "description": "A statement that is simply untrue according to the source.",
-        "example": "The hero is a doctor (the source says a merchant)."
+        "description": "A statement that is simply untrue according to the source. Example: The hero is a doctor (the source says a merchant)."
       },
       {
         "name": "contradiction",
-        "description": "A statement that says the opposite of the source.",
-        "example": "She accepts the proposal (the source says she refuses)."
+        "description": "A statement that says the opposite of the source. Example: She accepts the proposal (the source says she refuses)."
       },
       {
         "name": "wrong-number",
-        "description": "A number, year or amount that does not match the source.",
-        "example": "1890 instead of 1887."
+        "description": "A number, year or amount that does not match the source. Example: 1890 instead of 1887."
       },
       {
         "name": "unsupported-claim",
-        "description": "A statement the source does not support at all.",
-        "example": "He later moved to Paris (not mentioned)."
+        "description": "A statement the source does not support at all. Example: He later moved to Paris (not mentioned)."
       },
       {
         "name": "misattribution",
-        "description": "A true statement given to the wrong person or place.",
-        "example": "The brother, not the sister, leaves the town."
+        "description": "A true statement given to the wrong person or place. Example: The brother, not the sister, leaves the town."
       }
     ]
   },

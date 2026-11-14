@@ -8,6 +8,7 @@ import { checkEnvelope } from '../schemas/common';
 import { zodProblems } from '../schemas/messages';
 import { evaluationSchema, EVALUATION_FORMAT, EVALUATION_KEYS, EVALUATION_SCHEMA_VERSION, TEST_PROJECT_FORMAT } from '../schemas/evaluation';
 import { cleanJudgeSet } from '../schemas/judge-set';
+import { joinCategoryExamples } from '../cases/catalog';
 import { assignExpectedIds, ignoredFieldNote, storedCase } from '../schemas/test-case';
 
 export interface EvaluationMeta {
@@ -85,7 +86,7 @@ export function readEvaluation(text: string): ReadResult<LoadedEvaluation> {
 
   const p = parsed.data;
   const evaluation: Evaluation = {
-    judge_set: p.judge_set,
+    judge_set: { ...p.judge_set, error_catalog: joinCategoryExamples(p.judge_set.error_catalog) },
     dataset: { name: p.dataset.name, ...(p.dataset.version !== undefined ? { version: p.dataset.version } : {}), finalized: p.dataset.finalized, cases: assignExpectedIds(p.dataset.cases) },
     metric: p.metric,
     checks: p.checks,

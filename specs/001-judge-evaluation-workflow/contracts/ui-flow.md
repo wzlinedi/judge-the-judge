@@ -112,17 +112,15 @@ Compare step and no result shelf.
      while the test project has no test cases; collapsed when a test project with cases is loaded
      or the step is first opened with cases; collapsed, its heading says "N categories"; the state
      the user chooses is kept for the page session. A table, one row per category: **Name**,
-     **Description** (edited in the cell), **Used by** (the number of test cases), then **Example**
-     (a dialog "Example: name" with the test cases that use the category, one at a time with
-     **Previous case** and **Next case**, "case 14 · Anna + 2 errors (1 of 4)": every field with
-     the fragments of the category highlighted, the errors, and the field "Short example for
-     prompts"; disabled while no case uses the category), **Rename** (asks first: the N test cases
-     using it are renamed too, the test cases version changes and the error analysis of Results
-     uses the new name; also after finalizing) and **Remove** (at once when unused; disabled while a
-     case uses it, with the reason beside it: "Used by N test cases. Remove those test cases first,
-     or rename the category.", or after finalizing, when every case that uses it has a reply, "Used
-     by N test cases. It can be renamed."). Below: a box for one category per line (`name -
-     description`) and **Add category** (FR-015).
+     **Description & examples** (one multi-line text edited in the cell; it takes the room that is
+     left), **Used by** (the number of test cases, computed from the cases), then **Rename** (asks
+     first: the N test cases using it are renamed too, the test cases version changes and the error
+     analysis of Results uses the new name; also after finalizing) and **Remove** (always enabled,
+     T248: at once when unused; for a category in use a small dialog "Remove category" says "N test
+     cases use it. Their expected errors stay and lose the category. The test cases version
+     changes." with **Cancel** and **Remove**). There is no **Example** button. Below the table:
+     **Add category**, which appends one editable row (name, description and examples, **Add**,
+     **Cancel**); an empty or a taken name is refused in the row (FR-015).
   2. **Test project card**: name, test cases version; counts (cases, with injected errors, clean,
      with a reply); the **test-size summary** with the sentence that at least 30 injected errors
      and 10 clean cases are needed for a final answer; warnings (one kind of case only,

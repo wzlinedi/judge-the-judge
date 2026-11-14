@@ -1,5 +1,6 @@
 // Reading a metric definition file (metric-and-checks.md, section 1; Principle VI). Nothing is registered here:
 // an invalid file is described and changes nothing.
+import { joinCategoryExamples } from '../cases/catalog';
 import { findVariables } from '../judge/variables';
 import { extractJson } from '../judge/extract-json';
 import { recognizeFields } from '../judge/fields';
@@ -103,7 +104,7 @@ export function readMetric(text: string): ReadResult<MetricDefinition> {
       ...(set.sample_reply !== undefined ? { sample_reply: set.sample_reply } : {}),
       reply_mapping: set.reply_mapping,
       error_rules: set.error_rules,
-      error_catalog: set.error_catalog,
+      error_catalog: joinCategoryExamples(set.error_catalog),
       clean_base_cases: set.clean_base_cases.map((c) => ({ name: c.name, fields: c.fields, expected_errors: [] })),
     },
     parameters: metric.parameters,

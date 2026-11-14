@@ -42,8 +42,9 @@ test('the Error categories section: a new category from a case, rename, remove',
   await heading.click();
   const category = (name: string) => page.getByRole('row', { name, exact: true });
   await expect(category('exclusion')).toContainText('Used by 1 test case');
-  await expect(category('exclusion').getByRole('button', { name: 'Remove' })).toBeDisabled();
-  await expect(category('exclusion')).toContainText('Remove that test case first, or rename the category.');
+  await expect(category('exclusion').getByRole('button', { name: 'Remove' })).toBeEnabled();
+  await expect(page.getByRole('columnheader', { name: 'Description & examples' })).toBeVisible();
+  await expect(category('exclusion').getByRole('button', { name: 'Example' })).toHaveCount(0);
 
   // rename applies to the case
   await category('exclusion').getByRole('button', { name: 'Rename' }).click();
@@ -56,10 +57,24 @@ test('the Error categories section: a new category from a case, rename, remove',
   await category('age-bias').getByRole('button', { name: 'Remove' }).click();
   await expect(category('age-bias')).toHaveCount(0);
 
-  // typed categories
-  await page.getByLabel('Categories to add').fill('Tone - the wrong tone\nstereotype');
-  await page.getByRole('button', { name: 'Add categories' }).click();
-  await expect(category('tone')).toBeVisible();
-  await expect(page.getByRole('status', { name: 'Message' })).toContainText('Already in the catalog: stereotype');
+  // "Add category" appends an editable row to the table (T248); a taken name is refused in the row
+  await page.getByRole('button', { name: 'Add category' }).click();
+  const fresh = category('New category');
+  await fresh.getByLabel('Name of the new category').fill('stereotype');
+  await fresh.getByRole('button', { name: 'Add' }).click();
+  await expect(fresh.getByRole('alert')).toContainText('already in the catalog');
+  await fresh.getByLabel('Name of the new category').fill('Tone');
+  await fresh.getByLabel('Description and examples of the new category').fill('The wrong tone. Example: slang in a formal letter.');
+  await fresh.getByRole('button', { name: 'Add' }).click();
+  await expect(category('tone').getByLabel('Description and examples of tone')).toHaveValue('The wrong tone. Example: slang in a formal letter.');
   await expect(page.getByText('Unsaved changes')).toBeVisible();
+
+  // a category in use is removed after a question; its errors stay without the category (T248)
+  await category('left-out').getByRole('button', { name: 'Remove' }).click();
+  const ask = page.getByRole('dialog', { name: 'Remove category' });
+  await expect(ask).toContainText('1 test case use it. Their expected errors stay and lose the category.');
+  await ask.getByRole('button', { name: 'Remove' }).click();
+  await expect(category('left-out')).toHaveCount(0);
+  await expect(page.getByRole('row').filter({ hasText: 'Team update, one-sided' })).not.toContainText('left-out');
+  await expect(page.getByRole('row').filter({ hasText: 'Team update, one-sided' })).toContainText('Injected errors');
 });

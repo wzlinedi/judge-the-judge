@@ -102,7 +102,7 @@ made from it.
    save; try to change a field.
 
 **Expected**: the prompt contains the judge prompt, the base case, the judged text and each error
-with its category's description and example; the JSON box shows problems with their line and
+with its category's description; the JSON box shows problems with their line and
 column or field path and "Save case" is enabled only when valid, with the reason beside it; the list
 under the box shows E1 and E2 and the check line "Text and list agree"; the broken fragment turns
 the line into "not in the text" at once; the new

@@ -99,21 +99,21 @@ empty), up to eight distinct values seen in the sample, and the list it belongs 
 | Field | Type | Rules |
 |---|---|---|
 | `name` | text | Required. Normalized to lower case with dashes; unique. |
-| `description` | text | Optional; shown where a category is chosen (FR-015). |
-| `example` | text | Optional. |
+| `description` | text | Optional; holds the examples too; shown where a category is chosen (FR-015). |
+| `example` | text | Read only (files written before T248): joined to `description` on load ("… Example: …") and not written again. |
 
-- Added only by the user: typed or pasted as text (`name`, `name - description`, also with `:` or
-  `|`) in the "Error categories" section of the Test cases step; typed as a new name where the
+- Added only by the user: with **Add category** (one editable row) in the "Error categories"
+  section of the Test cases step; typed as a new name where the
   category of an error to prepare, or of an added finding, is given (FR-024, FR-062); named in a
   saved case JSON (the window says so); or, with explicit consent, when an imported test-case file
   uses unknown categories (FR-029). There is no catalog file of its own.
 - Uses (derived): the number of test cases that have at least one expected error with the
   category; a case counts once (FR-015).
 - Rename applies to every expected error that uses the category, also after finalizing, and
-  changes the test cases version. Remove happens at once when no test case uses the category; while
-  one does, Remove is disabled with the reason ("Used by N test cases. Remove those test cases
-  first, or rename the category."; after finalizing, when every such case has a reply, "Used by N
-  test cases. It can be renamed.").
+  changes the test cases version. Remove works for every category (T248): at once when no test case
+  uses it; otherwise after a question, and then the expected errors that used it stay without a
+  category (the test cases version changes; after the first reply the changed cases are marked
+  "corrected"), and so do the findings added by hand.
 
 ## TestCases (stored under the key `dataset`)
 

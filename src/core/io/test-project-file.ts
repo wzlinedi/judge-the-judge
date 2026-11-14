@@ -10,6 +10,7 @@ import { checkEnvelope } from '../schemas/common';
 import { zodProblems } from '../schemas/messages';
 import { EVALUATION_FORMAT } from '../schemas/evaluation';
 import { cleanJudgeSet } from '../schemas/judge-set';
+import { joinCategoryExamples } from '../cases/catalog';
 import { assignExpectedIds, ignoredFieldNote, storedCase } from '../schemas/test-case';
 import { TEST_PROJECT_FORMAT, TEST_PROJECT_KEYS, TEST_PROJECT_SCHEMA_VERSION, testProjectSchema } from '../schemas/test-project';
 
@@ -71,7 +72,7 @@ export function readTestProject(text: string, isMetricRegistered: (id: string) =
   if (fieldNote) notes.push(fieldNote);
 
   const p = parsed.data;
-  const judgeSet = { ...p.judge_set };
+  const judgeSet = { ...p.judge_set, error_catalog: joinCategoryExamples(p.judge_set.error_catalog) };
   const variables = findVariables(judgeSet.prompt);
   const proposal = proposeJudgedText(variables, judgeSet.judged_text);
   if (proposal.name !== undefined) {

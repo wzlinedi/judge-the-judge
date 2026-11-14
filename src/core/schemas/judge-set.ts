@@ -19,6 +19,7 @@ export const errorRuleSchema = z.object({
 export const categorySchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
+  /** Read only: written by versions before T248 and joined to the description when the file is loaded. */
   example: z.string().optional(),
 });
 
@@ -39,6 +40,6 @@ export function cleanJudgeSet(set: JudgeSet): JudgeSet {
     ...(set.sample_reply !== undefined ? { sample_reply: set.sample_reply } : {}),
     reply_mapping: set.reply_mapping,
     error_rules: set.error_rules,
-    error_catalog: set.error_catalog,
+    error_catalog: set.error_catalog.map((c) => (c.description ? { name: c.name, description: c.description } : { name: c.name })),
   };
 }

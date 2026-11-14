@@ -38,11 +38,11 @@ describe('injectErrorsPrompt', () => {
     expect(text).toContain('"summary"');
   });
 
-  it('gives each row its category with the catalog description and example, difficulty and what should be wrong', () => {
+  it('gives each row its category with the catalog description (which holds its examples), difficulty and what should be wrong', () => {
     const text = build();
     const factual = set.error_catalog.find((c) => c.name === 'factual-error')!;
     expect(text).toContain(factual.description!);
-    expect(text).toContain(factual.example!);
+    expect(factual.description).toContain('Example:');
     expect(text).toMatch(/Error 1[^]*factual-error[^]*obvious[^]*Change the profession\./);
     expect(text).toMatch(/Error 2[^]*wrong-number/);
   });

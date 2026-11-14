@@ -50,15 +50,15 @@ test('the card shows the counts and the test size; only clean cases warn; a case
   await expect(card(page)).not.toContainText('Unsaved');
 });
 
-test('a category shows its description and example where it is chosen', async ({ page }) => {
+test('a category shows its description, which holds its examples, where it is chosen', async ({ page }) => {
   await start(page);
   await page.getByRole('button', { name: 'Add test case…' }).click();
   await win(page).getByRole('button', { name: 'Case with errors' }).click();
-  const first = accuracy.judge_set.error_catalog[0] as { name: string; description: string; example: string };
-  const second = accuracy.judge_set.error_catalog[1] as { name: string; description: string; example: string };
+  const first = accuracy.judge_set.error_catalog[0] as { name: string; description: string };
+  const second = accuracy.judge_set.error_catalog[1] as { name: string; description: string };
   const row = win(page).getByRole('group', { name: 'Error 1' });
   await expect(row).toContainText(first.description);
-  await expect(row).toContainText(first.example);
+  expect(first.description).toContain('Example:');
   await row.getByLabel('Category').selectOption(second.name);
   await expect(row).toContainText(second.description);
   await expect(row).not.toContainText(first.description);

@@ -158,6 +158,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-14, second look, T245) How are buttons named? → A: One list (FR-008), sentence case, verb and noun, and "…" when the button opens a dialog or a file picker: "Load test project…", "Load evaluation…", "Save test project as…", "Save evaluation as…", "Import test cases…", "Export test cases…", "Load demo…", "New evaluation", "Add test case…", "From JSON", "Case with errors", "Save case" (also for a clean case), "Edit expected errors", "Reopen test cases", "Finalize test cases…", "Add categories", "Show prompt", "Show the issue", "Previous case" and "Next case", "Paste reply", "Keep as text", "Missed", "False positive", "Add finding…", "Load check settings…", "Export HTML report…" and "Run again with a new judge…". The state words in tables and the report ("Issue: missed") are not buttons and stay. "Approve", "Save reply", "Clone" and "Back" have no button; their labels stay in the code only until the Help is rewritten (T225).
 - Q: (Owner review 2026-11-14, third look, T246) What is in the top bar of the page? → A: The tool name, the indicator of unsaved changes, "Save test project", "Save evaluation", the menu, which is now named **More** (was "File"), and **Help**, all on one line; Help is no longer at the end of the step bar. The More menu opens inside the screen at every width (FR-008, FR-076).
 - Q: (Owner review 2026-11-14, third look, T247) How large are the dialogs that hold a long text, and how wide is the case window of Run? → A: One **standard large dialog**: about 90% of the screen in both directions, its buttons in a bar at the bottom. It is used by every "Show prompt" (Test cases, Run, the "From JSON" window after Recreate), by "Original prompt", by "Second opinion…" and by "Edit expected errors". Small questions (Rename, Remove, "Replace this reply?") keep the small dialog. The case window of Run and the case view of Results use the whole width of the screen.
+- Q: (Owner review 2026-11-14, third look, T248) How are the error categories shown and changed? → A: The table has the columns Name, **Description & examples** (one multi-line cell), Used by, and the buttons Rename and Remove. The "Example" button, its dialog and the separate short example are gone: an `example` in an older file is joined to the description when the file is loaded and is not written again (the catalog is in no version, so no version changes). **Remove** is enabled for every category; for a category in use it asks first, and the expected errors that used it stay and lose the category (the test cases version changes). The text box "Categories to add" is replaced by one button, **Add category**, which appends an editable row. "Used by" is computed from the test cases; in the demo "unsupported-claim" is used by one case, number 15. This replaces the T237 answer on "Example" and FR-015 on a disabled "Remove".
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -1101,34 +1102,29 @@ case and confirm the new case has the same fields and expected errors.
   condition, the rule is not used until every condition has a value, and the preview and the
   readability warning say so; "Broken rule" is kept for a field that is not in the sample reply, a
   rule with no conditions and a rule that uses two lists.
-- **FR-015**: The error catalog (the error categories of the test project, each with a name, an
-  optional description and an optional example) MUST be managed in one compact "Error categories"
-  section on the Test cases step, which can be collapsed (FR-087); the Judge step has no catalog
-  section. The section is a table with one row per category: its name, its description (edited in the
-  cell), the number of test cases that use it and the buttons "Example", "Rename" and "Remove".
-  "Example" opens a dialog with the test cases that use the category, one at a time with
-  "Previous case" and "Next case" (every field, the fragments of the category highlighted, the
-  description of each error); it is disabled while no case uses the category. The short text
-  `example` of a category stays in the file and in the generation prompts, and is edited in that dialog
-  as "Short example for prompts". "Rename" asks first and says that the test cases using the category are
-  renamed too, that the test cases version changes and that the error analysis of Results uses the
-  new name. The section lists, for each category, the number of test
-  cases that use it (a case counts once, however many of its expected errors have the category).
-  Users MUST be able to add categories there by typing them or by pasting a plain-text list with
-  one category per line (optionally `name - description`), and by typing a new name where the
-  category of an error to prepare is given (FR-024); names are normalized to lower case with
-  dashes, and names already in the catalog are skipped and reported. Users MUST be able to edit a
-  category's description and example, and to rename it: a rename applies to every expected error
-  that uses the category, and a new name already in the catalog is refused. Removing a category
-  that no test case uses happens at once. While at least one test case uses a category, its
-  "Remove" MUST be disabled and the reason shown beside it in one sentence that names the way out
-  ("Used by N test cases. Remove those test cases first, or rename the category."; after
-  finalizing, when every case that uses it has a reply and can no longer be removed: "Used by N
-  test cases. It can be renamed."). Renames are
-  allowed after finalizing; they change the test cases version, and error analysis, the totals per
-  category and the report are computed from the current categories. The system MUST NOT add,
-  rename or remove categories by itself. It MUST show each category's description and example
-  where a category is chosen. The judge does not have to use the catalog.
+- **FR-015**: The error catalog (the error categories of the test project, each with a name and an
+  optional description, which also holds its examples) MUST be managed in one compact "Error
+  categories" section on the Test cases step, which can be collapsed (FR-087); the Judge step has no
+  catalog section. The section is a table with one row per category: its name, "Description &
+  examples" (one multi-line text edited in the cell), the number of test cases that use it (a case
+  counts once, however many of its expected errors have the category; the number is computed from
+  the test cases) and the buttons "Rename" and "Remove" (T248). There is no "Example" button and no
+  separate example text: a file written earlier with an `example` has it joined to the description
+  when it is loaded ("… Example: …"), and the key is not written again. One button, "Add category",
+  appends an editable row to the table (name, description and examples, "Add" and "Cancel"); the name
+  is normalized to lower case with dashes, and an empty name or a name already in the catalog is
+  refused in the row. A new name can also be typed where the category of an error to prepare is
+  given (FR-024). "Rename" asks first and says that the test cases using the category are renamed
+  too, that the test cases version changes and that the error analysis of Results uses the new
+  name; a new name already in the catalog is refused. "Remove" MUST be enabled for every category:
+  a category that no test case uses is removed at once; for a category in use it asks first ("N
+  test cases use it. Their expected errors stay and lose the category. The test cases version
+  changes."), and after the user confirms, those expected errors (and the findings added by hand
+  with that category) stay without a category. Renames and removals are allowed after finalizing;
+  they change the test cases version, and the error analysis, the totals per category and the
+  report are computed from the current categories. The system MUST NOT add, rename or remove
+  categories by itself. It MUST show each category's description where the category is chosen. The
+  judge does not have to use the catalog.
 - **FR-016**: The error catalog has no file of its own and no "Load catalog" or "Export catalog"
   action. It belongs to the test project, not to the judge set, and is saved and loaded only inside
   the test project file (FR-020), together with the judge and the test cases. To reuse a catalog the
@@ -1277,7 +1273,7 @@ case and confirm the new case has the same fields and expected errors.
   cases version. A saved case's fields are not edited (FR-025).
 - **FR-040**: For a case with injected errors the window MUST first offer the base: any clean case,
   or none (the base is optional). The window MUST then show the **list of errors to prepare**: one row per wanted error with its category (picked
-  from the catalog, or typed as a new name in a text box, FR-024; its description and example are
+  from the catalog, or typed as a new name in a text box, FR-024; its description is
   taken from the catalog and MUST NOT have to be typed again), its difficulty (obvious, subtle, or
   left to the LLM) and a short description of what should be wrong. The user MUST be able to add
   and remove rows ("Add error", "Remove"). From the base case and these rows the window MUST build
@@ -1285,7 +1281,7 @@ case and confirm the new case has the same fields and expected errors.
   whenever a row or the base changes. It MUST contain the judge prompt with its judged text (so the
   LLM knows what the judge checks), every field of the base case when one is picked (without one,
   it asks the LLM to write the whole case, a value for every variable, with the errors in its
-  judged text), the rows with each category's description and example, the rules for realistic
+  judged text), the rows with each category's description (with its examples), the rules for realistic
   errors and exact-fragment quoting, and the answer format: one case in the case JSON layout
   (FR-031) with the judged text and one expected error per row, each with its exact fragment. The base, the rows and the
   prompt are parts 1 to 3 of one page; the rows are laid out horizontally, one line each (Category,

@@ -25,11 +25,15 @@ describe('the catalog in files', () => {
     expect(read.value.evaluation.judge_set.error_catalog).toEqual(e.judge_set.error_catalog);
   });
 
-  it('keeps a description and an example', () => {
-    const text = writeTestProject({ ...e, judge_set: { ...e.judge_set, error_catalog: [{ name: 'x', description: 'd', example: 'ex' }] } }, { toolVersion: '1', testCasesVersion: 'b' });
-    const read = readTestProject(text);
+  it('keeps a description; the short example of an older file is joined to it and not written again (T248)', () => {
+    const text = writeTestProject({ ...e, judge_set: { ...e.judge_set, error_catalog: [{ name: 'x', description: 'd' }] } }, { toolVersion: '1', testCasesVersion: 'b' });
+    const old = JSON.parse(text);
+    old.judge_set.error_catalog = [{ name: 'x', description: 'd', example: 'ex' }];
+    const read = readTestProject(JSON.stringify(old));
     if (!read.ok) throw new Error('unreadable');
-    expect(read.value.evaluation.judge_set.error_catalog).toEqual([{ name: 'x', description: 'd', example: 'ex' }]);
+    expect(read.value.evaluation.judge_set.error_catalog).toEqual([{ name: 'x', description: 'd. Example: ex' }]);
+    const again = JSON.parse(writeTestProject(read.value.evaluation, { toolVersion: '1', testCasesVersion: 'b' }));
+    expect(again.judge_set.error_catalog).toEqual([{ name: 'x', description: 'd. Example: ex' }]);
   });
 
   it('has no file of its own: a retired catalog file is refused naming what is supported', () => {

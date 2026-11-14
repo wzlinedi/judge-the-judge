@@ -72,12 +72,7 @@ function Row({ row, number, state, onChange, onRemove }: { row: ErrorRow; number
           </button>
         </div>
       </div>
-      {hint ? (
-        <p class="muted category-hint">
-          {hint.description ? hint.description : null}
-          {hint.example ? ` Example: ${hint.example}` : null}
-        </p>
-      ) : null}
+      {hint?.description ? <p class="muted category-hint">{hint.description}</p> : null}
       {row.isNew ? (
         <div class="form-grid new-category">
           <label class="field-label" for={`${id}-new`}>
