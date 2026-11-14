@@ -148,8 +148,7 @@ other cases are kept.
 
 **Expected**: the Run step shows one summary line (judge version, test project name, test cases
 version, judged text) with no prompt or rules, a multi-line "Model details" box whose lines are
-kept, and the evaluation file with "Save evaluation" and "Save evaluation as"; the page header has
-no save button. The window fills the screen at 1280 x 720 as one page of three parts (the case with its
+kept, and no save button of its own: "Save test project" and "Save evaluation" are in the page header, each with its file name under it. The window fills the screen at 1280 x 720 as one page of three parts (the case with its
 highlights; a row with "Add finding", "Second opinion…", "Marked N of M" and the status; then "Judge
 reply" with only "Paste reply" above the box on the left and the errors on the right), which scrolls as a whole; "Copy prompt" (part 1) is the primary
 button until it is pressed, then "Paste reply"; the reply box is always visible and
@@ -292,7 +291,7 @@ on a narrow screen; the action row of the second-opinion dialog stays visible; i
 browser a notice says the tool supports Chrome and Edge. The accent is red on a black background
 (dark) or near-white one (light); every text pair meets 4.5:1; every error and "Fail" carries a
 word or a sign besides its color; each step has exactly one primary action in its "what next"
-line, besides "Save evaluation" on the Run step.
+line.
 
 ## Performance checks
 

@@ -32,11 +32,12 @@ export interface CaseWindowProps {
   onClose: () => void;
   onlyAwaiting: boolean;
   onOnlyAwaitingChange: (value: boolean) => void;
-  saveBar: { fileName: string | null; repliesSinceSave: number; onSave: () => void; onSaveAs: () => void };
+  /** Replies not saved to a file; the window only reminds, the save buttons are in the page header (T242). */
+  repliesSinceSave: number;
   reply: ReplyActions;
 }
 
-export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate, onClose, onlyAwaiting, onOnlyAwaitingChange, saveBar, reply: replyActions }: CaseWindowProps) {
+export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate, onClose, onlyAwaiting, onOnlyAwaitingChange, repliesSinceSave, reply: replyActions }: CaseWindowProps) {
   const textRef = useRef<HTMLDivElement>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState<Record<string, boolean>>({});
@@ -185,18 +186,12 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
           <label class="inline-check">
             <input type="checkbox" checked={onlyAwaiting} onChange={(event) => onOnlyAwaitingChange((event.currentTarget as HTMLInputElement).checked)} /> Only cases awaiting verification
           </label>
-          <span class="muted">{`${saveBar.repliesSinceSave} not saved`}</span>
-          {reminderDue(saveBar.repliesSinceSave) ? (
+          <span class="muted">{`${repliesSinceSave} not saved`}</span>
+          {reminderDue(repliesSinceSave) ? (
             <span role="alert" class="save-reminder">
-              Save evaluation now.
+              {`${repliesSinceSave} replies are not saved to a file. Close the window and press ${labels.saveEvaluation} at the top.`}
             </span>
           ) : null}
-          <button type="button" onClick={saveBar.onSave}>
-            {labels.saveEvaluation}
-          </button>
-          <button type="button" onClick={saveBar.onSaveAs}>
-            {labels.saveEvaluationAs}
-          </button>
         </>
       }
       overlay={

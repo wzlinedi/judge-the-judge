@@ -33,26 +33,27 @@ describe('header', () => {
   it('says "All changes saved" with the file name', () => {
     renderApp({ initialState: { ...createState(), hasFile: true, evaluationFile: 'run-1.json' } });
     expect(screen.getByText(/All changes saved/)).toBeTruthy();
-    expect(screen.getByText(/run-1\.json/)).toBeTruthy();
+    expect(screen.getAllByText(/run-1\.json/).length).toBeGreaterThan(0);
   });
 
-  it('has a File menu with exactly the file actions and no Save evaluation', () => {
+  it('has a File menu with the loads and the Save as… items; the plain saves are buttons of the header (T242)', () => {
     renderApp();
     const button = screen.getByRole('button', { name: labels.file });
     expect(button.getAttribute('aria-haspopup')).toBe('menu');
     fireEvent.click(button);
     const items = screen.getAllByRole('menuitem').map((i) => i.textContent);
     expect(items).toEqual([
-      'Load evaluation…', 'Load test project…', 'Save test project', 'Save test project as…',
+      'Load evaluation…', 'Load test project…', 'Save test project as…', 'Save evaluation as…',
       'Import test cases…', 'Export test cases…', 'Load demo…', 'New evaluation',
     ]);
-    expect(screen.queryByRole('button', { name: /^Save evaluation/ })).toBeNull();
-    expect(screen.queryByRole('menuitem', { name: /^Save evaluation/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Save test project' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save evaluation' })).toBeTruthy();
+    expect(screen.queryByRole('menuitem', { name: 'Save evaluation' })).toBeNull();
   });
 
-  it('shows the remembered test project file, or "no file chosen yet"', () => {
+  it('shows the remembered test project file under its button, or "no file yet"', () => {
     const { unmount } = renderApp();
-    expect(screen.getByText(/no file chosen yet/)).toBeTruthy();
+    expect(screen.getAllByText(/no file yet/).length).toBe(2);
     unmount();
     renderApp({ initialState: { ...createState(), testProjectFile: 'books.json' } });
     expect(screen.getByText(/books\.json/)).toBeTruthy();

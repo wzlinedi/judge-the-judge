@@ -68,8 +68,8 @@ test('the Judge step builds a judge from scratch, shows the preview, and survive
 
   // save the test project, reload, load it
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Save test project', exact: true }).click();
-  await expect(page.getByText('Test project: judge.json')).toBeVisible();
+  await page.getByRole('button', { name: 'Save test project', exact: true }).click();
+  await expect(page.getByRole('banner').locator('.file-name').filter({ hasText: 'judge.json' })).toBeVisible();
   await page.reload();
   memory.chooseOpenName('judge.json');
   await page.getByRole('button', { name: 'File' }).click();

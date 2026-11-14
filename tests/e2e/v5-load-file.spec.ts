@@ -76,7 +76,7 @@ test('Export test cases, a new evaluation, Import test cases; and the test proje
 
   // Save test project, reload, Load test project
   memory.chooseSaveName('project.json');
-  await menu(page, 'Save test project');
+  await page.getByRole('button', { name: 'Save test project', exact: true }).click();
   await expect.poll(() => memory.files.has('project.json')).toBe(true);
   await page.reload();
   memory.chooseOpenName('project.json');

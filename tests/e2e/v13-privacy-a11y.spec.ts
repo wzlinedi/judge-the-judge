@@ -69,7 +69,7 @@ for (const scheme of ['light', 'dark'] as const) {
       } else {
         const inBar = (await next(page).locator('button.primary').allInnerTexts()).map((t) => t.trim());
         const others = primaries.filter((name) => !inBar.includes(name));
-        const allowed = label.startsWith('Run') ? ['Save evaluation'] : [];
+        const allowed: string[] = [];
         if (inBar.length !== 1 || others.some((name) => !allowed.includes(name))) problems.push(`${label}: primary buttons: in "what next" ${inBar.join(', ') || 'none'}; elsewhere ${others.join(', ') || 'none'}`);
       }
     };

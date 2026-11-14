@@ -26,24 +26,28 @@ const loadFile = async (ports: FakePorts, menuItem: string, text: string, name =
 };
 
 describe('where saving lives (FR-076, SC-038)', () => {
-  it('shows Save evaluation and Save evaluation as only on Run, with the remembered file name', () => {
-    const { unmount } = renderApp(createFakePorts(), stateOn('run', sampleEvaluation(), { evaluationFile: 'run-1.json' }));
-    expect(screen.getByRole('button', { name: 'Save evaluation' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Save evaluation as…' })).toBeTruthy();
-    expect(screen.getByText('run-1.json')).toBeTruthy();
-    unmount();
-    for (const step of ['judge', 'cases', 'results', 'help'] as const) {
-      const view = renderApp(createFakePorts(), stateOn(step));
-      expect(screen.queryByRole('button', { name: /Save evaluation/ })).toBeNull();
+  it('shows Save test project and Save evaluation in the header of every step, each with its file name under it (T242)', () => {
+    for (const step of ['judge', 'run', 'cases', 'results', 'help'] as const) {
+      const view = renderApp(createFakePorts(), stateOn(step, sampleEvaluation(), { evaluationFile: 'run-1.json', testProjectFile: 'books.json' }));
+      const header = screen.getByRole('banner');
+      expect(within(header).getByRole('button', { name: 'Save test project' })).toBeTruthy();
+      expect(within(header).getByRole('button', { name: 'Save evaluation' })).toBeTruthy();
+      expect(within(header).getByText('run-1.json')).toBeTruthy();
+      expect(within(header).getByText('books.json')).toBeTruthy();
+      expect(screen.queryByRole('button', { name: /Save evaluation as/ })).toBeNull();
       view.unmount();
     }
   });
 
-  it('shows them in the header of the Run case window too', () => {
+  it('says "no file yet" under a button before its first save', () => {
+    renderApp(createFakePorts(), stateOn('judge'));
+    expect(within(screen.getByRole('banner')).getAllByText('no file yet')).toHaveLength(2);
+  });
+
+  it('has no save button in the Run case window or on the Run step: the reminder points to the header', () => {
     renderApp(createFakePorts(), stateOn('run', sampleEvaluation(), { openCase: '1' }));
     const dialog = screen.getByRole('dialog', { name: /Case 1/ });
-    expect(within(dialog).getByRole('button', { name: 'Save evaluation' })).toBeTruthy();
-    expect(within(dialog).getByRole('button', { name: 'Save evaluation as…' })).toBeTruthy();
+    expect(within(dialog).queryByRole('button', { name: /Save evaluation/ })).toBeNull();
   });
 });
 
@@ -57,15 +61,15 @@ describe('the indicator', () => {
 
   it('stays on after Save test project when replies exist, and says replies are kept only by Save evaluation', async () => {
     renderApp(createFakePorts(), stateOn('judge', sampleEvaluation(), { unsaved: true }));
-    menu('Save test project');
+    fireEvent.click(screen.getByRole('button', { name: 'Save test project' }));
     await waitFor(() => expect(screen.getByText(/Replies are kept only by "Save evaluation"/)).toBeTruthy());
     expect(screen.getByText('Unsaved changes')).toBeTruthy();
-    expect(screen.getByText(/Test project: test-project\.json/)).toBeTruthy();
+    expect(screen.getByText('test-project.json')).toBeTruthy();
   });
 
   it('turns to saved after Save test project when there are no replies', async () => {
     renderApp(createFakePorts(), stateOn('judge', { ...sampleEvaluation(), replies: {}, decisions: {} }, { unsaved: true }));
-    menu('Save test project');
+    fireEvent.click(screen.getByRole('button', { name: 'Save test project' }));
     await waitFor(() => expect(screen.getByText(/All changes saved/)).toBeTruthy());
   });
 });
@@ -90,7 +94,7 @@ describe('loading', () => {
     renderApp(ports);
     await loadFile(ports, 'Load test project…', saver.testProjectTarget.lastText!, 'books.json');
     await waitFor(() => expect(screen.getByRole('button', { name: /3\s*Run/ }).getAttribute('aria-current')).toBe('step'));
-    expect(screen.getByText(/Test project: books\.json/)).toBeTruthy();
+    expect(screen.getByText('books.json')).toBeTruthy();
     expect(within(screen.getByRole('region', { name: 'What next' })).getByText('0 of 2 cases decided')).toBeTruthy();
   });
 
@@ -102,7 +106,7 @@ describe('loading', () => {
     expect(alert.textContent).toMatch(/not readable JSON/);
     expect(alert.textContent).toMatch(/line 1/);
     expect(screen.getByRole('button', { name: /1\s*Judge/ }).getAttribute('aria-current')).toBe('step');
-    expect(screen.getByText(/Test project: mine\.json/)).toBeTruthy();
+    expect(screen.getByText('mine.json')).toBeTruthy();
   });
 
   it('shows the notes of a file that loaded', async () => {

@@ -12,12 +12,12 @@ Chrome and Microsoft Edge (FR-003).
 
 - A header with the tool name, the four numbered steps as a progress bar, and a link to **Help**.
   The current step and how far the user has got are always visible.
-- **The header holds no save button** (FR-076). It shows the one indicator of unsaved changes
-  ("Unsaved changes", or "All changes saved" with the file name; FR-051) and a **File** menu
-  holding **Load evaluation**, **Load test project**, **Save test project**, **Save test project
-  as**, **Import test cases**, **Export test cases**, **Load demo…** and **Start new
-  evaluation**, with the remembered file name of the test project. **Save evaluation** and **Save
-  evaluation as** are only on the Run step and in the header of the case window of Run.
+- **The header holds the two save buttons** (FR-076, T242). It shows the one indicator of unsaved changes
+  ("Unsaved changes", or "All changes saved" with the file name; FR-051), **Save test project** and
+  **Save evaluation**, each with the name of its file (or "no file yet") under it, and a **File** menu
+  holding **Load evaluation…**, **Load test project…**, **Save test project as…**, **Save evaluation
+  as…**, **Import test cases…**, **Export test cases…**, **Load demo…** and **New evaluation**.
+  No other screen has a save button.
 - **Load demo…** loads the demo (a finished run of book summaries) at once, with no window, and
   opens the Judge step. There is no list of examples and no **Load metric definition…**: a metric
   that is not built in travels in `metric.definition` of the test project file
@@ -193,8 +193,6 @@ which asks first when something was pasted or typed.
   - **The judge being run**: one short summary line (judge version, test project name, test cases
     version, judged text), with no prompt or rules text; the **Model details** box (multi-line
     free text, FR-058).
-  - **Evaluation file**: the remembered file name, **Save evaluation** (primary) and **Save
-    evaluation as** (FR-059, FR-076).
   - **Progress**: replies received and cases decided out of all cases; the number of items still
     to decide; "N replies not saved to a file".
   - **One list of all cases**, with **Add test case** above it (disabled at the limit of cases; the
@@ -212,7 +210,7 @@ Opened by **Open** (FR-055, FR-060).
 
 - **Fills the screen.** A header that never scrolls: **Previous case**, **Next case**,
   the position, the checkbox "only cases awaiting verification", the case name with its
-  identifier, "N not saved", **Save evaluation**, **Save evaluation as**, **Close**.
+  identifier, "N not saved" (with the reminder from 25: "Close the window and press Save evaluation at the top"), **Close**.
   Alt + Left and Alt + Right do the same as the two buttons. The status is in part 2.
 - **One vertical page of three numbered parts** (the same page layout as the test case window;
   Owner review 2026-11-14, Case window of Run). The page scrolls as a whole.
@@ -326,7 +324,7 @@ offers no action that changes the case, and **Open on Run** leads to the case wi
 ## Rules for every screen (Principle VII)
 
 - One obvious primary action per step, in the "what next" line; the only other primary-colored
-  controls are **Save evaluation** on the Run step and the confirming button of a window the user
+  controls are the confirming button of a window the user
   has opened and must answer (**Save case**, **Save case**, **Apply opinion**, **Import
   test cases** in the import summary, **No more findings** in the case window of a reply that
   cannot be read). Inside a window, the action

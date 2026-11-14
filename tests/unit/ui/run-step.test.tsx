@@ -23,12 +23,9 @@ describe('the Run step', () => {
   const props = {
     evaluation,
     reviewed: reviewEvaluation(evaluation, accuracyMetric),
-    fileName: null,
     repliesSinceSave: 3,
     onOpen: vi.fn(),
     onAdd: vi.fn(),
-    onSave: vi.fn(),
-    onSaveAs: vi.fn(),
     onModelDetails: vi.fn(),
   };
 
@@ -59,12 +56,10 @@ describe('the Run step', () => {
     expect(props.onModelDetails).toHaveBeenCalledWith('model Y\ntemperature 1\ntop_p 0.9');
   });
 
-  it('has the Evaluation file card with Save evaluation and Save evaluation as', () => {
-    render(<RunStep {...props} fileName="run.json" />);
-    const card = screen.getByRole('region', { name: 'Evaluation file' });
-    expect(within(card).getByRole('button', { name: 'Save evaluation' })).toBeTruthy();
-    expect(within(card).getByRole('button', { name: 'Save evaluation as…' })).toBeTruthy();
-    expect(card.textContent).toContain('run.json');
+  it('has no save button and no Evaluation file card: saving is in the page header (T242)', () => {
+    render(<RunStep {...props} />);
+    expect(screen.queryByRole('region', { name: 'Evaluation file' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Save evaluation/ })).toBeNull();
   });
 
   it('says how many replies are not saved to a file, and reminds the user to save from 25', () => {
@@ -141,10 +136,11 @@ describe('the case window of Run, without a reply', () => {
     expect(within(win).getByRole('button', { name: 'Paste reply' }).classList.contains('primary')).toBe(true);
   });
 
-  it('puts the header in order: Previous, position, Next, status, the unsaved count, Save evaluation and Save evaluation as', () => {
+  it('puts the header in order: Previous, position, Next, status and the unsaved count, with no save button (T242)', () => {
     open(createFakePorts(), noReplies());
     const win = windowOf();
-    for (const name of ['Previous case', 'Next case', 'Save evaluation', 'Save evaluation as…']) expect(within(win).getByRole('button', { name })).toBeTruthy();
+    for (const name of ['Previous case', 'Next case']) expect(within(win).getByRole('button', { name })).toBeTruthy();
+    expect(within(win).queryByRole('button', { name: /^Save evaluation/ })).toBeNull();
     expect(within(win).getByText('1 of 2')).toBeTruthy();
     expect(within(win).getByText(/Not run/)).toBeTruthy();
     expect(within(win).getByText('0 not saved')).toBeTruthy();

@@ -45,8 +45,11 @@ test('the Run step shows the judge on one line, the model details and the evalua
   await expect(summary).toContainText(/Test cases version [0-9a-f]{12}/);
   await expect(summary).toContainText('Judged text summary');
   await expect(summary).not.toContainText('SUMMARY');
-  await expect(page.getByRole('region', { name: 'Evaluation file' }).getByRole('button', { name: 'Save evaluation as…' })).toBeVisible();
-  await expect(page.getByRole('banner').getByRole('button', { name: /Save evaluation/ })).toHaveCount(0);
+  // T242: saving is in the page header only, each button with its file name under it
+  await expect(page.getByRole('region', { name: 'Evaluation file' })).toHaveCount(0);
+  await expect(page.getByRole('banner').getByRole('button', { name: 'Save evaluation', exact: true })).toBeVisible();
+  await expect(page.getByRole('banner').getByRole('button', { name: 'Save test project', exact: true })).toBeVisible();
+  await expect(page.getByRole('banner').locator('.file-name').filter({ hasText: 'books.json' })).toBeVisible();
   await expect(next(page)).toContainText('new conversation');
 
   const details = page.getByLabel('Model details');
@@ -165,12 +168,15 @@ test('a reply that was typed and not saved is not lost by moving; and the remind
     if (i < 4) await expect(win.getByRole('alert')).toHaveCount(0);
   }
   await expect(win).toContainText('25 not saved');
-  await expect(win.getByRole('alert')).toContainText('Save evaluation');
+  await expect(win.getByRole('alert')).toContainText('25 replies are not saved to a file. Close the window and press Save evaluation at the top.');
+  await expect(win.getByRole('button', { name: /Save evaluation/ })).toHaveCount(0);
 
-  // Save evaluation clears the count and the reminder
-  await win.getByRole('button', { name: 'Save evaluation', exact: true }).click();
-  await expect(win).toContainText('0 not saved');
-  await expect(win.getByRole('alert')).toHaveCount(0);
+  // the window closes, Save evaluation at the top clears the count and the reminder
+  await win.getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByText('25 replies are not saved to a file.', { exact: false }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Save evaluation', exact: true }).click();
+  await expect(page.getByText('0 replies not saved to a file')).toBeVisible();
+  await expect(page.getByRole('alert')).toHaveCount(0);
 });
 
 test('the case window of Run is one page: the fields, the actions row, then the judge reply and the errors side by side (T230)', async ({ page }) => {

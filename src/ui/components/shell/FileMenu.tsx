@@ -6,6 +6,8 @@ export type FileAction =
   | 'load-test-project'
   | 'save-test-project'
   | 'save-test-project-as'
+  | 'save-evaluation'
+  | 'save-evaluation-as'
   | 'import-test-cases'
   | 'export-test-cases'
   | 'load-example'
@@ -14,8 +16,8 @@ export type FileAction =
 export const FILE_ITEMS: ReadonlyArray<{ action: FileAction; label: string }> = [
   { action: 'load-evaluation', label: labels.loadEvaluation },
   { action: 'load-test-project', label: labels.loadTestProject },
-  { action: 'save-test-project', label: labels.saveTestProject },
   { action: 'save-test-project-as', label: labels.saveTestProjectAs },
+  { action: 'save-evaluation-as', label: labels.saveEvaluationAs },
   { action: 'import-test-cases', label: labels.importTestCases },
   { action: 'export-test-cases', label: labels.exportTestCases },
   { action: 'load-example', label: labels.loadExample },
@@ -24,11 +26,9 @@ export const FILE_ITEMS: ReadonlyArray<{ action: FileAction; label: string }> = 
 
 export interface FileMenuProps {
   onAction: (action: FileAction) => void;
-  /** The remembered test project file, or null before the first save. */
-  testProjectFile: string | null;
 }
 
-export function FileMenu({ onAction, testProjectFile }: FileMenuProps) {
+export function FileMenu({ onAction }: FileMenuProps) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(0);
   const button = useRef<HTMLButtonElement>(null);
@@ -97,7 +97,6 @@ export function FileMenu({ onAction, testProjectFile }: FileMenuProps) {
       >
         {labels.file}
       </button>
-      <span class="file-name muted">{`Test project: ${testProjectFile ?? 'no file chosen yet'}`}</span>
       {open ? (
         <div class="menu" role="menu" aria-label={labels.file}>
           {FILE_ITEMS.map((item, index) => (

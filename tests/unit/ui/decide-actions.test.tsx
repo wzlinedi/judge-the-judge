@@ -135,7 +135,7 @@ describe('the source of every mark', () => {
 describe('what the Run step does not have', () => {
   it('has no second-opinion card and no approval of several cases', () => {
     const reviewed = reviewEvaluation(demo, accuracyMetric);
-    render(<RunStep evaluation={demo} reviewed={reviewed} fileName={null} repliesSinceSave={0} onOpen={() => {}} onAdd={() => {}} onSave={() => {}} onSaveAs={() => {}} onModelDetails={() => {}} />);
+    render(<RunStep evaluation={demo} reviewed={reviewed} repliesSinceSave={0} onOpen={() => {}} onAdd={() => {}} onModelDetails={() => {}} />);
     expect(document.body.textContent).not.toMatch(/Second opinion/);
     expect(screen.queryByRole('button', { name: /Approve/ })).toBeNull();
   });

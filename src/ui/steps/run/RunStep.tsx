@@ -13,13 +13,10 @@ import { TableScroll } from '../../components/TableScroll';
 export interface RunStepProps {
   evaluation: Evaluation;
   reviewed: ReviewedCase[];
-  fileName: string | null;
   repliesSinceSave: number;
   onOpen: (caseId: string) => void;
   /** Opens the window to add a test case; the button stands above the list of cases (FR-053). */
   onAdd: () => void;
-  onSave: () => void;
-  onSaveAs: () => void;
   onModelDetails: (text: string) => void;
 }
 
@@ -32,7 +29,7 @@ export function itemsToDecide(r: ReviewedCase): number {
   return undecided + (r.effective.needsApproval && !r.effective.approved && undecided === 0 ? 1 : 0);
 }
 
-export function RunStep({ evaluation, reviewed, fileName, repliesSinceSave, onOpen, onAdd, onSave, onSaveAs, onModelDetails }: RunStepProps) {
+export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd, onModelDetails }: RunStepProps) {
   const [show, setShow] = useState<Show>('all');
   const versions = useVersions(evaluation);
   const full = testProjectFeedback(evaluation).capacity.full;
@@ -61,22 +58,6 @@ export function RunStep({ evaluation, reviewed, fileName, repliesSinceSave, onOp
         </h2>
         <textarea id="model-details" rows={3} value={evaluation.model_note} spellcheck={false} onInput={(event) => onModelDetails((event.currentTarget as HTMLTextAreaElement).value)} />
         <p class="muted">Optional. Write the model name, the temperature and other settings in any form; the tool does not read them. They are saved with the result.</p>
-      </section>
-
-      <section class="card" aria-label="Evaluation file">
-        <h2>Evaluation file</h2>
-        <p>
-          <span class="muted">File: </span>
-          <span>{fileName ?? 'no file chosen yet'}</span>
-        </p>
-        <div class="button-row">
-          <button type="button" class="primary" onClick={onSave}>
-            {labels.saveEvaluation}
-          </button>
-          <button type="button" onClick={onSaveAs}>
-            {labels.saveEvaluationAs}
-          </button>
-        </div>
       </section>
 
       <section class="card" aria-label="Progress">

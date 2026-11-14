@@ -149,6 +149,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Clarify, prototype v16 review) Which marks does "Apply opinion" overwrite? → A: Every mark the opinion gives an answer for, including marks set by hand and marks from an earlier opinion; the preview lists each change, those that replace a mark set by hand included, before the user applies it. Items the opinion does not answer keep their marks (FR-063).
 - Q: (Clarify, prototype v16 review) Are the category and difficulty of a finding added by hand counted in the results, or only shown with the finding? → A: Both. They are shown with the finding (case window, Test case list, report), and Error analysis and the report get a table of additional findings per category and per difficulty (real errors and false positives, counts only), kept apart from the rates of the expected errors; findings without them are counted under "(no category)" and "(not set)" (FR-062, FR-070).
 - Q: (Clarify, prototype v16 review) May the second opinion add findings that are not in the list, for example when the reply was not JSON? → A: Yes. The verification prompt also asks for findings the reply contains that are not in the list (text, real error or false positive, reason, optional category and difficulty). The preview shows each as "+ new finding", and "Apply opinion" adds it as a finding added by hand, with "Remove", marked with the source "LLM opinion, approved by the user". An opinion that classifies no item and adds no finding changes nothing (FR-062, FR-063).
+- Q: (Owner review 2026-11-14, second look, T242) Where are the save buttons? → A: Only in the page header: "Save test project" and "Save evaluation", always visible, each with the name of its file under it. The File menu keeps "Save test project as…", "Save evaluation as…" and the loads. The "Evaluation file" card of Run and "Save evaluation" in the case window are removed; the window keeps the reminder at 25 unsaved replies, worded "25 replies are not saved to a file. Close the window and press Save evaluation at the top." (FR-057, FR-059, FR-076).
 - Q: (Owner review 2026-11-14, second look, T243) What does "Load demo…" do, and how is a metric loaded? → A: "Load demo…" loads the demo (book summaries) at once, with no window, and opens the Judge step. Accuracy and Completeness as ready examples and "Load metric definition…" are removed ("only Load test project, which holds everything"). A test project (only the test project, not the evaluation file) may carry the definition of a metric that is not built in, in `metric.definition` (name, description, limitations, output_format, parameters, measures); loading the file registers it for the session, replacing an earlier one with the same id without a question, and never replacing the built-in Accuracy. Completeness is no longer built in. The metric file format and `examples/metrics/*` stay as examples to copy from (FR-019, FR-026).
 - Q: (Owner review 2026-11-14, second look, T245) How are buttons named? → A: One list (FR-008), sentence case, verb and noun, and "…" when the button opens a dialog or a file picker: "Load test project…", "Load evaluation…", "Save test project as…", "Save evaluation as…", "Import test cases…", "Export test cases…", "Load demo…", "New evaluation", "Add test case…", "From JSON", "Case with errors", "Save case" (also for a clean case), "Edit expected errors", "Reopen test cases", "Finalize test cases…", "Add categories", "Show prompt", "Show the issue", "Previous case" and "Next case", "Paste reply", "Keep as text", "Missed", "False positive", "Add finding…", "Load check settings…", "Export HTML report…" and "Run again with a new judge…". The state words in tables and the report ("Issue: missed") are not buttons and stay. "Approve", "Save reply", "Clone" and "Back" have no button; their labels stay in the code only until the Help is rewritten (T225).
 
@@ -959,7 +960,7 @@ case and confirm the new case has the same fields and expected errors.
 - **FR-004**: The system MUST NOT retain judge sets, test cases, replies, decisions or results
   after the page is closed; it MUST warn the user before they leave or reload the page with
   unsaved changes, and MUST make saving the current work one clear action: "Save test project"
-  in the "File" menu at any time, and "Save evaluation" on the Run step (FR-076).
+  and "Save evaluation", both buttons of the page header at all times (FR-076).
 - **FR-005**: All data (judge sets, error catalogs, test cases, results, metric definitions, check
   configuration) MUST be loadable from and exportable to files, with clear errors for invalid
   or unsupported-version files.
@@ -1013,8 +1014,8 @@ case and confirm the new case has the same fields and expected errors.
   Available at any time, in the header: the indicator of unsaved changes, the "File" menu with
   "Load demo…" (the demo, loaded at once),
   "Load test project", "Save test project", "Save test project as", "Load evaluation", "Import
-  test cases", "Export test cases" and "New evaluation"; and Help. "Save evaluation" and
-  "Save evaluation as" are only on the Run step and in the case window of Run (FR-076).
+  test cases", "Export test cases" and "New evaluation"; and Help. "Save test project" and "Save evaluation"
+  are buttons of the header, each with the name of its file under it; "Save … as…" is in the File menu (FR-076, T242).
   On every screen: "Explain" opens the explanation of a section, and "Continue" and "Edit test
   cases" appear in the "what next" line. No action may duplicate another one under a different name. There is no Verify
   step, no Compare step, no result shelf, and no action that leads to them; "Modify", "Describe
@@ -1431,10 +1432,10 @@ case and confirm the new case has the same fields and expected errors.
   one case cannot influence another.
 - **FR-059**: Replies are entered one case at a time. Exporting all prompts to one file and
   importing all replies from one file are not part of this version (see Assumptions). Because
-  nothing is saved automatically (FR-004), the Run step MUST offer "Save evaluation" and "Save
-  evaluation as", the case window of Run MUST offer "Save evaluation" in its header, and the system
-  MUST show in both how many replies were saved since the last "Save evaluation" and remind the
-  user to save after every 25 of them. No other step offers these two actions (FR-076).
+  nothing is saved automatically (FR-004), the page header MUST offer "Save evaluation" at all times (FR-076); the Run step and the case window of
+  Run have no save button of their own. The system MUST show in both how many replies were not saved
+  since the last "Save evaluation" and remind the user after every 25 of them: in the case window with
+  "25 replies are not saved to a file. Close the window and press Save evaluation at the top." (T242).
 
 **Step 3: Run — resolving the differences**
 
@@ -1633,10 +1634,7 @@ case and confirm the new case has the same fields and expected errors.
   set, cases, replies and decisions MUST give identical numbers.
 - **FR-076**: The tool MUST work with two files on the user's device: the test project (FR-020) and
   the evaluation (FR-073). The Results step has no file of its own; it shows the result held in
-  the evaluation and generates the HTML report (FR-072). The load actions of both files and the
-  save actions of the test project MUST be in the header's "File" menu. "Save evaluation" and
-  "Save evaluation as" MUST be only on the Run step and in the header of the case window of Run
-  (FR-059), where the replies are entered; the header of the page holds no "Save evaluation". For
+  the evaluation and generates the HTML report (FR-072). The load actions of both files and "Save test project as…" and "Save evaluation as…" MUST be in the header's "File" menu. "Save test project" and "Save evaluation" MUST be buttons of the page header on every step, each with the name of its file (or "no file yet") under it; no other screen has a save button (T242). For
   each of the two files the system MUST remember,
   separately and only for the page session, the file it last saved to or loaded through the file
   picker:

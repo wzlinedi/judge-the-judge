@@ -171,6 +171,8 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     else if (action === 'load-test-project') void load('project');
     else if (action === 'save-test-project') void save(false, true);
     else if (action === 'save-test-project-as') void save(true, true);
+    else if (action === 'save-evaluation') void save(false);
+    else if (action === 'save-evaluation-as') void save(true);
     else if (action === 'import-test-cases') setImporting(true);
     else if (action === 'export-test-cases') void exportCases();
     else onFileAction?.(action, stateRef.current);
@@ -255,12 +257,9 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
               <RunStep
                 evaluation={state.evaluation}
                 reviewed={reviewed}
-                fileName={state.evaluationFile}
                 repliesSinceSave={state.repliesSinceSave}
                 onOpen={(id) => setState((s) => ({ ...s, openCase: id }))}
                 onAdd={() => setTestWindow({ view: 'choice' })}
-                onSave={() => void save(false)}
-                onSaveAs={() => void save(true)}
                 onModelDetails={(text) => setState((s) => modelDetailsEdit(s, text))}
               />
             ) : state.step === 'judge' ? (
@@ -293,7 +292,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           onClose={() => setState((s) => ({ ...s, openCase: null }))}
           onlyAwaiting={onlyAwaiting}
           onOnlyAwaitingChange={setOnlyAwaiting}
-          saveBar={{ fileName: state.evaluationFile, repliesSinceSave: state.repliesSinceSave, onSave: () => void save(false), onSaveAs: () => void save(true) }}
+          repliesSinceSave={state.repliesSinceSave}
           reply={replyActions}
         />
       ) : null}

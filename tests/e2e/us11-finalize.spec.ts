@@ -102,7 +102,7 @@ test('Reopen test cases stands in the "what next" line of Run and Add test case 
 
   // nothing is lost and the remembered file is kept: saving does not ask for a file again
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Save test project', exact: true }).click();
+  await page.getByRole('button', { name: 'Save test project', exact: true }).click();
   expect(memory.asked()).toBe(0);
   expect(JSON.parse(memory.files.get('books.json')!).dataset.finalized).toBe(false);
   expect(JSON.parse(memory.files.get('books.json')!).dataset.cases).toHaveLength(demo.dataset.cases.length);
@@ -141,7 +141,7 @@ test('leaving the page with unsaved cases warns; after saving the test project i
   expect(page.isClosed()).toBe(false);
 
   await page.getByRole('button', { name: 'File' }).click();
-  await page.getByRole('menuitem', { name: 'Save test project', exact: true }).click();
+  await page.getByRole('button', { name: 'Save test project', exact: true }).click();
   await expect(page.getByText('All changes saved').first()).toBeVisible();
   await page.close({ runBeforeUnload: true });
   await expect.poll(() => page.isClosed()).toBe(true);

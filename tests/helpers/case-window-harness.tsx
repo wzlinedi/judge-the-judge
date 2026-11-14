@@ -31,7 +31,7 @@ export function CaseWindowHarness({ start, caseId, onlyAwaiting = false, seen }:
       onClose={() => {}}
       onlyAwaiting={only}
       onOnlyAwaitingChange={setOnly}
-      saveBar={{ fileName: null, repliesSinceSave: 0, onSave: () => {}, onSaveAs: () => {} }}
+      repliesSinceSave={0}
       reply={{ save: async () => ({ state: createState(), status: 'unchanged' }), paste: async () => ({ state: createState(), status: 'unchanged' }) }}
     />
   );

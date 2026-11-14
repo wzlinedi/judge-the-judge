@@ -28,7 +28,7 @@ function Window({ caseId, start = demo, onlyAwaiting = false }: { caseId: string
       onClose={() => {}}
       onlyAwaiting={only}
       onOnlyAwaitingChange={setOnly}
-      saveBar={{ fileName: null, repliesSinceSave: 0, onSave: () => {}, onSaveAs: () => {} }}
+      repliesSinceSave={0}
       reply={{ save: async () => ({ state: createState(), status: 'unchanged' }), paste: async () => ({ state: createState(), status: 'unchanged' }) }}
     />
   );
@@ -38,7 +38,7 @@ const item = (kind: 'expected' | 'additional', id: string) => document.querySele
 
 describe('Run list', () => {
   const reviewed = reviewEvaluation(demo, accuracyMetric);
-  const props = { evaluation: demo, reviewed, fileName: null, repliesSinceSave: 3, onOpen: vi.fn(), onAdd: vi.fn(), onSave: vi.fn(), onSaveAs: vi.fn(), onModelDetails: vi.fn() };
+  const props = { evaluation: demo, reviewed, repliesSinceSave: 3, onOpen: vi.fn(), onAdd: vi.fn(), onModelDetails: vi.fn() };
 
   it('shows every case with its status as a word and a sign, and Open', () => {
     render(<RunStep {...props} />);
@@ -58,13 +58,11 @@ describe('Run list', () => {
     expect(screen.getAllByRole('row').slice(1)).toHaveLength(5);
   });
 
-  it('shows progress and the evaluation file card', () => {
-    render(<RunStep {...props} fileName="run.json" />);
+  it('shows progress and no evaluation file card', () => {
+    render(<RunStep {...props} />);
     expect(screen.getByText(/15 of 20 cases decided/)).toBeTruthy();
     expect(screen.getByText(/3 replies not saved to a file/)).toBeTruthy();
-    expect(screen.getByText(/run\.json/)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Save evaluation' }).classList.contains('primary')).toBe(true);
-    expect(screen.getByRole('button', { name: 'Save evaluation as…' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Save evaluation/ })).toBeNull();
   });
 
   it('opens a case', () => {
@@ -167,9 +165,8 @@ describe('case window of Run, with a reply', () => {
     expect(screen.getByText(/of 5/)).toBeTruthy();
   });
 
-  it('keeps the save buttons in the header', () => {
+  it('has no save button: saving is in the page header (T242)', () => {
     render(<Window caseId="3" />);
-    expect(screen.getByRole('button', { name: 'Save evaluation' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Save evaluation as…' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Save evaluation/ })).toBeNull();
   });
 });
