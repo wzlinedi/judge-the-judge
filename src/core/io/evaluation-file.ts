@@ -54,6 +54,7 @@ export function writeEvaluation(evaluation: Evaluation, results: Results | null,
     judge_set: cleanJudgeSet(evaluation.judge_set),
     judge_version: meta.judgeVersion,
     ...(evaluation.reply_judge_version !== undefined ? { reply_judge_version: evaluation.reply_judge_version } : {}),
+    ...(evaluation.reply_counted_per !== undefined ? { reply_counted_per: evaluation.reply_counted_per } : {}),
     rules_corrected_after_replies: corrected,
     model_note: evaluation.model_note,
     metric: evaluation.metric,
@@ -105,6 +106,7 @@ export function readEvaluation(text: string): ReadResult<LoadedEvaluation> {
     replies: p.replies,
     decisions: p.decisions,
     ...(p.reply_judge_version !== undefined ? { reply_judge_version: p.reply_judge_version } : {}),
+    ...(p.reply_counted_per !== undefined ? { reply_counted_per: p.reply_counted_per } : {}),
   };
   const stored = p.results !== null && typeof p.results === 'object' ? (p.results as Record<string, unknown>) : {};
   return {

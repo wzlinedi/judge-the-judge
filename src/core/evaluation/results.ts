@@ -2,7 +2,7 @@
 import type { CaseDecisions, Evaluation, TestCase } from '../model';
 import { findFindings, type Finding } from '../judge/findings';
 import { recognizeFields } from '../judge/fields';
-import { countingMode } from '../judge/rules';
+import { countingModeOf } from '../judge/counting-mode';
 import type { MeasureValue, MetricDefinition } from '../metrics/types';
 import { countAll, type Counters } from './counters';
 import { applyDecisions, type Effective, type EffectiveSource } from './decisions';
@@ -53,7 +53,7 @@ export function reviewEvaluation(evaluation: Evaluation, metric?: Pick<MetricDef
   const sample = judge_set.sample_reply ? recognizeFields(judge_set.sample_reply) : undefined;
   const recognized = sample?.ok ? sample : undefined;
   const parameters = matchParameters(evaluation, metric);
-  const mode = countingMode(judge_set.error_rules);
+  const mode = countingModeOf(judge_set);
 
   return evaluation.dataset.cases.map((testCase) => {
     const reply = evaluation.replies[testCase.id];
@@ -67,7 +67,8 @@ export function reviewEvaluation(evaluation: Evaluation, metric?: Pick<MetricDef
 }
 
 export function computeResults(evaluation: Evaluation, metric: MetricDefinition, minimum: MinimumSample = MINIMUM_SAMPLE): Results {
-  const mode = countingMode(evaluation.judge_set.error_rules);
+  const mode = countingModeOf(evaluation.judge_set);
+  const evaluated = mode === 'per_case' ? ('case' as const) : ('expected_error' as const);
   const reviewed = reviewEvaluation(evaluation, metric);
   const counters = countAll(reviewed, mode);
   const measures = computeMeasures(counters, metric, mode);
@@ -83,8 +84,8 @@ export function computeResults(evaluation: Evaluation, metric: MetricDefinition,
   }
   const undecided = counters.cases_awaiting + counters.cases_not_run;
   return {
-    evaluated_per: mode === 'per_case' ? 'case' : 'expected_error',
-    counted_per_before_correction: null,
+    evaluated_per: evaluated,
+    counted_per_before_correction: evaluation.reply_counted_per !== undefined && evaluation.reply_counted_per !== evaluated ? evaluation.reply_counted_per : null,
     provisional: undecided > 0,
     undecided,
     counters,

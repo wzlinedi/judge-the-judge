@@ -1,6 +1,7 @@
 import type { Results } from '../../../core/evaluation/results';
 import { MINIMUM_SAMPLE } from '../../../core/evaluation/results';
 import type { Evaluation } from '../../../core/model';
+import { PER_CASE_SENTENCE } from '../../../core/evaluation/counting-note';
 import { DetailsSection } from './DetailsSection';
 
 const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
@@ -48,22 +49,41 @@ export function SummaryView({ results, evaluation, onThreshold, onLoadChecks }: 
 
       {c.cases_decided === 0 ? <p class="muted">No case is decided yet, so there is no result to show. Run the cases and decide what awaits you on the Run step.</p> : null}
 
+      {perCase ? <p>{PER_CASE_SENTENCE}</p> : null}
+
       <div role="group" aria-label="Counts" class="counts">
-        <Group title="Expected errors">
-          <Count label="Total" value={c.expected_total} />
-          <Count label="Found" value={c.expected_found} />
-          <Count label="Missed" value={c.expected_missed} />
-        </Group>
-        <Group title="Additional findings">
-          <Count label="Total" value={c.additional_total} />
-          <Count label="Real errors" value={c.real_errors} />
-          <Count label="False positives" value={c.false_positives} />
-        </Group>
-        <Group title="Subtle errors">
-          <Count label="Total" value={c.subtle_total} />
-          <Count label="Found" value={c.subtle_found} />
-          <Count label="Missed" value={c.subtle_missed} />
-        </Group>
+        {perCase ? (
+          <>
+            <Group title="Cases with expected errors">
+              <Count label="Decided" value={c.defective_cases_decided} />
+              <Count label="Flagged" value={c.defective_cases_flagged} />
+              <Count label="Not flagged" value={c.defective_cases_decided - c.defective_cases_flagged} />
+            </Group>
+            <Group title="Clean cases">
+              <Count label="Decided" value={c.clean_cases_decided} />
+              <Count label="Flagged wrongly" value={c.clean_cases_with_false_positive} />
+              <Count label="Not flagged" value={c.clean_cases_decided - c.clean_cases_with_false_positive} />
+            </Group>
+          </>
+        ) : (
+          <>
+            <Group title="Expected errors">
+              <Count label="Total" value={c.expected_total} />
+              <Count label="Found" value={c.expected_found} />
+              <Count label="Missed" value={c.expected_missed} />
+            </Group>
+            <Group title="Additional findings">
+              <Count label="Total" value={c.additional_total} />
+              <Count label="Real errors" value={c.real_errors} />
+              <Count label="False positives" value={c.false_positives} />
+            </Group>
+            <Group title="Subtle errors">
+              <Count label="Total" value={c.subtle_total} />
+              <Count label="Found" value={c.subtle_found} />
+              <Count label="Missed" value={c.subtle_missed} />
+            </Group>
+          </>
+        )}
       </div>
 
       {ignored > 0 ? (

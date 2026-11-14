@@ -1,6 +1,6 @@
 // Error rules (research.md, section 9; FR-013, FR-014): evaluation is three-valued, so a field the
 // reply does not contain is "unknown" and the tool never guesses.
-import type { Condition, CountingMode, ErrorRule } from '../model';
+import type { Condition, ErrorRule } from '../model';
 import type { RecognizedFields } from './fields';
 
 export type Tri = 'holds' | 'fails' | 'unknown';
@@ -99,11 +99,4 @@ export function validateRules(rules: readonly ErrorRule[], recognized: Recognize
     if (lists.size > 1) return { usable: false, reason: `"${rule.name}" uses two lists (${[...lists].join(' and ')}); one rule can use only one.` };
     return { usable: true, list: [...lists][0] };
   });
-}
-
-/** `per_case` when at least one rule exists and every rule uses only fields outside any list (FR-061). */
-export function countingMode(rules: readonly ErrorRule[]): CountingMode {
-  const used = rules.filter((r) => r.conditions.length > 0);
-  if (used.length === 0) return 'per_expected_error';
-  return used.every((r) => r.conditions.every((c) => !isListPath(c.field))) ? 'per_case' : 'per_expected_error';
 }

@@ -1,5 +1,6 @@
 import type { JudgeEdit } from '../../../app/actions/judge';
 import type { AppState } from '../../../app/store';
+import { countingModeOf } from '../../../core/judge/counting-mode';
 import { readabilityWarnings } from '../../../core/judge/readability';
 import { PromptSection } from './PromptSection';
 import { RulesSection } from './RulesSection';
@@ -27,6 +28,11 @@ export function JudgeStep({ state, onEdit }: JudgeStepProps) {
       <PromptSection state={state} onEdit={onEdit} />
       <SampleReplySection state={state} onEdit={onEdit} />
       <RulesSection state={state} onEdit={onEdit} />
+      {countingModeOf(state.evaluation.judge_set) === 'per_case' ? (
+        <p class="notice" role="status" aria-label="Way of counting">
+          This judge is evaluated per case: every rule uses only fields outside any list, so it gives one verdict for the whole text. A flagged reply makes every expected error of the case found, and the Summary counts cases.
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -128,7 +128,9 @@
       },
       "per_rule": {},
       "additional_per_category": {},
-      "additional_per_difficulty": {}
+      "additional_per_difficulty": {},
+      "case_per_category": {},
+      "case_per_difficulty": {}
     },
     "measures": {
       "detection_rate": {
@@ -533,7 +535,9 @@
           "real": 1,
           "fp": 2
         }
-      }
+      },
+      "case_per_category": {},
+      "case_per_difficulty": {}
     },
     "measures": {
       "detection_rate": {

@@ -8,6 +8,7 @@ import { MetricsAndChecks } from './sections/MetricsAndChecks';
 import { MarkingAfterReplies } from './sections/MarkingAfterReplies';
 import { ResultsHelp } from './sections/ResultsHelp';
 import { Privacy } from './sections/Privacy';
+import { VerdictJudges } from './sections/VerdictJudges';
 import { WorkingByHand } from './sections/WorkingByHand';
 import { SampleReplyRules } from './sections/SampleReplyRules';
 import { ReadingResults } from './sections/ReadingResults';
@@ -35,6 +36,7 @@ export function HelpStep() {
       <DemoData />
       <MetricsAndChecks />
       <ReadingResults />
+      <VerdictJudges />
       <ResultsHelp />
     </div>
   );

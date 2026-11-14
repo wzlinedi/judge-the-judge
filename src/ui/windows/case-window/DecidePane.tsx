@@ -106,6 +106,9 @@ export function DecidePane({ reviewed, effective, replyChanged, onExpected, onAd
   return (
     <div class="decide-pane">
       {unreadable ? <p class="error-note">{reviewed.review?.reason}</p> : null}
+      {reviewed.review?.flagged !== undefined ? (
+        <p class="muted">{`This judge is evaluated per case. The text was ${reviewed.review.flagged ? '' : 'not '}flagged.`}</p>
+      ) : null}
       <FindingsInReply reviewed={reviewed} unreadable={unreadable} />
 
       <div class="status-row">

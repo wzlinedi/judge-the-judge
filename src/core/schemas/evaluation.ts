@@ -42,6 +42,7 @@ export const evaluationSchema = z.object({
   judge_set: judgeSetSchema,
   judge_version: z.string().optional(),
   reply_judge_version: z.string().optional(),
+  reply_counted_per: z.enum(['expected_error', 'case']).optional(),
   rules_corrected_after_replies: z.boolean().optional(),
   model_note: z.string().default(''),
   metric: metricRefSchema,
@@ -54,7 +55,7 @@ export const evaluationSchema = z.object({
 });
 
 export const EVALUATION_KEYS = [
-  'format', 'schema_version', 'tool_version', 'saved', 'judge_set', 'judge_version', 'reply_judge_version',
+  'format', 'schema_version', 'tool_version', 'saved', 'judge_set', 'judge_version', 'reply_judge_version', 'reply_counted_per',
   'rules_corrected_after_replies', 'model_note', 'metric', 'dataset', 'replies', 'decisions', 'checks',
   'minimum_sample', 'results', 'proposals',
 ] as const;

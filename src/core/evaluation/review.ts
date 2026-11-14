@@ -23,6 +23,8 @@ export interface CaseReview {
   partialOnly: Finding[];
   unknown: string[];
   reason?: string;
+  /** For a judge evaluated per case: whether the text was flagged by at least one rule (FR-061). */
+  flagged?: boolean;
 }
 
 export function reviewCase(
@@ -31,8 +33,6 @@ export function reviewCase(
   parameters: Partial<MatchParameters>,
   mode: CountingMode = 'per_expected_error',
 ): CaseReview {
-  if (mode === 'per_case') throw new Error('Reviewing a case per case is added with the judges evaluated per case.');
-
   if (!result.readable) {
     const reason = `The reply could not be read: ${result.reason ?? 'unknown reason'}`;
     return {
@@ -45,6 +45,8 @@ export function reviewCase(
       reason,
     };
   }
+
+  if (mode === 'per_case') return reviewPerCase(testCase, result);
 
   const level = new Map<string, Map<string, 'clear' | 'partial'>>(); // finding key -> expected id -> level
   for (const finding of result.findings) {
@@ -83,4 +85,28 @@ export function reviewCase(
   });
 
   return { readable: true, needsApproval: false, expected, additional, partialOnly, unknown: result.unknown };
+}
+
+/**
+ * A judge that gives one verdict for the whole text has no place to match (FR-061): a flagged reply makes every expected error
+ * found, an unflagged one makes every expected error missed, both with the source "automatic". On a clean case a flag is an
+ * additional finding that the user decides as always.
+ */
+function reviewPerCase(testCase: Pick<TestCase, 'expected_errors'>, result: FindingsResult): CaseReview {
+  const whole = result.findings.find((f) => f.key === 'reply');
+  const flagged = whole !== undefined;
+
+  if (!flagged && result.unknown.length > 0) {
+    const reason = `A rule could not be checked because the reply has no usable ${result.unknown.join(', ')}, so decide it by hand.`;
+    return { readable: true, needsApproval: false, flagged, expected: testCase.expected_errors.map((e) => ({ id: e.id, state: 'undecided' as const, clear: [], partial: [], reason })), additional: [], partialOnly: [], unknown: result.unknown };
+  }
+  return {
+    readable: true,
+    needsApproval: false,
+    flagged,
+    expected: testCase.expected_errors.map((e) => (flagged ? { id: e.id, state: 'found' as const, clear: ['reply'], partial: [] } : { id: e.id, state: 'missed' as const, clear: [], partial: [] })),
+    additional: whole !== undefined && testCase.expected_errors.length === 0 ? [whole] : [],
+    partialOnly: [],
+    unknown: result.unknown,
+  };
 }

@@ -9,7 +9,7 @@ describe('Help (Principle VIII)', () => {
   it('has the sections written so far, in plain headings', () => {
     render(<HelpStep />);
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Marking after each reply: Add finding, Remove, the second opinion and Ignore', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results', 'Overall result and thresholds', 'Exporting the report, and what provisional means']);
+    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Marking after each reply: Add finding, Remove, the second opinion and Ignore', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results', 'Judges that give only a verdict (for example bias: yes or no)', 'Overall result and thresholds', 'Exporting the report, and what provisional means']);
   });
 
   it('quotes the numbers of the demo from the demo files, so they cannot drift', () => {
@@ -186,5 +186,31 @@ describe('Help for the Results step (US9)', () => {
       }
     });
     expect(pre).toContain(example);
+  });
+});
+
+describe('Help for judges that give only a verdict (US14 part 2)', () => {
+  it('explains per-case counting with the worked example and what is not covered', () => {
+    render(<HelpStep />);
+    const text = document.body.textContent ?? '';
+    expect(text).toMatch(/evaluated per case/);
+    expect(text).toMatch(/30 biased texts, 27 flagged: 90%/);
+    expect(text).toMatch(/10 neutral texts, 1 flagged: 10%/);
+    for (const label of ['Case detection rate', 'Clean-case false-positive rate']) expect(text).toContain(label);
+    expect(text).toMatch(/graded answers/);
+    expect(text).toMatch(/number the judge returns/);
+  });
+
+  it('quotes the verdict example, so the example cannot drift', () => {
+    render(<HelpStep />);
+    const set = JSON.parse(readFileSync('examples/metrics/bias-verdict-example.json', 'utf8')).judge_set;
+    const compact = (t: string) => {
+      try {
+        return JSON.stringify(JSON.parse(t));
+      } catch {
+        return undefined;
+      }
+    };
+    expect([...document.querySelectorAll('pre.example')].map((p) => compact(p.textContent ?? ''))).toContain(compact(set.sample_reply));
   });
 });

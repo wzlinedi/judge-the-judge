@@ -190,6 +190,8 @@ export interface Evaluation {
   replies: Record<string, Reply>;
   decisions: Record<string, CaseDecisions>;
   reply_judge_version?: string;
+  /** The way of counting when the first reply arrived, to name a switch caused by a later correction of the rules (FR-075). */
+  reply_counted_per?: 'expected_error' | 'case';
   rules_corrected_after_replies?: boolean;
 }
 

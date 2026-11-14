@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { countingMode, evaluateCondition, evaluateRule, validateRules } from '../../../../src/core/judge/rules';
+import { countingMode } from '../../../../src/core/judge/counting-mode';
+import { evaluateCondition, evaluateRule, validateRules } from '../../../../src/core/judge/rules';
 import { recognizeFields } from '../../../../src/core/judge/fields';
 import type { Condition, ErrorRule } from '../../../../src/core/model';
 

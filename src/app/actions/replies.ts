@@ -1,5 +1,6 @@
 // Entering the judge's replies one case at a time (FR-053, FR-056, FR-057, FR-059).
 import { composePrompt } from '../../core/judge/compose';
+import { countingModeOf } from '../../core/judge/counting-mode';
 import { judgeVersion } from '../../core/judge/version';
 import type { Evaluation, Problem } from '../../core/model';
 import { pastedReplySource } from '../../sources/pasted-reply';
@@ -23,6 +24,8 @@ export function replaceNeedsQuestion(evaluation: Evaluation, caseId: string): { 
 export interface AttachOptions {
   /** The judge version, recorded when the first reply arrives. */
   judgeVersion: string;
+  /** The way of counting now, recorded with the first reply. */
+  countedPer?: 'expected_error' | 'case';
   /** The user was asked about replacing replies that have decisions and said yes. */
   confirmReplace?: boolean;
 }
@@ -71,6 +74,7 @@ export function attachReplies(evaluation: Evaluation, batch: ReplyBatch, options
     replies,
     decisions,
     reply_judge_version: evaluation.reply_judge_version ?? options.judgeVersion,
+    ...(evaluation.reply_counted_per !== undefined || options.countedPer !== undefined ? { reply_counted_per: evaluation.reply_counted_per ?? (options.countedPer as 'expected_error' | 'case') } : {}),
   };
   return result;
 }
@@ -94,7 +98,11 @@ export async function saveReply(state: AppState, caseId: string, text: string, o
   if (batch.items.length === 0) return { state, status: 'empty', message: batch.problems[0]?.message ?? 'The reply is empty.' };
 
   const version = await judgeVersion(state.evaluation.judge_set);
-  const attached = attachReplies(state.evaluation, batch, { judgeVersion: version, confirmReplace: options.confirmed === true });
+  const attached = attachReplies(state.evaluation, batch, {
+    judgeVersion: version,
+    countedPer: countingModeOf(state.evaluation.judge_set) === 'per_case' ? 'case' : 'expected_error',
+    confirmReplace: options.confirmed === true,
+  });
   const [first] = attached.needsConfirmation;
   if (first) {
     return {

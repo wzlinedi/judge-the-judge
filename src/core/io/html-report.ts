@@ -3,6 +3,7 @@
 // Every value is escaped. Details are collapsible on screen and expanded in print.
 import { composePrompt } from '../judge/compose';
 import type { Evaluation } from '../model';
+import { countingSwitchNote, PER_CASE_SENTENCE, PER_CASE_WHY } from '../evaluation/counting-note';
 import { errorAnalysis, falsePositiveShares, type GroupRow } from '../evaluation/analysis';
 import { measuresInUse } from '../evaluation/measures';
 import { MINIMUM_SAMPLE, type ReviewedCase, type Results } from '../evaluation/results';
@@ -39,18 +40,28 @@ function table(label: string, head: string[], rows: string[][]): string {
     .join('')}</tbody></table>`;
 }
 
-function groupRows(rows: GroupRow[]): string[][] {
+function groupRows(rows: GroupRow[], perCase = false): string[][] {
+  if (perCase) return rows.map((g) => [g.name, String(g.expected), String(g.found), String(g.missed)]);
   return rows.map((g) => [g.name, String(g.expected), String(g.found), String(g.missed), g.rate === null ? 'counts only' : pct(g.rate)]);
 }
 
 function summary(evaluation: Evaluation, results: Results, reviewed: ReviewedCase[]): string {
   const c = results.counters;
   const out: string[] = ['<section id="summary"><h2>1. Summary</h2>'];
+  const perCase = results.evaluated_per === 'case';
   out.push(
-    `<h3>Counts</h3>`,
-    table('Expected errors', ['Total', 'Found', 'Missed'], [[String(c.expected_total), String(c.expected_found), String(c.expected_missed)]]),
-    table('Additional findings', ['Total', 'Real errors', 'False positives'], [[String(c.additional_total), String(c.real_errors), String(c.false_positives)]]),
-    table('Subtle errors', ['Total', 'Found', 'Missed'], [[String(c.subtle_total), String(c.subtle_found), String(c.subtle_missed)]]),
+    '<h3>Counts</h3>',
+    ...(perCase
+      ? [
+          `<p>${esc(PER_CASE_SENTENCE)}</p>`,
+          table('Cases with expected errors', ['Decided', 'Flagged', 'Not flagged'], [[String(c.defective_cases_decided), String(c.defective_cases_flagged), String(c.defective_cases_decided - c.defective_cases_flagged)]]),
+          table('Clean cases', ['Decided', 'Flagged wrongly', 'Not flagged'], [[String(c.clean_cases_decided), String(c.clean_cases_with_false_positive), String(c.clean_cases_decided - c.clean_cases_with_false_positive)]]),
+        ]
+      : [
+          table('Expected errors', ['Total', 'Found', 'Missed'], [[String(c.expected_total), String(c.expected_found), String(c.expected_missed)]]),
+          table('Additional findings', ['Total', 'Real errors', 'False positives'], [[String(c.additional_total), String(c.real_errors), String(c.false_positives)]]),
+          table('Subtle errors', ['Total', 'Found', 'Missed'], [[String(c.subtle_total), String(c.subtle_found), String(c.subtle_missed)]]),
+        ]),
   );
 
   const ignored: string[] = [];
@@ -96,15 +107,16 @@ function summary(evaluation: Evaluation, results: Results, reviewed: ReviewedCas
 }
 
 function analysis(results: Results): string {
-  const a = errorAnalysis(results.counters);
-  const head = ['Group', 'Expected errors', 'Found', 'Missed', 'Detection rate'];
+  const perCase = results.evaluated_per === 'case';
+  const a = errorAnalysis(results.counters, perCase);
+  const head = perCase ? ['Group', 'Cases with errors', 'Flagged', 'Not flagged'] : ['Group', 'Expected errors', 'Found', 'Missed', 'Detection rate'];
   return [
     '<section id="error-analysis"><h2>2. Error analysis</h2>',
     '<h3>By category</h3>',
-    table('By category', head, groupRows(a.byCategory)),
+    table('By category', head, groupRows(a.byCategory, perCase)),
     '<h3>By difficulty</h3>',
-    table('By difficulty', head, groupRows(a.byDifficulty)),
-    '<p>A group with fewer than 10 expected errors shows counts only, with no rate.</p>',
+    table('By difficulty', head, groupRows(a.byDifficulty, perCase)),
+    `<p>${esc(perCase ? PER_CASE_WHY : 'A group with fewer than 10 expected errors shows counts only, with no rate.')}</p>`,
     '<h3>Additional findings per rule</h3>',
     table('Additional findings per rule', ['Rule', 'Real errors', 'False positives'], a.perRule.map((r) => [r.rule, String(r.real), String(r.fp)])),
     '<h3>Additional findings per category</h3>',
@@ -207,6 +219,8 @@ export function buildHtmlReport(evaluation: Evaluation, results: Results, review
       `<p class="note">The rules were corrected after the replies were received (the error rules or the reply mapping changed). The judge version in force when the replies were received was ${esc(evaluation.reply_judge_version)}; the current one is ${esc(meta.judgeVersion)}.</p>`,
     );
   }
+  const switched = countingSwitchNote(results);
+  if (switched) head.push(`<p class="note">${esc(switched)}</p>`);
   for (const [kind, text] of [['added', 'added'], ['corrected', 'corrected']] as const) {
     const cases = evaluation.dataset.cases.filter((t) => t.changed_after_first_reply === kind);
     if (cases.length > 0) head.push(`<p class="note">Cases ${text} after the first reply: ${cases.map((t) => esc(`case ${t.id} (${t.name})`)).join(', ')}.</p>`);
