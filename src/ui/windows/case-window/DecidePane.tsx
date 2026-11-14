@@ -1,4 +1,5 @@
 import type { Effective, EffectiveAdditional, EffectiveExpected } from '../../../core/evaluation/decisions';
+import { markFindings } from '../../../core/evaluation/finding-marks';
 import type { ReviewedCase } from '../../../core/evaluation/results';
 import type { AdditionalState, ExpectedState, TestCase } from '../../../core/model';
 import { SOURCE_LABELS } from '../../components/sources';
@@ -70,6 +71,22 @@ function AdditionalItem({ item, onMark }: { item: EffectiveAdditional; onMark: (
   );
 }
 
+/** Each finding of the reply with the words that go with its colour (FR-077): green matches, amber partly matches, red matches no expected error. */
+function FindingsInReply({ reviewed, unreadable }: { reviewed: ReviewedCase; unreadable: boolean }) {
+  if (unreadable) return <p class="muted">The reply is shown without finding highlights because it cannot be read.</p>;
+  const marks = markFindings(reviewed);
+  if (marks.length === 0) return <p class="muted">The reply holds no findings to highlight.</p>;
+  return (
+    <ul class="plain-list findings-in-reply" aria-label="Findings in the reply">
+      {marks.map((m) => (
+        <li key={m.key}>
+          <mark class={`finding finding-${m.kind}`}>{m.text === '' ? 'The whole reply' : m.text}</mark> <span class="finding-label">{m.label}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function DecidePane({ reviewed, effective, reply, onExpected, onAdditional, onApprove, onShowInText }: DecidePaneProps) {
   const unreadable = reviewed.review !== null && !reviewed.review.readable;
   const awaiting = reviewed.status === 'awaiting';
@@ -81,6 +98,7 @@ export function DecidePane({ reviewed, effective, reply, onExpected, onAdditiona
       </label>
       <textarea id="judge-reply" class="json" rows={8} value={reply} readOnly aria-label="Judge reply" />
       {unreadable ? <p class="error-note">{reviewed.review?.reason}</p> : null}
+      <FindingsInReply reviewed={reviewed} unreadable={unreadable} />
 
       <div class="status-row">
         <StatusMark status={reviewed.status} />

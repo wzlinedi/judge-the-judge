@@ -1,20 +1,31 @@
-import { useState } from 'preact/hooks';
-import { saveCaseFromJson, correctExpectedErrors, type CaseEdit } from '../../../app/actions/cases';
+import { useRef, useState } from 'preact/hooks';
+import type { CaseEdit } from '../../../app/actions/cases';
+import { listCheckOf } from '../../../app/actions/test-case-window';
 import type { AppState } from '../../../app/store';
 import { checkCaseJson } from '../../../core/cases/case-json';
 import { findVariables } from '../../../core/judge/variables';
-import type { CaseJsonCheck } from '../../../core/model';
+import type { CaseJsonCheck, TestCase } from '../../../core/model';
 import { JsonBox } from '../../components/JsonBox';
 import { labels } from '../../labels';
-import { CaseData, ErrorList } from './CaseData';
+import { CaseData, CheckLine, ErrorList } from './CaseData';
+import { SaveCaseButton } from './SaveCaseButton';
 import { TestCaseFrame } from './TestCaseFrame';
 
 export interface JsonCaseViewProps {
   state: AppState;
-  /** `paste`: a new case from JSON (also Clone). `correct`: only the expected errors of a saved case may change. */
-  mode: 'paste' | 'correct';
+  /** `paste`: a new case from JSON (also Clone). `inject`: parts 2 and 3 of a case with injected errors. `correct`: only the expected errors of a saved case may change. */
+  mode: 'paste' | 'inject' | 'correct';
   caseId?: string;
   initialText: string;
+  /** Keeps the text outside the view, so that Back to part 1 does not lose it. */
+  onTextChange?: (text: string) => void;
+  base?: string;
+  errorsToPrepare?: number;
+  /** Back from the JSON box (part 2) to part 1. */
+  onBack?: () => void;
+  /** True when something before this view was typed (part 1). */
+  touched?: boolean;
+  title?: string;
   onApply: (edit: CaseEdit) => void;
   onClose: () => void;
 }
@@ -48,54 +59,88 @@ export function Status({ check }: { check: CaseJsonCheck }) {
   );
 }
 
-/** "Paste JSON" (FR-090) and, after Next, the case view (FR-085): the one JSON box checked as it changes. */
-export function JsonCaseView({ state, mode, caseId, initialText, onApply, onClose }: JsonCaseViewProps) {
+/** The JSON box (FR-041, FR-090) and, after Next, the case view (FR-085): the one JSON box checked as it changes. */
+export function JsonCaseView({ state, mode, caseId, initialText, onTextChange, base, errorsToPrepare, onBack, touched, title, onApply, onClose }: JsonCaseViewProps) {
   const [text, setText] = useState(initialText);
   const [stage, setStage] = useState<'json' | 'case'>(mode === 'correct' ? 'case' : 'json');
+  const [strong, setStrong] = useState<string | null>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  const lastValid = useRef<Omit<TestCase, 'id'> | undefined>(undefined);
   const original = caseId ? state.evaluation.dataset.cases.find((c) => c.id === caseId) : undefined;
-  const check = text.trim() === '' ? undefined : checkCaseJson(text, { ...contextOf(state), mode, ...(original ? { original } : {}) });
+  const check = text.trim() === '' ? undefined : checkCaseJson(text, { ...contextOf(state), mode, ...(base !== undefined && base !== '' ? { base } : {}), ...(errorsToPrepare !== undefined ? { errorsToPrepare } : {}), ...(original ? { original } : {}) });
   const valid = check !== undefined && check.case !== undefined;
   const judged = state.evaluation.judge_set.judged_text;
+  if (check?.case) lastValid.current = check.case;
+  const shown = check?.case ?? lastValid.current;
+  const outOfDate = stage === 'case' && shown !== undefined && !valid;
+  const list = shown ? listCheckOf(state, shown) : undefined;
 
-  const save = () => {
-    const edit = mode === 'correct' && caseId ? correctExpectedErrors(state, caseId, text) : saveCaseFromJson(state, text, { mode: 'paste' });
-    onApply(edit);
-    if (!edit.problems || edit.problems.length === 0) {
-      if (edit.state !== state) onClose();
-    }
+  const change = (value: string) => {
+    setText(value);
+    onTextChange?.(value);
+  };
+  const showInText = (expectedId: string) => {
+    setStrong(expectedId);
+    const element = textRef.current?.querySelector<HTMLElement>(`mark[data-error="${expectedId}"]`);
+    element?.scrollIntoView?.({ block: 'center' });
+    element?.focus();
   };
 
   const box = (
     <>
-      <JsonBox label="Case JSON" value={text} onChange={setText} check={() => check?.problems ?? []} rows={stage === 'json' ? 18 : 12} />
+      <JsonBox label="Case JSON" value={text} onChange={change} check={() => check?.problems ?? []} rows={stage === 'json' ? 18 : 12} />
       {check ? <Status check={check} /> : null}
     </>
   );
 
+  const heading = title ?? (mode === 'correct' ? labels.correctExpectedErrors : stage === 'json' ? (mode === 'inject' ? labels.caseWithInjectedErrors : labels.pasteJson) : 'Case view');
+  const back = stage === 'case' && mode !== 'correct' ? () => setStage('json') : stage === 'json' ? onBack : undefined;
+
   return (
     <TestCaseFrame
-      title={mode === 'correct' ? labels.correctExpectedErrors : stage === 'json' ? labels.pasteJson : 'Case view'}
-      dirty={text !== initialText}
+      title={heading}
+      dirty={(touched ?? false) || (mode === 'inject' ? text !== '' : text !== initialText)}
       onClose={onClose}
       headerExtra={
         <>
+          {back ? (
+            <button type="button" onClick={back}>
+              {labels.back}
+            </button>
+          ) : null}
           {stage === 'json' ? (
             <button type="button" disabled={!valid} onClick={() => setStage('case')}>
               {labels.next}
             </button>
           ) : null}
-          <button type="button" class="primary" disabled={!valid} onClick={save}>
-            {labels.saveCase}
-          </button>
+          <SaveCaseButton state={state} text={text} mode={mode} {...(caseId ? { caseId } : {})} {...(base !== undefined ? { base } : {})} {...(errorsToPrepare !== undefined ? { errorsToPrepare } : {})} check={check} onApply={onApply} onClose={onClose} />
         </>
       }
-      left={stage === 'json' ? box : check?.case ? <CaseData testCase={check.case} judged={judged} /> : <p class="muted">The JSON is not valid yet. Fix it in the box on the right.</p>}
-      right={stage === 'json' ? undefined : (
-        <>
-          {check?.case ? <ErrorList testCase={check.case} /> : null}
-          {box}
-        </>
-      )}
+      left={
+        stage === 'json' ? (
+          box
+        ) : shown ? (
+          <>
+            {outOfDate ? <p class="out-of-date warning-text">Out of date</p> : null}
+            <CaseData testCase={shown} judged={judged} uncovered={list?.uncovered ?? []} strong={strong} rootRef={textRef} />
+          </>
+        ) : (
+          <p class="muted">The JSON is not valid yet. Fix it in the box on the right.</p>
+        )
+      }
+      right={
+        stage === 'json' ? undefined : (
+          <>
+            {shown && list ? (
+              <>
+                <CheckLine list={list} testCase={shown} />
+                <ErrorList testCase={shown} onShow={showInText} notInText={new Set(list.notInText.map((m) => m.index))} />
+              </>
+            ) : null}
+            {box}
+          </>
+        )
+      }
     />
   );
 }

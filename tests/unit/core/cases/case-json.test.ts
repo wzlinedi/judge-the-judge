@@ -127,6 +127,24 @@ describe('modes', () => {
     expect(r.notes.join(' ')).toMatch(/1 expected error.*3/);
   });
 
+  it('inject: a JSON with no expected errors is accepted and will be saved as a clean case', () => {
+    const r = check(one({ expected_errors: [] }), { mode: 'inject', base: '1', errorsToPrepare: 2 });
+    expect(r.problems).toEqual([]);
+    expect(r.kind).toBe('Clean');
+    expect(r.case?.base).toBe('1');
+  });
+
+  it('inject: the base named by its id or name in the JSON is not a note when it is the picked one', () => {
+    expect(check(one({ base: '1' }), { mode: 'inject', base: '1' }).notes.join(' ')).not.toMatch(/ignored/);
+    expect(check(one({ base: 'Anna' }), { mode: 'inject', base: '1' }).notes.join(' ')).not.toMatch(/ignored/);
+  });
+
+  it('inject: a category of an answer that is not in the catalog is a note, and the case is still valid', () => {
+    const r = check(one({ expected_errors: [{ category: 'tone-shift', fragment: 'Anna is a doctor', description: 'Changed' }] }), { mode: 'inject', base: '1' });
+    expect(r.problems).toEqual([]);
+    expect(r.notes.join(' ')).toMatch(/tone-shift.*catalog/);
+  });
+
   it('clean: expected errors are a problem pointing to Paste JSON', () => {
     expect(messages(check(one(), { mode: 'clean' }))).toMatch(/Paste JSON/);
     expect(check(one({ expected_errors: [] }), { mode: 'clean' }).problems).toEqual([]);

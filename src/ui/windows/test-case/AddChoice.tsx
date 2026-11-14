@@ -32,22 +32,3 @@ export function AddChoice({ onChoose, onClose }: AddChoiceProps) {
     />
   );
 }
-
-export function InjectPlaceholder({ onChoose, onClose }: AddChoiceProps) {
-  return (
-    <TestCaseFrame
-      title={labels.caseWithInjectedErrors}
-      dirty={false}
-      onClose={onClose}
-      left={
-        <div class="choice-list">
-          <p>Preparing a case with injected errors step by step comes in a later version of the tool.</p>
-          <p>Until then, prepare the case with your LLM and add it with the button below.</p>
-          <button type="button" onClick={() => onChoose('paste')}>
-            {labels.pasteJson}
-          </button>
-        </div>
-      }
-    />
-  );
-}

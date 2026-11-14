@@ -1,4 +1,5 @@
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
+import { listCheckOf } from '../../../app/actions/test-case-window';
 import type { AppState } from '../../../app/store';
 import { caseToJson } from '../../../core/cases/case-json';
 import { composePrompt } from '../../../core/judge/compose';
@@ -6,7 +7,7 @@ import { CaseWindowFrame } from '../../components/CaseWindowFrame';
 import { CopyButton } from '../../components/CopyButton';
 import { JsonBox } from '../../components/JsonBox';
 import { labels } from '../../labels';
-import { CaseData, ErrorList } from './CaseData';
+import { CaseData, CheckLine, ErrorList } from './CaseData';
 
 export interface CaseReadOnlyProps {
   state: AppState;
@@ -20,6 +21,8 @@ export interface CaseReadOnlyProps {
 /** "Open": a saved case read-only (FR-086). Nothing in it can be edited. */
 export function CaseReadOnly({ state, caseId, onNavigate, onClone, onCorrect, onClose }: CaseReadOnlyProps) {
   const [showJson, setShowJson] = useState(false);
+  const [strong, setStrong] = useState<string | null>(null);
+  const textRef = useRef<HTMLDivElement>(null);
   const { dataset, replies, judge_set } = state.evaluation;
   const index = dataset.cases.findIndex((c) => c.id === caseId);
   const testCase = dataset.cases[index];
@@ -27,6 +30,13 @@ export function CaseReadOnly({ state, caseId, onNavigate, onClone, onCorrect, on
   const reply = replies[caseId];
   const prompt = reply?.prompt ?? composePrompt(judge_set.prompt, testCase).text;
   const json = caseToJson(testCase);
+  const list = testCase.expected_errors.length > 0 ? listCheckOf(state, testCase) : undefined;
+  const showInText = (expectedId: string) => {
+    setStrong(expectedId);
+    const element = textRef.current?.querySelector<HTMLElement>(`mark[data-error="${expectedId}"]`);
+    element?.scrollIntoView?.({ block: 'center' });
+    element?.focus();
+  };
   const previous = dataset.cases[index - 1];
   const next = dataset.cases[index + 1];
 
@@ -52,7 +62,7 @@ export function CaseReadOnly({ state, caseId, onNavigate, onClone, onCorrect, on
       }
       left={
         <>
-          <CaseData testCase={testCase} judged={judge_set.judged_text} />
+          <CaseData testCase={testCase} judged={judge_set.judged_text} uncovered={list?.uncovered ?? []} strong={strong} rootRef={textRef} />
           <label class="field-label" for="read-prompt">
             Complete judge prompt
           </label>
@@ -63,7 +73,8 @@ export function CaseReadOnly({ state, caseId, onNavigate, onClone, onCorrect, on
       right={
         <>
           <h3>Expected errors</h3>
-          <ErrorList testCase={testCase} />
+          {list ? <CheckLine list={list} testCase={testCase} /> : null}
+          <ErrorList testCase={testCase} onShow={showInText} notInText={new Set(list?.notInText.map((m) => m.index) ?? [])} />
           {dataset.finalized && reply ? <p class="muted">This case has a reply, so its expected errors cannot be corrected.</p> : null}
           {reply ? (
             <>

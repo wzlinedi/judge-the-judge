@@ -1,6 +1,7 @@
 import { cloneCase, type CaseEdit } from '../../../app/actions/cases';
 import type { AppState } from '../../../app/store';
-import { AddChoice, InjectPlaceholder } from './AddChoice';
+import { AddChoice } from './AddChoice';
+import { InjectWindow } from './InjectWindow';
 import { CaseReadOnly } from './CaseReadOnly';
 import { CleanCaseView } from './CleanCaseView';
 import { JsonCaseView } from './JsonCaseView';
@@ -29,7 +30,7 @@ export function TestCaseWindow({ state, view, onView, onApply }: TestCaseWindowP
     case 'choice':
       return <AddChoice onChoose={choose} onClose={close} />;
     case 'inject':
-      return <InjectPlaceholder onChoose={choose} onClose={close} />;
+      return <InjectWindow state={state} onApply={onApply} onClose={close} />;
     case 'paste':
       return <JsonCaseView key={view.text} state={state} mode="paste" initialText={view.text} onApply={onApply} onClose={close} />;
     case 'clean':

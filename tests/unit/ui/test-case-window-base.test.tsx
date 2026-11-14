@@ -35,12 +35,13 @@ describe('the choice', () => {
     expect(screen.queryByRole('dialog', { name: 'Test case' })).toBeNull();
   });
 
-  it('Case with injected errors leads to a view that says it comes in a later step', () => {
+  it('Case with injected errors leads to part 1: the base and the errors to prepare', () => {
     show();
     openChoice();
     fireEvent.click(within(windowOf()).getByRole('button', { name: 'Case with injected errors' }));
     expect(within(windowOf()).getByRole('button', { name: 'Close without saving' })).toBeTruthy();
-    expect(within(windowOf()).getByText(/Paste JSON/)).toBeTruthy();
+    expect(within(windowOf()).getByLabelText('Base case (optional)')).toBeTruthy();
+    expect(within(windowOf()).getByRole('group', { name: 'Error 1' })).toBeTruthy();
   });
 });
 

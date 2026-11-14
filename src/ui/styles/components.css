@@ -55,6 +55,7 @@
 .json-box textarea { min-height: 8rem; font-size: var(--text-sm); }
 .problems { list-style: none; margin: var(--space-2) 0 0; padding: 0; }
 .link-button { background: transparent; border: 0; padding: 0 var(--space-2); color: var(--accent); text-decoration: underline; min-height: 0; }
+.link-button:hover:not(:disabled) { background: transparent; color: var(--accent-hover); }
 .explain-body { background: var(--surface); border-radius: var(--radius); padding: var(--space-3); margin-top: var(--space-2); }
 .status-mark { white-space: nowrap; }
 .empty-state { text-align: center; padding: var(--space-6) var(--space-4); border: 1px dashed var(--border); border-radius: var(--radius); }
@@ -143,3 +144,26 @@ tr.clickable:hover { background: var(--surface-2); }
 button.fold { background: transparent; border: 0; padding: 0; font: inherit; font-weight: 600; color: inherit; min-height: 0; text-align: left; }
 .category { display: grid; gap: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3); margin-bottom: var(--space-2); }
 .category label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
+
+/* Test case window: case with injected errors, case view, highlights (FR-077, FR-080, FR-085) */
+mark.fragment-ignored { background: var(--surface-2, var(--surface)); border-bottom-color: var(--text-muted); }
+mark.fragment-strong { outline: 3px solid var(--accent); outline-offset: 1px; font-weight: 600; }
+mark.fragment-uncovered { background: var(--warning-bg); border-bottom: 2px dashed var(--warning); }
+.check-line { margin: 0 0 var(--space-2); font-weight: 600; }
+.check-line.agree { color: var(--success); }
+.not-in-text { font-size: var(--text-sm); font-weight: 600; }
+.out-of-date { margin: 0 0 var(--space-2); font-weight: 600; }
+.error-list .decide-item { padding: var(--space-2) var(--space-3); }
+.error-list .item-fragment, .error-list .source { margin: 0; }
+.error-row { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; display: flex; flex-direction: column; gap: var(--space-1); align-items: flex-start; }
+.error-row h3 { margin: 0; font-size: var(--text-base); }
+.error-row input[type="text"] { width: 100%; }
+.row-fields { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.base-fields { max-height: 12rem; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; }
+mark.finding { padding: 0 2px; color: var(--text); border-bottom: 2px solid transparent; }
+mark.finding-clear { background: var(--success-bg); border-bottom-color: var(--success); }
+mark.finding-partial { background: var(--warning-bg); border-bottom-color: var(--warning); }
+mark.finding-none { background: var(--error-bg); border-bottom-color: var(--error); }
+.finding-label { font-size: var(--text-sm); font-weight: 600; }
+.findings-in-reply { margin: var(--space-2) 0; }
+.field-name { margin: var(--space-2) 0 var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }

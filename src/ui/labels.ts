@@ -44,6 +44,7 @@ export const labels = {
   cleanCase: 'Clean case',
   caseWithInjectedErrors: 'Case with injected errors',
   addError: 'Add error',
+  back: 'Back',
   copyPrompt: 'Copy prompt',
   showInText: 'Show in text',
   saveCase: 'Save case',

@@ -1,6 +1,6 @@
 // Everything the Results step and the files show, in one value (core-api.md, computeResults).
 import type { CaseDecisions, Evaluation, TestCase } from '../model';
-import { findFindings } from '../judge/findings';
+import { findFindings, type Finding } from '../judge/findings';
 import { recognizeFields } from '../judge/fields';
 import { countingMode } from '../judge/rules';
 import type { MeasureValue, MetricDefinition } from '../metrics/types';
@@ -19,6 +19,8 @@ export interface ReviewedCase {
   review: CaseReview | null;
   effective: Effective | null;
   status: CaseStatus;
+  /** What the judge's reply says, one entry per finding (empty when there is no reply or it cannot be read). */
+  findings: Finding[];
 }
 
 export interface CaseResult {
@@ -55,12 +57,12 @@ export function reviewEvaluation(evaluation: Evaluation, metric?: Pick<MetricDef
 
   return evaluation.dataset.cases.map((testCase) => {
     const reply = evaluation.replies[testCase.id];
-    if (!reply) return { testCase, review: null, effective: null, status: 'not_run' as const };
+    if (!reply) return { testCase, review: null, effective: null, status: 'not_run' as const, findings: [] };
     const found = findFindings(reply.reply, judge_set.error_rules, judge_set.reply_mapping.finding_text, recognized);
     const review = reviewCase(testCase, found, parameters, mode);
     const decisions: CaseDecisions | undefined = evaluation.decisions[testCase.id];
     const effective = applyDecisions(review, decisions);
-    return { testCase, review, effective, status: caseStatus(effective) };
+    return { testCase, review, effective, status: caseStatus(effective), findings: found.findings };
   });
 }
 

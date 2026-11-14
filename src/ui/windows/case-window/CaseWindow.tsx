@@ -7,9 +7,7 @@ import { CaseWindowFrame } from '../../components/CaseWindowFrame';
 import { StatusMark } from '../../components/StatusMark';
 import { labels } from '../../labels';
 import { DecidePane } from './DecidePane';
-import { applyMarks } from './marks';
-
-const MARK_SIGNS: Record<string, string> = { found: '✓', missed: '✕', undecided: '?', ignored: '–' };
+import { MarkedFields } from './MarkedFields';
 
 export interface CaseWindowProps {
   evaluation: Evaluation;
@@ -54,25 +52,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
         <strong>{testCase.expected_errors.length === 0 ? 'Clean' : 'Injected errors'}</strong>
         {testCase.base ? <span class="muted">{` · Base: ${testCase.base}${base ? ` (${base.name})` : ''}`}</span> : null}
       </p>
-      <div ref={textRef}>
-        {Object.entries(testCase.fields).map(([name, text]) => (
-          <section key={name} class="field-block">
-            <h3>{name}{name === judged ? ' (judged text)' : ''}</h3>
-            <p class="field-text">
-              {(name === judged ? applyMarks(text, testCase, effective) : [{ text }]).map((segment, i) =>
-                segment.error ? (
-                  <mark key={i} class={`fragment fragment-${segment.error.state}`} data-error={segment.error.id} tabIndex={-1}>
-                    <sup>{`${segment.error.label} ${MARK_SIGNS[segment.error.state] ?? ''}`}</sup>
-                    {segment.text}
-                  </mark>
-                ) : (
-                  <span key={i}>{segment.text}</span>
-                ),
-              )}
-            </p>
-          </section>
-        ))}
-      </div>
+      <MarkedFields testCase={testCase} judged={judged} effective={effective} uncovered={[]} rootRef={textRef} />
       <label class="field-label" for="complete-prompt">
         Complete judge prompt
       </label>
