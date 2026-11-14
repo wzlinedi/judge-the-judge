@@ -51,19 +51,16 @@ describe('Paste JSON', () => {
     openChoice();
     fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste JSON' }));
   };
-  const next = () => within(windowOf()).getByRole('button', { name: 'Next' }) as HTMLButtonElement;
   const save = () => within(windowOf()).getByRole('button', { name: 'Save case' }) as HTMLButtonElement;
 
-  it('has one JSON box; Next and Save case are enabled only while the JSON is valid', () => {
+  it('has one JSON box; Save case is enabled only while the JSON is valid', () => {
     start();
     expect(within(windowOf()).getAllByRole('textbox')).toHaveLength(1);
-    expect(next().disabled).toBe(true);
     expect(save().disabled).toBe(true);
     paste('{ "name": ');
     expect(screen.getByText(/Line 1, column/)).toBeTruthy();
-    expect(next().disabled).toBe(true);
+    expect(save().disabled).toBe(true);
     paste(valid());
-    expect(next().disabled).toBe(false);
     expect(save().disabled).toBe(false);
   });
 
@@ -75,11 +72,10 @@ describe('Paste JSON', () => {
     expect(within(windowOf()).getByText(/saved as a clean case/i)).toBeTruthy();
   });
 
-  it('Next leads to the case view; Save case adds the case and closes the window', () => {
+  it('shows the expected errors under the box; Save case adds the case and closes the window', () => {
     start();
     paste(valid());
-    fireEvent.click(next());
-    expect(within(windowOf()).getByText('Anna is a doctor')).toBeTruthy();
+    expect(within(windowOf()).getByText('“Anna is a doctor”')).toBeTruthy();
     fireEvent.click(save());
     expect(screen.queryByRole('dialog', { name: 'Test case' })).toBeNull();
     expect(screen.getByText('Fresh')).toBeTruthy();

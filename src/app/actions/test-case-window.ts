@@ -53,11 +53,16 @@ export function listCheckOf(state: AppState, testCase: Omit<TestCase, 'id'> & { 
   return textListCheck(testCase, base, state.evaluation.judge_set.judged_text);
 }
 
+/** The changed places that no expected error covers, one plain line each; shown under the JSON box (T229). */
+export function uncoveredLines(list: ListCheck): string[] {
+  return list.uncovered.filter((place) => place.end > place.start).map((place) => `A changed place is not in the list: “${place.text}” in ${place.field}.`);
+}
+
 /** What does not agree, one plain line each, for the question before saving (FR-080: only (a) and (b) ask). */
 export function mismatchLines(list: ListCheck): string[] {
-  const lines: string[] = [];
+  const lines: string[] = uncoveredLines(list);
   for (const place of list.uncovered) {
-    lines.push(place.end > place.start ? `A changed place is not in the list: “${place.text}” in ${place.field}.` : `Text of the base is gone from ${place.field} and no expected error covers it: “${(place.removed ?? '').slice(0, 80)}”.`);
+    if (place.end <= place.start) lines.push(`Text of the base is gone from ${place.field} and no expected error covers it: “${(place.removed ?? '').slice(0, 80)}”.`);
   }
   for (const missing of list.notInText) lines.push(`E${missing.index + 1}: the fragment “${missing.fragment}” is not in the text.`);
   return lines;

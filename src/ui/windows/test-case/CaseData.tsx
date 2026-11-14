@@ -24,10 +24,10 @@ export interface CaseDataProps {
   baseName?: string | undefined;
 }
 
-/** A case read-only: its fields, with the fragments of the expected errors highlighted and numbered. */
-export function CaseData({ testCase, judged, uncovered = [], strong, rootRef, baseName }: CaseDataProps) {
+/** The name, the kind and the base of a case. */
+export function CaseSummary({ testCase, baseName }: { testCase: Shown; baseName?: string | undefined }) {
   return (
-    <div class="case-data">
+    <>
       {testCase.name.trim() !== '' ? (
         <p>
           <span class="muted">Name: </span>
@@ -39,6 +39,15 @@ export function CaseData({ testCase, judged, uncovered = [], strong, rootRef, ba
         <strong>{testCase.expected_errors.length === 0 ? 'Clean' : 'Injected errors'}</strong>
         {testCase.base ? <span class="muted">{` · Base: ${testCase.base}${baseName ? ` (${baseName})` : ''}`}</span> : null}
       </p>
+    </>
+  );
+}
+
+/** A case read-only: its fields, with the fragments of the expected errors highlighted and numbered. */
+export function CaseData({ testCase, judged, uncovered = [], strong, rootRef, baseName }: CaseDataProps) {
+  return (
+    <div class="case-data">
+      <CaseSummary testCase={testCase} baseName={baseName} />
       <MarkedFields testCase={testCase} judged={judged} effective={null} uncovered={uncovered} strong={strong} rootRef={rootRef} />
     </div>
   );

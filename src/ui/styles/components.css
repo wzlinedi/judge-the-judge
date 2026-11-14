@@ -47,6 +47,11 @@
 .case-columns { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; }
 .case-pane { overflow: auto; padding: var(--space-4); border-right: 1px solid var(--border); }
 .case-pane:last-child { border-right: 0; }
+.case-window-body { flex: 1; min-height: 0; overflow: auto; padding: var(--space-4); }
+.case-page { max-width: 64rem; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-5); }
+.case-part h3 { margin: 0 0 var(--space-2); font-size: var(--text-lg); }
+.case-part textarea, .case-part select { max-width: 100%; }
+.case-window-footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: var(--surface); }
 @media (max-width: 759px) {
   .case-columns { grid-template-columns: 1fr; overflow: auto; }
   .case-pane { overflow: visible; border-right: 0; border-bottom: 1px solid var(--border); }
@@ -164,10 +169,13 @@ mark.fragment-uncovered { background: var(--warning-bg); border-bottom: 2px dash
 .out-of-date { margin: 0 0 var(--space-2); font-weight: 600; }
 .error-list .decide-item { padding: var(--space-2) var(--space-3); }
 .error-list .item-fragment, .error-list .source { margin: 0; }
-.error-row { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; display: flex; flex-direction: column; gap: var(--space-1); align-items: flex-start; }
-.error-row h3 { margin: 0; font-size: var(--text-base); }
+.error-row { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; display: flex; flex-direction: column; gap: var(--space-1); align-items: stretch; }
+.error-row h4 { margin: 0; font-size: var(--text-base); }
 .error-row input[type="text"] { width: 100%; }
-.row-fields { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.row-fields { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-start; }
+.row-fields > div { flex: 0 1 13rem; min-width: 9rem; }
+.row-fields > .row-what { flex: 1 1 16rem; }
+.row-fields > .row-remove { flex: 0 0 auto; min-width: 0; }
 .base-fields { max-height: 12rem; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; }
 mark.finding { padding: 0 2px; color: var(--text); border-bottom: 2px solid transparent; }
 mark.finding-clear { background: var(--success-bg); border-bottom-color: var(--success); }

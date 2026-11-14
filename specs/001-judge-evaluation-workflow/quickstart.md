@@ -75,7 +75,7 @@ version, and the tool opens the Test cases step (the first step with unfinished 
 1. On Test cases choose "Add test case", then "Clean case"; type a name and a comment, pick a
    "Like case" when one exists, "Copy prompt", run it in an LLM, paste the answer into the box and
    "Approve and close".
-2. Paste an answer with expected errors into a new clean case view.
+2. Paste an answer with expected errors into a new clean case window.
 3. Make a copy of a clean case by hand ("Open", "Show JSON", then "Paste JSON" in a new case with a
    new name), "Save case"; "Rename" the copy to a name another case has, then to a free name;
    "Remove" the copy. There is no "Clone" button.
@@ -92,9 +92,9 @@ made from it.
 
 1. On Test cases choose "Add test case", then "Case with injected errors"; pick a base case; list
    two errors to prepare (one with a new category name typed in); "Copy prompt".
-2. Run it, paste the answer into the box, "Next".
-3. In the case view press "Show in text" on each error; change a fragment in the source JSON so it
-   no longer occurs; fix it; "Save case".
+2. Run it, paste the answer into the box on the same page (there is no "Next").
+3. Read the list of expected errors under the box; change a fragment in the JSON so it
+   no longer occurs; fix it; "Save case" (at the bottom of the window).
 4. "Add test case", "Paste JSON", paste a JSON identical to its base but with one expected error.
 5. "Open" a case with five expected errors at 1280 x 720; "Show JSON", "Copy JSON"; paste it into
    a new case with "Paste JSON"; use "Next test case".
@@ -103,9 +103,9 @@ made from it.
 
 **Expected**: the prompt contains the judge prompt, the base case, the judged text and each error
 with its category's description and example; the JSON box shows problems with their line and
-column or field path and "Next" is enabled only when valid; the case view shows the judged text
-with E1 and E2 highlighted and the check line "Text and list agree"; "Show in text" scrolls to and
-highlights the fragment; the broken fragment turns the line into "not in the text" at once; the new
+column or field path and "Save case" is enabled only when valid, with the reason beside it; the list
+under the box shows E1 and E2 and the check line "Text and list agree"; the broken fragment turns
+the line into "not in the text" at once; the new
 category is added to "Error categories"; the saved case records its base; the unchanged version is
 refused with the reason; the five expected errors are visible without scrolling; the pasted JSON
 gives the same fields and expected errors; after finalizing only the expected errors change, the

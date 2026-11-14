@@ -3,8 +3,11 @@ import type { CaseEdit } from '../../../app/actions/cases';
 import { newDraft, type InjectDraft } from '../../../app/actions/test-case-window';
 import type { AppState } from '../../../app/store';
 import { checkCaseJson } from '../../../core/cases/case-json';
-import { contextOf, JsonCaseView } from './JsonCaseView';
-import { InjectPrepare } from './InjectPrepare';
+import { AnswerBox, contextOf, ExpectedErrorsPart, Part } from './CaseParts';
+import { InjectParts } from './InjectParts';
+import { SaveCaseButton } from './SaveCaseButton';
+import { TestCaseFrame } from './TestCaseFrame';
+import { labels } from '../../labels';
 
 export interface InjectWindowProps {
   state: AppState;
@@ -12,46 +15,37 @@ export interface InjectWindowProps {
   onClose: () => void;
 }
 
-/** "Case with injected errors" (FR-040, FR-041, FR-085): part 1 prepares the prompt, parts 2 and 3 are the JSON view. */
+/** "Case with injected errors" (FR-040, FR-041, FR-085): the five parts follow one another on one page; Save case is at the bottom. */
 export function InjectWindow({ state, onApply, onClose }: InjectWindowProps) {
   const [draft, setDraft] = useState<InjectDraft>(() => newDraft(state));
   const [text, setText] = useState('');
-  const [part, setPart] = useState<1 | 2>(1);
   const [touched, setTouched] = useState(false);
   const first = newDraft(state);
   const changed = touched || draft.base !== '' || draft.instructions !== '' || draft.rows.length !== first.rows.length || draft.rows.some((r, i) => r.description !== '' || r.difficulty !== 'llm' || r.category !== first.rows[i]?.category);
-
-  if (part === 2) {
-    return (
-      <JsonCaseView
-        state={state}
-        mode="inject"
-        initialText={text}
-        onTextChange={setText}
-        base={draft.base}
-        errorsToPrepare={draft.rows.length}
-        onBack={() => setPart(1)}
-        touched={changed}
-        onApply={onApply}
-        onClose={onClose}
-      />
-    );
-  }
   const check = text.trim() === '' ? undefined : checkCaseJson(text, { ...contextOf(state), mode: 'inject', ...(draft.base !== '' ? { base: draft.base } : {}), errorsToPrepare: draft.rows.length });
+
   return (
-    <InjectPrepare
-      state={state}
-      draft={draft}
-      onDraft={(next) => {
-        setTouched(true);
-        setDraft(next);
-      }}
-      onNext={() => setPart(2)}
-      text={text}
-      check={check}
+    <TestCaseFrame
+      title={labels.caseWithInjectedErrors}
       dirty={changed || text !== ''}
-      onApply={onApply}
       onClose={onClose}
-    />
+      footer={<SaveCaseButton state={state} text={text} mode="inject" {...(draft.base !== '' ? { base: draft.base } : {})} errorsToPrepare={draft.rows.length} check={check} emptyReason="Paste the answer of your LLM to save." onApply={onApply} onClose={onClose} />}
+    >
+      <InjectParts
+        state={state}
+        draft={draft}
+        onDraft={(next) => {
+          setTouched(true);
+          setDraft(next);
+        }}
+      />
+      <Part number={4} title="Paste its answer">
+        <p class="muted">Paste what your LLM returned into the box. It is checked as you paste it. To change anything, change the JSON in the box.</p>
+        <AnswerBox label="Case JSON" value={text} onChange={setText} check={check} rows={14} state={state} hideCleanKind />
+      </Part>
+      <Part number={5} title="Expected errors">
+        <ExpectedErrorsPart state={state} text={text} check={check} />
+      </Part>
+    </TestCaseFrame>
   );
 }

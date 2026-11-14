@@ -51,9 +51,8 @@ describe('the read-only view', () => {
     const win = () => screen.getByRole('dialog', { name: 'Test case' });
     fireEvent.click(within(win()).getByRole('button', { name: 'Paste JSON' }));
     fireEvent.input(within(win()).getByLabelText('Case JSON'), { target: { value: json.replace('Anna + 2 errors', 'Anna pasted') } });
-    fireEvent.click(within(win()).getByRole('button', { name: 'Next' }));
-    expect(win().querySelectorAll('mark[data-error]')).toHaveLength(2);
-    expect(win().textContent).toMatch(/Anna is a doctor\. She bought a .*second oven in 2005\./);
+    expect(within(within(win()).getByRole('list', { name: 'Expected errors' })).getAllByRole('listitem')).toHaveLength(2);
+    expect(win().textContent).toContain('Anna pasted');
   });
 
   it('has no Clone button: a wrong case is changed through Show JSON, Paste JSON and Remove (T218)', () => {

@@ -180,20 +180,20 @@ describe('CaseWindowFrame', () => {
 describe('TestCaseFrame as a window', () => {
   it('Escape closes it when nothing was typed, and asks first when something was', () => {
     const onClose = vi.fn();
-    const { unmount } = render(<TestCaseFrame title="Test case" dirty={false} onClose={onClose} left={<p>left</p>} />);
+    const { unmount } = render(<TestCaseFrame title="Test case" dirty={false} onClose={onClose}><p>left</p></TestCaseFrame>);
     fireEvent.keyDown(screen.getByRole('dialog', { name: 'Test case' }), { key: 'Escape' });
     expect(onClose).toHaveBeenCalledTimes(1);
     unmount();
 
     const again = vi.fn();
-    render(<TestCaseFrame title="Test case" dirty onClose={again} left={<p>left</p>} />);
+    render(<TestCaseFrame title="Test case" dirty onClose={again}><p>left</p></TestCaseFrame>);
     fireEvent.keyDown(screen.getByRole('dialog', { name: 'Test case' }), { key: 'Escape' });
     expect(again).not.toHaveBeenCalled();
     expect(screen.getByText('What you typed or pasted has not been saved.')).toBeTruthy();
   });
 
   it('takes the focus when it opens', () => {
-    render(<TestCaseFrame title="Test case" dirty={false} onClose={() => {}} left={<button>Inside</button>} />);
+    render(<TestCaseFrame title="Test case" dirty={false} onClose={() => {}}><button>Inside</button></TestCaseFrame>);
     expect(screen.getByRole('dialog', { name: 'Test case' }).contains(document.activeElement)).toBe(true);
   });
 });

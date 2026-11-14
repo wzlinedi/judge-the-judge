@@ -140,37 +140,41 @@ which asks first when something was pasted or typed.
 
 - **Add test case** first offers three choices, all always available: **Paste JSON**, **Clean
   case** and **Case with injected errors**.
-- **Paste JSON** (FR-090): one box for a case JSON (file-formats.md, section 2), checked as it
-  changes, with problems under it (line and column, or field path); **Next** when valid; then the
-  case view below. The window names the kind the case will have (clean without expected errors,
-  injected errors with at least one). There is no **Clone**: a copy is made with **Show JSON**, **Copy JSON** and this view.
-- **Clean case** (FR-083): left, **Name**, an optional **Comment** and an optional **Like case**
-  (an existing clean case whose fields go into the prompt as a model), then the prompt for the
-  user's LLM with **Copy prompt**; right, the box for the LLM's answer, checked as it changes. When
-  valid its fields are shown read-only and **Approve and close** (header, primary) saves and
+- **One vertical page** (FR-085): every way of adding a case is one page from top to bottom; there
+  are no two columns, no **Next**, no **Back** and no "Part N of 3". The header holds only the
+  title and **Close without saving** (Escape too). The save button is at the bottom, with the reason
+  beside it while it is disabled. The parts are numbered from 1 in each window.
+- **Paste JSON** (FR-090): 1. the box for a case JSON (file-formats.md, section 2), checked as it
+  changes, with problems under it (line and column, or field path); 2. the expected errors,
+  read-only. The window names the kind the case will have (clean without expected errors, injected
+  errors with at least one); a JSON with no expected errors says "No expected errors: this will be
+  saved as a clean case." **Save case** is at the bottom. There is no **Clone**: a copy is made with **Show JSON**, **Copy JSON** and this window.
+- **Clean case** (FR-083): 1. **Name**, an optional **Comment** and an optional **Like case**
+  (an existing clean case whose fields go into the prompt as a model); 2. the prompt for the
+  user's LLM with **Copy prompt**; 3. the box for the LLM's answer, checked as it changes. When
+  valid its fields are shown read-only and **Approve and close** (bottom, primary) saves and
   closes; an answer with expected errors is a problem that points to **Paste JSON**.
-- **Case with injected errors**, in three parts (FR-040, FR-041, FR-085):
-  1. **Prepare**: left, the optional base (any clean case, or none) with its fields; right, the
-     errors to prepare (category from the catalog or typed as a new name, difficulty obvious /
-     subtle / left to the LLM, what should be wrong) with **Add error** and **Remove**, optional
-     own instructions, the prompt with **Copy prompt**, and **Next**.
-  2. **Paste**: the JSON box as in **Paste JSON**, with **Next** (enabled when valid) and **Back**.
-  3. **Check (the case view)**: left, the case read-only: name, the line of FR-080 ("Text and list
-     agree", or what does not), the judged text with the fragments of the expected errors
-     highlighted and numbered (E1, E2…) and changed places no expected error covers marked "not in
-     list", and the other fields. Right, the expected errors read-only (number, category,
-     difficulty, fragment, description), each with **Show in text** (highlights and scrolls to the
-     fragment; disabled with "not in the text" when it is not found), and below them the source
-     JSON in an editable box; every change shows at once, and while the JSON is invalid the view
-     keeps its last valid state marked "Out of date".
-  **Save case** is in the header in every part, enabled only while the JSON is valid; with a
-  mismatch of FR-080 it asks for confirmation; a case identical to its base is refused.
-- **Open** (FR-086): the same case view, read-only and without the JSON box, with **Previous test
+- **Case with injected errors**, five parts (FR-040, FR-041, FR-085):
+  1. **Base case**: the optional base (any clean case, or none) with its fields.
+  2. **Errors to prepare**: one horizontal row per error (category from the catalog or typed as a
+     new name, difficulty obvious / subtle / left to the LLM, what should be wrong, **Remove**),
+     **Add error**, and optional own instructions.
+  3. **Ask your LLM**: the prompt with **Copy prompt**.
+  4. **Paste its answer**: the box for the JSON, checked as it changes; changed places that no
+     expected error covers are warnings under it ("A changed place is not in the list: …").
+  5. **Expected errors**: the name, kind and base ("Base: 4 (name)"), the line of FR-080 ("Text and
+     list agree", or what does not), and the expected errors read-only (number, category,
+     difficulty, fragment, description), each marked "not in the text" when its fragment is not
+     found. No fields with highlights and no **Show in text** here; while the JSON is invalid the
+     list is replaced by a line saying so.
+  **Save case** is at the bottom, enabled only while the JSON is valid; with a mismatch of FR-080
+  it asks for confirmation; a case identical to its base is refused.
+- **Open** (FR-086): the case read-only (its own layout, with highlighted fields), with **Previous test
   case**, **Next test case** and the position ("case 7 of 20") in the header (Alt + Left/Right do
   the same), **Show JSON** (the case JSON with **Copy JSON**), and after finalizing,
   for a case without a reply, **Correct expected errors**; also the composed judge prompt with
   **Copy prompt** and the reply if one exists. A saved case is never edited.
-- **Correct expected errors** (FR-089): the case view with the case's JSON, where only
+- **Correct expected errors** (FR-089): the page of **Paste JSON** with the case's JSON, where only
   `expected_errors` may change; a change to the name or the fields is a problem under the box.
   **Save case** gives a new test cases version.
 - **States**: malformed JSON (line and column, text kept); missing variable, empty field, missing

@@ -1,4 +1,4 @@
-// quickstart.md V4: a case with injected errors in three parts, Open, Show JSON, Correct expected errors
+// quickstart.md V4: a case with injected errors on one page (T229), Open, Show JSON, Correct expected errors
 // (SC-022 to SC-024, SC-031, SC-033, SC-035, SC-036, User Story 4).
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
@@ -29,7 +29,7 @@ async function start(page: Page) {
 }
 const axe = async (page: Page) => (await new AxeBuilder({ page }).analyze()).violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ') + ' ' + (n.any[0]?.message ?? '')).join(' | ')}`);
 
-test('a case with injected errors in three parts: prompt, JSON, case view, save', async ({ page }) => {
+test('a case with injected errors on one page: base, errors, prompt, JSON, expected errors, save', async ({ page }) => {
   await start(page);
   await page.getByRole('button', { name: 'Add test case' }).click();
   await win(page).getByRole('button', { name: 'Case with injected errors' }).click();
@@ -50,28 +50,24 @@ test('a case with injected errors in three parts: prompt, JSON, case view, save'
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('tone-shift');
   expect(await axe(page)).toEqual([]);
 
-  // part 2: one paste, checked as it is pasted
-  await win(page).getByRole('button', { name: 'Next' }).click();
+  // part 4: one paste, checked as it is pasted, on the same page
   const box = win(page).getByLabel('Case JSON');
   await box.fill('{ "name": ');
   await expect(win(page).getByText(/Line 1, column \d+/)).toBeVisible();
-  await expect(win(page).getByRole('button', { name: 'Next' })).toBeDisabled();
+  await expect(win(page).getByRole('button', { name: 'Save case' })).toBeDisabled();
   await box.fill(withErrors(['Zorro,', 'Quartz.']));
-  await win(page).getByRole('button', { name: 'Next' }).click();
 
-  // part 3: highlights, the check line, Show in text
+  // part 5: the check line and the list of expected errors, read-only
   await expect(win(page).getByText('Text and list agree')).toBeVisible();
-  await expect(win(page).locator('mark[data-error]')).toHaveCount(2);
-  await expect(win(page).locator('mark[data-error]').first()).toContainText('E1');
-  await win(page).getByRole('button', { name: 'Show in text' }).nth(1).click();
-  await expect(win(page).locator('mark.fragment-strong')).toContainText('Quartz');
+  await expect(win(page).getByRole('list', { name: 'Expected errors' }).getByRole('listitem')).toHaveCount(2);
+  await expect(win(page).locator('mark')).toHaveCount(0);
   expect(await axe(page)).toEqual([]);
 
   // a fragment that no longer occurs turns the line into "not in the text" at once
   const text = await box.inputValue();
   await box.fill(text.replace(/"fragment":\s*"Quartz\."/, '"fragment": "Quartzzz"'));
   await expect(win(page).getByText(/1 expected error not in the text/)).toBeVisible();
-  await expect(win(page).getByRole('button', { name: 'Show in text' }).nth(1)).toBeDisabled();
+  await expect(win(page).getByText('not in the text', { exact: true })).toBeVisible();
   await win(page).getByRole('button', { name: 'Save case' }).click();
   const ask = page.getByRole('dialog', { name: 'Save with a mismatch?' });
   await expect(ask).toContainText('Quartzzz');
@@ -123,8 +119,7 @@ test('five expected errors are visible without scrolling, and Show JSON, Copy JS
   await page.getByRole('button', { name: 'Add test case' }).click();
   await win(page).getByRole('button', { name: 'Paste JSON' }).click();
   await win(page).getByLabel('Case JSON').fill(copied.replace('Five errors', 'Five errors pasted'));
-  await win(page).getByRole('button', { name: 'Next' }).click();
-  await expect(win(page).locator('mark[data-error]')).toHaveCount(5);
+  await expect(win(page).getByRole('list', { name: 'Expected errors' }).getByRole('listitem')).toHaveCount(5);
   await win(page).getByRole('button', { name: 'Save case' }).click();
   await expect(page.getByRole('row').filter({ hasText: 'Five errors pasted' })).toBeVisible();
 
@@ -172,4 +167,25 @@ test('after finalizing only the expected errors of a case without a reply can be
   await page.getByRole('row').nth(1).getByRole('button', { name: 'Open' }).click();
   await expect(page.getByRole('button', { name: 'Correct expected errors' })).toHaveCount(0);
   await expect(page.getByRole('dialog', { name: /Case 1/ }).getByText(/has a reply/)).toBeVisible();
+});
+
+test('the window is one page: the error row is on one line, nothing scrolls sideways, Save case stays at the bottom (T229)', async ({ page }) => {
+  await start(page);
+  await page.getByRole('button', { name: 'Add test case' }).click();
+  await win(page).getByRole('button', { name: 'Case with injected errors' }).click();
+  const row = win(page).getByRole('group', { name: 'Error 1' });
+  // Category, Difficulty, What should be wrong and Remove sit side by side: their boxes overlap vertically
+  const boxes = await row.locator('select, input, button').evaluateAll((items) => items.map((i) => ({ top: i.getBoundingClientRect().top, bottom: i.getBoundingClientRect().bottom })));
+  expect(boxes).toHaveLength(4);
+  const line = { top: Math.max(...boxes.map((b) => b.top)), bottom: Math.min(...boxes.map((b) => b.bottom)) };
+  expect(line.top, 'the controls of the row are on more than one line').toBeLessThan(line.bottom);
+  const save = win(page).getByRole('button', { name: 'Save case' });
+  const body = win(page).locator('.case-window-body');
+  expect((await save.boundingBox())!.y).toBeGreaterThan((await body.boundingBox())!.y + (await body.boundingBox())!.height - 1);
+  for (const width of [1280, 360]) {
+    await page.setViewportSize({ width, height: 720 });
+    expect(await win(page).evaluate((element) => element.scrollWidth <= element.clientWidth), `the window scrolls sideways at ${width} px`).toBe(true);
+    expect(await body.evaluate((element) => element.scrollWidth <= element.clientWidth), `the page of the window scrolls sideways at ${width} px`).toBe(true);
+  }
+  await expect(save).toBeInViewport();
 });

@@ -7,7 +7,7 @@ import { CopyButton } from '../../components/CopyButton';
 import { JsonBox } from '../../components/JsonBox';
 import { labels } from '../../labels';
 import { CaseData } from './CaseData';
-import { contextOf, Status } from './JsonCaseView';
+import { contextOf, Part, Status } from './CaseParts';
 import { TestCaseFrame } from './TestCaseFrame';
 
 export interface CleanCaseViewProps {
@@ -40,7 +40,7 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
       title={labels.cleanCase}
       dirty={name !== '' || comment !== '' || like !== '' || answer !== ''}
       onClose={onClose}
-      headerExtra={
+      footer={
         <>
           <button type="button" class="primary" disabled={!valid} aria-describedby={valid ? undefined : 'clean-approve-why'} onClick={approve}>
             {labels.approveAndClose}
@@ -52,43 +52,42 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
           )}
         </>
       }
-      left={
-        <>
-          <label class="field-label" for="clean-name">
-            Name
-          </label>
-          <input id="clean-name" type="text" value={name} onInput={(event) => setName((event.currentTarget as HTMLInputElement).value)} />
-          <label class="field-label" for="clean-comment">
-            Comment (optional)
-          </label>
-          <textarea id="clean-comment" rows={3} value={comment} onInput={(event) => setComment((event.currentTarget as HTMLTextAreaElement).value)} />
-          <p class="muted">The comment is only used to write the prompt below. It is not saved with the case.</p>
-          <label class="field-label" for="clean-like">
-            Like case (optional)
-          </label>
-          <select id="clean-like" value={like} onChange={(event) => setLike((event.currentTarget as HTMLSelectElement).value)}>
-            <option value="">None</option>
-            {clean.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name || `Case ${c.id}`}
-              </option>
-            ))}
-          </select>
-          <p class="muted">The prompt shows your LLM the texts of this case as an example, so that the new case has the same kind of text.</p>
-          <label class="field-label" for="clean-prompt">
-            Prompt for your LLM
-          </label>
-          <textarea id="clean-prompt" class="json" rows={12} readOnly value={prompt} />
-          <CopyButton text={prompt} label={labels.copyPrompt} />
-        </>
-      }
-      right={
-        <>
-          <JsonBox label="Answer of your LLM" value={answer} onChange={setAnswer} check={() => check?.problems ?? []} rows={10} />
-          {check ? <Status check={check} /> : null}
-          {check?.case ? <CaseData testCase={check.case} judged={judge_set.judged_text} /> : null}
-        </>
-      }
-    />
+    >
+      <Part number={1} title="About the case">
+        <label class="field-label" for="clean-name">
+          Name
+        </label>
+        <input id="clean-name" type="text" value={name} onInput={(event) => setName((event.currentTarget as HTMLInputElement).value)} />
+        <label class="field-label" for="clean-comment">
+          Comment (optional)
+        </label>
+        <textarea id="clean-comment" rows={3} value={comment} onInput={(event) => setComment((event.currentTarget as HTMLTextAreaElement).value)} />
+        <p class="muted">The comment is only used to write the prompt below. It is not saved with the case.</p>
+        <label class="field-label" for="clean-like">
+          Like case (optional)
+        </label>
+        <select id="clean-like" value={like} onChange={(event) => setLike((event.currentTarget as HTMLSelectElement).value)}>
+          <option value="">None</option>
+          {clean.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name || `Case ${c.id}`}
+            </option>
+          ))}
+        </select>
+        <p class="muted">The prompt shows your LLM the texts of this case as an example, so that the new case has the same kind of text.</p>
+      </Part>
+      <Part number={2} title="Ask your LLM">
+        <label class="field-label" for="clean-prompt">
+          Prompt for your LLM
+        </label>
+        <textarea id="clean-prompt" class="json" rows={12} readOnly value={prompt} />
+        <CopyButton text={prompt} label={labels.copyPrompt} />
+      </Part>
+      <Part number={3} title="Paste its answer">
+        <JsonBox label="Answer of your LLM" value={answer} onChange={setAnswer} check={() => check?.problems ?? []} rows={10} />
+        {check ? <Status check={check} /> : null}
+        {check?.case ? <CaseData testCase={check.case} judged={judge_set.judged_text} /> : null}
+      </Part>
+    </TestCaseFrame>
   );
 }

@@ -14,12 +14,14 @@ export interface SaveCaseButtonProps {
   base?: string;
   errorsToPrepare?: number;
   check: CaseJsonCheck | undefined;
+  /** Why the button is disabled while there is nothing in the box yet. */
+  emptyReason: string;
   onApply: (edit: CaseEdit) => void;
   onClose: () => void;
 }
 
-/** "Save case" (FR-085): enabled only while the JSON is valid; a mismatch of FR-080 asks first. */
-export function SaveCaseButton({ state, text, mode, caseId, base, errorsToPrepare, check, onApply, onClose }: SaveCaseButtonProps) {
+/** "Save case" (FR-085) at the bottom of the window: enabled only while the JSON is valid and, when it is not, saying why; a mismatch of FR-080 asks first. */
+export function SaveCaseButton({ state, text, mode, caseId, base, errorsToPrepare, check, emptyReason, onApply, onClose }: SaveCaseButtonProps) {
   const [asking, setAsking] = useState<string[] | null>(null);
 
   const save = () => {
@@ -40,9 +42,14 @@ export function SaveCaseButton({ state, text, mode, caseId, base, errorsToPrepar
 
   return (
     <>
-      <button type="button" class="primary" disabled={check?.case === undefined} onClick={press}>
+      <button type="button" class="primary" disabled={check?.case === undefined} aria-describedby={check?.case === undefined ? 'save-why' : undefined} onClick={press}>
         {labels.saveCase}
       </button>
+      {check?.case === undefined ? (
+        <span id="save-why" class="why-disabled">
+          {check ? 'Fix the problems listed under the JSON to save.' : emptyReason}
+        </span>
+      ) : null}
       <Dialog
         open={asking !== null}
         title="Save with a mismatch?"

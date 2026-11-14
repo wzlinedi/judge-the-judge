@@ -23,74 +23,49 @@ const open = (state: AppState = draftState(), base: string | null = '1') => {
   fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);
   fireEvent.click(button('Case with injected errors'));
   if (base) fireEvent.change(within(win()).getByLabelText('Base case (optional)'), { target: { value: base } });
-  fireEvent.click(button('Next'));
 };
-const toCaseView = (text: string) => {
-  fireEvent.input(box(), { target: { value: text } });
-  fireEvent.click(button('Next'));
-};
+const toCaseView = (text: string) => fireEvent.input(box(), { target: { value: text } });
 
-describe('part 3 live checks', () => {
-  it('every change in the JSON shows at once in the fields, the list and the check line', () => {
+describe('parts 4 and 5: live checks', () => {
+  it('every change in the JSON shows at once in the list and the check line', () => {
     open();
     toCaseView(json('Anna is a doctor. She bought a second oven in 1998.', [doctor]));
     expect(within(win()).getByText('Text and list agree')).toBeTruthy();
     fireEvent.input(box(), { target: { value: json('Anna is a lawyer. She bought a second oven in 1998.', [doctor]) } });
-    expect(win().textContent).toMatch(/lawyer\. She bought a second oven in 1998\./);
     expect(within(win()).getByText(/1 expected error not in the text/)).toBeTruthy();
     expect(within(win()).getByText(/not in the text/, { selector: '.not-in-text' })).toBeTruthy();
   });
 
-  it('a changed place that no expected error covers is highlighted with the words "not in the list"', () => {
+  it('a changed place that no expected error covers is a warning under the box: "A changed place is not in the list"', () => {
     open();
     toCaseView(json('Anna is a doctor. She bought a third oven in 1998.', [doctor]));
     expect(within(win()).getByText(/1 changed place not in the list/)).toBeTruthy();
-    const mark = win().querySelector('mark.fragment-uncovered')!;
-    expect(mark.textContent).toContain('third');
-    expect(mark.textContent).toContain('not in the list');
+    expect(within(win()).getByText(/A changed place is not in the list: “third” in summary/)).toBeTruthy();
+    expect(win().querySelectorAll('mark')).toHaveLength(0);
   });
 
-  it('Show in text gives the fragment a stronger highlight and scrolls it into view', () => {
-    open();
-    toCaseView(json('Anna is a doctor. She bought a second oven in 2005.', [doctor, { ...doctor, category: 'wrong-number', fragment: 'second oven in 2005', description: 'Year' }]));
-    const scroll = vi.fn();
-    Element.prototype.scrollIntoView = scroll;
-    fireEvent.click(within(win()).getAllByRole('button', { name: 'Show in text' })[1]!);
-    const strong = win().querySelector('mark.fragment-strong')!;
-    expect(strong.textContent).toContain('second oven in 2005');
-    expect(scroll).toHaveBeenCalled();
-    expect(win().querySelectorAll('mark.fragment-strong')).toHaveLength(1);
-  });
-
-  it('for an omission Show in text highlights the fragment in the other field', () => {
+  it('for an omission the list agrees with the base and says nothing more', () => {
     open();
     toCaseView(json('Anna is a baker.', [{ category: 'omission', fragment: 'She bought a second oven in 1998', description: 'The oven is left out' }]));
-    Element.prototype.scrollIntoView = vi.fn();
     expect(within(win()).getByText('Text and list agree')).toBeTruthy();
-    fireEvent.click(within(win()).getByRole('button', { name: 'Show in text' }));
-    const strong = win().querySelector('mark.fragment-strong')!;
-    expect(strong.textContent).toContain('She bought a second oven in 1998');
-    expect(strong.closest('section')?.textContent).toMatch(/source_text/);
+    expect(within(win()).queryByRole('list', { name: 'Changed places not in the list' })).toBeNull();
   });
 
-  it('Show in text is disabled with "not in the text" when the fragment is not found', () => {
+  it('a fragment that is not found is marked "not in the text" in the list', () => {
     open();
     toCaseView(json('Anna is a doctor.', [{ ...doctor, fragment: 'Anna is a lawyer' }]));
-    const show = within(win()).getByRole('button', { name: 'Show in text' }) as HTMLButtonElement;
-    expect(show.disabled).toBe(true);
-    expect(within(win()).getByText('not in the text')).toBeTruthy();
+    expect(within(win()).getByText('not in the text', { selector: '.not-in-text' })).toBeTruthy();
   });
 
-  it('while the JSON is invalid the view keeps its last valid state, marked out of date, and Save case is disabled', () => {
+  it('while the JSON is invalid the list is not shown, the problem is under the box, and Save case is disabled', () => {
     open();
     toCaseView(json('Anna is a doctor. She bought a second oven in 1998.', [doctor]));
     fireEvent.input(box(), { target: { value: '{ "name": ' } });
-    expect(within(win()).getByText('Out of date')).toBeTruthy();
-    expect(win().textContent).toMatch(/Anna is a doctor\. She bought a second oven in 1998\./);
     expect(within(win()).getByText(/Line 1, column/)).toBeTruthy();
+    expect(within(win()).queryByRole('list', { name: 'Expected errors' })).toBeNull();
     expect(button('Save case').disabled).toBe(true);
     fireEvent.input(box(), { target: { value: json('Anna is a doctor. She bought a second oven in 1998.', [doctor]) } });
-    expect(within(win()).queryByText('Out of date')).toBeNull();
+    expect(within(win()).getByRole('list', { name: 'Expected errors' })).toBeTruthy();
     expect(button('Save case').disabled).toBe(false);
   });
 });
@@ -124,7 +99,6 @@ describe('saving', () => {
     open();
     fireEvent.input(box(), { target: { value: json(source, [doctor]) } });
     expect(within(win()).getByText(/identical to its base case 1/)).toBeTruthy();
-    expect(button('Next').disabled).toBe(true);
     expect(button('Save case').disabled).toBe(true);
   });
 
@@ -147,21 +121,18 @@ describe('saving', () => {
   });
 });
 
-describe('the three parts say where the user is and what to do (T223, found by the T221 run)', () => {
-  it('part 1 says "Part 1 of 3", part 2 asks for the answer of the LLM, part 3 says what to check', () => {
+describe('the page says where the user is and what to do (T223, T229)', () => {
+  it('has no "Part N of 3"; the headings are numbered and the answer is asked for under its own heading', () => {
     render(<App ports={createFakePorts()} env={env} initialState={draftState()} />);
     fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);
     fireEvent.click(button('Case with injected errors'));
-    expect(within(win()).getByText(/Part 1 of 3/)).toBeTruthy();
-    fireEvent.click(button('Next'));
-    expect(within(win()).getByText(/Part 2 of 3/)).toBeTruthy();
-    expect(within(win()).getByText(/Paste the answer of your LLM into the box/)).toBeTruthy();
-    toCaseView(json('Anna is a doctor. She bought a second oven in 1998.', [doctor]));
-    expect(within(win()).getByText(/Part 3 of 3/)).toBeTruthy();
-    expect(within(win()).getByText(/Check the case, then save it/)).toBeTruthy();
+    expect(win().textContent).not.toMatch(/Part \d of 3/);
+    expect(within(win()).getByRole('heading', { name: '4. Paste its answer' })).toBeTruthy();
+    expect(within(win()).getByText(/Paste what your LLM returned into the box/)).toBeTruthy();
+    expect(within(win()).getByRole('heading', { name: '5. Expected errors' })).toBeTruthy();
   });
 
-  it('part 3 names the base case, not only its number', () => {
+  it('names the base case, not only its number', () => {
     open();
     toCaseView(json('Anna is a doctor. She bought a second oven in 1998.', [doctor], { base: '1' }));
     const baseName = sampleEvaluation().dataset.cases.find((c) => c.id === '1')!.name;

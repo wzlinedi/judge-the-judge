@@ -1,0 +1,173 @@
+// T229: one vertical layout for every way of adding a case (FR-040, FR-041, FR-083, FR-085, FR-090).
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/preact';
+import { App } from '../../../src/ui/App';
+import { createFakePorts } from '../../../src/app/ports/fakes';
+import { createState, type AppState } from '../../../src/app/store';
+import { sampleEvaluation } from '../../helpers/fixtures';
+
+const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
+const draftState = (): AppState => {
+  const e = sampleEvaluation();
+  return { ...createState(), step: 'cases', evaluation: { ...e, dataset: { ...e.dataset, finalized: false }, replies: {}, decisions: {} } };
+};
+const win = () => screen.getByRole('dialog', { name: 'Test case' });
+const start = (choice: 'Paste JSON' | 'Clean case' | 'Case with injected errors', state: AppState = draftState()) => {
+  render(<App ports={createFakePorts()} env={env} initialState={state} />);
+  fireEvent.click(screen.getAllByRole('button', { name: 'Add test case' })[0]!);
+  fireEvent.click(within(win()).getByRole('button', { name: choice }));
+};
+const headings = () => within(win()).getAllByRole('heading', { level: 3 }).filter((h) => /^\d\. /.test(h.textContent ?? '')).map((h) => (h.textContent ?? '').replace(/^\d\. /, ''));
+const source = 'Anna is a baker. She bought a second oven in 1998.';
+const json = (summary: string, errors: unknown[], over: Record<string, unknown> = {}) => JSON.stringify({ name: 'Anna case', fields: { source_text: source, summary }, expected_errors: errors, ...over });
+const doctor = { category: 'factual-error', fragment: 'Anna is a doctor', description: 'Profession changed', difficulty: 'obvious' };
+const box = () => within(win()).getByLabelText('Case JSON') as HTMLTextAreaElement;
+const save = () => within(win()).getByRole('button', { name: 'Save case' }) as HTMLButtonElement;
+
+function expectOnePage() {
+  const buttons = within(win().querySelector('.case-window-header') as HTMLElement).getAllByRole('button');
+  expect(buttons.map((b) => b.textContent)).toEqual(['Close without saving']);
+  expect(within(win()).queryByRole('button', { name: 'Next' })).toBeNull();
+  expect(within(win()).queryByRole('button', { name: 'Back' })).toBeNull();
+  expect(win().textContent).not.toMatch(/Part \d of 3/);
+  expect(win().querySelector('.case-columns')).toBeNull();
+}
+
+describe('case with injected errors: five parts from top to bottom', () => {
+  it('shows base, errors to prepare, prompt, answer and expected errors on one page, with the header holding only Close', () => {
+    start('Case with injected errors');
+    expectOnePage();
+    expect(headings()).toEqual(['Base case', 'Errors to prepare', 'Ask your LLM', 'Paste its answer', 'Expected errors']);
+  });
+
+  it('puts Save case at the bottom, not in the header', () => {
+    start('Case with injected errors');
+    const footer = win().querySelector('.case-window-footer') as HTMLElement;
+    expect(within(footer).getByRole('button', { name: 'Save case' })).toBeTruthy();
+    expect(within(win().querySelector('.case-window-header') as HTMLElement).queryByRole('button', { name: 'Save case' })).toBeNull();
+  });
+
+  it('says why Save case is disabled, and the reason goes when the JSON is valid', () => {
+    start('Case with injected errors');
+    expect(save().disabled).toBe(true);
+    expect(save().getAttribute('aria-describedby')).toBe('save-why');
+    expect(within(win()).getByText('Paste the answer of your LLM to save.')).toBeTruthy();
+    fireEvent.input(box(), { target: { value: '{ "name": ' } });
+    expect(within(win()).getByText('Fix the problems listed under the JSON to save.')).toBeTruthy();
+    fireEvent.input(box(), { target: { value: json('Anna is a doctor. She bought a second oven in 1998.', [doctor]) } });
+    expect(save().disabled).toBe(false);
+    expect(save().getAttribute('aria-describedby')).toBeNull();
+    expect(within(win()).queryByText(/to save\.$/)).toBeNull();
+  });
+
+  it('lays the errors out in a row: Category, Difficulty, What should be wrong and Remove', () => {
+    start('Case with injected errors');
+    const row = within(within(win()).getByRole('group', { name: 'Error 1' }));
+    for (const label of ['Category', 'Difficulty', 'What should be wrong']) expect(row.getByLabelText(label)).toBeTruthy();
+    expect(row.getByRole('button', { name: 'Remove' })).toBeTruthy();
+    expect(row.getByLabelText('Category').closest('.row-fields')).toBe(row.getByRole('button', { name: 'Remove' }).closest('.row-fields'));
+    expect(within(win()).getByRole('button', { name: 'Add error' })).toBeTruthy();
+    expect(within(win()).getByLabelText('Your own instructions (optional)')).toBeTruthy();
+  });
+
+  it('a changed place that no expected error covers is a warning under the JSON box', () => {
+    start('Case with injected errors');
+    fireEvent.change(within(win()).getByLabelText('Base case (optional)'), { target: { value: '1' } });
+    fireEvent.input(box(), { target: { value: json('Anna is a doctor. She bought a third oven in 1998.', [doctor]) } });
+    const warnings = within(win()).getByRole('list', { name: 'Changed places not in the list' });
+    expect(within(warnings).getByText(/A changed place is not in the list: “third” in summary/)).toBeTruthy();
+    expect(warnings.compareDocumentPosition(box()) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+  });
+
+  it('part 5 is a read-only list: no fields with highlights, no Show in text, "not in the text" for a fragment that is not found', () => {
+    start('Case with injected errors');
+    fireEvent.input(box(), { target: { value: json('Anna is a doctor.', [doctor, { ...doctor, fragment: 'Anna is a lawyer' }]) } });
+    const list = within(win()).getByRole('list', { name: 'Expected errors' });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(2);
+    expect(win().querySelectorAll('mark')).toHaveLength(0);
+    expect(within(win()).queryByRole('button', { name: 'Show in text' })).toBeNull();
+    expect(within(list).getAllByText('not in the text')).toHaveLength(1);
+    expect(within(list).queryAllByRole('textbox')).toHaveLength(0);
+  });
+
+  it('keeps the JSON box and the errors to prepare when the base changes', () => {
+    start('Case with injected errors');
+    fireEvent.input(box(), { target: { value: json('Anna is a doctor. She bought a second oven in 1998.', [doctor]) } });
+    fireEvent.change(within(win()).getByLabelText('Base case (optional)'), { target: { value: '1' } });
+    expect(box().value).toContain('Anna case');
+    expect(within(win()).getByRole('group', { name: 'Error 1' })).toBeTruthy();
+  });
+
+  it('Escape and Close without saving ask first when something was pasted', () => {
+    start('Case with injected errors');
+    fireEvent.input(box(), { target: { value: json('Anna is a doctor.', [doctor]) } });
+    fireEvent.click(within(win()).getByRole('button', { name: 'Close without saving' }));
+    expect(screen.getByRole('dialog', { name: 'Close without saving?' })).toBeTruthy();
+  });
+});
+
+describe('clean case: name, prompt and answer', () => {
+  it('has no errors to prepare and no expected errors', () => {
+    start('Clean case');
+    expectOnePage();
+    expect(headings()).toEqual(['About the case', 'Ask your LLM', 'Paste its answer']);
+    expect(within(win()).queryByRole('group', { name: 'Error 1' })).toBeNull();
+    expect(within(win()).queryByRole('list', { name: 'Expected errors' })).toBeNull();
+  });
+
+  it('puts Approve and close at the bottom with the reason', () => {
+    start('Clean case');
+    const footer = win().querySelector('.case-window-footer') as HTMLElement;
+    const approve = within(footer).getByRole('button', { name: 'Approve and close' }) as HTMLButtonElement;
+    expect(approve.disabled).toBe(true);
+    expect(within(footer).getByText('Paste the answer of your LLM to approve.')).toBeTruthy();
+    expect(within(win().querySelector('.case-window-header') as HTMLElement).queryByRole('button', { name: 'Approve and close' })).toBeNull();
+  });
+});
+
+describe('Paste JSON: only the box and the expected errors', () => {
+  it('has parts 1 and 2: the JSON and the expected errors', () => {
+    start('Paste JSON');
+    expectOnePage();
+    expect(headings()).toEqual(['Paste the case JSON', 'Expected errors']);
+    expect(within(win()).queryByLabelText('Base case (optional)')).toBeNull();
+    expect(within(win()).queryByRole('button', { name: 'Copy prompt' })).toBeNull();
+  });
+
+  it('the list appears as the JSON is pasted, without a Next', () => {
+    start('Paste JSON');
+    expect(within(win()).getByText('Paste the JSON to see the expected errors here.')).toBeTruthy();
+    fireEvent.input(box(), { target: { value: json('Anna is a doctor.', [doctor]) } });
+    expect(within(within(win()).getByRole('list', { name: 'Expected errors' })).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(win()).getByText('Anna case')).toBeTruthy();
+  });
+
+  it('a JSON with no expected errors says it will be saved as a clean case', () => {
+    start('Paste JSON');
+    fireEvent.input(box(), { target: { value: json('Anna works as a baker.', []) } });
+    expect(within(win()).getByText('No expected errors: this will be saved as a clean case.')).toBeTruthy();
+    expect(within(win()).queryByRole('list', { name: 'Expected errors' })).toBeNull();
+  });
+
+  it('an invalid JSON says the list is not available yet, and Save case says what to fix', () => {
+    start('Paste JSON');
+    fireEvent.input(box(), { target: { value: '{ nope' } });
+    expect(within(win()).getByText('The JSON is not valid yet, so there is no list to show.')).toBeTruthy();
+    expect(within(win()).getByText('Fix the problems listed under the JSON to save.')).toBeTruthy();
+  });
+});
+
+describe('Correct expected errors uses the Paste JSON layout', () => {
+  it('shows the case JSON and the list, with Save case at the bottom', () => {
+    const s = draftState();
+    const finalized: AppState = { ...s, evaluation: { ...s.evaluation, dataset: { ...s.evaluation.dataset, finalized: true } } };
+    render(<App ports={createFakePorts()} env={env} initialState={finalized} />);
+    const row = screen.getAllByRole('row').find((r) => r.textContent?.includes('Anna + 2 errors')) as HTMLElement;
+    fireEvent.click(within(row).getByRole('button', { name: 'Open' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Correct expected errors' }));
+    expectOnePage();
+    expect(headings()).toEqual(['Case JSON', 'Expected errors']);
+    expect(within(within(win()).getByRole('list', { name: 'Expected errors' })).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(win().querySelector('.case-window-footer') as HTMLElement).getByRole('button', { name: 'Save case' })).toBeTruthy();
+  });
+});

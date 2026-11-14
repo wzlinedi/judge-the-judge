@@ -17,11 +17,11 @@ const open = (name: string) => fireEvent.click(within(screen.getAllByRole('row')
 const win = () => screen.getByRole('dialog', { name: 'Test case' });
 
 describe('Correct expected errors', () => {
-  it('opens the case view with the case JSON', () => {
+  it('opens the window with the case JSON and the list of expected errors', () => {
     show();
     open('Anna + 2 errors');
     fireEvent.click(screen.getByRole('button', { name: 'Correct expected errors' }));
-    expect(within(win()).getAllByRole('button', { name: 'Show in text' })).toHaveLength(2);
+    expect(within(within(win()).getByRole('list', { name: 'Expected errors' })).getAllByRole('listitem')).toHaveLength(2);
     expect(JSON.parse((within(win()).getByLabelText('Case JSON') as HTMLTextAreaElement).value).fields.summary).toContain('Anna is a doctor');
   });
 
