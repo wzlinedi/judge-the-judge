@@ -9,7 +9,7 @@ describe('Help (Principle VIII)', () => {
   it('has the sections written so far, in plain headings', () => {
     render(<HelpStep />);
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Marking after each reply: Add finding, Remove, the second opinion and Ignore', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results', 'Judges that give only a verdict (for example bias: yes or no)', 'Overall result and thresholds', 'Exporting the report, and what provisional means']);
+    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Finalizing, and editing before the first reply', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Marking after each reply: Add finding, Remove, the second opinion and Ignore', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results', 'Judges that give only a verdict (for example bias: yes or no)', 'Overall result and thresholds', 'Exporting the report, and what provisional means']);
   });
 
   it('quotes the numbers of the demo from the demo files, so they cannot drift', () => {
@@ -129,6 +129,19 @@ describe('Help for running by hand (US7)', () => {
       }
     };
     expect(pre.map(compact)).toContain(compact(sample));
+  });
+});
+
+describe('Help for finalizing (US11)', () => {
+  it('names the buttons, what is fixed and what can still change, and when Edit test cases is offered', () => {
+    render(<HelpStep />);
+    const section = screen.getByRole('heading', { name: 'Finalizing, and editing before the first reply' }).closest('section')!;
+    const text = section.textContent ?? '';
+    for (const label of ['Finalize test cases', 'Edit test cases', 'Add test case', 'Start new evaluation', 'Correct expected errors', 'Edit the judge and run again']) expect(text).toContain(label);
+    expect(text).toMatch(/10 cases imported from a file and 2 cases you add by hand make one test project of 12 cases/);
+    expect(text).toMatch(/30 injected errors and 10 clean cases/);
+    expect(text).toMatch(/After the first reply it is no longer offered/);
+    expect(text).toMatch(/warns you before the page is closed/);
   });
 });
 

@@ -567,13 +567,24 @@ The category's description and example show under the Category select of every e
 **Independent Test**: 10 imported + 2 added cases finalize into 12 cases whose input is fixed; a
 13th can still be added; before the first reply "Edit test cases" opens them again.
 
-- [ ] T176 [US11] Write `tests/e2e/us11-finalize.spec.ts` covering User Story 11, including the browser warning when leaving with unsaved cases (FR-004) and **Edit test cases** before the first reply
-- [ ] T177 [P] [US11] Write `tests/unit/core/cases/finalize.test.ts`: finalizing is refused for empty test cases or an empty judge prompt; warnings for one kind only, replies not readable automatically, a broken rule, a case without a field for a variable, no subtle error, test size below the minimum (FR-052, SC-014, SC-025)
-- [ ] T178 [P] [US11] Write `tests/integration/finalize-flow.test.ts`: imported and added cases join one test project; after finalizing the prompt, judged text, fields and identifiers are fixed; cases may still be added, cloned and imported; a case without a reply may be renamed, removed or have its expected errors corrected, a case with a reply may not; the mapping and rules may be corrected; replies only after finalizing; "Edit test cases" is allowed only while no reply exists, opens the test cases and the prompt again, loses nothing and keeps both remembered files; after the first reply it is not offered (FR-039, FR-049, FR-053, FR-076, FR-089)
-- [ ] T179 [US11] Implement `src/core/cases/finalize.ts` to pass T177
-- [ ] T180 [US11] Implement `src/app/actions/finalize.ts` (`finalize`, `editTestCases`) to pass T178
-- [ ] T181 [US11] Implement `src/ui/steps/cases/FinalizeDialog.tsx`, **Finalize test cases**, **Edit test cases** and, after finalizing, **Add test case** in the "what next" line of Test cases, Judge and Run, and the finalized states of the Judge step, the table and the test case window, to pass T176
-- [ ] T182 [US11] Write the Help section "Finalizing, and editing before the first reply" in `src/ui/help/sections/`
+- [X] T176 [US11] Write `tests/e2e/us11-finalize.spec.ts` covering User Story 11, including the browser warning when leaving with unsaved cases (FR-004) and **Edit test cases** before the first reply
+- [X] T177 [P] [US11] Write `tests/unit/core/cases/finalize.test.ts`: finalizing is refused for empty test cases or an empty judge prompt; warnings for one kind only, replies not readable automatically, a broken rule, a case without a field for a variable, no subtle error, test size below the minimum (FR-052, SC-014, SC-025)
+- [X] T178 [P] [US11] Write `tests/integration/finalize-flow.test.ts`: imported and added cases join one test project; after finalizing the prompt, judged text, fields and identifiers are fixed; cases may still be added, cloned and imported; a case without a reply may be renamed, removed or have its expected errors corrected, a case with a reply may not; the mapping and rules may be corrected; replies only after finalizing; "Edit test cases" is allowed only while no reply exists, opens the test cases and the prompt again, loses nothing and keeps both remembered files; after the first reply it is not offered (FR-039, FR-049, FR-053, FR-076, FR-089)
+- [X] T179 [US11] Implement `src/core/cases/finalize.ts` to pass T177
+- [X] T180 [US11] Implement `src/app/actions/finalize.ts` (`finalize`, `editTestCases`) to pass T178
+- [X] T181 [US11] Implement `src/ui/steps/cases/FinalizeDialog.tsx`, **Finalize test cases**, **Edit test cases** and, after finalizing, **Add test case** in the "what next" line of Test cases, Judge and Run, and the finalized states of the Judge step, the table and the test case window, to pass T176
+- [X] T182 [US11] Write the Help section "Finalizing, and editing before the first reply" in `src/ui/help/sections/`
+
+Done 2026-11-14. US11 is complete. `finalizeSummary` (`src/core/cases/finalize.ts`) refuses only an empty test project or an empty
+judge prompt; every other finding is a warning (one kind only, replies not readable, a broken rule, no error rule, a case without a
+field for a variable, no subtle error, duplicates, test size below the minimum), each once and in a fixed order. `finalize` and
+`editTestCases` (`src/app/actions/finalize.ts`): finalizing sets the one unsaved flag; **Edit test cases** is allowed only while
+finalized with no reply, keeps both remembered files, and from Run or Results returns to Test cases. The "what next" line gained
+quieter buttons beside the primary action (`others`): after finalizing, **Add test case** on Judge and Run (Test cases already has it
+above its table, so it is not repeated there) and **Edit test cases** while no reply exists. `FinalizeDialog` shows the counts,
+the balance, the test size (`TestSize`, shared with the card) and every warning before a confirmation; the card says the test
+cases are finalized. The leave-the-page warning (FR-004) was already in place and is now covered by an e2e test. Help has the
+section "Finalizing, and editing before the first reply"; it names **Edit the judge and run again**, which arrives with Phase 16.
 
 ---
 

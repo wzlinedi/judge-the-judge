@@ -14,7 +14,8 @@ import { metricFor, sessionRegistry } from '../app/metrics';
 import { browserSupported, type BrowserEnv } from '../app/ports/browser';
 import { createBrowserPorts } from '../app/ports';
 import type { Ports } from '../app/ports/types';
-import { nextAction, stepGate } from '../app/selectors';
+import { nextAction, stepGate, type NextIntent } from '../app/selectors';
+import { editTestCases, finalize } from '../app/actions/finalize';
 import { createState, goToStep, startNewEvaluation, type AppState, type StepId } from '../app/store';
 import { computeResults, reviewEvaluation } from '../core/evaluation/results';
 import type { Evaluation, Problem } from '../core/model';
@@ -30,6 +31,7 @@ import { HelpStep } from './help/HelpStep';
 import { labels } from './labels';
 import { ResultsStep } from './steps/results/ResultsStep';
 import { CasesStep } from './steps/cases/CasesStep';
+import { FinalizeDialog } from './steps/cases/FinalizeDialog';
 import { JudgeStep } from './steps/judge/JudgeStep';
 import { RunStep } from './steps/run/RunStep';
 import { CaseWindow } from './windows/case-window/CaseWindow';
@@ -67,6 +69,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const [metricsVersion, setMetricsVersion] = useState(0);
   const [testWindow, setTestWindow] = useState<TestWindowView | null>(null);
   const [importing, setImporting] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
   const [viewCase, setViewCase] = useState<string | null>(null);
   const portsRef = useRef<Ports>(ports ?? createBrowserPorts(browser, () => stateRef.current.evaluation.dataset.name));
   const stateRef = useRef(state);
@@ -204,10 +207,25 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const windowOpen = (state.step === 'run' && state.openCase !== null) || (state.step === 'results' && viewCase !== null) || testWindow !== null;
   const gate = stepGate(state, state.step);
   const next = nextAction(state, state.step, reviewed);
+  const doIntent = (intent: NextIntent | undefined) => {
+    if (intent === 'add') setTestWindow({ view: 'choice' });
+    else if (intent === 'finalize') setFinalizing(true);
+    else if (intent === 'edit-cases') {
+      const result = editTestCases(stateRef.current);
+      setState(result.state);
+      say(result.note);
+    }
+  };
   const runAction = () => {
     if (next.action.openCase) setState((s) => ({ ...s, openCase: next.action.openCase ?? null }));
     else if (next.action.go) go(next.action.go);
-    else if (state.step === 'cases' && next.action.label === labels.addTestCase) setTestWindow({ view: 'choice' });
+    else doIntent(next.action.intent);
+  };
+  const confirmFinalize = () => {
+    setFinalizing(false);
+    const result = finalize(stateRef.current);
+    setState(result.state);
+    say(result.note);
   };
   const onResultsContinue = () => setState((s) => continueWork(s));
 
@@ -238,7 +256,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           />
         ) : (
           <>
-            <NextBar sentence={next.sentence} detail={next.detail} note={next.note} action={{ label: next.action.label, disabled: next.action.disabled, onClick: runAction }} />
+            <NextBar sentence={next.sentence} detail={next.detail} note={next.note} action={{ label: next.action.label, disabled: next.action.disabled, onClick: runAction }} others={(next.others ?? []).map((o) => ({ label: o.label, disabled: o.disabled, onClick: () => doIntent(o.intent) }))} />
             {state.step === 'run' ? (
               <RunStep
                 evaluation={state.evaluation}
@@ -298,6 +316,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           }}
         />
       ) : null}
+      <FinalizeDialog open={finalizing} state={state} onConfirm={confirmFinalize} onClose={() => setFinalizing(false)} />
       {testWindow ? <TestCaseWindow state={state} view={testWindow} onView={setTestWindow} onApply={applyCase} /> : null}
       {importing ? (
         <ImportWindow

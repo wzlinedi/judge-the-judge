@@ -1,5 +1,6 @@
 // Derived values for the interface, recomputed from state and never stored in it.
 import type { ReviewedCase } from '../core/evaluation/results';
+import { MAX_CASES } from '../core/schemas/test-case';
 import { findVariables } from '../core/judge/variables';
 import type { AppState, StepId } from './store';
 
@@ -10,12 +11,17 @@ export const STEPS: ReadonlyArray<{ id: Exclude<StepId, 'help'>; number: number;
   { id: 'results', number: 4, name: 'Results' },
 ];
 
+/** What a button of the "what next" line does, when it is not a plain move to another step. */
+export type NextIntent = 'finalize' | 'add' | 'edit-cases';
+
 export interface NextAction {
   sentence: string;
   detail?: string;
   /** A reminder that goes with the step (FR-058). */
   note?: string;
-  action: { label: string; go?: StepId; openCase?: string; disabled?: boolean };
+  action: { label: string; go?: StepId; openCase?: string; disabled?: boolean; intent?: NextIntent };
+  /** Quieter buttons beside the primary action (FR-053): only after finalizing. */
+  others?: Array<{ label: string; intent: NextIntent; disabled?: boolean }>;
 }
 
 export interface StepGateInfo {
@@ -49,6 +55,16 @@ export function caseToContinue(reviewed: readonly ReviewedCase[]): string | unde
   return (reviewed.find((r) => r.status === 'awaiting') ?? reviewed.find((r) => r.status === 'not_run'))?.testCase.id;
 }
 
+/** After finalizing: cases may still be added (not on Test cases, which has the button above its table), and while no reply exists the test cases may be opened again (FR-053). */
+function afterFinalizing(state: AppState, step: StepId): NextAction['others'] {
+  const { dataset, replies } = state.evaluation;
+  if (!dataset.finalized) return [];
+  const others: NonNullable<NextAction['others']> = [];
+  if (step !== 'cases') others.push({ label: 'Add test case', intent: 'add', disabled: dataset.cases.length >= MAX_CASES });
+  if (Object.keys(replies).length === 0) others.push({ label: 'Edit test cases', intent: 'edit-cases' });
+  return others;
+}
+
 export const NEW_CONVERSATION = 'Run every prompt in a new conversation, so that one case cannot influence another.';
 
 /** The "what next" line of a step (FR-001): a sentence, an optional second line and one primary action. */
@@ -58,7 +74,12 @@ export function nextAction(state: AppState, step: StepId = state.step, reviewed:
   switch (step) {
     case 'judge': {
       if (dataset.finalized) {
-        return { sentence: 'The judge prompt and the test cases are fixed. Go on with the run.', action: { label: 'Continue', go: 'run' } };
+        return {
+          sentence: 'The judge prompt and the test cases are fixed. Go on with the run.',
+          detail: 'The reply mapping and the error rules can still be changed, and test cases can still be added.',
+          action: { label: 'Continue', go: 'run' },
+          others: afterFinalizing(state, 'judge'),
+        };
       }
       const needed: string[] = [];
       if (judge_set.prompt.trim() === '') needed.push('the judge prompt');
@@ -76,18 +97,24 @@ export function nextAction(state: AppState, step: StepId = state.step, reviewed:
     }
     case 'cases':
       if (dataset.finalized) {
-        return { sentence: 'The test cases are finalized. Go on with the run.', detail: `${count} test cases`, action: { label: 'Continue', go: 'run' } };
+        return {
+          sentence: 'The test cases are finalized. Go on with the run.',
+          detail: `${count} test cases. The prompt and the fields are fixed; cases can still be added.`,
+          action: { label: 'Continue', go: 'run' },
+          others: afterFinalizing(state, 'cases'),
+        };
       }
       if (count === 0) {
-        return { sentence: 'Add your first test case, or import test cases from the File menu.', action: { label: 'Add test case' } };
+        return { sentence: 'Add your first test case, or import test cases from the File menu.', action: { label: 'Add test case', intent: 'add' } };
       }
-      return { sentence: 'Finalize the test cases when they are ready.', detail: `${count} test cases`, action: { label: 'Finalize test cases' } };
+      return { sentence: 'Finalize the test cases when they are ready.', detail: `${count} test cases`, action: { label: 'Finalize test cases', intent: 'finalize' } };
     case 'run': {
       const decided = reviewed.filter((r) => r.status === 'pass' || r.status === 'fail').length;
       const next = caseToContinue(reviewed);
       const detail = `${decided} of ${reviewed.length} cases decided`;
-      if (next === undefined) return { sentence: 'Every case is decided. Read the results.', detail, action: { label: 'Next: Results', go: 'results' } };
-      return { sentence: 'Continue with the next case that needs you.', detail, note: NEW_CONVERSATION, action: { label: 'Continue', openCase: next } };
+      const others = afterFinalizing(state, 'run');
+      if (next === undefined) return { sentence: 'Every case is decided. Read the results.', detail, action: { label: 'Next: Results', go: 'results' }, others };
+      return { sentence: 'Continue with the next case that needs you.', detail, note: NEW_CONVERSATION, action: { label: 'Continue', openCase: next }, others };
     }
     case 'results':
       return { sentence: 'Read the result of the evaluation.', action: { label: 'Continue' } };
