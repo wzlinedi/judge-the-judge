@@ -2,7 +2,7 @@ import type { RefObject } from 'preact';
 import type { ChangedPlace } from '../../../core/cases/text-list-check';
 import type { Effective } from '../../../core/evaluation/decisions';
 import type { TestCase } from '../../../core/model';
-import { fieldMarks } from './marks';
+import { fieldMarks, type ShownSpot } from './marks';
 
 const SIGNS: Record<string, string> = { found: '✓', missed: '✕', undecided: '?', ignored: '–' };
 
@@ -15,6 +15,8 @@ export interface MarkedFieldsProps {
   uncovered: readonly ChangedPlace[];
   /** The expected error that "Show in text" points at. */
   strong?: string | null;
+  /** The text of an additional finding that "Show the issue" points at. */
+  shown?: ShownSpot | null;
   rootRef?: RefObject<HTMLDivElement | null>;
 }
 
@@ -22,23 +24,30 @@ export interface MarkedFieldsProps {
  * The fields of a case with the fragments of its expected errors highlighted (FR-077). Every highlight
  * carries its number (E1 …) and a word, so a colour is never the only sign; the text itself is never changed.
  */
-export function MarkedFields({ testCase, judged, effective, uncovered, strong, rootRef }: MarkedFieldsProps) {
+export function MarkedFields({ testCase, judged, effective, uncovered, strong, shown = null, rootRef }: MarkedFieldsProps) {
   return (
     <div ref={rootRef} class="marked-fields">
       {Object.keys(testCase.fields).map((name) => (
-        <section key={name} class="field-block">
+        <section key={name} class="field-block" data-field={name}>
           <h3>
             {name}
             {name === judged ? ' (judged text)' : ''}
           </h3>
           <p class="field-text">
-            {fieldMarks(testCase, name, judged, effective, uncovered).map((segment, i) => {
+            {fieldMarks(testCase, name, judged, effective, uncovered, shown).map((segment, i) => {
               if (segment.error) {
                 const { id, label, state } = segment.error;
                 const sign = effective ? ` ${SIGNS[state] ?? ''}` : '';
                 return (
                   <mark key={i} class={`fragment${effective ? ` fragment-${state}` : ''}${strong === id ? ' fragment-strong' : ''}`} data-error={id} tabIndex={-1} title={effective ? `${label} ${state}` : label}>
                     <sup>{`${label}${sign}`}</sup>
+                    {segment.text}
+                  </mark>
+                );
+              }
+              if (segment.shown) {
+                return (
+                  <mark key={i} class="fragment fragment-strong" data-shown="true" tabIndex={-1}>
                     {segment.text}
                   </mark>
                 );

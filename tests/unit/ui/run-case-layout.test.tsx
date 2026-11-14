@@ -76,7 +76,7 @@ describe('the case window of Run: three parts from top to bottom', () => {
     expect(within(columns[1] as HTMLElement).getByRole('heading', { name: 'Errors' })).toBeTruthy();
   });
 
-  it('the left column has only Paste reply above the reply box; the prompt buttons are in part 1 (T235)', () => {
+  it('the left column has only Paste reply below the reply box; the prompt buttons are in part 1 (T235)', () => {
     open('11');
     const left = part(3).querySelectorAll<HTMLElement>('.case-half > section')[0] as HTMLElement;
     expect(left.querySelector('ol')).toBeNull();
@@ -84,7 +84,7 @@ describe('the case window of Run: three parts from top to bottom', () => {
     expect(within(left).queryByRole('button', { name: 'Copy prompt' })).toBeNull();
     const paste = within(left).getByRole('button', { name: 'Paste reply' });
     const box = within(left).getByLabelText('Judge reply');
-    expect(paste.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(box.compareDocumentPosition(paste) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy(); // T240: Paste reply is below the box
     expect(within(part(1)).getByRole('button', { name: 'Copy prompt' })).toBeTruthy();
     expect(within(part(1)).getByRole('button', { name: 'Show prompt' })).toBeTruthy();
   });
@@ -110,6 +110,46 @@ describe('the case window of Run: three parts from top to bottom', () => {
     expect(within(part(2)).queryByRole('button', { name: 'Add finding…' })).toBeNull();
     expect(within(part(2)).getByText(/Not run/)).toBeTruthy();
     expect(within(part(3)).getByText('The errors appear here when the judge’s reply is saved.')).toBeTruthy();
+  });
+});
+
+describe('T240: where each finding is, and Show the issue', () => {
+  const items = (label: string) => [...win().querySelectorAll<HTMLElement>(`ul[aria-label="${label}"] > li`)];
+
+  it('every expected error says in which field it is', () => {
+    open('11');
+    const list = items('Expected errors');
+    expect(list.length).toBeGreaterThan(0);
+    for (const li of list) expect(li.querySelector('.item-place')?.textContent).toMatch(/^(in \S+|not found in the case)$/);
+    expect(list.some((li) => /^in /.test(li.querySelector('.item-place')?.textContent ?? ''))).toBe(true);
+  });
+
+  it('an additional finding whose text is in a field names it and has the button; one that is in no field says so and has no button', () => {
+    open('3');
+    const found = items('Additional findings').filter((li) => /^in /.test(li.querySelector('.item-place')?.textContent ?? ''));
+    for (const li of found) expect(within(li).getByRole('button', { name: 'Show the issue' })).toBeTruthy();
+    const lost = items('Additional findings').filter((li) => li.querySelector('.not-found'));
+    for (const li of lost) {
+      expect(li.querySelector('.item-place')?.textContent).toBe('not found in the case');
+      expect(within(li).queryByRole('button', { name: 'Show the issue' })).toBeNull();
+    }
+    expect(found.length + lost.length).toBeGreaterThan(0);
+  });
+
+  it('Show the issue on an expected error highlights its fragment strongly in part 1', () => {
+    open('11');
+    expect(part(1).querySelector('.fragment-strong')).toBeNull();
+    const li = items('Expected errors').find((x) => within(x).queryByRole('button', { name: 'Show the issue' }))!;
+    fireEvent.click(within(li).getByRole('button', { name: 'Show the issue' }));
+    expect(part(1).querySelectorAll('.fragment-strong')).toHaveLength(1);
+  });
+
+  it('a finding with no text has no field line and no button', () => {
+    open('3');
+    for (const li of items('Additional findings').filter((x) => /whole reply/.test(x.textContent ?? ''))) {
+      expect(li.querySelector('.item-place')).toBeNull();
+      expect(within(li).queryByRole('button', { name: 'Show the issue' })).toBeNull();
+    }
   });
 });
 

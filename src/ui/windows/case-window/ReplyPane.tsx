@@ -27,7 +27,7 @@ function checkReply(text: string): Problem[] {
   return [{ ...problem, message: `This is not JSON. ${problem.message}` }];
 }
 
-/** "Judge reply" (FR-055), the left column of part 3: "Paste reply from clipboard" above the always visible box. A reply that is readable JSON is saved as soon as it is in the box (FR-056). */
+/** "Judge reply" (FR-055), the left column of part 3: "Paste reply" below the always visible box. A reply that is readable JSON is saved as soon as it is in the box (FR-056). */
 export function ReplyPane({ saved, text, onText, copied, onSaveAsText, onPaste, message }: ReplyPaneProps) {
   const dirty = text !== (saved ?? '');
   const readable = text.trim() !== '' && extractJson(text).ok;
@@ -37,14 +37,6 @@ export function ReplyPane({ saved, text, onText, copied, onSaveAsText, onPaste, 
   return (
     <section class="reply-pane">
       <h4>Judge reply</h4>
-      <div class="button-row">
-        <button type="button" class={pastePrimary ? 'primary' : ''} onClick={onPaste}>
-          {labels.pasteReplyFromClipboard}
-        </button>
-      </div>
-      <p class="reply-message" role="status">
-        {message}
-      </p>
       <JsonBox label="Judge reply" value={text} onChange={onText} check={checkReply} rows={8} />
       {notJson ? (
         <div class="button-row">
@@ -54,6 +46,14 @@ export function ReplyPane({ saved, text, onText, copied, onSaveAsText, onPaste, 
           </button>
         </div>
       ) : null}
+      <div class="button-row">
+        <button type="button" class={pastePrimary ? 'primary' : ''} onClick={onPaste}>
+          {labels.pasteReplyFromClipboard}
+        </button>
+      </div>
+      <p class="reply-message" role="status">
+        {message}
+      </p>
     </section>
   );
 }

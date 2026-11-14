@@ -87,7 +87,7 @@ describe('the case window of Run', () => {
     const e = sampleEvaluation();
     const reviewed = reviewEvaluation(e, accuracyMetric).find((r) => r.testCase.id === '2')!;
     const noop = () => undefined;
-    const { getByRole } = render(<ErrorsPane reviewed={reviewed} effective={reviewed.effective!} onExpected={noop} onAdditional={noop} onApprove={noop} onShowInText={noop} onRemove={noop} />);
+    const { getByRole } = render(<ErrorsPane reviewed={reviewed} effective={reviewed.effective!} onExpected={noop} onAdditional={noop} onApprove={noop} onShowInText={noop} judged={undefined} onRemove={noop} />);
     const list = getByRole('list', { name: 'Findings in the reply' });
     expect(list.textContent).toContain('matches error 1');
     expect(list.textContent).toContain('matches error 2');

@@ -6,6 +6,7 @@ import type { AdditionalState, ExpectedState, TestCase } from '../../../core/mod
 import { SOURCE_LABELS } from '../../components/sources';
 import { StatusMark } from '../../components/StatusMark';
 import { labels } from '../../labels';
+import { whereInCase, type ShownSpot } from './marks';
 
 const EXPECTED_MARKS: ReadonlyArray<{ state: ExpectedState; label: string }> = [
   { state: 'found', label: labels.found },
@@ -32,22 +33,35 @@ export interface ErrorsPaneProps {
   onAdditional: (item: EffectiveAdditional, state: AdditionalState) => void;
   /** "No more findings": the findings added by hand are all, for a reply that could not be read. */
   onApprove: () => void;
-  onShowInText: (expectedId: string) => void;
+  /** "Show the issue": scroll to part 1 and highlight the place. `expectedId` is set for an expected error, `spot` for the text of an additional finding. */
+  onShowInText: (target: { expectedId?: string; spot?: ShownSpot }) => void;
+  /** The judged text field, which the search for a fragment starts with. */
+  judged: string | undefined;
   onRemove: (item: EffectiveAdditional) => void;
 }
 
-function ExpectedItem({ error, index, testCase, onMark, onShow }: { error: EffectiveExpected; index: number; testCase: TestCase; onMark: (s: ExpectedState) => void; onShow: () => void }) {
+/** Where the finding sits: "in summary", or that no field holds its text. Nothing for a finding with no text. */
+function Place({ field }: { field: string | undefined | null }) {
+  if (field === null) return null;
+  return field === undefined ? <p class="muted item-place not-found">not found in the case</p> : <p class="muted item-place">{`in ${field}`}</p>;
+}
+
+function ExpectedItem({ error, index, testCase, judged, onMark, onShow }: { error: EffectiveExpected; index: number; testCase: TestCase; judged: string | undefined; onMark: (s: ExpectedState) => void; onShow: () => void }) {
   const meta = testCase.expected_errors.find((e) => e.id === error.id);
+  const place = meta?.fragment ? whereInCase(testCase, judged, meta.fragment) : undefined;
   const name = `E${index + 1}`;
   return (
     <li data-expected={error.id} class="decide-item">
       <div class="item-head">
         <strong>{name}</strong> <span>{meta?.description}</span>
-        <button type="button" class="link-button" onClick={onShow}>
-          {labels.showInText}
-        </button>
+        {place ? (
+          <button type="button" class="link-button" onClick={onShow}>
+            {labels.showInText}
+          </button>
+        ) : null}
       </div>
       {meta?.fragment ? <p class="muted item-fragment">{`Fragment: “${meta.fragment}”`}</p> : null}
+      <Place field={meta?.fragment ? place?.field : null} />
       <div role="group" aria-label={`Mark for ${name}`} class="marks">
         {EXPECTED_MARKS.map((m) => (
           <button key={m.state} type="button" aria-pressed={error.state === m.state} class={error.state === m.state ? 'pressed' : ''} onClick={() => onMark(m.state)}>
@@ -60,17 +74,24 @@ function ExpectedItem({ error, index, testCase, onMark, onShow }: { error: Effec
   );
 }
 
-function AdditionalItem({ item, onMark, onRemove }: { item: EffectiveAdditional; onMark: (s: AdditionalState) => void; onRemove: () => void }) {
+function AdditionalItem({ item, testCase, judged, onMark, onShow, onRemove }: { item: EffectiveAdditional; testCase: TestCase; judged: string | undefined; onMark: (s: AdditionalState) => void; onShow: (spot: ShownSpot) => void; onRemove: () => void }) {
+  const place = item.text === '' ? undefined : whereInCase(testCase, judged, item.text);
   return (
     <li data-additional={item.key} class="decide-item">
       <div class="item-head">
         <span>{item.text === '' ? 'A finding about the whole reply' : item.text}</span>
+        {place ? (
+          <button type="button" class="link-button" onClick={() => onShow(place)}>
+            {labels.showInText}
+          </button>
+        ) : null}
         {item.added !== undefined ? (
           <button type="button" class="link-button" onClick={onRemove}>
             {labels.remove}
           </button>
         ) : null}
       </div>
+      <Place field={item.text === '' ? null : place?.field} />
       {item.rules.length > 0 ? <p class="muted">{`Rule: ${item.rules.join(', ')}`}</p> : null}
       {item.category || item.difficulty ? <p class="muted">{[item.category, item.difficulty].filter(Boolean).join(' · ')}</p> : null}
       <div role="group" aria-label={`Mark for ${item.text || item.key}`} class="marks">
@@ -123,7 +144,7 @@ export function DecideBar({ reviewed, effective, onAddFinding, onSecondOpinion }
 }
 
 /** The right column of part 3: the errors of the case with their marks, and the findings of the reply. */
-export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onApprove, onShowInText, onRemove }: ErrorsPaneProps) {
+export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onApprove, onShowInText, judged, onRemove }: ErrorsPaneProps) {
   const unreadable = reviewed.review !== null && !reviewed.review.readable;
   const awaiting = reviewed.status === 'awaiting';
   return (
@@ -149,7 +170,7 @@ export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onAp
           <h5>Expected errors</h5>
           <ul class="decide-list" aria-label="Expected errors">
             {effective.expected.map((e, i) => (
-              <ExpectedItem key={e.id} error={e} index={i} testCase={reviewed.testCase} onMark={(s) => onExpected(e.id, s)} onShow={() => onShowInText(e.id)} />
+              <ExpectedItem key={e.id} error={e} index={i} testCase={reviewed.testCase} judged={judged} onMark={(s) => onExpected(e.id, s)} onShow={() => onShowInText({ expectedId: e.id })} />
             ))}
           </ul>
         </>
@@ -160,7 +181,7 @@ export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onAp
           <h5>Additional findings</h5>
           <ul class="decide-list" aria-label="Additional findings">
             {effective.additional.map((a) => (
-              <AdditionalItem key={a.key} item={a} onMark={(s) => onAdditional(a, s)} onRemove={() => onRemove(a)} />
+              <AdditionalItem key={a.key} item={a} testCase={reviewed.testCase} judged={judged} onMark={(s) => onAdditional(a, s)} onShow={(spot) => onShowInText({ spot })} onRemove={() => onRemove(a)} />
             ))}
           </ul>
         </>
