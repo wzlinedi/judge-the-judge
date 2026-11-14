@@ -28,6 +28,12 @@ const apply = () => within(dialog()).getByRole('button', { name: 'Apply opinion'
 const caseWindow = () => screen.getByRole('dialog', { name: /^Case / });
 
 describe('the second-opinion window', () => {
+  it('is the standard large dialog, with Cancel and Apply opinion in the bar at the bottom (T247)', () => {
+    openWindow('14');
+    expect(dialog().classList.contains('dialog-wide')).toBe(true);
+    expect(within(dialog().querySelector('.dialog-actions') as HTMLElement).getAllByRole('button').map((b) => b.textContent)).toEqual(['Cancel', 'Apply opinion']);
+  });
+
   it('opens a dialog for that case with the line saying what is checked, the prompt with Copy prompt and one box', () => {
     openWindow('17');
     expect(within(dialog()).getByText('The LLM checks 3 expected errors and 1 additional finding of this case.')).toBeTruthy();

@@ -34,6 +34,15 @@ describe('the case window of Run: three parts from top to bottom', () => {
     expect(headings).toEqual(['Case', 'Marking', 'Judge reply and errors']);
   });
 
+  it('uses the whole width of the screen, and "Show prompt" opens the standard large dialog with its button at the bottom (T247)', () => {
+    open('14');
+    expect(win().querySelector('.case-page')?.classList.contains('case-page-wide')).toBe(true);
+    fireEvent.click(within(part(1)).getByRole('button', { name: 'Show prompt' }));
+    const dialog = screen.getByRole('dialog', { name: 'Complete judge prompt' });
+    expect(dialog.classList.contains('dialog-wide')).toBe(true);
+    expect(within(dialog.querySelector('.dialog-actions') as HTMLElement).getByRole('button', { name: 'Close' })).toBeTruthy();
+  });
+
   it('part 1 holds every field of the case with the highlights of the expected errors, over the full width', () => {
     open('11');
     expect(within(part(1)).getByText(/Injected errors/)).toBeTruthy();

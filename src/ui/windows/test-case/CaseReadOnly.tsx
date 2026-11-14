@@ -82,7 +82,7 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onRecreate,
           </section>
           <section class="frame" aria-label="Prompt">
             <h3>Prompt</h3>
-            <PromptButtons prompt={prompt} wide />
+            <PromptButtons prompt={prompt} />
           </section>
         </>
       }

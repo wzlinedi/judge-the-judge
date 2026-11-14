@@ -10,6 +10,10 @@ Chrome and Microsoft Edge (FR-003).
 
 ## Shell
 
+- **The standard large dialog** (T247): about 90% of the screen in both directions, the content
+  scrolling inside it, its buttons in a bar at the bottom. Every "Show prompt", "Original prompt",
+  "Second opinion…" and "Edit expected errors" use it. A short question keeps the small dialog.
+
 - A header with the tool name and, on the same line, **Save test project**, **Save evaluation**, the
   **More** menu and **Help** (T246); under it the four numbered steps as a progress bar. The **More**
   menu always opens inside the screen (it is aligned to the right edge of its button and scrolls when

@@ -38,8 +38,9 @@
 .dialog { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg); color: var(--text); padding: 0; max-width: min(40rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); box-shadow: var(--shadow); }
 .dialog::backdrop { background: var(--overlay); }
 .dialog.dialog-wide { width: 90vw; height: 90vh; max-width: 90vw; max-height: 90vh; }
-.dialog-wide .dialog-body { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-.dialog-wide .dialog-body > textarea { flex: 1; min-height: 0; resize: none; }
+.dialog-wide .dialog-body { flex: 1; min-height: 0; }
+.dialog-wide .dialog-body:has(> .prompt-full) { display: flex; flex-direction: column; }
+.dialog-wide .dialog-body > .prompt-full { flex: 1; min-height: 0; resize: none; }
 .dialog-frame { display: flex; flex-direction: column; max-height: calc(100vh - 2rem); }
 .dialog-wide .dialog-frame { height: 100%; max-height: none; }
 .dialog-frame h2 { padding: var(--space-4) var(--space-4) 0; }
@@ -56,6 +57,7 @@
 .case-pane:last-child { border-right: 0; }
 .case-window-body { flex: 1; min-height: 0; overflow: auto; padding: var(--space-4); }
 .case-page { max-width: 64rem; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-5); }
+.case-page.case-page-wide { max-width: none; }
 .frame, .case-part { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); }
 .case-pane > .frame + .frame { margin-top: var(--space-4); }
 .frame > h3:first-child { margin-top: 0; }

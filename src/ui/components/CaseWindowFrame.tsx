@@ -11,7 +11,7 @@ export interface CaseWindowFrameProps {
   /** The two columns of the read-only views. */
   left?: ComponentChildren;
   right?: ComponentChildren;
-  /** Instead of the two columns: one vertical page of numbered parts (the case window of Run, T230). */
+  /** Instead of the two columns: one vertical page of numbered parts over the whole width (the case window of Run, T230, T247). */
   page?: ComponentChildren;
   onPrevious: () => void;
   onNext: () => void;
@@ -76,7 +76,7 @@ export function CaseWindowFrame({ title, index, total, left, right, page, onPrev
       </div>
       {page !== undefined ? (
         <div class="case-window-body">
-          <div class="case-page">{page}</div>
+          <div class="case-page case-page-wide">{page}</div>
         </div>
       ) : (
         <div class="case-columns">

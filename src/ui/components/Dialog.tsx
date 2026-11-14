@@ -10,7 +10,7 @@ export interface DialogProps {
   children?: ComponentChildren;
   /** Buttons pinned to the bottom, outside the scrolling content. */
   actions?: ComponentChildren;
-  /** About 90% of the screen in both directions, for a long text (T238). */
+  /** The standard large dialog: about 90% of the screen in both directions, the buttons in the bar at the bottom (T238, T247). */
   wide?: boolean;
 }
 

@@ -56,6 +56,7 @@ export function SecondOpinionWindow({ evaluation, reviewed, onApply, onClose }: 
   return (
     <Dialog
       open
+      wide
       title="Second opinion"
       onClose={onClose}
       actions={
