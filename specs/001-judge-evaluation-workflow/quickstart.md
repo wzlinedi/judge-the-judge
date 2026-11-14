@@ -76,8 +76,8 @@ version, and the tool opens the Test cases step (the first step with unfinished 
    "Like case" when one exists, "Copy prompt", run it in an LLM, paste the answer into the box and
    "Save case".
 2. Paste an answer with expected errors into a new clean case window.
-3. Make a copy of a clean case by hand ("Open", "Show JSON", then "From JSON" in a new case with a
-   new name), "Save case"; "Rename" the copy to a name another case has, then to a free name;
+3. Make a copy of a case by hand ("Open", "Recreate the test case" for a case made with "Clean case"
+   or "Case with errors", then "From JSON" in a new case with a new name), "Save case"; "Rename" the copy to a name another case has, then to a free name;
    "Remove" the copy. There is no "Clone" button.
 4. Try to remove a clean case that another case uses as its base.
 
@@ -96,8 +96,8 @@ made from it.
 3. Read the list of expected errors under the box; change a fragment in the JSON so it
    no longer occurs; fix it; "Save case" (in the header of the window).
 4. "Add test case", "From JSON", paste a JSON identical to its base but with one expected error.
-5. "Open" a case with five expected errors at 1280 x 720; "Show JSON", "Copy JSON"; paste it into
-   a new case with "From JSON"; use "Next case".
+5. "Open" a case with five expected errors at 1280 x 720; there is no "Show JSON"; use
+   "Next case".
 6. Finalize; "Open" a case without a reply, "Edit expected errors", change one difficulty and
    save; try to change a field.
 

@@ -13,6 +13,8 @@ export interface SaveCaseButtonProps {
   caseId?: string;
   base?: string;
   errorsToPrepare?: number;
+  /** The prompt of the window, kept with the case (T238). */
+  generationPrompt?: string;
   /** The name the user typed in "Test case name"; none while the field is untouched (T239). */
   name?: string;
   check: CaseJsonCheck | undefined;
@@ -23,7 +25,7 @@ export interface SaveCaseButtonProps {
 }
 
 /** "Save case" (FR-085) at the bottom of the window: enabled only while the JSON is valid and, when it is not, saying why; a mismatch of FR-080 asks first. */
-export function SaveCaseButton({ state, text, mode, caseId, base, errorsToPrepare, name, check, emptyReason, onApply, onClose }: SaveCaseButtonProps) {
+export function SaveCaseButton({ state, text, mode, caseId, base, errorsToPrepare, generationPrompt, name, check, emptyReason, onApply, onClose }: SaveCaseButtonProps) {
   const [asking, setAsking] = useState<string[] | null>(null);
 
   const save = () => {
@@ -31,7 +33,7 @@ export function SaveCaseButton({ state, text, mode, caseId, base, errorsToPrepar
     const edit =
       mode === 'correct' && caseId
         ? correctExpectedErrors(state, caseId, text)
-        : saveCaseFromJson(state, text, { mode: mode === 'inject' ? 'inject' : 'paste', ...(base !== undefined && base !== '' ? { base } : {}), ...(errorsToPrepare !== undefined ? { errorsToPrepare } : {}), ...(name !== undefined ? { name } : {}) });
+        : saveCaseFromJson(state, text, { mode: mode === 'inject' ? 'inject' : 'paste', ...(base !== undefined && base !== '' ? { base } : {}), ...(errorsToPrepare !== undefined ? { errorsToPrepare } : {}), ...(name !== undefined ? { name } : {}), ...(generationPrompt !== undefined ? { generationPrompt } : {}) });
     onApply(edit);
     if ((!edit.problems || edit.problems.length === 0) && edit.state !== state) onClose();
   };

@@ -31,7 +31,7 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
   const valid = check?.case !== undefined;
 
   const approve = () => {
-    const edit = saveCaseFromJson(state, answer, { mode: 'clean', name });
+    const edit = saveCaseFromJson(state, answer, { mode: 'clean', name, generationPrompt: prompt });
     onApply(edit);
     if (edit.state !== state) onClose();
   };

@@ -1,4 +1,4 @@
-// quickstart.md V4: a case with injected errors on one page (T229), Open, Show JSON, Edit expected errors
+// quickstart.md V4: a case with injected errors on one page (T229), Open, Edit expected errors
 // (SC-022 to SC-024, SC-031, SC-033, SC-035, SC-036, User Story 4).
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
@@ -91,13 +91,14 @@ test('From JSON: a case identical to its base is refused with the reason', async
   await expect(win(page).getByRole('button', { name: 'Save case' })).toBeDisabled();
 });
 
-test('five expected errors are visible without scrolling, and Show JSON, Copy JSON and From JSON round-trip', async ({ page }) => {
+test('five expected errors are visible without scrolling, and From JSON adds a case (Show JSON and Copy JSON are gone, T238)', async ({ page }) => {
   await start(page);
   const words = Array.from(new Set(base.fields.summary.split(' '))).filter((w) => w.length > 3).slice(0, 5);
   expect(words).toHaveLength(5);
   await page.getByRole('button', { name: 'Add test case…' }).click();
   await win(page).getByRole('button', { name: 'From JSON' }).click();
-  await win(page).getByLabel('Case JSON').fill(json({ name: 'Five errors', expected_errors: words.map((w, i) => ({ category: 'factual-error', fragment: w, description: `Change ${i + 1}`, difficulty: i % 2 ? 'subtle' : 'obvious' })) }));
+  const five = json({ name: 'Five errors', expected_errors: words.map((w, i) => ({ category: 'factual-error', fragment: w, description: `Change ${i + 1}`, difficulty: i % 2 ? 'subtle' : 'obvious' })) });
+  await win(page).getByLabel('Case JSON').fill(five);
   await win(page).getByRole('button', { name: 'Save case' }).click();
   await page.getByRole('row').filter({ hasText: 'Five errors' }).getByRole('button', { name: 'Open' }).click();
 
@@ -107,15 +108,13 @@ test('five expected errors are visible without scrolling, and Show JSON, Copy JS
   const box = await last.boundingBox();
   expect(box!.y + box!.height).toBeLessThanOrEqual(720);
 
-  await view.getByRole('button', { name: 'Show JSON' }).click();
-  await view.getByRole('button', { name: 'Copy JSON' }).click();
-  const copied = await page.evaluate(() => navigator.clipboard.readText());
-  expect(JSON.parse(copied).expected_errors).toHaveLength(5);
+  await expect(view.getByRole('button', { name: 'Show JSON' })).toHaveCount(0);
+  await expect(view.getByRole('button', { name: 'Copy JSON' })).toHaveCount(0);
   await view.getByRole('button', { name: 'Close' }).click();
 
   await page.getByRole('button', { name: 'Add test case…' }).click();
   await win(page).getByRole('button', { name: 'From JSON' }).click();
-  await win(page).getByLabel('Case JSON').fill(copied.replace('Five errors', 'Five errors pasted'));
+  await win(page).getByLabel('Case JSON').fill(five.replace('Five errors', 'Five errors pasted'));
   await expect(win(page).getByRole('list', { name: 'Expected errors' }).getByRole('listitem')).toHaveCount(5);
   await win(page).getByRole('button', { name: 'Save case' }).click();
   await expect(page.getByRole('row').filter({ hasText: 'Five errors pasted' })).toBeVisible();

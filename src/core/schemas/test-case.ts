@@ -18,6 +18,7 @@ export const testCaseSchema = z.object({
   name: z.string(),
   base: z.string().optional(),
   changed_after_first_reply: z.enum(['added', 'corrected']).optional(),
+  generation_prompt: z.string().optional(),
   fields: z.record(z.string(), z.string().max(MAX_FIELD_LENGTH)),
   expected_errors: z.array(expectedErrorSchema),
 });
@@ -47,6 +48,7 @@ export function assignExpectedIds(parsed: ParsedCase[]): TestCase[] {
       name: c.name,
       ...(c.base !== undefined ? { base: c.base } : {}),
       ...(c.changed_after_first_reply !== undefined ? { changed_after_first_reply: c.changed_after_first_reply } : {}),
+      ...(c.generation_prompt !== undefined ? { generation_prompt: c.generation_prompt } : {}),
       fields: c.fields,
       expected_errors: c.expected_errors.map((e) => ({
         id: e.id ?? nextId(),
@@ -73,6 +75,7 @@ export function storedCase(c: TestCase): Record<string, unknown> {
     name: c.name,
     ...(c.base !== undefined ? { base: c.base } : {}),
     ...(c.changed_after_first_reply !== undefined ? { changed_after_first_reply: c.changed_after_first_reply } : {}),
+    ...(c.generation_prompt !== undefined ? { generation_prompt: c.generation_prompt } : {}),
     fields: c.fields,
     expected_errors: c.expected_errors.map((e) => ({
       id: e.id,

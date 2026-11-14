@@ -41,24 +41,11 @@ describe('the read-only view', () => {
     }
   });
 
-  it('Copy JSON then From JSON gives the same fields and expected errors', () => {
-    show();
-    open('Anna + 2 errors');
-    fireEvent.click(within(view()).getByRole('button', { name: 'Show JSON' }));
-    const json = (within(view()).getByRole('textbox', { name: 'Case JSON' }) as HTMLTextAreaElement).value;
-    fireEvent.click(within(view()).getByRole('button', { name: 'Close' }));
-    fireEvent.click(screen.getAllByRole('button', { name: 'Add test case…' })[0]!);
-    const win = () => screen.getByRole('dialog', { name: 'Test case' });
-    fireEvent.click(within(win()).getByRole('button', { name: 'From JSON' }));
-    fireEvent.input(within(win()).getByLabelText('Case JSON'), { target: { value: json.replace('Anna + 2 errors', 'Anna pasted') } });
-    expect(within(within(win()).getByRole('list', { name: 'Expected errors' })).getAllByRole('listitem')).toHaveLength(2);
-    expect(win().textContent).toContain('Anna pasted');
-  });
-
-  it('has no Clone button: a wrong case is changed through Show JSON, From JSON and Remove (T218)', () => {
+  it('has no Clone and no Show JSON: a copy is made with Recreate the test case or Export test cases (T218, T238)', () => {
     show();
     open('Anna + 2 errors');
     expect(within(view()).queryByRole('button', { name: 'Clone' })).toBeNull();
-    expect(within(view()).getByRole('button', { name: 'Show JSON' })).toBeTruthy();
+    expect(within(view()).queryByRole('button', { name: 'Show JSON' })).toBeNull();
+    expect(within(view()).getByRole('button', { name: 'Recreate the test case' })).toBeTruthy();
   });
 });

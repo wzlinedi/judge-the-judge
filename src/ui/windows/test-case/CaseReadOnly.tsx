@@ -1,12 +1,11 @@
 import { useRef, useState } from 'preact/hooks';
 import { listCheckOf } from '../../../app/actions/test-case-window';
 import type { AppState } from '../../../app/store';
-import { caseToJson } from '../../../core/cases/case-json';
 import { composePrompt } from '../../../core/judge/compose';
 import { CaseWindowFrame } from '../../components/CaseWindowFrame';
 import { CopyButton } from '../../components/CopyButton';
+import { Dialog } from '../../components/Dialog';
 import { PromptButtons } from '../../components/PromptButtons';
-import { JsonBox } from '../../components/JsonBox';
 import { labels } from '../../labels';
 import { baseNameOf, CaseData, CheckLine, ErrorList } from './CaseData';
 
@@ -15,12 +14,14 @@ export interface CaseReadOnlyProps {
   caseId: string;
   onNavigate: (caseId: string) => void;
   onCorrect: (caseId: string) => void;
+  /** Opens an empty "From JSON" window, after the original prompt was copied. */
+  onRecreate: () => void;
   onClose: () => void;
 }
 
 /** "Open": a saved case read-only (FR-086). Nothing in it can be edited. */
-export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onClose }: CaseReadOnlyProps) {
-  const [showJson, setShowJson] = useState(false);
+export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onRecreate, onClose }: CaseReadOnlyProps) {
+  const [recreating, setRecreating] = useState(false);
   const [strong, setStrong] = useState<string | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const { dataset, replies, judge_set } = state.evaluation;
@@ -29,13 +30,22 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onClose }: 
   if (!testCase) return null;
   const reply = replies[caseId];
   const prompt = reply?.prompt ?? composePrompt(judge_set.prompt, testCase).text;
-  const json = caseToJson(testCase);
+  const original = testCase.generation_prompt;
   const list = testCase.expected_errors.length > 0 ? listCheckOf(state, testCase) : undefined;
   const showInText = (expectedId: string) => {
     setStrong(expectedId);
     const element = textRef.current?.querySelector<HTMLElement>(`mark[data-error="${expectedId}"]`);
     element?.scrollIntoView?.({ block: 'center' });
     element?.focus();
+  };
+  const copyAndRecreate = async () => {
+    try {
+      await navigator.clipboard.writeText(original ?? '');
+    } catch {
+      // the browser may refuse the copy; the window still opens and the prompt stays in the dialog until then
+    }
+    setRecreating(false);
+    onRecreate();
   };
   const previous = dataset.cases[index - 1];
   const next = dataset.cases[index + 1];
@@ -50,6 +60,14 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onClose }: 
       onClose={onClose}
       headerExtra={
         <>
+          <button type="button" disabled={original === undefined} aria-describedby={original === undefined ? 'recreate-why' : undefined} onClick={() => setRecreating(true)}>
+            {labels.recreateTestCase}
+          </button>
+          {original === undefined ? (
+            <span id="recreate-why" class="why-disabled">
+              This case does not keep the prompt it was made with.
+            </span>
+          ) : null}
           {dataset.finalized && !reply ? (
             <button type="button" onClick={() => onCorrect(caseId)}>
               {labels.correctExpectedErrors}
@@ -64,7 +82,7 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onClose }: 
           </section>
           <section class="frame" aria-label="Prompt">
             <h3>Prompt</h3>
-            <PromptButtons prompt={prompt} />
+            <PromptButtons prompt={prompt} wide />
           </section>
         </>
       }
@@ -76,16 +94,28 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onClose }: 
             <ErrorList testCase={testCase} onShow={showInText} notInText={new Set(list?.notInText.map((m) => m.index) ?? [])} />
             {dataset.finalized && reply ? <p class="muted">This case has a reply, so its expected errors cannot be corrected.</p> : null}
           </section>
-          <section class="frame" aria-label="Case as JSON">
-          <div class="button-row">
-            <button type="button" aria-expanded={showJson} onClick={() => setShowJson(!showJson)}>
-              {labels.showJson}
-            </button>
-            {showJson ? <CopyButton text={json} label={labels.copyJson} /> : null}
-          </div>
-          {showJson ? <JsonBox label="Case JSON" value={json} onChange={() => {}} check={() => []} readOnly rows={12} /> : null}
-          </section>
         </>
+      }
+      overlay={
+        <Dialog
+          open={recreating}
+          title="Original prompt"
+          wide
+          onClose={() => setRecreating(false)}
+          actions={
+            <>
+              <CopyButton text={original ?? ''} label="Copy" />
+              <button type="button" class="primary" onClick={() => void copyAndRecreate()}>
+                {labels.copyAndRecreate}
+              </button>
+              <button type="button" onClick={() => setRecreating(false)}>
+                {labels.close}
+              </button>
+            </>
+          }
+        >
+          <textarea class="json prompt-full" rows={4} readOnly value={original ?? ''} aria-label="Original prompt" />
+        </Dialog>
       }
     />
   );

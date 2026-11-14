@@ -43,18 +43,31 @@ test('a clean case is made from a prompt and an answer, and checked as it is pas
   await expect(testWindow(page)).toHaveCount(0);
   await expect(row(page, 'Keeper')).toContainText('Clean');
   await expect(page.getByText('Unsaved changes')).toBeVisible();
+
+  // T238: the case keeps its prompt; Open offers Recreate the test case, and the other cases do not have one
+  await row(page, 'Keeper').getByRole('button', { name: 'Open' }).click();
+  await page.getByRole('button', { name: 'Recreate the test case' }).click();
+  const original = page.getByRole('dialog', { name: 'Original prompt' });
+  await expect(original.getByRole('textbox', { name: 'Original prompt' })).toHaveValue(/About a lighthouse/);
+  await original.getByRole('button', { name: 'Copy and recreate' }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('About a lighthouse');
+  await expect(testWindow(page).getByLabel('Case JSON')).toHaveValue('');
+  await testWindow(page).getByRole('button', { name: 'Close' }).click();
+  await row(page, 'Keeper').getByRole('button', { name: 'Open' }).click();
+  await page.getByRole('button', { name: 'Previous case' }).click();
+  await expect(page.getByRole('button', { name: 'Recreate the test case' })).toBeDisabled();
 });
 
-test('Rename and Remove work from the row buttons, a copy is made with Show JSON and From JSON, and a base in use cannot be removed', async ({ page }) => {
+test('Rename and Remove work from the row buttons, a copy is made with From JSON, and a base in use cannot be removed', async ({ page }) => {
   await start(page);
   const first = page.getByRole('row').nth(1);
   const firstName = (await first.getByRole('cell').nth(1).textContent()) ?? '';
 
-  // no Clone button (T218); a copy is made with Show JSON and From JSON
+  // no Clone button (T218) and no Show JSON (T238); a case is made with From JSON
   await expect(first.getByRole('button', { name: 'Clone' })).toHaveCount(0);
   await first.getByRole('button', { name: 'Open' }).click();
-  await page.getByRole('button', { name: 'Show JSON' }).click();
-  const shown = await page.getByRole('textbox', { name: 'Case JSON' }).inputValue();
+  await expect(page.getByRole('button', { name: 'Show JSON' })).toHaveCount(0);
+  const shown = answer({ name: firstName });
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   await page.getByRole('button', { name: 'Add test case…' }).click();
   await testWindow(page).getByRole('button', { name: 'From JSON' }).click();
@@ -102,8 +115,10 @@ test('Open shows a case read-only with Previous and Next, and the Test cases pag
   expect(await axe()).toEqual([]);
   await page.getByRole('button', { name: 'Next case' }).click();
   await expect(page.getByRole('dialog', { name: /Case 2/ })).toBeVisible();
-  await page.getByRole('button', { name: 'Show JSON' }).click();
-  await expect(page.getByLabel('Case JSON')).toBeVisible();
+  await page.getByRole('button', { name: 'Show prompt' }).click();
+  await expect(page.getByRole('dialog', { name: 'Complete judge prompt' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await page.getByRole('dialog', { name: 'Complete judge prompt' }).getByRole('button', { name: 'Close' }).click();
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   await page.getByRole('button', { name: 'Add test case…' }).click();
   await testWindow(page).getByRole('button', { name: 'Clean case' }).click();

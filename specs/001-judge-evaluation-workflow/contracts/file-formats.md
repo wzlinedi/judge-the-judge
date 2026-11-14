@@ -137,8 +137,8 @@ Rules for `judge_set`:
 
 The one layout of a single test case (FR-031). It is what the user's LLM is asked to return (the
 clean case view, FR-083, and part 1 of a case with injected errors, FR-040), what is pasted with
-"From JSON" (FR-090) and in part 2 of a case with injected errors (FR-041), what "Show JSON" and
-"Copy JSON" give back (FR-086), and what "Edit expected errors"
+"From JSON" (FR-090) and in part 2 of a case with injected errors (FR-041), what "Export test cases"
+gives back (FR-086), and what "Edit expected errors"
 edits (FR-089).
 
 ```json
@@ -175,7 +175,7 @@ edits (FR-089).
   identifier or exact name), otherwise the case has none and a note says so. In a case with
   injected errors the base picked in the window wins and a different `base` is named in a note.
   A case with expected errors identical to its base is refused (FR-080).
-- "Show JSON" writes `name`, `base` (only when there is one), `fields` and `expected_errors`
+- "Export test cases" writes `name`, `base` (only when there is one), `fields` and `expected_errors`
   (without `id`), so that the JSON pasted into a new case gives the same fields and expected
   errors (SC-036).
 - In "Edit expected errors" only `expected_errors` may change; a change to `name` or `fields`
@@ -231,6 +231,9 @@ Rules (see data-model.md for the full list):
   says how many; `base` references inside the file follow the new identifiers.
 - A name already used in the test project is kept on import and both cases show the warning
   (FR-079, SC-034).
+- `generation_prompt` (optional text) is the prompt a case was made with, written when it is saved
+  from "Clean case" or "Case with errors"; "Open" offers it as "Recreate the test case". It is not part of
+  the test cases version, and a case pasted as JSON, imported or from the demo has none (T238).
 - `changed_after_first_reply` is `added` or `corrected` for a case added, or whose expected errors
   were corrected, after the first reply of the run was entered (FR-053); it is absent otherwise.
   The Results step and the report list these cases.

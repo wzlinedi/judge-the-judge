@@ -213,6 +213,9 @@
                   "corrected"
                 ]
               },
+              "generation_prompt": {
+                "type": "string"
+              },
               "fields": {
                 "type": "object",
                 "propertyNames": {

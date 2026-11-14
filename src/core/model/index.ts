@@ -79,6 +79,8 @@ export interface TestCase {
   name: string;
   base?: string;
   changed_after_first_reply?: ChangedAfterFirstReply;
+  /** The prompt the case was made with ("Clean case", "Case with errors"); not part of the test cases version (T238). */
+  generation_prompt?: string;
   fields: Record<string, string>;
   expected_errors: ExpectedError[];
 }

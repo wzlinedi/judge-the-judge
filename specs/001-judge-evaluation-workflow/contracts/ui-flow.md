@@ -150,7 +150,7 @@ which asks first when something was pasted or typed.
   changes, with problems under it (line and column, or field path), and **Test case name** above it (see below); 2. the expected errors,
   read-only. The window names the kind the case will have (clean without expected errors, injected
   errors with at least one); a JSON with no expected errors says "No expected errors: this will be
-  saved as a clean case." **Save case** is in the header. There is no **Clone**: a copy is made with **Show JSON**, **Copy JSON** and this window.
+  saved as a clean case." **Save case** is in the header. There is no **Clone**: a copy is made with **Recreate the test case** (Open) or **Export test cases**, and this window. A case saved from **Clean case** or **Case with errors** keeps the prompt of its window as `generation_prompt`.
 - **Test case name** (T239), the first field of part 1 in every way of adding a case (not in **Edit expected errors**, where the name cannot change): filled with "Case N", N being the identifier the case will get; a name in the pasted JSON replaces it while the user has not typed in the field; what the user typed wins over the JSON.
 - **Clean case** (FR-083): 1. **Test case name** (see below), an optional **Comment** and an optional **Like case**
   (an existing clean case whose fields go into the prompt as a model); 2. the prompt for the
@@ -174,8 +174,8 @@ which asks first when something was pasted or typed.
   it asks for confirmation; a case identical to its base is refused.
 - **Open** (FR-086): the case read-only (its own layout, with highlighted fields), with **Previous test
   case**, **Next case** and the position ("case 7 of 20") in the header (Alt + Left/Right do
-  the same), **Show JSON** (the case JSON with **Copy JSON**), and after finalizing,
-  for a case without a reply, **Edit expected errors**; also **Show prompt** (a dialog with
+  the same), **Recreate the test case** (enabled when the case keeps `generation_prompt`; opens **Original prompt** with **Copy**, **Copy and recreate** and **Close**; **Copy and recreate** copies the prompt and opens an empty **From JSON** window; no **Show JSON** or **Copy JSON**), and after finalizing,
+  for a case without a reply, **Edit expected errors**; also **Show prompt** (a dialog of about 90% of the screen with
   the whole composed prompt and only **Close**) with **Copy prompt**. No reply is shown (a reply belongs to Run).
   Sections are in frames and the expected errors are highlighted strongly. A saved case is never edited.
 - **Edit expected errors** (FR-089): the page of **From JSON** with the case's JSON, where only
@@ -312,7 +312,7 @@ leads to the case window.
   needs, with a worked example; the four steps; the manual copy-and-paste workflow; variables and
   the judged text; the sample reply, field paths and error rules, with examples; the error
   categories; adding test cases (From JSON, Clean case, Case with errors, the case JSON
-  layout, Open, Show JSON, Edit expected errors); importing test cases from a file;
+  layout, Open, Recreate the test case, Edit expected errors); importing test cases from a file;
   pasting replies and what happens when a reply is replaced; marking after each reply, Add finding
   and Remove, the second opinion window and "Ignore"; the two files (the test project, reused for
   every run; the evaluation, the progress of one run), the indicator of unsaved changes, "… as",

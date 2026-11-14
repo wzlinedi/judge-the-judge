@@ -10,10 +10,12 @@ export interface DialogProps {
   children?: ComponentChildren;
   /** Buttons pinned to the bottom, outside the scrolling content. */
   actions?: ComponentChildren;
+  /** About 90% of the screen in both directions, for a long text (T238). */
+  wide?: boolean;
 }
 
 /** A native `<dialog>` that traps focus, returns it on close and closes with Escape. */
-export function Dialog({ open, title, onClose, children, actions }: DialogProps) {
+export function Dialog({ open, title, onClose, children, actions, wide }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useRef(`dialog-title-${Math.random().toString(36).slice(2)}`);
 
@@ -57,7 +59,7 @@ export function Dialog({ open, title, onClose, children, actions }: DialogProps)
   return (
     <dialog
       ref={ref}
-      class="dialog"
+      class={wide ? 'dialog dialog-wide' : 'dialog'}
       aria-labelledby={titleId.current}
       aria-modal="true"
       onKeyDown={onKeyDown}

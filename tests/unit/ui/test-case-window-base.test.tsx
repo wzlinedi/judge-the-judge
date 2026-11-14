@@ -128,15 +128,54 @@ describe('the read-only view (Open)', () => {
     expect(screen.getByRole('dialog', { name: /Anna/ })).toBeTruthy();
   });
 
-  it('Show JSON shows the case JSON and Copy JSON; nothing can be edited', () => {
+  it('T238: has no Show JSON and no Copy JSON; Show prompt opens a dialog of about 90% of the screen', () => {
     show();
     open('Anna + 2 errors');
     const view = screen.getByRole('dialog', { name: /Anna \+ 2 errors/ });
-    fireEvent.click(within(view).getByRole('button', { name: 'Show JSON' }));
-    const box = within(view).getByRole('textbox', { name: 'Case JSON' }) as HTMLTextAreaElement;
-    expect(box.readOnly).toBe(true);
-    expect(JSON.parse(box.value)).toEqual(JSON.parse(caseToJson(sampleEvaluation().dataset.cases[1]!)));
-    expect(within(view).getByRole('button', { name: 'Copy JSON' })).toBeTruthy();
+    expect(within(view).queryByRole('button', { name: 'Show JSON' })).toBeNull();
+    expect(within(view).queryByRole('button', { name: 'Copy JSON' })).toBeNull();
+    fireEvent.click(within(view).getByRole('button', { name: 'Show prompt' }));
+    expect(screen.getByRole('dialog', { name: 'Complete judge prompt' }).classList.contains('dialog-wide')).toBe(true);
+  });
+
+  it('T238: Recreate the test case is disabled for a case that has no generation prompt, and says why', () => {
+    show();
+    open('Anna + 2 errors');
+    const view = screen.getByRole('dialog', { name: /Anna \+ 2 errors/ });
+    expect((within(view).getByRole('button', { name: 'Recreate the test case' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(view.textContent).toMatch(/does not keep the prompt it was made with/);
+  });
+
+  describe('with a case that keeps its generation prompt (T238)', () => {
+    const generated = (): AppState => {
+      const s = withCases();
+      return { ...s, evaluation: { ...s.evaluation, dataset: { ...s.evaluation.dataset, cases: s.evaluation.dataset.cases.map((c) => (c.name === 'Anna + 2 errors' ? { ...c, generation_prompt: 'Write a case about Anna.' } : c)) } } };
+    };
+    const original = () => screen.getByRole('dialog', { name: 'Original prompt' });
+    const start = () => {
+      show(generated());
+      open('Anna + 2 errors');
+      fireEvent.click(screen.getByRole('button', { name: 'Recreate the test case' }));
+    };
+
+    it('opens Original prompt with the prompt and Copy, Copy and recreate and Close', () => {
+      start();
+      expect((within(original()).getByRole('textbox', { name: 'Original prompt' }) as HTMLTextAreaElement).value).toBe('Write a case about Anna.');
+      expect(within(original()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Copy', 'Copy and recreate', 'Close']);
+      fireEvent.click(within(original()).getByRole('button', { name: 'Close' }));
+      expect(screen.queryByRole('dialog', { name: 'Original prompt' })).toBeNull();
+    });
+
+    it('Copy and recreate copies the prompt, closes the view and opens an empty From JSON window', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText, readText: vi.fn() }, configurable: true });
+      start();
+      fireEvent.click(within(original()).getByRole('button', { name: 'Copy and recreate' }));
+      await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith('Write a case about Anna.'));
+      const win = await screen.findByRole('dialog', { name: 'Test case' });
+      expect((within(win).getByLabelText('Case JSON') as HTMLTextAreaElement).value).toBe('');
+      expect(screen.queryByRole('dialog', { name: /Anna \+ 2 errors/ })).toBeNull();
+    });
   });
 
   it('has no Clone button in the read-only view (T218)', () => {

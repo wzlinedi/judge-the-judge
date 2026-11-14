@@ -42,6 +42,7 @@ export function TestCaseWindow({ state, view, onView, onApply }: TestCaseWindowP
           caseId={view.id}
           onNavigate={(id) => onView({ view: 'open', id })}
           onCorrect={(id) => onView({ view: 'correct', id })}
+          onRecreate={() => onView({ view: 'paste', text: '' })}
           onClose={close}
         />
       );

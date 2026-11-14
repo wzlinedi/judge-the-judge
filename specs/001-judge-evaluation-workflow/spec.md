@@ -140,6 +140,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-14, Test case window) How is the test case window laid out? → A: As one vertical page for every way of adding a case; there are no two columns, no "Next", no "Back" and no "Part N of 3". The header holds the title, the save button, "Save case" (or "Save case" for a clean case), with the reason beside it while it is disabled, and "Close without saving" (Escape too; it asks first when something was typed or pasted); there is no bottom bar (Owner review 2026-11-14, T233, replacing the bottom button). Each numbered part is in its own frame; in every part the labels stand in a column on the left and the fields on the right; in the row of an error the description of the category stands under the whole row, so Category, Difficulty, What should be wrong and Remove are on one line. The parts are numbered from 1 in each window, from top to bottom. **Case with errors**: the base (optional, with its fields); the errors to prepare, one horizontal row per error (Category, Difficulty, What should be wrong, Remove) with "Add error", and the own instructions; the prompt with "Copy prompt"; the box for the LLM's JSON, checked as it changes, with the changed places that no expected error covers listed under it as warnings; the expected errors as a read-only list (each marked "not in the text" when its fragment is not found), changed only through the JSON. The list is not the case with its highlighted fields (decided). **Clean case**: Name, Comment and Like case; the prompt; the answer, with its fields shown read-only once valid; no errors to prepare and no list. **From JSON**: the JSON box and the expected errors only; a JSON with no expected errors says "No expected errors: this will be saved as a clean case." **Edit expected errors**: the same as From JSON. The read-only "Open" view is not changed. This replaces the earlier answers on the three parts of a case with injected errors and on "Next" (FR-040, FR-041, FR-083, FR-085, FR-090).
 - Q: (Owner review 2026-11-14, Case window of Run) How is the case window of Run laid out, and what happens to "Approve"? → A: As one vertical page of three numbered parts under a header that does not scroll. **1. Case**: every field of the case with the highlights of the expected errors, over the full width. **2. Marking**: one row with "Add finding", "Second opinion…", the meter "Marked N of M" (items that are not undecided, "Ignore" included, of all expected errors and additional findings) and the status of the case (Awaiting verification, Pass, Fail; the header no longer shows it). **3. Judge reply and errors**: two columns of the same width, stacked below 760 px. On the left "Judge reply": the four steps with "Copy prompt" and "Paste reply", the complete judge prompt collapsed under "Show complete prompt", then the reply box with "Save reply". On the right "Errors": the expected errors and the additional findings with their marks, then the findings in the reply. Before a reply is saved part 2 shows only the status and the right column says that the errors appear when the reply is saved. **"Approve" is removed** from the actions of Run (decided): it saved nothing, it was taken for a duplicate of "Save evaluation", and for a reply that can be read it changed nothing. Only for a reply that cannot be read a button "No more findings" stands next to the message that says so; it confirms that the findings added by hand are all and sets the approval as "Approve" did, and the case awaits verification until then. This replaces the earlier answers on the two columns of the case window and on "Approve" (FR-055, FR-060, FR-064, the naming list).
 - Q: (Owner review 2026-11-14, T240) Where is "Paste reply" in the case window of Run, and how does a finding point at its place in the case? → A: "Paste reply" is below the reply box (it was above). Every expected error and every additional finding that has text shows the field that holds it ("in summary"; the judged field is searched first, then the others, word for word and then ignoring case); "Show the issue" is offered only when the text is found, scrolls to part 1 and highlights the place strongly for about two seconds, for an additional finding too. A text found in no field says "not found in the case" and has no button; a finding about the whole reply (no text) shows neither (FR-055, FR-062).
+- Q: (Owner review 2026-11-14, T238) What does "Open" offer instead of "Show JSON" and "Copy JSON"? → A: **"Recreate the test case"**, at the top of the view, enabled when the case keeps the prompt it was generated with. A test case may carry an optional `generation_prompt`, written when a case is saved from "Clean case" or "Case with errors" (the prompt of that window, FR-083, FR-085); a case pasted as JSON, imported or from the demo has none and the button says so. It opens "Original prompt" with "Copy", "Copy and recreate" and "Close"; "Copy and recreate" copies the prompt, closes the view and opens an empty "From JSON" window. The prompt is not part of the test cases version (old files keep their version). "Show JSON" and "Copy JSON" are removed; "Show prompt" opens a dialog of about 90% of the screen in both directions (FR-031, FR-083, FR-085, FR-086).
 - Q: (Owner review 2026-11-14, Reply box and note of the case window of Run) When is a reply saved, and what happens to the note of a case? → A: **There is no "Save reply".** A reply that is readable JSON (the whole text, a code fence, or the first balanced block; FR-084) is saved as soon as it is in the box, typed or pasted, and the case is marked from it at once. Replacing a reply that has decisions still asks first, naming how many (FR-056); if the user cancels, the text stays in the box and nothing is saved. Text that is not JSON is not saved by itself: the box says "This is not JSON" with the line and column of the problem, and a button "Keep as text" (primary) keeps the text as the reply, as any text could always be kept (such a reply then needs "No more findings"). Leaving the case (Next, Previous, Close, Escape) with text in the box that is not saved still asks first (FR-055). **The per-case "Note" button and box are removed** (decided): the note of the run is the "Model details" box of the Run step (model name, temperature, settings), which is saved in the evaluation file and shown in the HTML report. A file that holds notes of cases still loads, the notes are kept when the file is saved again, and the HTML report and the read-only view still show a note a file has. This replaces the earlier answers on "Save reply" and on the short note (FR-055, FR-056, FR-062).
 - Q: (Owner review 2026-11-14, T234 to T236) How do the read-only view ("Open") and the case window of Run show the prompt, the reply and the highlights? → A: The complete judge prompt is no longer a box: a button **"Show prompt"** opens a dialog with the whole prompt and only **Close**, in the read-only view and in part 1 of the case window of Run, each with **"Copy prompt"** beside it. The read-only view of a case no longer shows "Judge’s reply" (a reply belongs to Run); "Show JSON" and "Copy JSON" stay. Its sections are in frames. In the case window of Run the left column of part 3 keeps only "Paste reply" above the reply box: the four steps, "Show complete prompt" and "Readable JSON" are gone, while the problem messages stay ("This is not JSON" with its place and "Keep as text", the empty or refused clipboard). "Copy prompt" is the primary button until pressed, then "Paste reply". The three parts are in frames. The highlights of the expected errors are stronger in all windows: a stronger background, a thicker underline and a bold label (E1 …), with 4.5:1 for the text in both schemes. This replaces the four steps and the collapsed prompt of the answer on the case window of Run (FR-025, FR-055, FR-086).
 - Q: (Owner review 2026-11-14, T232) Where is the field that shows where an error is set? → A: In each error rule, as **"Where the error is"**, not once per list in "Sample reply and fields" (the choice "Text of a finding in claims[]" is removed from there). The reason: two fields of one item can each produce an error, and each rule then points at its own field. The field is a text field of the items of the list the rule is about; the tool proposes the field it proposed before (the likely text field of the list) and the user may change it; a rule about the whole reply has none. When two rules hold for the same item with different fields, the first rule in the list gives the text of the finding. **How it is stored** (decided to keep the judge version of every existing file): the file keeps `reply_mapping.finding_text` as the field a rule takes when it has none of its own, and a rule carries `finding_text` only when the user chose a field other than that one; choosing the proposed field again removes it. A file written before this change loads and gives the same judge version, because its rules have no field of their own. This replaces the answer on how the finding text is marked per list (FR-011, FR-012, FR-021).
@@ -779,11 +780,12 @@ case and confirm the new case has the same fields and expected errors.
 2. **Given** the user presses "Open" at a case, **When** the window opens, **Then** it shows the
    case read-only: its fields with the fragments highlighted, its expected errors with "Show in
    text", its composed prompt, and its reply if one exists; nothing in it can be edited.
-3. **Given** an open case, **When** the user presses "Show JSON", **Then** the case's JSON, rebuilt
-   from the case in the layout used to make cases, is shown with "Copy JSON"; pasted into a new case
-   it gives the same fields and expected errors.
-4. **Given** an open case, **When** the user looks at its buttons, **Then** there is no "Clone"; "Show JSON"
-   and "Copy JSON" give the JSON that "From JSON" takes.
+3. **Given** an open case that was made with "Clean case" or "Case with errors", **When** the user presses
+   "Recreate the test case", **Then** a dialog "Original prompt" shows the prompt the case was made
+   with, with "Copy", "Copy and recreate" (copies the prompt and opens an empty "From JSON" window) and
+   "Close"; for a case without a saved prompt the button is disabled and says why.
+4. **Given** an open case, **When** the user looks at its buttons, **Then** there is no "Clone", no "Show JSON"
+   and no "Copy JSON"; a copy is made with "Recreate the test case" or "Export test cases".
 5. **Given** a row of either list, **When** the user looks at its actions, **Then** it shows "Open",
    "Rename" and "Remove"; after finalizing "Open" stays enabled, "Rename" and
    "Remove" stay enabled for a case without a reply, and for a case with a reply they are disabled
@@ -883,8 +885,8 @@ case and confirm the new case has the same fields and expected errors.
   close": the window covers the page and has no file action of its own, so nothing can be saved to
   a file while it is open; "Close without saving" with pasted or typed content asks first, and a
   file holds only kept cases.
-- A saved case that turns out to be wrong: its text is not edited; before finalizing the user copies its JSON
-  ("Show JSON", "Copy JSON"), pastes it into a new case with "From JSON", corrects it, saves it and removes the original; after finalizing, its expected
+- A saved case that turns out to be wrong: its text is not edited; before finalizing the user makes it again
+  ("Recreate the test case" when it keeps its prompt, otherwise "From JSON"), corrects it, saves it and removes the original; after finalizing, its expected
   errors are corrected with "Edit expected errors" while it has no reply, and are marked
   "Ignore" on Run once it has one (FR-053, FR-089).
 - A case added after the first reply: it is Not run, so the result stays provisional until it is
@@ -1003,7 +1005,7 @@ case and confirm the new case has the same fields and expected errors.
   "From JSON" "Save case" and "Close without saving"; for a clean case "Copy prompt", "Save case" and
   "Close without saving"; for a case with errors "Add error" and "Remove" in the list of errors to
   prepare, "Copy prompt", "Save case" and "Close without saving". In the read-only view of a saved case
-  ("Open"): "Previous case", "Next case", "Show the issue", "Show JSON", "Copy JSON", "Show prompt", "Copy prompt"
+  ("Open"): "Previous case", "Next case", "Show the issue", "Recreate the test case", "Show prompt", "Copy prompt"
   and, after finalizing, "Edit expected errors".
   Run: "Save evaluation", "Save evaluation as…", "Open" at each case; in its window "Previous case",
   "Next case", "Show the issue", "Copy prompt", "Show prompt", "Paste reply", "Keep as text" (for a text in the
@@ -1221,7 +1223,7 @@ case and confirm the new case has the same fields and expected errors.
   `fragment`, `description` and optionally `difficulty`), and optionally `id` and `base` (the case it
   was made from). This one **case JSON** layout is used everywhere a case is exchanged as JSON: in the
   answer the LLM is asked for (FR-040, FR-083), in the box where a case is pasted (FR-085), in
-  "Show JSON" (FR-086), and in "Export test cases". "Export test cases" MUST
+  "Export test cases". "Export test cases" MUST
   always write JSON, with every case, clean ones included. When a case JSON is pasted to make a
   new case in the test case window: `id` is ignored (a new identifier is
   assigned); for a case with injected errors
@@ -1685,8 +1687,8 @@ case and confirm the new case has the same fields and expected errors.
   schemes.
 
 - **FR-078**: There MUST be no "Clone" button, on the row of a case or in its read-only view (removed
-  in the owner review of 2026-11-14). A copy of a case is made by hand: "Show JSON" and "Copy JSON"
-  (FR-086), then "From JSON" (FR-090) in a new case, where the user changes the name and the rest
+  in the owner review of 2026-11-14). A copy of a case is made by hand: "Recreate the test case"
+  (FR-086) or "Export test cases", then "From JSON" (FR-090) in a new case, where the user changes the name and the rest
   and presses "Save case"; the copy is an ordinary new case with no link to the original. A new
   clean case is made with "Clean case" and its "Like case" (FR-083), and a new case with injected
   errors with "Case with errors" (FR-040), neither of which needs a copy. Before its first
@@ -1773,10 +1775,14 @@ case and confirm the new case has the same fields and expected errors.
   the page of FR-085): name, fields with highlighted fragments, the list of expected errors with
   "Show the issue", "Show prompt" (a dialog with the whole composed prompt and only "Close")
   with "Copy prompt" (FR-048), with "Previous case" and "Next case". It does not show a
-  reply: a reply belongs to Run. Its sections are in frames. Nothing in it can be edited. "Show JSON"
-  MUST show the case's JSON, rebuilt from the case in the case JSON layout (FR-031), with "Copy
-  JSON"; pasting it into a new case MUST give the same fields and expected errors (the base of
-  the new case is set in its window, FR-031).
+  reply: a reply belongs to Run. Its sections are in frames. Nothing in it can be edited. There is
+  no "Show JSON" and no "Copy JSON" (T238). "Show prompt" opens a dialog of about 90% of the screen in
+  both directions. At the top, "Recreate the test case" is enabled when the case keeps the prompt it
+  was made with (`generation_prompt`, written by "Clean case" and "Case with errors", FR-083, FR-085);
+  it opens the dialog "Original prompt" with "Copy", "Copy and recreate" (copies the prompt, closes
+  the view and opens an empty "From JSON" window) and "Close". A case pasted as JSON, imported or from
+  the demo keeps no prompt, so the button is disabled with the reason. The prompt is not part of the
+  test cases version.
   The view MUST NOT offer "Clone" (FR-078); it offers, after finalizing, for a case without a reply,
   "Edit expected errors" (FR-089).
 
@@ -1800,7 +1806,7 @@ case and confirm the new case has the same fields and expected errors.
   test cases version. Once the case has a reply, the action is not offered and the view says why.
 
 - **FR-090**: "From JSON" MUST open the page of FR-085 with only the JSON box of FR-041 and the list of expected errors under it, for a case JSON the user
-  already has (prepared elsewhere, copied with "Copy JSON", or exported). The checks of FR-041 and
+  already has (prepared elsewhere, or exported). The checks of FR-041 and
   FR-084 apply, except that the JSON may hold no expected errors; a `base` that names an existing
   clean case is used as the base, otherwise the case has none. The window names the kind the case
   will have: a clean case when it has no expected errors, a case with injected errors when it has at
@@ -1972,7 +1978,7 @@ case and confirm the new case has the same fields and expected errors.
   plus one paste, and in 100% of saved cases the line of FR-080 was shown
   before saving.
 
-- **SC-036**: In 100% of cases, the JSON shown by "Show JSON", pasted into a new case of the same
+- **SC-036**: In 100% of cases, the JSON that "Export test cases" writes, pasted into a new case of the same
   kind, gives a case with the same fields and expected errors, and with the same base when the
   same base case is picked.
 

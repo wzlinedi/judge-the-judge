@@ -130,3 +130,29 @@ describe('correctExpectedErrors', () => {
     expect(r.state.evaluation.dataset.cases[1]?.changed_after_first_reply).toBe('corrected');
   });
 });
+
+describe('generation_prompt (T238)', () => {
+  it('is kept with a case saved with a prompt, survives a save and load of the test project, and is not part of the test cases version', async () => {
+    const { testCasesVersion } = await import('../../../src/core/cases/version');
+    const { writeTestProject, readTestProject } = await import('../../../src/core/io/test-project-file');
+    const state = open();
+    const plain = saveCaseFromJson(state, json(), { mode: 'paste' });
+    const withPrompt = saveCaseFromJson(state, json(), { mode: 'inject', generationPrompt: 'Make a case.' });
+    expect(plain.state.evaluation.dataset.cases[2]).not.toHaveProperty('generation_prompt');
+    expect(withPrompt.state.evaluation.dataset.cases[2]?.generation_prompt).toBe('Make a case.');
+    expect(await testCasesVersion(withPrompt.state.evaluation.dataset.cases)).toBe(await testCasesVersion(plain.state.evaluation.dataset.cases));
+
+    const parts = withPrompt.state.evaluation;
+    const text = writeTestProject(parts, { toolVersion: 't', testCasesVersion: 'v' });
+    const back = readTestProject(text);
+    expect(back.ok && back.value.evaluation.dataset.cases[2]?.generation_prompt).toBe('Make a case.');
+  });
+
+  it('is kept when the expected errors of the case are corrected', () => {
+    const base = open();
+    const saved = saveCaseFromJson(base, json(), { mode: 'inject', generationPrompt: 'Make a case.' }).state;
+    const id = saved.evaluation.dataset.cases[2]!.id;
+    const done = correctExpectedErrors({ ...saved, evaluation: { ...saved.evaluation, dataset: { ...saved.evaluation.dataset, finalized: true } } }, id, caseToJson(saved.evaluation.dataset.cases[2]!));
+    expect(done.state.evaluation.dataset.cases[2]?.generation_prompt).toBe('Make a case.');
+  });
+});

@@ -9,10 +9,12 @@ export interface PromptButtonsProps {
   /** "Copy prompt" is the primary action of the window until it is pressed. */
   primary?: boolean;
   onCopied?: () => void;
+  /** The dialog fills about 90% of the screen (the Open view, T238). */
+  wide?: boolean;
 }
 
 /** "Show the full prompt" (a dialog with the whole prompt and only Close) and "Copy prompt", for the case windows (T234, T235). */
-export function PromptButtons({ prompt, primary, onCopied }: PromptButtonsProps) {
+export function PromptButtons({ prompt, primary, onCopied, wide }: PromptButtonsProps) {
   const [open, setOpen] = useState(false);
   return (
     <div class="button-row prompt-buttons">
@@ -23,6 +25,7 @@ export function PromptButtons({ prompt, primary, onCopied }: PromptButtonsProps)
       <Dialog
         open={open}
         title="Complete judge prompt"
+        {...(wide ? { wide } : {})}
         onClose={() => setOpen(false)}
         actions={
           <button type="button" onClick={() => setOpen(false)}>
@@ -30,7 +33,7 @@ export function PromptButtons({ prompt, primary, onCopied }: PromptButtonsProps)
           </button>
         }
       >
-        <textarea class="json prompt-full" rows={20} readOnly value={prompt} aria-label="Complete judge prompt" />
+        <textarea class="json prompt-full" rows={wide ? 4 : 20} readOnly value={prompt} aria-label="Complete judge prompt" />
       </Dialog>
     </div>
   );

@@ -36,7 +36,11 @@
 
 .dialog { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg); color: var(--text); padding: 0; max-width: min(40rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); box-shadow: var(--shadow); }
 .dialog::backdrop { background: var(--overlay); }
+.dialog.dialog-wide { width: 90vw; height: 90vh; max-width: 90vw; max-height: 90vh; }
+.dialog-wide .dialog-body { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.dialog-wide .dialog-body > textarea { flex: 1; min-height: 0; resize: none; }
 .dialog-frame { display: flex; flex-direction: column; max-height: calc(100vh - 2rem); }
+.dialog-wide .dialog-frame { height: 100%; max-height: none; }
 .dialog-frame h2 { padding: var(--space-4) var(--space-4) 0; }
 .dialog-body { padding: var(--space-3) var(--space-4); overflow: auto; flex: 1; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: var(--surface); }

@@ -24,6 +24,8 @@ export interface SaveOptions {
   /** A name typed in the window. */
   name?: string;
   errorsToPrepare?: number;
+  /** The prompt the case was made with, kept with it so that it can be recreated (T238). */
+  generationPrompt?: string;
 }
 
 const hasReplies = (state: AppState): boolean => Object.keys(state.evaluation.replies).length > 0;
@@ -49,7 +51,8 @@ export function saveCaseFromJson(state: AppState, text: string, options: SaveOpt
   const check = checkCaseJson(text, { ...contextOf(state), mode: options.mode, ...(options.base !== undefined ? { base: options.base } : {}), ...(options.name !== undefined ? { name: options.name } : {}), ...(options.errorsToPrepare !== undefined ? { errorsToPrepare: options.errorsToPrepare } : {}) });
   if (!check.case) return { state, problems: check.problems };
   const [saved] = assignIdentifiers([check.case], state.evaluation.dataset.cases);
-  const added = markLate(saved as TestCase, hasReplies(state), 'added');
+  const withPrompt = options.generationPrompt !== undefined && options.generationPrompt !== '' ? { ...(saved as TestCase), generation_prompt: options.generationPrompt } : (saved as TestCase);
+  const added = markLate(withPrompt, hasReplies(state), 'added');
 
   const catalog = [...state.evaluation.judge_set.error_catalog];
   const fresh: string[] = [];
