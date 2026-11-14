@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'preact/hooks';
-import { removeCase, renameCase, type CaseEdit } from '../../../app/actions/cases';
+import { removalImpact, removeCase, renameCase, type CaseEdit } from '../../../app/actions/cases';
 import {
   caseRows,
   countText,
@@ -31,6 +31,7 @@ export function CasesTable({ state, onOpen, onEdit }: CasesTableProps) {
   /** A refused rename is said inside the window, where the user is looking. */
   const [renameRefusal, setRenameRefusal] = useState<string | null>(null);
   const [removing, setRemoving] = useState<TestCase | null>(null);
+  const impact = removing ? removalImpact(state, removing.id) : null;
   const [view, setView] = useState<CaseView>(DEFAULT_VIEW);
   const { dataset } = state.evaluation;
   // The warnings of all the cases are worked out once per change of the test project, not on every key typed in the search.
@@ -121,7 +122,7 @@ export function CasesTable({ state, onOpen, onEdit }: CasesTableProps) {
             </tr>
           </thead>
           <tbody>
-            {shown.map(({ testCase: c, hasReply, warnings }) => {
+            {shown.map(({ testCase: c, warnings }) => {
               const base = c.base ? byId.get(c.base) : undefined;
               const categories = [...new Set(c.expected_errors.map((e) => e.category).filter((x): x is string => !!x))];
               return (
@@ -143,7 +144,6 @@ export function CasesTable({ state, onOpen, onEdit }: CasesTableProps) {
                       </button>
                       <button
                         type="button"
-                        disabled={hasReply}
                         onClick={() => {
                           setNewName(c.name);
                           setRenameRefusal(null);
@@ -152,11 +152,10 @@ export function CasesTable({ state, onOpen, onEdit }: CasesTableProps) {
                       >
                         {labels.rename}
                       </button>
-                      <button type="button" disabled={hasReply} onClick={() => askRemove(c)}>
+                      <button type="button" onClick={() => askRemove(c)}>
                         {labels.remove}
                       </button>
                     </div>
-                    {hasReply ? <span class="muted">This case has a reply</span> : null}
                   </td>
                 </tr>
               );
@@ -221,6 +220,11 @@ export function CasesTable({ state, onOpen, onEdit }: CasesTableProps) {
         }
       >
         <p>{removing ? `Remove “${removing.name || `Case ${removing.id}`}”? This cannot be undone.` : ''}</p>
+        {impact?.hasReply ? (
+          <p>
+            Its judge reply and its {impact.decisions} {impact.decisions === 1 ? 'decision' : 'decisions'} are removed with it, and the results change.
+          </p>
+        ) : null}
       </Dialog>
     </>
   );

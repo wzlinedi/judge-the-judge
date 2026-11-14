@@ -76,13 +76,15 @@ Compare step and no result shelf.
   2. **Sample reply and its fields**: a box for one reply, read as soon as it is pasted or
      changed (no read button); a problem is shown under the box with its line and column, and the
      fields of the last readable sample stay. Then a table of fields (path, kind, values seen) with a
-     line saying that the values are examples from the sample, not a closed list, and,
-     for each list, a choice of the field that holds the text a finding points at.
+     line saying that the values are examples from the sample, not a closed list. There is no choice
+     of the text of a finding here: it is made in each rule (T232).
   3. **Error rules**: **Add rule**; per rule its name, "all of these hold" or "any of these
      holds", and conditions (field from the recognized list, comparison, value as free text with the
      values seen offered as suggestions and a line beside the box: "Any value; it is kept as you type
      it"), each removable with **Remove**; a condition just added without a value shows "Condition N:
-     type a value" beside it and the rule says it is not used until every condition has a value; under the rules a live preview of which parts
+     type a value" beside it and the rule says it is not used until every condition has a value; for a
+     rule about a list, **Where the error is in rule N**: a choice of the text field of the items of
+     that list, proposed automatically and changeable (a rule about the whole reply has none); under the rules a live preview of which parts
      of the sample are findings and by which rule. When every rule uses only fields outside any
      list, a note says that the judge is evaluated per case (FR-061).
 - There is no error catalog and no clean case section on this step.
@@ -128,7 +130,7 @@ Compare step and no result shelf.
   limit reached; text too long; identifier collision on import (new identifiers, said in the
   summary); name used twice (both cases show the warning); finalized (**Add test case**
   above the list and **Import test cases** stay available and new cases start as Not run; **Rename** and
-  **Remove** are disabled with "This case has a reply" for a case with a reply; while no reply
+  **Remove** stay enabled for every case (**Remove** of a case with a reply asks first and says its reply and decisions go with it); while no reply
   exists, **Edit test cases** opens the test project again).
 
 ### Window: the test case window
@@ -142,17 +144,16 @@ which asks first when something was pasted or typed.
   case** and **Case with injected errors**.
 - **One vertical page** (FR-085): every way of adding a case is one page from top to bottom; there
   are no two columns, no **Next**, no **Back** and no "Part N of 3". The header holds only the
-  title and **Close without saving** (Escape too). The save button is at the bottom, with the reason
-  beside it while it is disabled. The parts are numbered from 1 in each window.
+  title, the save button with the reason beside it while it is disabled, and **Close without saving** (Escape too); there is no bottom bar. Each part is in a frame, labels are in a left column and fields on the right, and the description of the category stands under the whole error row. The parts are numbered from 1 in each window.
 - **Paste JSON** (FR-090): 1. the box for a case JSON (file-formats.md, section 2), checked as it
   changes, with problems under it (line and column, or field path); 2. the expected errors,
   read-only. The window names the kind the case will have (clean without expected errors, injected
   errors with at least one); a JSON with no expected errors says "No expected errors: this will be
-  saved as a clean case." **Save case** is at the bottom. There is no **Clone**: a copy is made with **Show JSON**, **Copy JSON** and this window.
+  saved as a clean case." **Save case** is in the header. There is no **Clone**: a copy is made with **Show JSON**, **Copy JSON** and this window.
 - **Clean case** (FR-083): 1. **Name**, an optional **Comment** and an optional **Like case**
   (an existing clean case whose fields go into the prompt as a model); 2. the prompt for the
   user's LLM with **Copy prompt**; 3. the box for the LLM's answer, checked as it changes. When
-  valid its fields are shown read-only and **Approve and close** (bottom, primary) saves and
+  valid its fields are shown read-only and **Approve and close** (in the header, primary) saves and
   closes; an answer with expected errors is a problem that points to **Paste JSON**.
 - **Case with injected errors**, five parts (FR-040, FR-041, FR-085):
   1. **Base case**: the optional base (any clean case, or none) with its fields.
@@ -167,13 +168,14 @@ which asks first when something was pasted or typed.
      difficulty, fragment, description), each marked "not in the text" when its fragment is not
      found. No fields with highlights and no **Show in text** here; while the JSON is invalid the
      list is replaced by a line saying so.
-  **Save case** is at the bottom, enabled only while the JSON is valid; with a mismatch of FR-080
+  **Save case** is in the header, enabled only while the JSON is valid; with a mismatch of FR-080
   it asks for confirmation; a case identical to its base is refused.
 - **Open** (FR-086): the case read-only (its own layout, with highlighted fields), with **Previous test
   case**, **Next test case** and the position ("case 7 of 20") in the header (Alt + Left/Right do
   the same), **Show JSON** (the case JSON with **Copy JSON**), and after finalizing,
-  for a case without a reply, **Correct expected errors**; also the composed judge prompt with
-  **Copy prompt** and the reply if one exists. A saved case is never edited.
+  for a case without a reply, **Correct expected errors**; also **Show the full prompt** (a dialog with
+  the whole composed prompt and only **Close**) with **Copy prompt**. No reply is shown (a reply belongs to Run).
+  Sections are in frames and the expected errors are highlighted strongly. A saved case is never edited.
 - **Correct expected errors** (FR-089): the page of **Paste JSON** with the case's JSON, where only
   `expected_errors` may change; a change to the name or the fields is a problem under the box.
   **Save case** gives a new test cases version.
@@ -216,9 +218,9 @@ Opened by **Open** (FR-055, FR-060).
 
 | Part | Content |
 |---|---|
-| **1. Case** | Kind and base; every field of the case, over the full width, with the fragments of the expected errors highlighted and numbered (and, after a reply, marked found, missed, undecided or ignored). |
+| **1. Case** | Kind and base; every field of the case, over the full width, with the fragments of the expected errors highlighted and numbered (and, after a reply, marked found, missed, undecided or ignored); then **Show the full prompt** (a dialog with the whole prompt and only **Close**) and **Copy prompt** (primary until pressed). |
 | **2. Marking** | One row: **Add finding** (text, optional category, optional difficulty), **Second opinion…**, the meter "Marked N of M" and the status of the case (Awaiting verification, Pass, Fail). **Without a reply** only the status is shown. There is no **Approve**. |
-| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: the four steps in one list (1 Copy prompt, 2 run it in a new conversation, 3 copy the answer, 4 Paste reply from clipboard) with **Copy prompt** and **Paste reply from clipboard** (the one needed next is primary), the complete judge prompt collapsed under **Show complete prompt**, then the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column. A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Save as text anyway** (primary) keeps it. **Right, "Errors"**: without a reply "The errors appear here when the judge’s reply is saved."; with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; **Expected errors**, each with its mark (**Found**, **Issue: missed**, **Ignore**), **Show in text**, the reason for anything undecided and the source of every mark; **Additional findings**, each with its mark (**Issue: false positive**, **Real error**, **Ignore**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**; then **Findings in the reply** with the words that go with their colours. |
+| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: **Paste reply from clipboard** (primary once **Copy prompt** was pressed), then the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column. A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Save as text anyway** (primary) keeps it. **Right, "Errors"**: without a reply "The errors appear here when the judge’s reply is saved."; with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; **Expected errors**, each with its mark (**Found**, **Issue: missed**, **Ignore**), **Show in text**, the reason for anything undecided and the source of every mark; **Additional findings**, each with its mark (**Issue: false positive**, **Real error**, **Ignore**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**; then **Findings in the reply** with the words that go with their colours. |
 
 - A decision made in the window takes effect at once and the window stays open.
 - A new reply resets the case: its decisions, the added findings included, are removed and the

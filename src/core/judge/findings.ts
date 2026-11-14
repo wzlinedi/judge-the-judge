@@ -54,6 +54,16 @@ function readField(root: unknown, item: unknown, list: string | undefined, field
   return undefined;
 }
 
+/** The list a rule is about: the list of its first condition that has one; undefined for a rule about the whole reply. */
+export function ruleList(rule: ErrorRule): string | undefined {
+  return rule.conditions.map((c) => listOfPath(c.field)).find((l): l is string => l !== undefined);
+}
+
+/** "Where the error is" of a rule: its own field, else the one the reply mapping names for its list. */
+export function whereTheErrorIs(rule: ErrorRule, list: string, findingText: Record<string, string>): string | undefined {
+  return rule.finding_text ?? findingText[list];
+}
+
 export function findFindings(
   replyText: string,
   rules: readonly ErrorRule[],
@@ -91,7 +101,7 @@ export function findFindings(
       unknown.push(...evaluation.unknownFields);
       if (evaluation.result !== 'holds') continue;
       const key = `${list}#${positions.join('.')}`;
-      const textField = findingText[list];
+      const textField = whereTheErrorIs(rule, list, findingText);
       const raw = textField ? readField(root, item, list, textField) : undefined;
       const found = byKey.get(key) ?? { key, text: typeof raw === 'string' ? raw : raw === undefined || raw === null ? '' : String(raw), rules: [] };
       found.rules.push(rule.name);
@@ -122,7 +132,8 @@ export function previewRules(sampleReply: string, rules: readonly ErrorRule[], f
     for (const { item, positions } of listItems(extracted.value, list)) {
       const key = `${list}#${positions.join('.')}`;
       const hit = result.findings.find((f) => f.key === key);
-      const textField = findingText[list];
+      const first = rules.find((r) => ruleList(r) === list);
+      const textField = first ? whereTheErrorIs(first, list, findingText) : findingText[list];
       const raw = textField ? readField(extracted.value, item, list, textField) : undefined;
       rows.push({ key, text: hit?.text ?? (typeof raw === 'string' ? raw : ''), rules: hit?.rules ?? [] });
     }

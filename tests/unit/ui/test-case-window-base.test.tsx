@@ -106,16 +106,23 @@ describe('Paste JSON', () => {
 describe('the read-only view (Open)', () => {
   const open = (name: string) => fireEvent.click(within(screen.getAllByRole('row').find((r) => r.textContent?.includes(name)) as HTMLElement).getByRole('button', { name: 'Open' }));
 
-  it('shows fields, expected errors, the composed prompt and the position, with Previous and Next test case', () => {
+  it('shows fields, expected errors, the full prompt in a dialog and the position, with Previous and Next test case; no judge reply (T234)', () => {
     show();
     open('Anna + 2 errors');
     const view = screen.getByRole('dialog', { name: /Anna \+ 2 errors/ });
     expect(within(view).getByText('2 of 2')).toBeTruthy();
     expect(within(view).getAllByRole('listitem').length).toBeGreaterThanOrEqual(2);
     expect(within(view).getByRole('button', { name: 'Previous test case' })).toBeTruthy();
-    expect((within(view).getByRole('textbox', { name: 'Complete judge prompt' }) as HTMLTextAreaElement).value).toContain('Anna is a doctor.');
+    expect(within(view).queryByRole('textbox', { name: 'Complete judge prompt' })).toBeNull();
+    expect(within(view).queryByLabelText('Judge’s reply')).toBeNull();
     expect(view.querySelectorAll('mark').length).toBe(2);
     expect(within(view).getByRole('button', { name: 'Copy prompt' })).toBeTruthy();
+    fireEvent.click(within(view).getByRole('button', { name: 'Show the full prompt' }));
+    const prompt = screen.getByRole('dialog', { name: 'Complete judge prompt' });
+    expect((within(prompt).getByRole('textbox', { name: 'Complete judge prompt' }) as HTMLTextAreaElement).value).toContain('Anna is a doctor.');
+    expect(within(prompt).getAllByRole('button').map((b) => b.textContent)).toEqual(['Close']);
+    fireEvent.click(within(prompt).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog', { name: 'Complete judge prompt' })).toBeNull();
     fireEvent.click(within(view).getByRole('button', { name: 'Previous test case' }));
     expect(screen.getByRole('dialog', { name: /Anna/ })).toBeTruthy();
   });

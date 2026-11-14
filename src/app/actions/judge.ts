@@ -1,5 +1,6 @@
 // The actions of the Judge step (FR-009 to FR-014, FR-019, FR-053, FR-088). Every action returns the next
 // state and, when there is something to tell the user, one plain sentence. Refused actions return the same state.
+import { ruleList } from '../../core/judge/findings';
 import { proposeFindingText, recognizeFields, validFindingTextField, type RecognizedFields } from '../../core/judge/fields';
 import { findVariables, proposeJudgedText } from '../../core/judge/variables';
 import type { Condition, ErrorRule, Evaluation, JudgeSet, Problem, ReplyMapping, TestCase } from '../../core/model';
@@ -65,17 +66,37 @@ export function setSampleReply(state: AppState, text: string): JudgeEdit {
       const { sample_reply: _old, ...rest } = s;
       if (text.trim() === '') return rest;
       const read = recognizeFields(text);
-      return { ...rest, sample_reply: text, reply_mapping: read.ok ? remap(s.reply_mapping, read) : s.reply_mapping };
+      if (!read.ok) return { ...rest, sample_reply: text, reply_mapping: s.reply_mapping };
+      const error_rules = s.error_rules.map((rule) => {
+        const list = ruleList(rule);
+        if (rule.finding_text === undefined || (list !== undefined && validFindingTextField(read, list, rule.finding_text))) return rule;
+        const { finding_text: _gone, ...kept } = rule;
+        return kept;
+      });
+      return { ...rest, sample_reply: text, reply_mapping: remap(s.reply_mapping, read), error_rules };
     }),
   };
 }
 
-export function setFindingText(state: AppState, list: string, field: string): JudgeEdit {
-  const fields = recognized(state.evaluation.judge_set);
-  if (!fields || !validFindingTextField(fields, list, field)) {
-    return refuse(state, `${field} is not a text field of the items of ${list}.`);
-  }
-  return { state: withJudgeSet(state, (s) => ({ ...s, reply_mapping: { finding_text: { ...s.reply_mapping.finding_text, [list]: field } } })) };
+/**
+ * "Where the error is" of a rule (T232): the text field of the list item that shows where the error is.
+ * The field the reply mapping proposes for the list is the default and is not stored in the rule;
+ * choosing it again removes the rule's own field.
+ */
+export function setRuleWhere(state: AppState, ruleIndex: number, field: string): JudgeEdit {
+  const set = state.evaluation.judge_set;
+  const rule = set.error_rules[ruleIndex];
+  const list = rule ? ruleList(rule) : undefined;
+  const fields = recognized(set);
+  if (!rule || list === undefined) return refuse(state, 'This rule is about the whole reply, so there is no place in it to point at.');
+  if (!fields || !validFindingTextField(fields, list, field)) return refuse(state, `${field} is not a text field of the items of ${list}.`);
+  const isDefault = set.reply_mapping.finding_text[list] === field;
+  return {
+    state: changeRule(state, ruleIndex, (r) => {
+      const { finding_text: _own, ...rest } = r;
+      return isDefault ? rest : { ...rest, finding_text: field };
+    }),
+  };
 }
 
 const NO_SAMPLE = 'Paste a sample reply first: a rule can only use the fields the sample reply contains.';
@@ -124,17 +145,27 @@ export function updateCondition(state: AppState, ruleIndex: number, conditionInd
       return refuse(state, `The sample reply has no field ${patch.field}. Only fields of the sample reply can be used.`);
     }
   }
+  const fieldsNow = recognized(state.evaluation.judge_set);
   return {
-    state: changeRule(state, ruleIndex, (r) => ({
-      ...r,
-      conditions: r.conditions.map((c, i) => {
-        if (i !== conditionIndex) return c;
-        const merged = { ...c, ...patch };
-        if (merged.comparison === 'is_empty' || merged.comparison === 'is_not_empty') delete merged.value;
-        else merged.value ??= '';
-        return merged;
-      }),
-    })),
+    state: changeRule(state, ruleIndex, (r) => {
+      const changed = {
+        ...r,
+        conditions: r.conditions.map((c, i) => {
+          if (i !== conditionIndex) return c;
+          const merged = { ...c, ...patch };
+          if (merged.comparison === 'is_empty' || merged.comparison === 'is_not_empty') delete merged.value;
+          else merged.value ??= '';
+          return merged;
+        }),
+      };
+      // the rule's own "Where the error is" belongs to its list: a rule moved to another list loses it
+      const list = ruleList(changed);
+      if (changed.finding_text !== undefined && (list === undefined || (fieldsNow !== null && !validFindingTextField(fieldsNow, list, changed.finding_text)))) {
+        const { finding_text: _gone, ...rest } = changed;
+        return rest;
+      }
+      return changed;
+    }),
   };
 }
 

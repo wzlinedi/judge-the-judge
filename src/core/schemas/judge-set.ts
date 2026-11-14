@@ -13,6 +13,7 @@ export const errorRuleSchema = z.object({
   name: z.string().min(1),
   match: z.enum(['all', 'any']),
   conditions: z.array(conditionSchema),
+  finding_text: z.string().min(1).optional(),
 });
 
 export const categorySchema = z.object({

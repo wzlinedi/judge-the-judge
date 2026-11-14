@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { correctExpectedErrors, removeCase, renameCase, saveCaseFromJson } from '../../src/app/actions/cases';
 import { editTestCases, finalize } from '../../src/app/actions/finalize';
-import { setFindingText, setJudgedText, setPrompt, updateRule } from '../../src/app/actions/judge';
+import { setJudgedText, setRuleWhere, setPrompt, updateRule } from '../../src/app/actions/judge';
 import { saveReply } from '../../src/app/actions/replies';
 import { applyImport, prepareImport } from '../../src/app/actions/test-cases-file';
 import { createFakePorts } from '../../src/app/ports/fakes';
@@ -119,7 +119,7 @@ describe('what may still change after finalizing', () => {
     expect(state.evaluation.dataset.finalized).toBe(true);
   });
 
-  it('a case without a reply may be renamed, removed and have its expected errors corrected; a case with a reply may not', async () => {
+  it('a case without a reply may be renamed, removed and have its expected errors corrected; a case with a reply may be renamed and removed (with its reply), but its expected errors may not be corrected', async () => {
     let state = await finalized();
     const reply = sampleEvaluation().replies['1']!.reply;
     state = (await saveReply(state, '1', reply)).state;
@@ -130,10 +130,10 @@ describe('what may still change after finalizing', () => {
     const corrected = correctExpectedErrors(state, '12', JSON.stringify({ fields: original.fields, expected_errors: [{ ...doctor, difficulty: 'obvious' }] }));
     expect(corrected.state.evaluation.dataset.cases.find((c) => c.id === '12')?.expected_errors[0]?.difficulty).toBe('obvious');
 
-    const renamed = renameCase(state, '1', 'No');
-    expect(renamed.state).toBe(state);
-    expect(renamed.note).toMatch(/has a reply/);
-    expect(removeCase(state, '1').state).toBe(state);
+    expect(renameCase(state, '1', 'No').state.evaluation.dataset.cases.find((c) => c.id === '1')?.name).toBe('No');
+    const removed = removeCase(state, '1').state.evaluation;
+    expect(removed.dataset.cases.some((c) => c.id === '1')).toBe(false);
+    expect(removed.replies['1']).toBeUndefined();
     expect(correctExpectedErrors(state, '1', json('x', 'y')).state).toBe(state);
   });
 
@@ -141,7 +141,7 @@ describe('what may still change after finalizing', () => {
     const state = await finalized();
     const rule = updateRule(state, 0, { name: 'A better name' });
     expect(rule.state.evaluation.judge_set.error_rules[0]?.name).toBe('A better name');
-    expect(setFindingText(state, 'claims[]', 'text').state.evaluation.dataset.finalized).toBe(true);
+    expect(setRuleWhere(state, 0, 'claims[].text').state.evaluation.dataset.finalized).toBe(true);
   });
 });
 

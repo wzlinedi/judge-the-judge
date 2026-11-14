@@ -89,6 +89,13 @@ describe('Open, Rename and Remove', () => {
     expect(screen.getAllByRole('row')).toHaveLength(2);
   });
 
+  it('Remove of a case with a reply says its reply and its decisions are removed with it (T234)', () => {
+    show(stateOf(true, true));
+    fireEvent.click(within(rowOf('Anna + 2 errors')).getByRole('button', { name: 'Remove' }));
+    const dialog = screen.getByRole('dialog', { name: 'Remove test case' });
+    expect(dialog.textContent).toMatch(/Its judge reply and its \d+ decisions? are removed with it, and the results change/);
+  });
+
   it('Remove of a base case in use is refused with the list of cases made from it', () => {
     const s = stateOf();
     const cases = s.evaluation.dataset.cases.map((c) => (c.id === '2' ? { ...c, base: '1' } : c));
@@ -101,17 +108,14 @@ describe('Open, Rename and Remove', () => {
 });
 
 describe('after finalizing (FR-053)', () => {
-  it('keeps Open and Add test case enabled; Rename and Remove only for a case without a reply', () => {
+  it('keeps Open, Rename, Remove and Add test case enabled, also for a case with a reply (T234)', () => {
     show(stateOf(true, true));
     expect((screen.getByRole('button', { name: 'Add test case' }) as HTMLButtonElement).disabled).toBe(false);
     const withReply = rowOf('Anna + 2 errors');
     const without = rowOf('Anna');
-    for (const name of ['Open']) expect((within(withReply).getByRole('button', { name }) as HTMLButtonElement).disabled).toBe(false);
-    for (const name of ['Rename', 'Remove']) {
-      expect((within(withReply).getByRole('button', { name }) as HTMLButtonElement).disabled).toBe(true);
+    for (const row of [withReply, without]) {
+      for (const name of ['Open', 'Rename', 'Remove']) expect((within(row).getByRole('button', { name }) as HTMLButtonElement).disabled).toBe(false);
     }
-    expect(withReply.textContent).toContain('This case has a reply');
-    expect(without.textContent).not.toContain('This case has a reply');
   });
 });
 

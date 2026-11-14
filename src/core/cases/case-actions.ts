@@ -5,7 +5,7 @@ export type CaseAction = 'rename' | 'remove' | 'correct';
 export type CaseChange = { allowed: true } | { allowed: false; reason: string };
 
 export function canChangeCase(cases: readonly TestCase[], replies: Readonly<Record<string, Reply>>, _finalized: boolean, id: string, action: CaseAction): CaseChange {
-  if (replies[id] !== undefined) return { allowed: false, reason: 'This case has a reply' };
+  if (action === 'correct' && replies[id] !== undefined) return { allowed: false, reason: 'This case has a reply' };
   if (action === 'remove') {
     const dependants = cases.filter((c) => c.base === id);
     if (dependants.length > 0) {

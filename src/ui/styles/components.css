@@ -49,6 +49,10 @@
 .case-pane:last-child { border-right: 0; }
 .case-window-body { flex: 1; min-height: 0; overflow: auto; padding: var(--space-4); }
 .case-page { max-width: 64rem; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-5); }
+.frame, .case-part { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); }
+.case-pane > .frame + .frame { margin-top: var(--space-4); }
+.frame > h3:first-child { margin-top: 0; }
+.prompt-full { width: 100%; }
 .case-part h3 { margin: 0 0 var(--space-2); font-size: var(--text-lg); }
 .case-part textarea, .case-part select { max-width: 100%; }
 .case-half { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); align-items: start; }
@@ -59,9 +63,12 @@
 .mark-meter { font-weight: 600; }
 .unreadable-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 .unreadable-note .error-note { margin: 0; }
-.prompt-details { margin: var(--space-3) 0; }
-.prompt-details summary { cursor: pointer; }
-.prompt-details textarea { width: 100%; margin-top: var(--space-2); }
+.case-window-save { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.form-grid { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: var(--space-2) var(--space-3); align-items: start; }
+.form-grid > .field-label { margin: var(--space-2) 0 0; }
+.form-grid > div > :is(input[type="text"], select, textarea) { width: 100%; max-width: 100%; }
+.form-grid .muted { margin: var(--space-1) 0 0; }
+@media (max-width: 759px) { .form-grid { grid-template-columns: 1fr; } .form-grid > .field-label { margin-top: var(--space-2); } }
 .case-window-footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: var(--surface); }
 @media (max-width: 759px) {
   .case-columns { grid-template-columns: 1fr; overflow: auto; }
@@ -101,10 +108,10 @@ select { width: auto; }
 .inline-check input { width: auto; }
 .field-block h4 { margin: var(--space-3) 0 var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
 .field-text { white-space: pre-wrap; margin: 0; }
-mark.fragment { background: var(--warning-bg); color: var(--text); border-bottom: 2px solid var(--warning); padding: 0 2px; }
-mark.fragment-found { background: var(--success-bg); border-bottom-color: var(--success); }
-mark.fragment-missed { background: var(--error-bg); border-bottom-color: var(--error); }
-mark.fragment sup { font-size: 0.7em; margin-right: 0.4em; font-weight: 600; }
+mark.fragment { background: var(--mark-warning); color: var(--text); border-bottom: 4px solid var(--warning); padding: 0 3px; border-radius: 2px; }
+mark.fragment-found { background: var(--mark-success); border-bottom-color: var(--success); }
+mark.fragment-missed { background: var(--mark-error); border-bottom-color: var(--error); }
+mark.fragment sup { font-size: 0.75em; margin-right: 0.4em; font-weight: 800; }
 .field-label { display: block; margin: var(--space-3) 0 var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
 textarea.json { font-size: var(--text-sm); }
 
@@ -174,7 +181,7 @@ button.fold { background: transparent; border: 0; padding: 0; font: inherit; fon
 /* Test case window: case with injected errors, case view, highlights (FR-077, FR-080, FR-085) */
 mark.fragment-ignored { background: var(--surface-2, var(--surface)); border-bottom-color: var(--text-muted); }
 mark.fragment-strong { outline: 3px solid var(--accent); outline-offset: 1px; font-weight: 600; }
-mark.fragment-uncovered { background: var(--warning-bg); border-bottom: 2px dashed var(--warning); }
+mark.fragment-uncovered { background: var(--warning-bg); border-bottom: 4px dashed var(--warning); }
 .check-line { margin: 0 0 var(--space-2); font-weight: 600; }
 .check-line.agree { color: var(--success); }
 .not-in-text { font-size: var(--text-sm); font-weight: 600; }
@@ -185,9 +192,13 @@ mark.fragment-uncovered { background: var(--warning-bg); border-bottom: 2px dash
 .error-row h4 { margin: 0; font-size: var(--text-base); }
 .error-row input[type="text"] { width: 100%; }
 .row-fields { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-start; }
-.row-fields > div { flex: 0 1 13rem; min-width: 9rem; }
-.row-fields > .row-what { flex: 1 1 16rem; }
-.row-fields > .row-remove { flex: 0 0 auto; min-width: 0; }
+.row-fields > div { display: flex; align-items: center; gap: var(--space-2); flex: 0 1 auto; }
+.row-fields .field-label { margin: 0; white-space: nowrap; }
+.row-fields > .row-what { flex: 1 1 18rem; }
+.row-fields > .row-what input[type="text"] { flex: 1; min-width: 6rem; }
+.row-fields > .row-remove { flex: 0 0 auto; }
+.row-fields > .row-remove .field-label { display: none; }
+.category-hint { margin: var(--space-1) 0 0; }
 .base-fields { max-height: 12rem; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; }
 mark.finding { padding: 0 2px; color: var(--text); border-bottom: 2px solid transparent; }
 mark.finding-clear { background: var(--success-bg); border-bottom-color: var(--success); }

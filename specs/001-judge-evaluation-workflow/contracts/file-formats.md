@@ -61,6 +61,7 @@ metric and the thresholds, with no replies, decisions, results or model details.
       {
         "name": "Contradicted or unsupported claim",
         "match": "any",
+        "finding_text": "claims[].reason",
         "conditions": [
           { "field": "claims[].verdict", "comparison": "equals", "value": "contradicted" },
           { "field": "claims[].verdict", "comparison": "equals", "value": "unsupported" }

@@ -74,7 +74,24 @@ export function renameCase(state: AppState, id: string, name: string): CaseEdit 
 export function removeCase(state: AppState, id: string): CaseEdit {
   const allowed = canChangeCase(state.evaluation.dataset.cases, state.evaluation.replies, state.evaluation.dataset.finalized, id, 'remove');
   if (!allowed.allowed) return { state, note: allowed.reason };
-  return { state: withCases(state, state.evaluation.dataset.cases.filter((c) => c.id !== id)) };
+  const kept = withCases(state, state.evaluation.dataset.cases.filter((c) => c.id !== id));
+  // The reply and the decisions of the case go with it (T234); with no reply left the run starts again from nothing.
+  return {
+    state: edit(kept, (e) => {
+      const { [id]: _reply, ...replies } = e.replies;
+      const { [id]: _decisions, ...decisions } = e.decisions;
+      if (Object.keys(replies).length > 0) return { ...e, replies, decisions };
+      const { reply_judge_version: _v, reply_counted_per: _c, rules_corrected_after_replies: _r, ...rest } = e;
+      return { ...rest, replies, decisions };
+    }),
+  };
+}
+
+/** What removing a case takes with it besides the case: whether it has a reply and how many decisions were made for it. */
+export function removalImpact(state: AppState, id: string): { hasReply: boolean; decisions: number } {
+  const d = state.evaluation.decisions[id];
+  const decisions = d ? Object.keys(d.expected).length + Object.keys(d.additional).length + d.added_findings.length : 0;
+  return { hasReply: state.evaluation.replies[id] !== undefined, decisions };
 }
 
 /** After finalizing, the expected errors of a case without a reply may be corrected through its JSON (FR-089). */

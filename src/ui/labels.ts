@@ -49,6 +49,7 @@ export const labels = {
   addError: 'Add error',
   back: 'Back',
   copyPrompt: 'Copy prompt',
+  showFullPrompt: 'Show the full prompt',
   showInText: 'Show in text',
   saveCase: 'Save case',
   approveAndClose: 'Approve and close',

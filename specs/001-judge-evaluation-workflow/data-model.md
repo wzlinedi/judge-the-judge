@@ -12,7 +12,7 @@ from other data and never stored as a source of truth.
 TestProject ──────────────────────┐
  ├─ JudgeSet                       │
  │   ├─ prompt ──> Variables       │
- │   ├─ sample reply ──> ReplyMapping (recognized fields, finding text per list)
+ │   ├─ sample reply ──> ReplyMapping (recognized fields, default finding text per list)
  │   └─ ErrorRule ── Condition     ├──> Evaluation (one page session)
  ├─ ErrorCatalog ── Category       │      ├─ replies     (case id → judge prompt + received reply)
  ├─ TestCases ── TestCase ─────────┘      ├─ decisions   (case id → what the user settled,
@@ -67,7 +67,7 @@ The recognized structure of the judge's reply. It never says what an error is (F
 |---|---|---|
 | fields | list of ReplyField, derived from the sample reply | Recomputed whenever the sample changes and is readable; a sample that cannot be read keeps the fields of the last readable one and shows its line and column (FR-084, FR-088). |
 | lists | list of paths, derived | Every list of objects in the sample, for example `claims[]`. |
-| `finding_text` | list path → field path | Per list, the field holding the text a finding points at. Proposed by the tool, confirmed or changed by the user; may be unset (FR-012). The field must belong to that list and hold text. |
+| `finding_text` | list path → field path | Per list, the field a rule points at when it has none of its own: the tool's proposal, never edited by the user directly (the user chooses "Where the error is" in each rule, FR-012); may be unset. The field must belong to that list and hold text. |
 
 **ReplyField** (derived): `path` (for example `claims[].verdict`), kind (text, number, true/false,
 empty), up to eight distinct values seen in the sample, and the list it belongs to (or none).
@@ -79,6 +79,7 @@ empty), up to eight distinct values seen in the sample, and the list it belongs 
 | `name` | text | Required; shown wherever a finding is shown. |
 | `match` | `all` or `any` | Whether all conditions must hold or any one of them. |
 | `conditions` | list of Condition | At least one for the rule to be used. No upper limit. |
+| `finding_text` | field path, optional | "Where the error is" (FR-012): the text field of the items of the rule's list that a finding of this rule points at. Written only when it differs from the field `reply_mapping.finding_text` names for that list; absent otherwise, so the judge version of a file without it does not change. Dropped when the sample no longer has the field or the rule moves to another list. When two rules hold for one item, the first rule gives the text. |
 
 | Condition field | Type | Rules |
 |---|---|---|

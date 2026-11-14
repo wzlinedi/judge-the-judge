@@ -192,10 +192,16 @@ test('the case window of Run is one page: the fields, the actions row, then the 
 
   await expect(win.getByText(/Marked \d+ of \d+/)).toBeVisible();
   await expect(win.getByRole('button', { name: 'Approve' })).toHaveCount(0);
-  const prompt = win.getByLabel('Complete judge prompt');
-  await expect(prompt).toBeHidden();
-  await win.getByText('Show complete prompt').click();
-  await expect(prompt).toBeVisible();
+  // T235: the prompt is in a dialog with only Close; the left column of part 3 has only the paste button above the box
+  await expect(win.getByRole('textbox', { name: 'Complete judge prompt' })).toHaveCount(0);
+  await win.getByRole('button', { name: 'Show the full prompt' }).click();
+  const prompt = page.getByRole('dialog', { name: 'Complete judge prompt' });
+  await expect(prompt.getByRole('textbox', { name: 'Complete judge prompt' })).toHaveValue(/SUMMARY/);
+  await expect(prompt.getByRole('button')).toHaveCount(1);
+  await prompt.getByRole('button', { name: 'Close' }).click();
+  await expect(prompt).toHaveCount(0);
+  await expect(win.getByRole('button', { name: 'Copy prompt' })).toHaveCount(1);
+  await expect(win.locator('.reply-pane').getByRole('button')).toHaveCount(1);
 
   // 1280 px: the two columns of part 3 share the row, about half each
   const [left, right] = await Promise.all([win.locator('.case-half > section').nth(0).boundingBox(), win.locator('.case-half > section').nth(1).boundingBox()]);

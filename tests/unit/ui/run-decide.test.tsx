@@ -153,7 +153,8 @@ describe('case window of Run, with a reply', () => {
     render(<Window caseId="11" />);
     expect(screen.getByText(/Injected errors/)).toBeTruthy();
     expect(document.querySelectorAll('mark.fragment')).toHaveLength(3);
-    expect((screen.getByLabelText('Complete judge prompt') as HTMLTextAreaElement).value).toContain('SUMMARY:');
+    fireEvent.click(screen.getByRole('button', { name: 'Show the full prompt' }));
+    expect((screen.getByRole('textbox', { name: 'Complete judge prompt' }) as HTMLTextAreaElement).value).toContain('SUMMARY:');
   });
 
   it('moves between cases with Previous and Next, and can be limited to cases awaiting verification', () => {

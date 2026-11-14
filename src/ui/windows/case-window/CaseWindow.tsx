@@ -9,6 +9,7 @@ import type { Evaluation } from '../../../core/model';
 import { CaseWindowFrame } from '../../components/CaseWindowFrame';
 import { Dialog } from '../../components/Dialog';
 import { Part } from '../../components/CasePart';
+import { PromptButtons } from '../../components/PromptButtons';
 import { labels } from '../../labels';
 import { DecideBar, ErrorsPane } from './DecidePane';
 import { MarkedFields } from './MarkedFields';
@@ -117,6 +118,8 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
     go?.();
   };
 
+  const notJsonDraft = changed && text.trim() !== '' && !extractJson(text).ok;
+
   const page = (
     <>
       <Part number={1} title="Case">
@@ -126,6 +129,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
           {testCase.base ? <span class="muted">{` · Base: ${testCase.base}${base ? ` (${base.name})` : ''}`}</span> : null}
         </p>
         <MarkedFields testCase={testCase} judged={judged} effective={effective} uncovered={[]} rootRef={textRef} />
+        <PromptButtons prompt={prompt} primary={!reply && !notJsonDraft && copied[caseId] !== true} onCopied={() => setCopied((c) => ({ ...c, [caseId]: true }))} />
       </Part>
 
       <Part number={2} title="Marking">
@@ -135,12 +139,10 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
       <Part number={3} title="Judge reply and errors">
         <div class="case-half">
           <ReplyPane
-            prompt={prompt}
             saved={reply?.reply}
             text={text}
             onText={onText}
             copied={copied[caseId] === true}
-            onCopied={() => setCopied((c) => ({ ...c, [caseId]: true }))}
             onSaveAsText={() => void saveText(text)}
             onPaste={() => void pasteReply()}
             message={message}

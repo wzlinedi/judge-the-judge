@@ -1,8 +1,9 @@
 import { useId } from 'preact/hooks';
-import { addCondition, addRule, removeCondition, removeRule, updateCondition, updateRule } from '../../../app/actions/judge';
+import { addCondition, addRule, removeCondition, removeRule, setRuleWhere, updateCondition, updateRule } from '../../../app/actions/judge';
 import { recognizeFields } from '../../../core/judge/fields';
+import { ruleList, whereTheErrorIs } from '../../../core/judge/findings';
 import { hasNoValue, needsValue, validateRules } from '../../../core/judge/rules';
-import type { Comparison } from '../../../core/model';
+import type { Comparison, ErrorRule } from '../../../core/model';
 import { Explain } from '../../components/Explain';
 import { labels } from '../../labels';
 import type { SectionProps } from './PromptSection';
@@ -109,6 +110,7 @@ export function RulesSection({ state, onEdit }: SectionProps) {
             <button type="button" onClick={() => onEdit(addCondition(state, r))}>
               {labels.addCondition}
             </button>
+            {fields ? <WhereTheErrorIs rule={rule} number={n} fields={fields} mapping={set.reply_mapping.finding_text} onChange={(field) => onEdit(setRuleWhere(state, r, field))} /> : null}
           </fieldset>
         );
       })}
@@ -118,5 +120,35 @@ export function RulesSection({ state, onEdit }: SectionProps) {
       <h3>Preview</h3>
       <RulePreview set={set} />
     </section>
+  );
+}
+
+interface WhereProps {
+  rule: ErrorRule;
+  number: number;
+  fields: Extract<ReturnType<typeof recognizeFields>, { ok: true }>;
+  mapping: Record<string, string>;
+  onChange: (field: string) => void;
+}
+
+/** "Where the error is" (T232): the text field of the list item that shows where the error is, proposed automatically and changeable. A rule about the whole reply has none. */
+function WhereTheErrorIs({ rule, number, fields, mapping, onChange }: WhereProps) {
+  const list = ruleList(rule);
+  if (list === undefined) return null;
+  const choices = fields.fields.filter((f) => f.list === list && f.kind === 'text');
+  const current = whereTheErrorIs(rule, list, mapping);
+  return (
+    <label class="where-the-error-is">
+      {`Where the error is in rule ${number}`}
+      <select value={current ?? ''} onChange={(event) => onChange(text(event))}>
+        {current === undefined ? <option value="">Not chosen</option> : null}
+        {choices.map((f) => (
+          <option key={f.path} value={f.path}>
+            {f.path}
+          </option>
+        ))}
+      </select>
+      <span class="muted value-hint">The text of this field is what the finding points at.</span>
+    </label>
   );
 }

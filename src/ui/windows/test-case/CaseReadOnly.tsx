@@ -5,6 +5,7 @@ import { caseToJson } from '../../../core/cases/case-json';
 import { composePrompt } from '../../../core/judge/compose';
 import { CaseWindowFrame } from '../../components/CaseWindowFrame';
 import { CopyButton } from '../../components/CopyButton';
+import { PromptButtons } from '../../components/PromptButtons';
 import { JsonBox } from '../../components/JsonBox';
 import { labels } from '../../labels';
 import { baseNameOf, CaseData, CheckLine, ErrorList } from './CaseData';
@@ -58,26 +59,24 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onClose }: 
       }
       left={
         <>
-          <CaseData testCase={testCase} judged={judge_set.judged_text} uncovered={list?.uncovered ?? []} strong={strong} rootRef={textRef} baseName={baseNameOf(state, testCase.base)} />
-          <label class="field-label" for="read-prompt">
-            Complete judge prompt
-          </label>
-          <textarea id="read-prompt" class="json" rows={8} readOnly value={prompt} aria-label="Complete judge prompt" />
-          <CopyButton text={prompt} label={labels.copyPrompt} />
+          <section class="frame" aria-label="Case data">
+            <CaseData testCase={testCase} judged={judge_set.judged_text} uncovered={list?.uncovered ?? []} strong={strong} rootRef={textRef} baseName={baseNameOf(state, testCase.base)} />
+          </section>
+          <section class="frame" aria-label="Prompt">
+            <h3>Prompt</h3>
+            <PromptButtons prompt={prompt} />
+          </section>
         </>
       }
       right={
         <>
-          <h3>Expected errors</h3>
-          {list ? <CheckLine list={list} testCase={testCase} /> : null}
-          <ErrorList testCase={testCase} onShow={showInText} notInText={new Set(list?.notInText.map((m) => m.index) ?? [])} />
-          {dataset.finalized && reply ? <p class="muted">This case has a reply, so its expected errors cannot be corrected.</p> : null}
-          {reply ? (
-            <>
-              <h3>Judge’s reply</h3>
-              <textarea class="json" rows={6} readOnly aria-label="Judge’s reply" value={reply.reply} />
-            </>
-          ) : null}
+          <section class="frame" aria-label="Expected errors">
+            <h3>Expected errors</h3>
+            {list ? <CheckLine list={list} testCase={testCase} /> : null}
+            <ErrorList testCase={testCase} onShow={showInText} notInText={new Set(list?.notInText.map((m) => m.index) ?? [])} />
+            {dataset.finalized && reply ? <p class="muted">This case has a reply, so its expected errors cannot be corrected.</p> : null}
+          </section>
+          <section class="frame" aria-label="Case as JSON">
           <div class="button-row">
             <button type="button" aria-expanded={showJson} onClick={() => setShowJson(!showJson)}>
               {labels.showJson}
@@ -85,6 +84,7 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onClose }: 
             {showJson ? <CopyButton text={json} label={labels.copyJson} /> : null}
           </div>
           {showJson ? <JsonBox label="Case JSON" value={json} onChange={() => {}} check={() => []} readOnly rows={12} /> : null}
+          </section>
         </>
       }
     />

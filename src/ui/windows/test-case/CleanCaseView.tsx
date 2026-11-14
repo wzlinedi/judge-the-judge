@@ -40,7 +40,7 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
       title={labels.cleanCase}
       dirty={name !== '' || comment !== '' || like !== '' || answer !== ''}
       onClose={onClose}
-      footer={
+      headerAction={
         <>
           <button type="button" class="primary" disabled={!valid} aria-describedby={valid ? undefined : 'clean-approve-why'} onClick={approve}>
             {labels.approveAndClose}
@@ -54,34 +54,46 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
       }
     >
       <Part number={1} title="About the case">
-        <label class="field-label" for="clean-name">
-          Name
-        </label>
-        <input id="clean-name" type="text" value={name} onInput={(event) => setName((event.currentTarget as HTMLInputElement).value)} />
-        <label class="field-label" for="clean-comment">
-          Comment (optional)
-        </label>
-        <textarea id="clean-comment" rows={3} value={comment} onInput={(event) => setComment((event.currentTarget as HTMLTextAreaElement).value)} />
-        <p class="muted">The comment is only used to write the prompt below. It is not saved with the case.</p>
-        <label class="field-label" for="clean-like">
-          Like case (optional)
-        </label>
-        <select id="clean-like" value={like} onChange={(event) => setLike((event.currentTarget as HTMLSelectElement).value)}>
-          <option value="">None</option>
-          {clean.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name || `Case ${c.id}`}
-            </option>
-          ))}
-        </select>
-        <p class="muted">The prompt shows your LLM the texts of this case as an example, so that the new case has the same kind of text.</p>
+        <div class="form-grid">
+          <label class="field-label" for="clean-name">
+            Name
+          </label>
+          <div>
+            <input id="clean-name" type="text" value={name} onInput={(event) => setName((event.currentTarget as HTMLInputElement).value)} />
+          </div>
+          <label class="field-label" for="clean-comment">
+            Comment (optional)
+          </label>
+          <div>
+            <textarea id="clean-comment" rows={3} value={comment} onInput={(event) => setComment((event.currentTarget as HTMLTextAreaElement).value)} />
+            <p class="muted">The comment is only used to write the prompt below. It is not saved with the case.</p>
+          </div>
+          <label class="field-label" for="clean-like">
+            Like case (optional)
+          </label>
+          <div>
+            <select id="clean-like" value={like} onChange={(event) => setLike((event.currentTarget as HTMLSelectElement).value)}>
+              <option value="">None</option>
+              {clean.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name || `Case ${c.id}`}
+                </option>
+              ))}
+            </select>
+            <p class="muted">The prompt shows your LLM the texts of this case as an example, so that the new case has the same kind of text.</p>
+          </div>
+        </div>
       </Part>
       <Part number={2} title="Ask your LLM">
-        <label class="field-label" for="clean-prompt">
-          Prompt for your LLM
-        </label>
-        <textarea id="clean-prompt" class="json" rows={12} readOnly value={prompt} />
-        <CopyButton text={prompt} label={labels.copyPrompt} />
+        <div class="form-grid">
+          <label class="field-label" for="clean-prompt">
+            Prompt for your LLM
+          </label>
+          <div>
+            <textarea id="clean-prompt" class="json" rows={12} readOnly value={prompt} />
+            <CopyButton text={prompt} label={labels.copyPrompt} />
+          </div>
+        </div>
       </Part>
       <Part number={3} title="Paste its answer">
         <JsonBox label="Answer of your LLM" value={answer} onChange={setAnswer} check={() => check?.problems ?? []} rows={10} />

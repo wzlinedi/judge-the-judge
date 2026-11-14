@@ -28,7 +28,7 @@ export function JsonCaseView({ state, mode, caseId, initialText, onApply, onClos
       title={mode === 'correct' ? labels.correctExpectedErrors : labels.pasteJson}
       dirty={text !== initialText}
       onClose={onClose}
-      footer={<SaveCaseButton state={state} text={text} mode={mode} {...(caseId ? { caseId } : {})} check={check} emptyReason="Paste the JSON to save." onApply={onApply} onClose={onClose} />}
+      headerAction={<SaveCaseButton state={state} text={text} mode={mode} {...(caseId ? { caseId } : {})} check={check} emptyReason="Paste the JSON to save." onApply={onApply} onClose={onClose} />}
     >
       <Part number={1} title={mode === 'correct' ? 'Case JSON' : 'Paste the case JSON'}>
         {mode === 'correct' ? <p class="muted">Only the expected errors can change here; the name and the fields must stay as they are.</p> : null}

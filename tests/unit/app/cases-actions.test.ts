@@ -1,6 +1,6 @@
 // The actions of the Test cases step (FR-017, FR-023, FR-025, FR-039, FR-053, FR-078, FR-089).
 import { describe, expect, it } from 'vitest';
-import { correctExpectedErrors, removeCase, renameCase, saveCaseFromJson } from '../../../src/app/actions/cases';
+import { correctExpectedErrors, removalImpact, removeCase, renameCase, saveCaseFromJson } from '../../../src/app/actions/cases';
 import { createState, type AppState } from '../../../src/app/store';
 import { caseToJson } from '../../../src/core/cases/case-json';
 import { sampleEvaluation } from '../../helpers/fixtures';
@@ -65,11 +65,31 @@ describe('rename and remove', () => {
     expect(taken.state.evaluation.dataset.cases[0]?.name).toBe('Anna');
   });
 
-  it('refuses Rename and Remove for a case with a reply after finalizing', () => {
+  it('renames a case that has a reply, and the reply stays (T234)', () => {
     const state = finalized(true);
-    expect(renameCase(state, '2', 'x').note).toBe('This case has a reply');
-    expect(removeCase(state, '2').note).toBe('This case has a reply');
-    expect(removeCase(state, '2').state).toBe(state);
+    const renamed = renameCase(state, '2', 'x');
+    expect(renamed.note).toBeUndefined();
+    expect(renamed.state.evaluation.dataset.cases.find((c) => c.id === '2')?.name).toBe('x');
+    expect(renamed.state.evaluation.replies['2']).toBeDefined();
+  });
+
+  it('removes a case that has a reply together with its reply and its decisions (T234)', () => {
+    const base = finalized(true);
+    const state: AppState = { ...base, evaluation: { ...base.evaluation, decisions: { '2': { expected: {}, additional: {}, added_findings: [], approved: true, note: '' }, '1': { expected: {}, additional: {}, added_findings: [], approved: false, note: '' } } } };
+    const removed = removeCase(state, '2');
+    expect(removed.note).toBeUndefined();
+    expect(removed.state.evaluation.dataset.cases.map((c) => c.id)).toEqual(['1']);
+    expect(removed.state.evaluation.replies['2']).toBeUndefined();
+    expect(removed.state.evaluation.decisions['2']).toBeUndefined();
+    expect(removed.state.evaluation.decisions['1']).toBeDefined();
+  });
+
+  it('says what removing a case takes with it: its reply and the number of its decisions (T234)', () => {
+    const base = finalized(true);
+    const decisions = { '2': { expected: { e1: { state: 'found' }, e2: { state: 'missed' } }, additional: { 'claims[]#2': { state: 'false_positive' } }, added_findings: [{ text: 'x' }], approved: false, note: '' } } as unknown as AppState['evaluation']['decisions'];
+    const state: AppState = { ...base, evaluation: { ...base.evaluation, decisions } };
+    expect(removalImpact(state, '2')).toEqual({ hasReply: true, decisions: 4 });
+    expect(removalImpact(finalized(false), '2')).toEqual({ hasReply: false, decisions: 0 });
   });
 
   it('refuses to remove a base in use, naming its cases; removes a free case', () => {

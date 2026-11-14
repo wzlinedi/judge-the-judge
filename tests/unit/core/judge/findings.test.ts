@@ -105,6 +105,37 @@ describe('findFindings', () => {
   });
 });
 
+describe('"Where the error is" of a rule (T232)', () => {
+  const both = JSON.stringify({ claims: [{ text: 'the text', reason: 'the reason', verdict: 'contradicted' }] });
+  const own: ErrorRule = { name: 'Own', match: 'all', conditions: [{ field: 'claims[].verdict', comparison: 'equals', value: 'contradicted' }], finding_text: 'claims[].reason' };
+  const plain: ErrorRule = { name: 'Plain', match: 'all', conditions: [{ field: 'claims[].verdict', comparison: 'equals', value: 'contradicted' }] };
+
+  it('uses the field of the rule when it has one, and the field of the list when it has none', () => {
+    expect(findFindings(both, [own], findingText).findings[0]?.text).toBe('the reason');
+    expect(findFindings(both, [plain], findingText).findings[0]?.text).toBe('the text');
+  });
+
+  it('when two rules hold for the same item with different fields, the first rule in the list gives the text', () => {
+    expect(findFindings(both, [own, plain], findingText).findings[0]?.text).toBe('the reason');
+    expect(findFindings(both, [plain, own], findingText).findings[0]?.text).toBe('the text');
+    expect(findFindings(both, [own, plain], findingText).findings[0]?.rules).toEqual(['Own', 'Plain']);
+  });
+
+  it('a rule with its own field needs no entry for the list in the mapping', () => {
+    expect(findFindings(both, [own], {}).findings[0]?.text).toBe('the reason');
+  });
+
+  it('a rule about the whole reply has none, even if it carries a field', () => {
+    const whole: ErrorRule = { name: 'Whole', match: 'all', conditions: [{ field: 'verdict', comparison: 'equals', value: 'bad' }], finding_text: 'claims[].text' };
+    expect(findFindings('{"verdict":"bad"}', [whole], findingText).findings).toEqual([{ key: 'reply', text: '', rules: ['Whole'] }]);
+  });
+
+  it('the preview shows, for an item no rule holds for, the text of the first rule of its list', () => {
+    const rows = previewRules(both.replace('contradicted', 'supported'), [own, plain], findingText);
+    expect(rows.readable && rows.rows[0]?.text).toBe('the reason');
+  });
+});
+
 describe('previewRules', () => {
   it('shows every item of the sample as a finding with its rules or as no finding', () => {
     const rows = previewRules(reply, [bad], findingText);

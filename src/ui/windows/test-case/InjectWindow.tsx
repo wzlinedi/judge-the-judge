@@ -29,7 +29,7 @@ export function InjectWindow({ state, onApply, onClose }: InjectWindowProps) {
       title={labels.caseWithInjectedErrors}
       dirty={changed || text !== ''}
       onClose={onClose}
-      footer={<SaveCaseButton state={state} text={text} mode="inject" {...(draft.base !== '' ? { base: draft.base } : {})} errorsToPrepare={draft.rows.length} check={check} emptyReason="Paste the answer of your LLM to save." onApply={onApply} onClose={onClose} />}
+      headerAction={<SaveCaseButton state={state} text={text} mode="inject" {...(draft.base !== '' ? { base: draft.base } : {})} errorsToPrepare={draft.rows.length} check={check} emptyReason="Paste the answer of your LLM to save." onApply={onApply} onClose={onClose} />}
     >
       <InjectParts
         state={state}

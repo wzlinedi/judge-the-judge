@@ -36,6 +36,8 @@ export interface ErrorRule {
   name: string;
   match: MatchMode;
   conditions: Condition[];
+  /** "Where the error is": the text field of the list item that shows where the error is. Absent: the field the reply mapping names for the rule's list. */
+  finding_text?: string;
 }
 
 export interface Category {

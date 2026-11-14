@@ -1,5 +1,5 @@
 import { useId, useRef } from 'preact/hooks';
-import { setFindingText, setSampleReply } from '../../../app/actions/judge';
+import { setSampleReply } from '../../../app/actions/judge';
 import { recognizeFields, unreadableToProblem, type RecognizedFields } from '../../../core/judge/fields';
 import { Explain } from '../../components/Explain';
 import { JsonBox } from '../../components/JsonBox';
@@ -56,22 +56,6 @@ export function SampleReplySection({ state, onEdit }: SectionProps) {
             </table>
           </TableScroll>
           <p class="muted">The values are examples from your sample, not a closed list: the judge may return others, and a rule can use any value.</p>
-          {fields.lists.map((list) => {
-            const choices = fields.fields.filter((f) => f.list === list && f.kind === 'text');
-            return (
-              <label key={list} class="field-label">
-                {`Text of a finding in ${list}`}
-                <select value={set.reply_mapping.finding_text[list] ?? ''} onChange={(event) => onEdit(setFindingText(state, list, (event.currentTarget as HTMLSelectElement).value))}>
-                  {set.reply_mapping.finding_text[list] === undefined ? <option value="">Not chosen</option> : null}
-                  {choices.map((f) => (
-                    <option key={f.path} value={f.path}>
-                      {f.path}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            );
-          })}
         </>
       ) : null}
     </section>

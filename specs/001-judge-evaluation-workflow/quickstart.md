@@ -94,7 +94,7 @@ made from it.
    two errors to prepare (one with a new category name typed in); "Copy prompt".
 2. Run it, paste the answer into the box on the same page (there is no "Next").
 3. Read the list of expected errors under the box; change a fragment in the JSON so it
-   no longer occurs; fix it; "Save case" (at the bottom of the window).
+   no longer occurs; fix it; "Save case" (in the header of the window).
 4. "Add test case", "Paste JSON", paste a JSON identical to its base but with one expected error.
 5. "Open" a case with five expected errors at 1280 x 720; "Show JSON", "Copy JSON"; paste it into
    a new case with "Paste JSON"; use "Next test case".
@@ -151,9 +151,9 @@ version, judged text) with no prompt or rules, a multi-line "Model details" box 
 kept, and the evaluation file with "Save evaluation" and "Save evaluation as"; the page header has
 no save button. The window fills the screen at 1280 x 720 as one page of three parts (the case with its
 highlights; a row with "Add finding", "Second opinion…", "Marked N of M" and the status; then "Judge
-reply" with the four steps on the left and the errors on the right), which scrolls as a whole; "Copy prompt" is the primary
+reply" with only "Paste reply from clipboard" above the box on the left and the errors on the right), which scrolls as a whole; "Copy prompt" (part 1) is the primary
 button until it is pressed, then "Paste reply from clipboard"; the reply box is always visible and
-never behind a collapsed section, and the complete prompt is collapsed under "Show complete prompt";
+never behind a collapsed section, and the complete prompt opens from "Show the full prompt" in a dialog with only "Close";
 the reply is saved by the paste itself and the marks appear on the right, with no "Approve" and
 "Add finding" and "Second opinion…" as visible buttons; the position ("case 2 of 20") is always visible; one case takes no more than three
 actions; the first replacement happens without a question and the second asks, naming one

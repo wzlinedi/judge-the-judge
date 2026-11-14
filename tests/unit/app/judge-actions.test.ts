@@ -1,7 +1,7 @@
 // The Judge step's actions (FR-009 to FR-014, FR-019, FR-021, FR-053, FR-088).
 import { describe, expect, it } from 'vitest';
 import {
-  addCondition, addRule, removeCondition, removeRule, setFindingText, setJudgedText, setPrompt, setSampleReply,
+  addCondition, addRule, removeCondition, removeRule, setJudgedText, setRuleWhere, setPrompt, setSampleReply,
   startFromMetric, updateCondition, updateRule,
 } from '../../../src/app/actions/judge';
 import { createFakePorts } from '../../../src/app/ports/fakes';
@@ -10,6 +10,7 @@ import { metricFor } from '../../../src/app/metrics';
 import { sampleEvaluation } from '../../helpers/fixtures';
 
 const SAMPLE = JSON.stringify({ claims: [{ text: 'A', verdict: 'contradicted' }, { text: 'B', verdict: 'supported' }] });
+const WITH_REASON = JSON.stringify({ claims: [{ text: 'A', reason: 'because A', verdict: 'contradicted' }, { text: 'B', reason: 'because B', verdict: 'supported' }] });
 const fresh = (): AppState => createState();
 const withPrompt = (prompt: string, state = fresh()) => setPrompt(state, prompt).state;
 
@@ -70,18 +71,39 @@ describe('sample reply and finding text', () => {
     expect(state.evaluation.judge_set.reply_mapping.finding_text).toEqual({ 'claims[]': 'claims[].text' });
   });
 
-  it('keeps a mapping the user chose and drops one whose list left the sample', () => {
+  it('drops the default of a list that left the sample, and keeps the field a rule chose while the sample still has it (T232)', () => {
     let state = setSampleReply(fresh(), JSON.stringify({ a: [{ x: 'one', y: 'two' }], b: [{ z: 'three' }] })).state;
-    state = setFindingText(state, 'a[]', 'a[].y').state;
+    state = addRule(state).state;
+    state = updateCondition(state, 0, 0, { field: 'a[].x' }).state;
+    state = setRuleWhere(state, 0, 'a[].y').state;
     state = setSampleReply(state, JSON.stringify({ a: [{ x: 'one', y: 'two' }] })).state;
-    expect(state.evaluation.judge_set.reply_mapping.finding_text).toEqual({ 'a[]': 'a[].y' });
+    expect(state.evaluation.judge_set.reply_mapping.finding_text).toEqual({ 'a[]': 'a[].x' });
+    expect(state.evaluation.judge_set.error_rules[0]?.finding_text).toBe('a[].y');
+    state = setSampleReply(state, JSON.stringify({ a: [{ x: 'one' }] })).state;
+    expect(state.evaluation.judge_set.error_rules[0]?.finding_text).toBeUndefined();
   });
 
-  it('refuses a finding text that is not a text field of that list', () => {
-    const state = setSampleReply(fresh(), SAMPLE).state;
-    const result = setFindingText(state, 'claims[]', 'nope');
-    expect(result.state).toBe(state);
-    expect(result.note).toBeDefined();
+  it('setRuleWhere gives a rule its own field, and choosing the default of the list again removes it (T232)', () => {
+    let state = setSampleReply(fresh(), WITH_REASON).state;
+    state = addRule(state).state;
+    state = updateCondition(state, 0, 0, { field: 'claims[].verdict' }).state;
+    const fields = ['claims[].text', 'claims[].reason'];
+    const defaultField = state.evaluation.judge_set.reply_mapping.finding_text['claims[]']!;
+    const other = fields.find((f) => f !== defaultField)!;
+    state = setRuleWhere(state, 0, other).state;
+    expect(state.evaluation.judge_set.error_rules[0]?.finding_text).toBe(other);
+    state = setRuleWhere(state, 0, defaultField).state;
+    expect(state.evaluation.judge_set.error_rules[0]).not.toHaveProperty('finding_text');
+  });
+
+  it('setRuleWhere refuses a field that is not a text field of the list of the rule, and a rule about the whole reply', () => {
+    let state = setSampleReply(fresh(), WITH_REASON).state;
+    state = addRule(state).state;
+    state = updateCondition(state, 0, 0, { field: 'claims[].verdict' }).state;
+    const refused = setRuleWhere(state, 0, 'nope');
+    expect(refused.state).toBe(state);
+    expect(refused.note).toBeDefined();
+    expect(setRuleWhere(state, 5, 'claims[].text').state).toBe(state);
   });
 
   it('an empty sample is removed', () => {

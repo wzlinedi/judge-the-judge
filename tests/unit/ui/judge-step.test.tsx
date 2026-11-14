@@ -127,13 +127,11 @@ describe('sample reply (FR-011, FR-084, FR-088, SC-037)', () => {
     expect(screen.getByRole('table', { name: 'Fields of the sample reply' })).toBeTruthy();
   });
 
-  it('offers a finding-text choice per list, proposing the likely field, and changing it', () => {
+  it('has no "Text of a finding" choice per list: it moved to each rule as "Where the error is" (T232)', () => {
     show();
     type('Sample reply', SAMPLE);
-    const select = screen.getByLabelText(/Text of a finding in claims\[\]/) as HTMLSelectElement;
-    expect(select.value).toBe('claims[].text');
-    fireEvent.change(select, { target: { value: 'claims[].verdict' } });
-    expect(latest.evaluation.judge_set.reply_mapping.finding_text['claims[]']).toBe('claims[].verdict');
+    expect(screen.queryByLabelText(/Text of a finding/)).toBeNull();
+    expect(screen.queryByLabelText(/Where the error is/)).toBeNull();
   });
 });
 
@@ -142,6 +140,26 @@ describe('rules (FR-013, FR-014)', () => {
     show();
     type('Sample reply', SAMPLE);
   };
+
+  it('each rule about a list has its own "Where the error is": proposed automatically, changeable, and absent in the file while it is the proposal (T232)', () => {
+    withSample();
+    fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
+    fireEvent.change(screen.getByLabelText(/Field of condition 1 of rule 1/), { target: { value: 'claims[].verdict' } });
+    const select = screen.getByLabelText(/Where the error is in rule 1/) as HTMLSelectElement;
+    expect(select.value).toBe('claims[].text');
+    expect(latest.evaluation.judge_set.error_rules[0]).not.toHaveProperty('finding_text');
+    fireEvent.change(select, { target: { value: 'claims[].verdict' } });
+    expect(latest.evaluation.judge_set.error_rules[0]?.finding_text).toBe('claims[].verdict');
+    fireEvent.change(select, { target: { value: 'claims[].text' } });
+    expect(latest.evaluation.judge_set.error_rules[0]).not.toHaveProperty('finding_text');
+  });
+
+  it('a rule about the whole reply has no "Where the error is"', () => {
+    show();
+    type('Sample reply', JSON.stringify({ verdict: { biased: 'yes' } }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
+    expect(screen.queryByLabelText(/Where the error is/)).toBeNull();
+  });
 
   it('offers only recognized fields and no proposed rules', () => {
     withSample();

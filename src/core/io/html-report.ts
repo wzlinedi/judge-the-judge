@@ -1,6 +1,7 @@
 // The HTML report (contracts/file-formats.md, section 8; FR-072): one self-contained page with inline styles, no script
 // and no external resource, in the order of the tool: summary, error analysis, test case list, then the judge set.
 // Every value is escaped. Details are collapsible on screen and expanded in print.
+import { ruleList, whereTheErrorIs } from '../judge/findings';
 import { composePrompt } from '../judge/compose';
 import type { Evaluation } from '../model';
 import { differenceNote, rulesCorrectedAfterReplies, type Difference } from '../evaluation/recompute';
@@ -176,7 +177,12 @@ function testCase(evaluation: Evaluation, r: ReviewedCase): string {
 
 function judgeSet(evaluation: Evaluation): string {
   const set = evaluation.judge_set;
-  const mapping = Object.entries(set.reply_mapping.finding_text);
+  const places = set.error_rules.flatMap((rule) => {
+    const list = ruleList(rule);
+    if (list === undefined) return [{ name: rule.name, where: 'the whole reply' }];
+    const field = whereTheErrorIs(rule, list, set.reply_mapping.finding_text);
+    return field === undefined ? [] : [{ name: rule.name, where: field }];
+  });
   return [
     '<section id="judge-set"><h2>The judge set</h2>',
     '<h3>Prompt</h3>',
@@ -188,8 +194,8 @@ function judgeSet(evaluation: Evaluation): string {
       : `<ul>${set.error_rules
           .map((rule) => `<li>${esc(rule.name)} (${rule.match === 'all' ? 'all of' : 'any of'}): ${rule.conditions.map((c) => esc(`${c.field} ${c.comparison}${c.value === undefined ? '' : ` ${String(c.value)}`}`)).join('; ')}</li>`)
           .join('')}</ul>`,
-    '<h3>Finding text</h3>',
-    mapping.length === 0 ? '<p>No field is marked as the text of a finding.</p>' : `<ul>${mapping.map(([list, field]) => `<li>${esc(list)}: ${esc(field)}</li>`).join('')}</ul>`,
+    '<h3>Where the error is</h3>',
+    places.length === 0 ? '<p>No rule has a field that shows where the error is.</p>' : `<ul>${places.map((p) => `<li>${esc(p.name)}: ${esc(p.where)}</li>`).join('')}</ul>`,
     '<h3>Error catalog</h3>',
     set.error_catalog.length === 0
       ? '<p>The catalog is empty.</p>'

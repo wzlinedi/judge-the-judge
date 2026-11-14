@@ -41,24 +41,6 @@ function Row({ row, number, state, onChange, onRemove }: { row: ErrorRow; number
             ))}
             <option value={NEW_CATEGORY}>New category…</option>
           </select>
-          {hint ? (
-            <p class="muted category-hint">
-              {hint.description ? hint.description : null}
-              {hint.example ? ` Example: ${hint.example}` : null}
-            </p>
-          ) : null}
-          {row.isNew ? (
-            <>
-              <label class="field-label" for={`${id}-new`}>
-                New category name
-              </label>
-              <input id={`${id}-new`} type="text" value={row.category} onInput={(event) => onChange({ category: (event.currentTarget as HTMLInputElement).value })} />
-              {row.category.trim() !== '' && normalizeCategoryName(row.category) !== row.category ? (
-                <p class="muted category-hint">{`It is written in lower case with dashes: ${normalizeCategoryName(row.category)}.`}</p>
-              ) : null}
-              <p class="muted category-hint">The category joins the catalog when the case is saved; describe it in Error categories afterwards.</p>
-            </>
-          ) : null}
         </div>
         <div>
           <label class="field-label" for={`${id}-difficulty`}>
@@ -87,6 +69,24 @@ function Row({ row, number, state, onChange, onRemove }: { row: ErrorRow; number
           </button>
         </div>
       </div>
+      {hint ? (
+        <p class="muted category-hint">
+          {hint.description ? hint.description : null}
+          {hint.example ? ` Example: ${hint.example}` : null}
+        </p>
+      ) : null}
+      {row.isNew ? (
+        <div class="form-grid new-category">
+          <label class="field-label" for={`${id}-new`}>
+            New category name
+          </label>
+          <div>
+            <input id={`${id}-new`} type="text" value={row.category} onInput={(event) => onChange({ category: (event.currentTarget as HTMLInputElement).value })} />
+            {row.category.trim() !== '' && normalizeCategoryName(row.category) !== row.category ? <p class="muted category-hint">{`It is written in lower case with dashes: ${normalizeCategoryName(row.category)}.`}</p> : null}
+            <p class="muted category-hint">The category joins the catalog when the case is saved; describe it in Error categories afterwards.</p>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -100,17 +100,21 @@ export function InjectParts({ state, draft, onDraft }: InjectPartsProps) {
   return (
     <>
       <Part number={1} title="Base case">
-        <label class="field-label" for="inject-base">
-          Base case (optional)
-        </label>
-        <select id="inject-base" value={draft.base} onChange={(event) => onDraft({ ...draft, base: (event.currentTarget as HTMLSelectElement).value })}>
-          <option value="">None (the LLM writes the whole case)</option>
-          {clean.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name || `Case ${c.id}`}
-            </option>
-          ))}
-        </select>
+        <div class="form-grid">
+          <label class="field-label" for="inject-base">
+            Base case (optional)
+          </label>
+          <div>
+            <select id="inject-base" value={draft.base} onChange={(event) => onDraft({ ...draft, base: (event.currentTarget as HTMLSelectElement).value })}>
+              <option value="">None (the LLM writes the whole case)</option>
+              {clean.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name || `Case ${c.id}`}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
         {clean.length === 0 ? <p class="muted">There is no clean case yet, so the LLM writes the whole case. A base is optional.</p> : null}
         {base ? (
           <div class="base-fields">
@@ -131,19 +135,27 @@ export function InjectParts({ state, draft, onDraft }: InjectPartsProps) {
         <button type="button" onClick={() => onDraft(addRow(state, draft))}>
           {labels.addError}
         </button>
-        <label class="field-label" for="inject-instructions">
-          Your own instructions (optional)
-        </label>
-        <textarea id="inject-instructions" rows={3} value={draft.instructions} onInput={(event) => onDraft({ ...draft, instructions: (event.currentTarget as HTMLTextAreaElement).value })} />
+        <div class="form-grid">
+          <label class="field-label" for="inject-instructions">
+            Your own instructions (optional)
+          </label>
+          <div>
+            <textarea id="inject-instructions" rows={3} value={draft.instructions} onInput={(event) => onDraft({ ...draft, instructions: (event.currentTarget as HTMLTextAreaElement).value })} />
+          </div>
+        </div>
       </Part>
 
       <Part number={3} title="Ask your LLM">
         <p class="muted">Copy this prompt into your LLM. What it returns is a proposal to review, not a guaranteed result.</p>
-        <label class="field-label" for="inject-prompt">
-          Prompt for your LLM
-        </label>
-        <textarea id="inject-prompt" class="json" rows={14} readOnly value={prompt} />
-        <CopyButton text={prompt} label={labels.copyPrompt} />
+        <div class="form-grid">
+          <label class="field-label" for="inject-prompt">
+            Prompt for your LLM
+          </label>
+          <div>
+            <textarea id="inject-prompt" class="json" rows={14} readOnly value={prompt} />
+            <CopyButton text={prompt} label={labels.copyPrompt} />
+          </div>
+        </div>
       </Part>
     </>
   );

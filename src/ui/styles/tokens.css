@@ -22,6 +22,10 @@
   --warning-bg: #fdf1d8;
   --error: #b00020;
   --error-bg: #fbe5e9;
+  /* Highlights of expected errors (T236): stronger than the soft backgrounds, text stays at 4.5:1 or more */
+  --mark-warning: #ffd966;
+  --mark-success: #a8e0bc;
+  --mark-error: #f7a8b4;
   --overlay: rgb(0 0 0 / 0.45);
 
   /* Spacing */
@@ -65,6 +69,9 @@
     --warning-bg: #2d2411;
     --error: #ff6b7d;
     --error-bg: #34141a;
+    --mark-warning: #6b5210;
+    --mark-success: #1f6b3d;
+    --mark-error: #7a2634;
     --overlay: rgb(0 0 0 / 0.65);
     --shadow: 0 2px 8px rgb(0 0 0 / 0.6);
   }
@@ -87,6 +94,9 @@
   --warning-bg: #2d2411;
   --error: #ff6b7d;
   --error-bg: #34141a;
+  --mark-warning: #6b5210;
+  --mark-success: #1f6b3d;
+  --mark-error: #7a2634;
   --overlay: rgb(0 0 0 / 0.65);
   --shadow: 0 2px 8px rgb(0 0 0 / 0.6);
 }

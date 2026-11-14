@@ -76,18 +76,22 @@ describe('the case window of Run: three parts from top to bottom', () => {
     expect(within(columns[1] as HTMLElement).getByRole('heading', { name: 'Errors' })).toBeTruthy();
   });
 
-  it('the left column has the steps, the complete prompt collapsed under "Show complete prompt", and then the reply box', () => {
+  it('the left column has only Paste reply from clipboard above the reply box; the prompt buttons are in part 1 (T235)', () => {
     open('11');
     const left = part(3).querySelectorAll<HTMLElement>('.case-half > section')[0] as HTMLElement;
-    const steps = within(left).getByRole('list', { name: 'Steps' });
-    expect(within(steps).getByRole('button', { name: 'Copy prompt' })).toBeTruthy();
-    expect(within(steps).getByRole('button', { name: 'Paste reply from clipboard' })).toBeTruthy();
-    const details = left.querySelector('details') as HTMLDetailsElement;
-    expect(details.open).toBe(false);
-    expect(within(details).getByText('Show complete prompt')).toBeTruthy();
-    expect((within(details).getByLabelText('Complete judge prompt') as HTMLTextAreaElement).value).toContain('SUMMARY:');
-    const order = [steps, details, within(left).getByLabelText('Judge reply')];
-    for (let i = 1; i < order.length; i++) expect((order[i - 1] as HTMLElement).compareDocumentPosition(order[i] as HTMLElement) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(left.querySelector('ol')).toBeNull();
+    expect(left.querySelector('details')).toBeNull();
+    expect(within(left).queryByRole('button', { name: 'Copy prompt' })).toBeNull();
+    const paste = within(left).getByRole('button', { name: 'Paste reply from clipboard' });
+    const box = within(left).getByLabelText('Judge reply');
+    expect(paste.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(part(1)).getByRole('button', { name: 'Copy prompt' })).toBeTruthy();
+    expect(within(part(1)).getByRole('button', { name: 'Show the full prompt' })).toBeTruthy();
+  });
+
+  it('the three parts are in frames', () => {
+    open('11');
+    for (const n of [1, 2, 3]) expect(part(n).classList.contains('case-part')).toBe(true);
   });
 
   it('the right column lists the expected errors, the additional findings and the findings in the reply, with their marks', () => {

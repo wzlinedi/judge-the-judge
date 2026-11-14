@@ -27,10 +27,13 @@ describe('readabilityWarnings', () => {
     expect(readabilityWarnings(set).join(' ')).toMatch(/Ghost/);
   });
 
-  it('warns when a list has no field marked as the text of a finding', () => {
+  it('warns, naming the rule, when a rule about a list has no field that shows where the error is (T232)', () => {
     const set = accuracyJudgeSet();
     set.reply_mapping = { finding_text: {} };
-    expect(readabilityWarnings(set).join(' ')).toMatch(/text of a finding/);
+    const rule = set.error_rules[0]!;
+    expect(readabilityWarnings(set).join(' ')).toContain(`The rule "${rule.name}" has no field that shows where the error is`);
+    set.error_rules = [{ ...rule, finding_text: 'claims[].text' }, ...set.error_rules.slice(1)];
+    expect(readabilityWarnings(set).join(' ')).not.toContain(`The rule "${rule.name}" has no field`);
   });
 
   it('all warnings end with what it means: every case needs verification', () => {

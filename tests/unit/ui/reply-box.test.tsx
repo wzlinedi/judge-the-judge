@@ -29,21 +29,21 @@ describe('the reply box', () => {
     expect(box().closest('details')).toBeNull();
   });
 
-  it('is checked as the text changes: "Readable JSON", or the line and column of the problem', () => {
+  it('is checked as the text changes: no message when it reads, or the line and column of the problem', () => {
     open(noReplies());
     type('{"claims": [');
     expect(within(win()).getByText(/Line 1, column/)).toBeTruthy();
     type('{"claims": []}');
-    expect(within(win()).getByText('Readable JSON')).toBeTruthy();
+    expect(within(win()).queryByText(/This is not JSON/)).toBeNull();
+    expect(within(win()).queryByText('Readable JSON')).toBeNull();
     type('{\n  "claims": [\n    1,,\n  ]\n}');
     expect(within(win()).getByText(/Line 3, column/)).toBeTruthy();
-    expect(within(win()).queryByText('Readable JSON')).toBeNull();
   });
 
   it('reads JSON inside a code fence or other text as readable', () => {
     open(noReplies());
     type('Here is my answer:\n```json\n{"claims": []}\n```\nBye');
-    expect(within(win()).getByText('Readable JSON')).toBeTruthy();
+    expect(within(win()).queryByText(/This is not JSON/)).toBeNull();
   });
 
   it('has no Save reply: a reply that is readable JSON is saved as soon as it is in the box', async () => {

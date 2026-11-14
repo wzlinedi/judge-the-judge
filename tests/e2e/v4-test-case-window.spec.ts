@@ -169,7 +169,7 @@ test('after finalizing only the expected errors of a case without a reply can be
   await expect(page.getByRole('dialog', { name: /Case 1/ }).getByText(/has a reply/)).toBeVisible();
 });
 
-test('the window is one page: the error row is on one line, nothing scrolls sideways, Save case stays at the bottom (T229)', async ({ page }) => {
+test('the window is one page: the error row is on one line, nothing scrolls sideways, Save case is in the header, the parts are in frames (T229, T233)', async ({ page }) => {
   await start(page);
   await page.getByRole('button', { name: 'Add test case' }).click();
   await win(page).getByRole('button', { name: 'Case with injected errors' }).click();
@@ -181,7 +181,21 @@ test('the window is one page: the error row is on one line, nothing scrolls side
   expect(line.top, 'the controls of the row are on more than one line').toBeLessThan(line.bottom);
   const save = win(page).getByRole('button', { name: 'Save case' });
   const body = win(page).locator('.case-window-body');
-  expect((await save.boundingBox())!.y).toBeGreaterThan((await body.boundingBox())!.y + (await body.boundingBox())!.height - 1);
+  // T233: Save case is in the header, beside Close without saving, and stays there while the page scrolls
+  const header = await win(page).locator('.case-window-header').boundingBox();
+  const saveBox = (await save.boundingBox())!;
+  expect(saveBox.y + saveBox.height).toBeLessThanOrEqual(header!.y + header!.height + 1);
+  await expect(win(page).locator('.case-window-footer')).toHaveCount(0);
+  // the category description stands under the whole row, not between the controls
+  const rowBox = (await row.boundingBox())!;
+  const fields = (await row.locator('.row-fields').boundingBox())!;
+  const hint = row.locator('.category-hint').first();
+  if (await hint.count()) expect((await hint.boundingBox())!.y).toBeGreaterThanOrEqual(fields.y + fields.height - 1);
+  expect(rowBox.height).toBeGreaterThan(0);
+  // every part has a frame
+  const frames = await win(page).locator('.case-part').evaluateAll((items) => items.map((i) => getComputedStyle(i).borderTopWidth));
+  expect(frames.length).toBe(5);
+  for (const width of frames) expect(width).not.toBe('0px');
   for (const width of [1280, 360]) {
     await page.setViewportSize({ width, height: 720 });
     expect(await win(page).evaluate((element) => element.scrollWidth <= element.clientWidth), `the window scrolls sideways at ${width} px`).toBe(true);

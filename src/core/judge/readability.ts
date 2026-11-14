@@ -1,6 +1,7 @@
 // When replies cannot be read automatically, every case needs verification (FR-021).
 import type { JudgeSet } from '../model';
 import { recognizeFields } from './fields';
+import { ruleList, whereTheErrorIs } from './findings';
 import { validateRules } from './rules';
 
 const CONSEQUENCE = 'Every case will then need verification by hand or with an LLM opinion.';
@@ -23,9 +24,11 @@ export function readabilityWarnings(set: JudgeSet): string[] {
     });
   }
   if (recognized?.ok) {
-    const missing = recognized.lists.filter((list) => !set.reply_mapping.finding_text[list] && set.error_rules.some((r) => r.conditions.some((c) => c.field.startsWith(list))));
-    if (missing.length > 0) {
-      warnings.push(`No field is marked as the text of a finding for ${missing.join(', ')}. ${CONSEQUENCE}`);
+    for (const rule of set.error_rules) {
+      const list = ruleList(rule);
+      if (list !== undefined && whereTheErrorIs(rule, list, set.reply_mapping.finding_text) === undefined) {
+        warnings.push(`The rule "${rule.name}" has no field that shows where the error is. ${CONSEQUENCE}`);
+      }
     }
   }
   return warnings;

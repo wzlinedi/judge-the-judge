@@ -31,7 +31,7 @@ Inside `judge_set`:
 - `prompt` uses `{{variable}}` for each part of a test case. The variables are the fields of every test case.
 - `judged_text` names the variable the judge evaluates. Errors are injected into it.
 - `sample_reply` is one real reply of your judge. Every field a rule uses must be in it.
-- `reply_mapping.finding_text` says, for each list in the reply, which field holds the words of a finding.
+- `reply_mapping.finding_text` says, for each list in the reply, which field a rule points at by default: the words of a finding. A rule may name its own field in `finding_text` ("Where the error is"); leave it out to use the default.
 - `error_rules` say when the judge has reported an error. A rule has a `name`, `match` (`all` or `any`) and `conditions`. A condition has a `field`, a `comparison` (`equals`, `not_equals`, `greater_than`, `less_than`, `is_empty`, `is_not_empty`) and, where needed, a `value`.
 - `error_catalog` lists the kinds of error, each with a `name`, a `description` and an `example`.
 - `clean_base_cases` are a few texts with no errors. Each needs a text for every variable and `"expected_errors": []`.
