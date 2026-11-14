@@ -18,6 +18,8 @@ export interface CaseWindowFrameProps {
   positionLabel?: string;
   canPrevious?: boolean;
   canNext?: boolean;
+  /** Dialogs of the window, rendered inside it so they stay on top of it. */
+  overlay?: ComponentChildren;
 }
 
 /**
@@ -25,7 +27,7 @@ export interface CaseWindowFrameProps {
  * (research.md, section 20): fills the screen, a header that never scrolls, two columns that scroll
  * on their own and stack below 760 px.
  */
-export function CaseWindowFrame({ title, index, total, left, right, onPrevious, onNext, onClose, headerExtra, positionLabel, canPrevious, canNext }: CaseWindowFrameProps) {
+export function CaseWindowFrame({ title, index, total, left, right, onPrevious, onNext, onClose, headerExtra, positionLabel, canPrevious, canNext, overlay }: CaseWindowFrameProps) {
   const first = canPrevious === undefined ? index <= 0 : !canPrevious;
   const last = canNext === undefined ? index >= total - 1 : !canNext;
 
@@ -66,6 +68,7 @@ export function CaseWindowFrame({ title, index, total, left, right, onPrevious, 
         <section class="case-pane">{left}</section>
         <section class="case-pane">{right}</section>
       </div>
+      {overlay}
     </div>
   );
 }

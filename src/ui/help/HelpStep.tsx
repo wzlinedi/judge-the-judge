@@ -6,6 +6,7 @@ import { ImportingCases } from './sections/ImportingCases';
 import { FourSteps } from './sections/FourSteps';
 import { MetricsAndChecks } from './sections/MetricsAndChecks';
 import { Privacy } from './sections/Privacy';
+import { WorkingByHand } from './sections/WorkingByHand';
 import { SampleReplyRules } from './sections/SampleReplyRules';
 import { ReadingResults } from './sections/ReadingResults';
 import { TestSize } from './sections/TestSize';
@@ -25,6 +26,7 @@ export function HelpStep() {
       <AddingCases />
       <ImportingCases />
       <ErrorCategories />
+      <WorkingByHand />
       <Files />
       <Privacy />
       <DemoData />

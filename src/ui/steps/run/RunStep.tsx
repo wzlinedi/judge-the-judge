@@ -4,6 +4,9 @@ import type { Evaluation } from '../../../core/model';
 import { EmptyState } from '../../components/EmptyState';
 import { StatusMark } from '../../components/StatusMark';
 import { labels } from '../../labels';
+import { JudgeSummary } from './JudgeSummary';
+import { SaveReminder } from './SaveReminder';
+import { useVersions } from './useVersions';
 
 export interface RunStepProps {
   evaluation: Evaluation;
@@ -13,6 +16,7 @@ export interface RunStepProps {
   onOpen: (caseId: string) => void;
   onSave: () => void;
   onSaveAs: () => void;
+  onModelDetails: (text: string) => void;
 }
 
 type Show = 'all' | 'awaiting-first' | 'only-awaiting';
@@ -24,8 +28,9 @@ export function itemsToDecide(r: ReviewedCase): number {
   return undecided + (r.effective.needsApproval && !r.effective.approved && undecided === 0 ? 1 : 0);
 }
 
-export function RunStep({ evaluation, reviewed, fileName, repliesSinceSave, onOpen, onSave, onSaveAs }: RunStepProps) {
+export function RunStep({ evaluation, reviewed, fileName, repliesSinceSave, onOpen, onSave, onSaveAs, onModelDetails }: RunStepProps) {
   const [show, setShow] = useState<Show>('all');
+  const versions = useVersions(evaluation);
   const decided = reviewed.filter((r) => r.status === 'pass' || r.status === 'fail').length;
   const received = reviewed.filter((r) => r.status !== 'not_run').length;
   const toDecide = reviewed.reduce((sum, r) => sum + itemsToDecide(r), 0);
@@ -43,6 +48,16 @@ export function RunStep({ evaluation, reviewed, fileName, repliesSinceSave, onOp
 
   return (
     <div class="run-step">
+      <JudgeSummary judgeVersion={versions.judge} testProjectName={evaluation.dataset.name} testCasesVersion={versions.cases} judgedText={evaluation.judge_set.judged_text} />
+
+      <section class="card">
+        <h2>
+          <label for="model-details">Model details</label>
+        </h2>
+        <textarea id="model-details" rows={3} value={evaluation.model_note} spellcheck={false} onInput={(event) => onModelDetails((event.currentTarget as HTMLTextAreaElement).value)} />
+        <p class="muted">Optional. Write the model name, the temperature and other settings in any form; the tool does not read them. They are saved with the result.</p>
+      </section>
+
       <section class="card" aria-label="Evaluation file">
         <h2>Evaluation file</h2>
         <p>
@@ -65,6 +80,7 @@ export function RunStep({ evaluation, reviewed, fileName, repliesSinceSave, onOp
         <p>{`${decided} of ${reviewed.length} cases decided`}</p>
         <p>{`${toDecide} ${toDecide === 1 ? 'item' : 'items'} still to decide`}</p>
         <p>{`${repliesSinceSave} ${repliesSinceSave === 1 ? 'reply' : 'replies'} not saved to a file`}</p>
+        <SaveReminder repliesSinceSave={repliesSinceSave} />
       </section>
 
       <section class="card" aria-label="Cases">

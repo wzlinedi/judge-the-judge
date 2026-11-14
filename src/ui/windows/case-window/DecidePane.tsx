@@ -3,7 +3,6 @@ import { markFindings } from '../../../core/evaluation/finding-marks';
 import type { ReviewedCase } from '../../../core/evaluation/results';
 import type { AdditionalState, ExpectedState, TestCase } from '../../../core/model';
 import { SOURCE_LABELS } from '../../components/sources';
-import { StatusMark } from '../../components/StatusMark';
 import { labels } from '../../labels';
 
 const EXPECTED_MARKS: ReadonlyArray<{ state: ExpectedState; label: string }> = [
@@ -20,7 +19,8 @@ const ADDITIONAL_MARKS: ReadonlyArray<{ state: AdditionalState; label: string }>
 export interface DecidePaneProps {
   reviewed: ReviewedCase;
   effective: Effective;
-  reply: string;
+  /** Save reply is the primary action while the text of the box differs from the saved reply. */
+  replyChanged: boolean;
   onExpected: (expectedId: string, state: ExpectedState) => void;
   onAdditional: (item: EffectiveAdditional, state: AdditionalState) => void;
   onApprove: () => void;
@@ -87,22 +87,16 @@ function FindingsInReply({ reviewed, unreadable }: { reviewed: ReviewedCase; unr
   );
 }
 
-export function DecidePane({ reviewed, effective, reply, onExpected, onAdditional, onApprove, onShowInText }: DecidePaneProps) {
+export function DecidePane({ reviewed, effective, replyChanged, onExpected, onAdditional, onApprove, onShowInText }: DecidePaneProps) {
   const unreadable = reviewed.review !== null && !reviewed.review.readable;
   const awaiting = reviewed.status === 'awaiting';
   return (
     <div class="decide-pane">
-      <h3>Judge’s reply</h3>
-      <label class="field-label" for="judge-reply">
-        Judge reply
-      </label>
-      <textarea id="judge-reply" class="json" rows={8} value={reply} readOnly aria-label="Judge reply" />
       {unreadable ? <p class="error-note">{reviewed.review?.reason}</p> : null}
       <FindingsInReply reviewed={reviewed} unreadable={unreadable} />
 
       <div class="status-row">
-        <StatusMark status={reviewed.status} />
-        <button type="button" class={awaiting ? 'primary' : ''} onClick={onApprove}>
+        <button type="button" class={awaiting && !replyChanged ? 'primary' : ''} onClick={onApprove}>
           {labels.approve}
         </button>
       </div>

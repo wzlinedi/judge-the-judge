@@ -9,7 +9,7 @@ describe('Help (Principle VIII)', () => {
   it('has the sections written so far, in plain headings', () => {
     render(<HelpStep />);
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results']);
+    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results']);
   });
 
   it('quotes the numbers of the demo from the demo files, so they cannot drift', () => {
@@ -95,5 +95,39 @@ describe('Help: importing test cases', () => {
     const shown = Array.from(document.querySelectorAll('pre.example')).map((p) => p.textContent);
     expect(shown).toContain(readFileSync('examples/files/test-cases-example.csv', 'utf8').replace(/^﻿/, '').trimEnd());
     expect(shown).toContain(readFileSync('examples/files/test-cases-example.json', 'utf8').trimEnd());
+  });
+});
+
+describe('Help for running by hand (US7)', () => {
+  it('names the buttons, the new conversation, the model details and the reminder at 25 replies', () => {
+    render(<HelpStep />);
+    const text = document.body.textContent ?? '';
+    for (const label of ['Copy prompt', 'Paste reply from clipboard', 'Save reply', 'Model details', 'Next test case', 'Save evaluation']) expect(text).toContain(label);
+    expect(text).toMatch(/new conversation/);
+    expect(text).toMatch(/every 25|25 replies/);
+    expect(text).toMatch(/Alt \+ Right/);
+  });
+
+  it('explains what happens to a reply that is not JSON and when replacing a reply asks', () => {
+    render(<HelpStep />);
+    const text = document.body.textContent ?? '';
+    expect(text).toMatch(/not JSON/);
+    expect(text).toMatch(/Approve/);
+    expect(text).toMatch(/asks before replacing/i);
+    expect(text).toMatch(/Ctrl \+ V/);
+  });
+
+  it('quotes the sample reply of the Accuracy metric, the file the tests validate', () => {
+    render(<HelpStep />);
+    const sample = JSON.parse(readFileSync('src/core/metrics/builtin/accuracy.json', 'utf8')).judge_set.sample_reply as string;
+    const pre = [...document.querySelectorAll('pre.example')].map((p) => p.textContent ?? '');
+    const compact = (t: string) => {
+      try {
+        return JSON.stringify(JSON.parse(t));
+      } catch {
+        return undefined;
+      }
+    };
+    expect(pre.map(compact)).toContain(compact(sample));
   });
 });

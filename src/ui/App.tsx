@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import demoEvaluation from '../../examples/demo/evaluation.json?raw';
 import { loadExample } from '../app/actions/evaluation';
+import { modelDetailsEdit, pasteReplyFromClipboard, saveReply, type ReplyOutcome } from '../app/actions/replies';
 import { cloneCase, type CaseEdit } from '../app/actions/cases';
 import type { CatalogEdit } from '../app/actions/catalog';
 import { loadMetricDefinition, replaceLoadedMetric, startFromMetric, type JudgeEdit } from '../app/actions/judge';
@@ -131,6 +132,15 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     say(result.note);
   };
 
+  const applyReply = (outcome: ReplyOutcome): ReplyOutcome => {
+    setState(outcome.state);
+    return outcome;
+  };
+  const replyActions = {
+    save: async (caseId: string, text: string, confirmed?: boolean) => applyReply(await saveReply(stateRef.current, caseId, text, { confirmed: confirmed === true })),
+    paste: async (caseId: string) => applyReply(await pasteReplyFromClipboard(stateRef.current, caseId, portsRef.current)),
+  };
+
   const exportCases = async () => {
     const result = await exportTestCases(stateRef.current, portsRef.current, fileEnv);
     say(result.message);
@@ -202,7 +212,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           />
         ) : (
           <>
-            <NextBar sentence={next.sentence} detail={next.detail} action={{ label: next.action.label, disabled: next.action.disabled, onClick: runAction }} />
+            <NextBar sentence={next.sentence} detail={next.detail} note={next.note} action={{ label: next.action.label, disabled: next.action.disabled, onClick: runAction }} />
             {state.step === 'run' ? (
               <RunStep
                 evaluation={state.evaluation}
@@ -212,6 +222,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
                 onOpen={(id) => setState((s) => ({ ...s, openCase: id }))}
                 onSave={() => void save(false)}
                 onSaveAs={() => void save(true)}
+                onModelDetails={(text) => setState((s) => modelDetailsEdit(s, text))}
               />
             ) : state.step === 'judge' ? (
               <JudgeStep state={state} onEdit={applyJudge} />
@@ -245,6 +256,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           onlyAwaiting={onlyAwaiting}
           onOnlyAwaitingChange={setOnlyAwaiting}
           saveBar={{ fileName: state.evaluationFile, repliesSinceSave: state.repliesSinceSave, onSave: () => void save(false), onSaveAs: () => void save(true) }}
+          reply={replyActions}
         />
       ) : null}
       {testWindow ? <TestCaseWindow state={state} view={testWindow} onView={setTestWindow} onApply={applyCase} /> : null}

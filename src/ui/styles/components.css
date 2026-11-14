@@ -167,3 +167,13 @@ mark.finding-none { background: var(--error-bg); border-bottom-color: var(--erro
 .finding-label { font-size: var(--text-sm); font-weight: 600; }
 .findings-in-reply { margin: var(--space-2) 0; }
 .field-name { margin: var(--space-2) 0 var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
+
+/* US7: the Run step and the reply pane of the case window */
+.judge-summary p { margin: 0; }
+.steps { margin: 0 0 var(--space-3); padding-left: var(--space-5); display: grid; gap: var(--space-2); }
+.reply-message { min-height: 1.4em; margin: var(--space-2) 0; color: var(--text-muted); }
+.reply-readable { margin: 0 0 var(--space-2); color: var(--ok, var(--text-muted)); }
+.reply-readable::before { content: "✓ "; }
+.save-reminder { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--warn, var(--border)); border-radius: var(--radius); background: var(--surface); }
+.next-note { margin: var(--space-1) 0 0; }
+.reply-pane textarea { width: 100%; }

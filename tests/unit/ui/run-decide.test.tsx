@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { useState } from 'preact/hooks';
+import { createState } from '../../../src/app/store';
 import { reviewEvaluation } from '../../../src/core/evaluation/results';
 import { readEvaluation } from '../../../src/core/io/evaluation-file';
 import type { Evaluation } from '../../../src/core/model';
@@ -28,6 +29,7 @@ function Window({ caseId, start = demo, onlyAwaiting = false }: { caseId: string
       onlyAwaiting={only}
       onOnlyAwaitingChange={setOnly}
       saveBar={{ fileName: null, repliesSinceSave: 0, onSave: () => {}, onSaveAs: () => {} }}
+      reply={{ save: async () => ({ state: createState(), status: 'unchanged' }), paste: async () => ({ state: createState(), status: 'unchanged' }) }}
     />
   );
 }
@@ -36,7 +38,7 @@ const item = (kind: 'expected' | 'additional', id: string) => document.querySele
 
 describe('Run list', () => {
   const reviewed = reviewEvaluation(demo, accuracyMetric);
-  const props = { evaluation: demo, reviewed, fileName: null, repliesSinceSave: 3, onOpen: vi.fn(), onSave: vi.fn(), onSaveAs: vi.fn() };
+  const props = { evaluation: demo, reviewed, fileName: null, repliesSinceSave: 3, onOpen: vi.fn(), onSave: vi.fn(), onSaveAs: vi.fn(), onModelDetails: vi.fn() };
 
   it('shows every case with its status as a word and a sign, and Open', () => {
     render(<RunStep {...props} />);

@@ -5,9 +5,13 @@ export interface CopyButtonProps {
   label: string;
   /** Replaceable in tests; the default writes to the clipboard. */
   copy?: (text: string) => Promise<void>;
+  /** Called on every press, whether or not the browser allowed the copy. */
+  onPress?: () => void;
+  /** The button is the primary action of its screen. */
+  primary?: boolean;
 }
 
-export function CopyButton({ text, label, copy }: CopyButtonProps) {
+export function CopyButton({ text, label, copy, onPress, primary }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) return;
@@ -16,6 +20,7 @@ export function CopyButton({ text, label, copy }: CopyButtonProps) {
   }, [copied]);
 
   const onClick = async () => {
+    onPress?.();
     try {
       await (copy ?? ((t: string) => navigator.clipboard.writeText(t)))(text);
       setCopied(true);
@@ -26,7 +31,7 @@ export function CopyButton({ text, label, copy }: CopyButtonProps) {
 
   return (
     <span class="copy-button">
-      <button type="button" onClick={onClick}>
+      <button type="button" class={primary ? 'primary' : ''} onClick={onClick}>
         {label}
       </button>
       <span class="copy-status" role="status">

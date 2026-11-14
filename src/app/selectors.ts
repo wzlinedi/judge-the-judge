@@ -13,6 +13,8 @@ export const STEPS: ReadonlyArray<{ id: Exclude<StepId, 'help'>; number: number;
 export interface NextAction {
   sentence: string;
   detail?: string;
+  /** A reminder that goes with the step (FR-058). */
+  note?: string;
   action: { label: string; go?: StepId; openCase?: string; disabled?: boolean };
 }
 
@@ -46,6 +48,8 @@ export function stepGate(state: AppState, step: StepId): StepGateInfo | null {
 export function caseToContinue(reviewed: readonly ReviewedCase[]): string | undefined {
   return (reviewed.find((r) => r.status === 'awaiting') ?? reviewed.find((r) => r.status === 'not_run'))?.testCase.id;
 }
+
+export const NEW_CONVERSATION = 'Run every prompt in a new conversation, so that one case cannot influence another.';
 
 /** The "what next" line of a step (FR-001): a sentence, an optional second line and one primary action. */
 export function nextAction(state: AppState, step: StepId = state.step, reviewed: readonly ReviewedCase[] = []): NextAction {
@@ -83,7 +87,7 @@ export function nextAction(state: AppState, step: StepId = state.step, reviewed:
       const next = caseToContinue(reviewed);
       const detail = `${decided} of ${reviewed.length} cases decided`;
       if (next === undefined) return { sentence: 'Every case is decided. Read the results.', detail, action: { label: 'Next: Results', go: 'results' } };
-      return { sentence: 'Continue with the next case that needs you.', detail, action: { label: 'Continue', openCase: next } };
+      return { sentence: 'Continue with the next case that needs you.', detail, note: NEW_CONVERSATION, action: { label: 'Continue', openCase: next } };
     }
     case 'results':
       return { sentence: 'Read the result of the evaluation.', action: { label: 'Continue' } };
