@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'preact/hooks';
 import { setJudgedText, setPrompt, type JudgeEdit } from '../../../app/actions/judge';
-import type { AppState } from '../../../app/store';
+import { promptLocked, type AppState } from '../../../app/store';
 import { findVariables } from '../../../core/judge/variables';
 import { judgeVersion } from '../../../core/judge/version';
 import { Explain } from '../../components/Explain';
@@ -14,7 +14,7 @@ export interface SectionProps {
 export function PromptSection({ state, onEdit }: SectionProps) {
   const id = useId();
   const set = state.evaluation.judge_set;
-  const locked = state.evaluation.dataset.finalized;
+  const locked = promptLocked(state);
   const variables = findVariables(set.prompt);
   const [version, setVersion] = useState('');
 
@@ -41,6 +41,7 @@ export function PromptSection({ state, onEdit }: SectionProps) {
         spellcheck={false}
         onInput={(event) => onEdit(setPrompt(state, (event.currentTarget as HTMLTextAreaElement).value))}
       />
+      {state.judgeOpen && !locked ? <p class="muted">The prompt is open for the next run: the test cases are kept. It is fixed again by the first reply you enter.</p> : null}
       {locked ? <p class="muted">The prompt is fixed because the test cases are finalized. To change it, use Edit test cases (before the first reply) or Start new evaluation in the File menu.</p> : null}
       {version ? <p class="muted">{`Judge version: ${version}`}</p> : null}
       {set.prompt.trim() !== '' && variables.length === 0 ? <p class="muted">Nothing from the test cases will reach the prompt.</p> : null}

@@ -7,7 +7,7 @@ import { readMetric } from '../../core/io/metric-file';
 import type { MetricDefinition } from '../../core/metrics/types';
 import { registerMetric } from '../metrics';
 import type { Ports } from '../ports/types';
-import { DEFAULT_CHECKS, edit, forgetBothFiles, type AppState } from '../store';
+import { DEFAULT_CHECKS, edit, forgetBothFiles, promptLocked, type AppState } from '../store';
 
 export interface JudgeEdit {
   state: AppState;
@@ -29,7 +29,7 @@ function recognized(set: JudgeSet): RecognizedFields | null {
 }
 
 export function setPrompt(state: AppState, prompt: string): JudgeEdit {
-  if (state.evaluation.dataset.finalized) return refuse(state, FIXED);
+  if (promptLocked(state)) return refuse(state, FIXED);
   const set = state.evaluation.judge_set;
   const proposal = proposeJudgedText(findVariables(prompt), set.judged_text);
   const next = withJudgeSet(state, (s) => {
@@ -40,7 +40,7 @@ export function setPrompt(state: AppState, prompt: string): JudgeEdit {
 }
 
 export function setJudgedText(state: AppState, name: string): JudgeEdit {
-  if (state.evaluation.dataset.finalized) return refuse(state, FIXED);
+  if (promptLocked(state)) return refuse(state, FIXED);
   if (!findVariables(state.evaluation.judge_set.prompt).includes(name)) {
     return refuse(state, `"${name}" is not a variable of the prompt.`);
   }
@@ -156,7 +156,7 @@ export function startFromMetric(state: AppState, metric: MetricDefinition, ports
     replies: {},
     decisions: {},
   };
-  return { ...state, evaluation, step: 'judge', unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: null, hasFile: false, openCase: null };
+  return { ...state, evaluation, step: 'judge', unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: null, hasFile: false, openCase: null, judgeOpen: false };
 }
 
 export type MetricLoad =

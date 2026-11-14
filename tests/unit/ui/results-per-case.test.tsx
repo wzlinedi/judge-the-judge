@@ -10,7 +10,7 @@ import { CaseWindowHarness } from '../../helpers/case-window-harness';
 import { accuracyJudgeSet, accuracyMetric, biasVerdictMetric, verdictEvaluation } from '../../helpers/fixtures';
 
 const show = (e: Evaluation, metric = biasVerdictMetric) =>
-  render(<ResultsStep results={computeResults(e, metric)} evaluation={e} reviewed={reviewEvaluation(e, metric)} onContinue={vi.fn()} onExport={vi.fn()} onThreshold={vi.fn()} onLoadChecks={vi.fn()} onOpenCase={vi.fn()} />);
+  render(<ResultsStep results={computeResults(e, metric)} evaluation={e} reviewed={reviewEvaluation(e, metric)} onContinue={vi.fn()} onRerun={vi.fn()} onExport={vi.fn()} onThreshold={vi.fn()} onLoadChecks={vi.fn()} onOpenCase={vi.fn()} />);
 const tab = (name: string) => fireEvent.click(screen.getByRole('tab', { name }));
 const win = () => screen.getByRole('dialog', { name: /^Case / });
 

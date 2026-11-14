@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/preact';
+import { render, screen, within } from '@testing-library/preact';
 import { HelpStep } from '../../../src/ui/help/HelpStep';
 
 const expected = JSON.parse(readFileSync('examples/demo/expected-results.json', 'utf8'));
@@ -142,6 +142,21 @@ describe('Help for finalizing (US11)', () => {
     expect(text).toMatch(/30 injected errors and 10 clean cases/);
     expect(text).toMatch(/After the first reply it is no longer offered/);
     expect(text).toMatch(/warns you before the page is closed/);
+  });
+});
+
+describe('Help for testing another version of the judge (US12)', () => {
+  it('explains Edit the judge and run again and the same test with another LLM, in the files section', () => {
+    render(<HelpStep />);
+    const section = screen.getByRole('heading', { name: 'Files: the test project and the evaluation' }).closest('section')!;
+    const text = (section.textContent ?? '').replace(/\s+/g, ' ');
+    expect(within(section).getByText('Testing another version of the judge.')).toBeTruthy();
+    expect(within(section).getByText('Running the same test with another LLM.')).toBeTruthy();
+    for (const label of ['Edit the judge and run again', 'Save evaluation first', 'Discard', 'Cancel', 'Load test project', 'Save evaluation as']) expect(text).toContain(label);
+    expect(text).toMatch(/replies and decisions are cleared/);
+    expect(text).toMatch(/test cases are kept/);
+    expect(text).toMatch(/ask for a file again/);
+    expect(text).toMatch(/same judge version and the same test cases version/);
   });
 });
 

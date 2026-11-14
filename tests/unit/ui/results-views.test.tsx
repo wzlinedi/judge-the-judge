@@ -16,7 +16,7 @@ const decisionsAfter = JSON.parse(readFileSync('examples/demo/expected-results.j
 const decided: Evaluation = { ...loaded.value.evaluation, decisions: decisionsAfter };
 
 const ctx = (e: Evaluation) => ({ evaluation: e, reviewed: reviewEvaluation(e, accuracyMetric), results: computeResults(e, accuracyMetric) });
-const handlers = () => ({ onContinue: vi.fn(), onExport: vi.fn(), onThreshold: vi.fn(), onLoadChecks: vi.fn(), onOpenCase: vi.fn() });
+const handlers = () => ({ onContinue: vi.fn(), onRerun: vi.fn(), onExport: vi.fn(), onThreshold: vi.fn(), onLoadChecks: vi.fn(), onOpenCase: vi.fn() });
 const show = (e: Evaluation, h = handlers()) => {
   render(<ResultsStep {...ctx(e)} {...h} />);
   return h;

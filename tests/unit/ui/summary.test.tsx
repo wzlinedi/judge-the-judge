@@ -15,7 +15,7 @@ const final = computeResults({ ...loaded.value.evaluation, decisions: expected.d
 const finalEvaluation = { ...loaded.value.evaluation, decisions: expected.decisions_after };
 const finalContext = { evaluation: finalEvaluation, reviewed: reviewEvaluation(finalEvaluation, accuracyMetric) };
 const provisionalContext = { evaluation: loaded.value.evaluation, reviewed: reviewEvaluation(loaded.value.evaluation, accuracyMetric) };
-const props = { onContinue: vi.fn(), onExport: undefined as undefined | (() => void), onThreshold: vi.fn(), onLoadChecks: vi.fn(), onOpenCase: vi.fn() };
+const props = { onContinue: vi.fn(), onRerun: vi.fn(), onExport: undefined as undefined | (() => void), onThreshold: vi.fn(), onLoadChecks: vi.fn(), onOpenCase: vi.fn() };
 
 describe('Summary', () => {
   it('shows three count groups first: expected errors, additional findings, subtle errors', () => {

@@ -592,10 +592,22 @@ section "Finalizing, and editing before the first reply"; it names **Edit the ju
 
 **Independent Test**: quickstart.md V10.
 
-- [ ] T183 [US12] Write `tests/e2e/v10-rerun.spec.ts` implementing quickstart.md V10 steps 1 and 2 (another judge version; the same test project with another LLM)
-- [ ] T184 [P] [US12] Write `tests/integration/edit-judge-run-again.test.ts`: keeps the cases; clears replies, decisions and `reply_judge_version`; prompt editable until the first new reply; new judge version; asks first with **Save evaluation first**, **Discard** and **Cancel** when there are unsaved changes; forgets both remembered files, so the next "Save test project" and "Save evaluation" each ask for a file; loading the first run's test project again and entering other model details and replies gives an evaluation with the same judge version, test cases version, metric and thresholds (FR-020, FR-034, FR-051, FR-074, FR-076)
-- [ ] T185 [US12] Implement `src/app/actions/rerun.ts` to pass T184, and add **Edit the judge and run again** to `ResultsStep.tsx` to pass T183
-- [ ] T186 [US12] Extend the Help section "Files: the test project and the evaluation" with "Testing another version of the judge" and "Running the same test with another LLM" in `src/ui/help/sections/`
+- [X] T183 [US12] Write `tests/e2e/v10-rerun.spec.ts` implementing quickstart.md V10 steps 1 and 2 (another judge version; the same test project with another LLM)
+- [X] T184 [P] [US12] Write `tests/integration/edit-judge-run-again.test.ts`: keeps the cases; clears replies, decisions and `reply_judge_version`; prompt editable until the first new reply; new judge version; asks first with **Save evaluation first**, **Discard** and **Cancel** when there are unsaved changes; forgets both remembered files, so the next "Save test project" and "Save evaluation" each ask for a file; loading the first run's test project again and entering other model details and replies gives an evaluation with the same judge version, test cases version, metric and thresholds (FR-020, FR-034, FR-051, FR-074, FR-076)
+- [X] T185 [US12] Implement `src/app/actions/rerun.ts` to pass T184, and add **Edit the judge and run again** to `ResultsStep.tsx` to pass T183
+- [X] T186 [US12] Extend the Help section "Files: the test project and the evaluation" with "Testing another version of the judge" and "Running the same test with another LLM" in `src/ui/help/sections/`
+
+Done 2026-11-14. US12 is complete. `editJudgeAndRunAgain` (`src/app/actions/rerun.ts`) keeps the finalized test cases, the judge,
+the metric, the thresholds and the model details; it clears the replies, the decisions, `reply_judge_version`, `reply_counted_per`,
+the correction mark and the "added or corrected after the first reply" marks of the cases (there is no first reply any more),
+forgets both remembered files (FR-076) and opens the Judge step. The prompt stays fixed by finalizing, with one exception kept in
+the session state as `judgeOpen`: `promptLocked` (`store.ts`) is false from the rerun until the first new reply, so the cases and
+their version never change while the judge does. Loading a file or an example resets the flag. The Results "what next" line has
+**Edit the judge and run again** beside its primary action; the guard asks **Save evaluation first** / **Discard** / **Cancel** when
+there are unsaved changes. Help (section "Files: the test project and the evaluation") has "Testing another version of the judge"
+and "Running the same test with another LLM". The e2e test covers V10 steps 1 and 2: the first run's files are byte-identical
+after the new run, the second report has another judge version and the same test cases version, and the third (another LLM, from the
+first run's test project) has the first judge version, test cases version and model details of its own.
 
 ---
 

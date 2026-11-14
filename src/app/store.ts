@@ -33,6 +33,8 @@ export interface AppState {
   hasFile: boolean;
   /** The case open in the case window of Run, if any. */
   openCase: string | null;
+  /** "Edit the judge and run again" opened the judge prompt for the next run; it closes with the first new reply (FR-074). */
+  judgeOpen: boolean;
 }
 
 export function emptyEvaluation(): Evaluation {
@@ -48,11 +50,17 @@ export function emptyEvaluation(): Evaluation {
 }
 
 export function createState(): AppState {
-  return { step: 'judge', evaluation: emptyEvaluation(), unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: null, hasFile: false, openCase: null };
+  return { step: 'judge', evaluation: emptyEvaluation(), unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: null, hasFile: false, openCase: null, judgeOpen: false };
 }
 
 export function goToStep(state: AppState, step: StepId): AppState {
   return { ...state, step };
+}
+
+/** The judge prompt and the judged text are fixed once the test cases are finalized, except between "Edit the judge and run again" and the first new reply (FR-053, FR-074). */
+export function promptLocked(state: Pick<AppState, 'evaluation' | 'judgeOpen'>): boolean {
+  const { dataset, replies } = state.evaluation;
+  return dataset.finalized && !(state.judgeOpen && Object.keys(replies).length === 0);
 }
 
 /** Any change to the work: the one place that sets the unsaved flag. */
@@ -149,13 +157,14 @@ export function applyLoadedTestProject(state: AppState, evaluation: Evaluation, 
     evaluationFile: null,
     testProjectFile: ports.testProjectTarget.fileName,
     hasFile: true,
+    judgeOpen: false,
   };
 }
 
 /** "Load evaluation": exactly the saved state. Forgets the test project file (FR-076). */
 export function applyLoadedEvaluation(state: AppState, evaluation: Evaluation, ports: Ports): AppState {
   ports.testProjectTarget.forget();
-  return { ...state, evaluation, unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: ports.evaluationTarget.fileName, hasFile: true };
+  return { ...state, evaluation, unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: ports.evaluationTarget.fileName, hasFile: true, judgeOpen: false };
 }
 
 /** "Load example…" and "Start new evaluation" forget both files (FR-076). */

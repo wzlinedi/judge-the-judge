@@ -22,6 +22,8 @@ export interface ResultsStepProps {
   evaluation: Evaluation;
   reviewed: ReviewedCase[];
   onContinue: () => void;
+  /** "Edit the judge and run again" (FR-074); the caller asks about unsaved work first. */
+  onRerun: () => void;
   /** Exports the HTML report (FR-072). */
   onExport: (() => void) | undefined;
   onThreshold: (measure: string, value: number) => void;
@@ -30,7 +32,7 @@ export interface ResultsStepProps {
 }
 
 /** The Results step is read-only: nothing here changes a reply, decision, expected error, rule or mapping. Only the thresholds do (FR-065). */
-export function ResultsStep({ results, evaluation, reviewed, onContinue, onExport, onThreshold, onLoadChecks, onOpenCase }: ResultsStepProps) {
+export function ResultsStep({ results, evaluation, reviewed, onContinue, onRerun, onExport, onThreshold, onLoadChecks, onOpenCase }: ResultsStepProps) {
   const [view, setView] = useState<View>('summary');
   const versions = useVersions(evaluation);
   const c = results.counters;
@@ -54,6 +56,7 @@ export function ResultsStep({ results, evaluation, reviewed, onContinue, onExpor
         sentence={results.provisional ? 'The result is provisional: some cases are not decided yet.' : 'The result is final: every case is decided.'}
         detail={`${c.cases_decided} of ${total} cases decided`}
         action={action}
+        others={[{ label: labels.editJudgeAndRunAgain, onClick: onRerun }]}
       />
       {hasNotices ? (
         <section role="region" aria-label="Notices" class="notices">
@@ -89,6 +92,7 @@ export function ResultsStep({ results, evaluation, reviewed, onContinue, onExpor
             : 'The result is final. Export the report with the button in the line above.'}
         </p>
         <p class="muted">The result as JSON is the evaluation file: press Save evaluation on the Run step.</p>
+        <p class="muted">{`To test another version of the judge on the same test cases, use ${labels.editJudgeAndRunAgain} in the line above. The replies and decisions are cleared, and the test cases are kept.`}</p>
         {results.provisional ? (
           <div class="button-row">
             <button type="button" onClick={() => onExport?.()} disabled={onExport === undefined}>

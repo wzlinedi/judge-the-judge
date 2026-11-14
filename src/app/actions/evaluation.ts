@@ -26,6 +26,7 @@ export function loadExample(state: AppState, evaluationText: string, ports: Port
     evaluationFile: null,
     hasFile: false,
     openCase: null,
+    judgeOpen: false,
     step: firstUnfinishedStep(evaluation, metric),
   };
 }

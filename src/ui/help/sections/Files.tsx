@@ -32,8 +32,20 @@ export function Files() {
         and where.
       </p>
       <p>
-        <strong>The same test with another LLM.</strong> Save the test project once. For each LLM, load it, enter that LLM&rsquo;s replies and save a separate
-        evaluation with <strong>{labels.saveEvaluationAs}</strong>. Every run then counts the same way.
+        <strong>Testing another version of the judge.</strong> When the result shows that the judge needs a change, use{' '}
+        <strong>{labels.editJudgeAndRunAgain}</strong> on the Results step. The test cases are kept exactly as they were, so the two judges meet the same
+        test. The replies and decisions are cleared, and the judge prompt is open for changes until you enter the first reply of the new run. If there are
+        unsaved changes the tool asks first (<strong>{labels.saveEvaluationFirst}</strong>, <strong>{labels.discard}</strong> or{' '}
+        <strong>{labels.cancel}</strong>); export the report of the first run before you go on if you want to keep it. The changed judge is a new test,
+        so the tool forgets both remembered files: the first <strong>{labels.saveTestProject}</strong> and the first <strong>{labels.saveEvaluation}</strong>{' '}
+        of the new run each ask for a file again, and the files of the earlier run are never overwritten. The report of the new run names the same test
+        cases version and a different judge version.
+      </p>
+      <p>
+        <strong>Running the same test with another LLM.</strong> Keep the judge as it is. Save the test project once, then for each LLM use{' '}
+        <strong>{labels.loadTestProject}</strong>, write the model details, enter that LLM&rsquo;s replies and save a separate evaluation with{' '}
+        <strong>{labels.saveEvaluationAs}</strong>. Every run then has the same judge version and the same test cases version, the same metric and the same
+        thresholds, so the reports differ only in the model details, the replies, your decisions and the results.
       </p>
     </section>
   );

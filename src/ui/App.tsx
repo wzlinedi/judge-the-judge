@@ -15,6 +15,7 @@ import { browserSupported, type BrowserEnv } from '../app/ports/browser';
 import { createBrowserPorts } from '../app/ports';
 import type { Ports } from '../app/ports/types';
 import { nextAction, stepGate, type NextIntent } from '../app/selectors';
+import { editJudgeAndRunAgain } from '../app/actions/rerun';
 import { editTestCases, finalize } from '../app/actions/finalize';
 import { createState, goToStep, startNewEvaluation, type AppState, type StepId } from '../app/store';
 import { computeResults, reviewEvaluation } from '../core/evaluation/results';
@@ -59,7 +60,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const browser = env ?? (globalThis as unknown as BrowserEnv);
   const [state, setState] = useState<AppState>(initialState ?? createState());
   const [showExamples, setShowExamples] = useState(false);
-  const [pending, setPending] = useState<FileAction | null>(null);
+  const [pending, setPending] = useState<FileAction | 'edit-judge-and-run-again' | null>(null);
   const [onlyAwaiting, setOnlyAwaiting] = useState(false);
   const [notice, setNotice] = useState('');
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -170,8 +171,15 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     say(result.message);
   };
 
-  const perform = (action: FileAction) => {
-    if (action === 'load-example') setShowExamples(true);
+  const rerun = () => {
+    const result = editJudgeAndRunAgain(stateRef.current, portsRef.current);
+    setState(result.state);
+    say(result.note);
+  };
+
+  const perform = (action: FileAction | 'edit-judge-and-run-again') => {
+    if (action === 'edit-judge-and-run-again') rerun();
+    else if (action === 'load-example') setShowExamples(true);
     else if (action === 'start-new-evaluation') {
       setState((s) => startNewEvaluation(s, portsRef.current));
       say('Started a new evaluation.');
@@ -227,6 +235,10 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     setState(result.state);
     say(result.note);
   };
+  const onRerun = () => {
+    if (guardFor(state, 'edit-judge-and-run-again')) setPending('edit-judge-and-run-again');
+    else rerun();
+  };
   const onResultsContinue = () => setState((s) => continueWork(s));
 
   return (
@@ -249,6 +261,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
             evaluation={state.evaluation}
             reviewed={reviewed}
             onContinue={onResultsContinue}
+            onRerun={onRerun}
             onExport={() => void exportHtml()}
             onThreshold={(measure, value) => setState((s) => changeThreshold(s, measure, value))}
             onLoadChecks={() => void loadChecks()}
