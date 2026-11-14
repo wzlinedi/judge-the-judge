@@ -9,7 +9,7 @@ const rows: ErrorToPrepare[] = [
   { category: 'factual-error', difficulty: 'obvious', description: 'Change the profession.' },
   { category: 'wrong-number', difficulty: 'llm', description: '' },
 ];
-const build = (over: Partial<Parameters<typeof injectErrorsPrompt>[0]> = {}) => injectErrorsPrompt({ judgeSet: set, base, errors: rows, instructions: '', ...over });
+const build = (over: Partial<Parameters<typeof injectErrorsPrompt>[0]> = {}) => injectErrorsPrompt({ judgeSet: set, base, errors: rows, ...over });
 
 describe('injectErrorsPrompt', () => {
   it('asks for ONE case in the case JSON layout with one expected error per row', () => {
@@ -68,9 +68,8 @@ describe('injectErrorsPrompt', () => {
     expect(text).toMatch(/another field/i);
   });
 
-  it('puts the user’s own instructions first', () => {
-    const text = build({ instructions: 'Write in a formal register.' });
-    expect(text.startsWith('Write in a formal register.')).toBe(true);
+  it('starts with what the case is for: there are no own instructions any more (T249)', () => {
+    expect(build().startsWith('I am testing an LLM judge.')).toBe(true);
   });
 
   it('is rebuilt when a row or the base changes', () => {

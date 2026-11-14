@@ -3,7 +3,7 @@
 import { findVariables } from '../judge/variables';
 import type { JudgeSet, TestCase } from '../model';
 
-export function cleanCasePrompt(judgeSet: JudgeSet, comment: string, likeCase?: Pick<TestCase, 'fields' | 'name'>): string {
+export function cleanCasePrompt(judgeSet: JudgeSet, likeCase?: Pick<TestCase, 'fields' | 'name'>): string {
   const variables = findVariables(judgeSet.prompt);
   const judged = judgeSet.judged_text ?? variables[variables.length - 1];
   const parts: string[] = [];
@@ -25,7 +25,6 @@ export function cleanCasePrompt(judgeSet: JudgeSet, comment: string, likeCase?: 
     }
   }
 
-  if (comment.trim() !== '') parts.push('', 'Comment about what the case should be about:', comment);
 
   if (likeCase) {
     parts.push('', 'Use this existing case as a model for the kind and length of the text:', JSON.stringify(likeCase.fields, null, 2));

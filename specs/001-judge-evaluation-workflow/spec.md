@@ -159,6 +159,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-14, third look, T246) What is in the top bar of the page? → A: The tool name, the indicator of unsaved changes, "Save test project", "Save evaluation", the menu, which is now named **More** (was "File"), and **Help**, all on one line; Help is no longer at the end of the step bar. The More menu opens inside the screen at every width (FR-008, FR-076).
 - Q: (Owner review 2026-11-14, third look, T247) How large are the dialogs that hold a long text, and how wide is the case window of Run? → A: One **standard large dialog**: about 90% of the screen in both directions, its buttons in a bar at the bottom. It is used by every "Show prompt" (Test cases, Run, the "From JSON" window after Recreate), by "Original prompt", by "Second opinion…" and by "Edit expected errors". Small questions (Rename, Remove, "Replace this reply?") keep the small dialog. The case window of Run and the case view of Results use the whole width of the screen.
 - Q: (Owner review 2026-11-14, third look, T248) How are the error categories shown and changed? → A: The table has the columns Name, **Description & examples** (one multi-line cell), Used by, and the buttons Rename and Remove. The "Example" button, its dialog and the separate short example are gone: an `example` in an older file is joined to the description when the file is loaded and is not written again (the catalog is in no version, so no version changes). **Remove** is enabled for every category; for a category in use it asks first, and the expected errors that used it stay and lose the category (the test cases version changes). The text box "Categories to add" is replaced by one button, **Add category**, which appends an editable row. "Used by" is computed from the test cases; in the demo "unsupported-claim" is used by one case, number 15. This replaces the T237 answer on "Example" and FR-015 on a disabled "Remove".
+- Q: (Owner review 2026-11-14, third look, T249) What do the windows for adding a case lose? → A: In "Case with errors" the part "Errors to prepare" is a table like the categories table, with the columns Category, Difficulty and Description (what should be wrong) and "Remove" in each row; the box "Your own instructions (optional)" is removed. In "Clean case" the box "Comment (optional)" is removed. The prompts for the LLM no longer have those two texts (FR-040, FR-083).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -1284,8 +1285,8 @@ case and confirm the new case has the same fields and expected errors.
   judged text), the rows with each category's description (with its examples), the rules for realistic
   errors and exact-fragment quoting, and the answer format: one case in the case JSON layout
   (FR-031) with the judged text and one expected error per row, each with its exact fragment. The base, the rows and the
-  prompt are parts 1 to 3 of one page; the rows are laid out horizontally, one line each (Category,
-  Difficulty, What should be wrong, Remove), and the JSON box of FR-041 follows below (FR-085).
+  prompt are parts 1 to 3 of one page; the rows are a table with the columns Category,
+  Difficulty and Description, and "Remove" in each row (T249); there is no box for own instructions; the JSON box of FR-041 follows below (FR-085).
 - **FR-041**: The window MUST then offer, below the prompt on the same page, one JSON box into which the user pastes the case JSON (the
   LLM's answer). The same box is used by "From JSON" (FR-090) for a JSON the user already has. The JSON MUST be
   checked as soon as it is pasted and whenever it changes (FR-084): it must be readable (the first
@@ -1733,15 +1734,13 @@ case and confirm the new case has the same fields and expected errors.
   state and no "Mark as No error". Any clean case can be the base of a case with injected errors,
   a base is optional, and "Case with errors" is always available (FR-038, FR-040).
 
-- **FR-083**: "Clean case" MUST open the **clean case view**, one page from top to bottom: a field "Test case name" (T239), a box for an
-  optional comment and the "Like case" choice; the full prompt for the user's LLM with "Copy prompt"; the box for the LLM's
+- **FR-083**: "Clean case" MUST open the **clean case view**, one page from top to bottom: a field "Test case name" (T239) and
+  the "Like case" choice (there is no "Comment" box, T249); the full prompt for the user's LLM with "Copy prompt"; the box for the LLM's
   answer; and, in the header, "Save case" with the reason beside it while it is disabled
-  (next to "Close without saving"). The comment is free text (what the
-  text should be about, or examples) and goes into the prompt as written; the tool does not look
-  for case names in it. Beside it, an optional "Like case" choice lists the existing clean cases;
+  (next to "Close without saving"). The optional "Like case" choice lists the existing clean cases;
   the fields of the one picked are put into the prompt as a model. The prompt MUST be rebuilt when
-  the comment or the pick changes and MUST contain the judge prompt with its variables and its
-  judged text, the error catalog (so the case contains none of its errors), the comment, the
+  the pick changes and MUST contain the judge prompt with its variables and its
+  judged text, the error catalog (so the case contains none of its errors), the
   picked case if any, and the answer format:
   one clean case in the case JSON layout (FR-031) with a value for every variable and no expected
   errors. The answer MUST be checked as soon as it is pasted and whenever it changes (FR-084)
@@ -1938,7 +1937,7 @@ case and confirm the new case has the same fields and expected errors.
   and an identical version in 100% of cases.
 - **SC-020**: First-time users can import test cases using only the example file and Help,
   successfully on the first attempt in at least 90% of trials.
-- **SC-021**: A first-time user can add a clean case (name, comment, one copy of
+- **SC-021**: A first-time user can add a clean case (name, one copy of
   the prompt, one paste of the LLM's answer, "Save case") in under 2 minutes, not counting
   the time the LLM takes to answer.
 - **SC-022**: A user can prepare a case with injected errors from a clean base case in under

@@ -23,14 +23,13 @@ const approve = () => within(windowOf()).getByRole('button', { name: 'Save case'
 const promptText = () => (within(windowOf()).getByRole('textbox', { name: 'Prompt for your LLM' }) as HTMLTextAreaElement).value;
 
 describe('the prompt', () => {
-  it('shows the full prompt with Copy prompt, rebuilt when the comment or the pick changes', () => {
+  it('shows the full prompt with Copy prompt; there is no Comment box (T249)', () => {
     start();
     const before = promptText();
     expect(before).toContain('{{source_text}}');
     expect(before).toContain('factual-error');
     expect(within(windowOf()).getByRole('button', { name: 'Copy prompt' })).toBeTruthy();
-    type('Comment (optional)', 'About a Polish novel');
-    expect(promptText()).toContain('About a Polish novel');
+    expect(within(windowOf()).queryByLabelText('Comment (optional)')).toBeNull();
     const like = within(windowOf()).getByLabelText('Like case (optional)') as HTMLSelectElement;
     expect(like.options[0]?.textContent).toBe('None');
     expect(like.options).toHaveLength(4);
@@ -101,18 +100,13 @@ describe('the answer', () => {
 
   it('Close without saving asks first once something was typed', () => {
     start();
-    type('Comment (optional)', 'x');
+    type('Test case name', 'x');
     fireEvent.click(within(windowOf()).getByRole('button', { name: 'Close without saving' }));
     expect(screen.getByRole('dialog', { name: 'Close without saving?' })).toBeTruthy();
   });
 });
 
 describe('what the fields do (T223 and T224, found by the T221 run)', () => {
-  it('says that the comment only steers the prompt and is not saved with the case', () => {
-    start();
-    expect(windowOf().textContent).toMatch(/The comment is only used to write the prompt below\. It is not saved with the case\./);
-  });
-
   it('says what "Like case" does', () => {
     start();
     expect(windowOf().textContent).toMatch(/The prompt shows your LLM the texts of this case as an example, so that the new case has the same kind of text\./);

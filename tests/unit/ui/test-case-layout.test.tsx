@@ -51,15 +51,13 @@ describe('case with injected errors: five parts from top to bottom', () => {
     expect(within(header).getByText('Paste the answer of your LLM to save.')).toBeTruthy();
   });
 
-  it('each numbered part is in its own frame, and the category description stands under the whole error row (T233)', () => {
+  it('each numbered part is in its own frame, and the category description stands under the category of its row (T233, T249)', () => {
     start('Case with errors');
     const parts = win().querySelectorAll('.case-part');
     expect(parts).toHaveLength(5);
-    const row = within(win()).getByRole('group', { name: 'Error 1' });
-    const fields = row.querySelector('.row-fields') as HTMLElement;
-    const hint = row.querySelector('.category-hint');
-    if (hint) expect(fields.compareDocumentPosition(hint) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(fields.contains(hint)).toBe(false);
+    const row = within(win()).getByRole('row', { name: 'Error 1' });
+    const cell = within(row).getByLabelText('Category').closest('td') as HTMLElement;
+    expect(cell.querySelector('.category-hint')).not.toBeNull();
   });
 
   it('puts the labels of a part in a column on the left and the fields on the right (T233)', () => {
@@ -83,14 +81,14 @@ describe('case with injected errors: five parts from top to bottom', () => {
     expect(within(win()).queryByText(/to save\.$/)).toBeNull();
   });
 
-  it('lays the errors out in a row: Category, Difficulty, What should be wrong and Remove', () => {
+  it('lays the errors out as a table: Category, Difficulty, Description, and Remove in each row (T249)', () => {
     start('Case with errors');
-    const row = within(within(win()).getByRole('group', { name: 'Error 1' }));
-    for (const label of ['Category', 'Difficulty', 'What should be wrong']) expect(row.getByLabelText(label)).toBeTruthy();
+    const row = within(within(win()).getByRole('row', { name: 'Error 1' }));
+    for (const label of ['Category', 'Difficulty', 'Description']) expect(row.getByLabelText(label)).toBeTruthy();
     expect(row.getByRole('button', { name: 'Remove' })).toBeTruthy();
-    expect(row.getByLabelText('Category').closest('.row-fields')).toBe(row.getByRole('button', { name: 'Remove' }).closest('.row-fields'));
+    expect(row.getByLabelText('Category').closest('tr')).toBe(row.getByRole('button', { name: 'Remove' }).closest('tr'));
     expect(within(win()).getByRole('button', { name: 'Add error' })).toBeTruthy();
-    expect(within(win()).getByLabelText('Your own instructions (optional)')).toBeTruthy();
+    expect(within(win()).queryByLabelText('Your own instructions (optional)')).toBeNull();
   });
 
   it('a changed place that no expected error covers is a warning under the JSON box', () => {
@@ -118,7 +116,7 @@ describe('case with injected errors: five parts from top to bottom', () => {
     fireEvent.input(box(), { target: { value: json('Anna is a doctor. She bought a second oven in 1998.', [doctor]) } });
     fireEvent.change(within(win()).getByLabelText('Base case (optional)'), { target: { value: '1' } });
     expect(box().value).toContain('Anna case');
-    expect(within(win()).getByRole('group', { name: 'Error 1' })).toBeTruthy();
+    expect(within(win()).getByRole('row', { name: 'Error 1' })).toBeTruthy();
   });
 
   it('Escape and Close without saving ask first when something was pasted', () => {
@@ -134,7 +132,7 @@ describe('clean case: name, prompt and answer', () => {
     start('Clean case');
     expectOnePage('Save case');
     expect(headings()).toEqual(['About the case', 'Ask your LLM', 'Paste its answer']);
-    expect(within(win()).queryByRole('group', { name: 'Error 1' })).toBeNull();
+    expect(within(win()).queryByRole('row', { name: 'Error 1' })).toBeNull();
     expect(within(win()).queryByRole('list', { name: 'Expected errors' })).toBeNull();
   });
 

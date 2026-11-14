@@ -41,7 +41,7 @@ describe('the choice', () => {
     fireEvent.click(within(windowOf()).getByRole('button', { name: 'Case with errors' }));
     expect(within(windowOf()).getByRole('button', { name: 'Close without saving' })).toBeTruthy();
     expect(within(windowOf()).getByLabelText('Base case (optional)')).toBeTruthy();
-    expect(within(windowOf()).getByRole('group', { name: 'Error 1' })).toBeTruthy();
+    expect(within(windowOf()).getByRole('row', { name: 'Error 1' })).toBeTruthy();
   });
 });
 

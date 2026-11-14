@@ -78,8 +78,8 @@ returns text.
 
 | Function | Behavior |
 |---|---|
-| `cleanCasePrompt(judgeSet, catalog, comment, likeCase)` | Asks for ONE clean case in the case JSON layout with `"expected_errors": []`: the judge prompt with its variables and judged text, the catalog (so the case contains none of its errors), the comment as written, and the fields of the **Like case** as a model when one is picked (FR-083). |
-| `injectErrorsPrompt(judgeSet, catalog, base, errorsToPrepare, ownText)` | Asks for ONE case in the case JSON layout: with a base, its fields with the errors written into the judged text; without one, the whole case. One expected error per row (category with its description and example, difficulty or left to the LLM, what should be wrong), exact fragments (FR-040, FR-043). |
+| `cleanCasePrompt(judgeSet, likeCase)` | Asks for ONE clean case in the case JSON layout with `"expected_errors": []`: the judge prompt with its variables and judged text, the catalog (so the case contains none of its errors), and the fields of the **Like case** as a model when one is picked (FR-083). |
+| `injectErrorsPrompt({ judgeSet, base, errors })` | Asks for ONE case in the case JSON layout: with a base, its fields with the errors written into the judged text; without one, the whole case. One expected error per row (category with its description, difficulty or left to the LLM, what should be wrong), exact fragments (FR-040, FR-043). |
 | `verificationPrompt(evaluation, caseId)` | For one case with a reply: its identifier, fields, numbered expected errors, numbered additional findings, the received reply, and the fixed JSON opinion to return, including `new` for findings not in the list with optional category and difficulty (FR-063). |
 
 All three state the reply format of file-formats.md (sections 2 and 7) and are rebuilt whenever

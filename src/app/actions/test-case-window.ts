@@ -20,13 +20,12 @@ export interface InjectDraft {
   /** The id of the clean case the errors go into; empty for none. */
   base: string;
   rows: ErrorRow[];
-  instructions: string;
 }
 
 export const NEW_CATEGORY = '__new__';
 
 export function newDraft(state: AppState): InjectDraft {
-  return { base: '', rows: [newRow(state, [])], instructions: '' };
+  return { base: '', rows: [newRow(state, [])] };
 }
 
 function newRow(state: AppState, rows: readonly ErrorRow[]): ErrorRow {
@@ -44,7 +43,7 @@ export const cleanCasesOf = (state: AppState): TestCase[] => state.evaluation.da
 export function injectPrompt(state: AppState, draft: InjectDraft): string {
   const base = draft.base === '' ? undefined : state.evaluation.dataset.cases.find((c) => c.id === draft.base);
   const errors: ErrorToPrepare[] = draft.rows.map((r) => ({ category: r.isNew ? normalizeCategoryName(r.category) : r.category.trim(), difficulty: r.difficulty, description: r.description }));
-  return injectErrorsPrompt({ judgeSet: state.evaluation.judge_set, base, errors, instructions: draft.instructions });
+  return injectErrorsPrompt({ judgeSet: state.evaluation.judge_set, base, errors });
 }
 
 /** Whether the text and the list of a case agree, against the base case it names (FR-080). */

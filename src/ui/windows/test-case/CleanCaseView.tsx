@@ -20,13 +20,12 @@ export interface CleanCaseViewProps {
 export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
   const [typed, setTyped] = useState<TypedName>(null);
   const name = typedNameOf(typed) ?? '';
-  const [comment, setComment] = useState('');
   const [like, setLike] = useState('');
   const [answer, setAnswer] = useState('');
   const { judge_set, dataset } = state.evaluation;
   const clean = dataset.cases.filter((c) => c.expected_errors.length === 0);
   const likeCase = clean.find((c) => c.id === like);
-  const prompt = cleanCasePrompt(judge_set, comment, likeCase);
+  const prompt = cleanCasePrompt(judge_set, likeCase);
   const check = answer.trim() === '' ? undefined : checkCaseJson(answer, { ...contextOf(state), mode: 'clean', name });
   const valid = check?.case !== undefined;
 
@@ -39,7 +38,7 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
   return (
     <TestCaseFrame
       title={labels.cleanCase}
-      dirty={typed !== null || comment !== '' || like !== '' || answer !== ''}
+      dirty={typed !== null || like !== '' || answer !== ''}
       onClose={onClose}
       headerAction={
         <>
@@ -57,13 +56,6 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
       <Part number={1} title="About the case">
         <div class="form-grid">
           <NameField state={state} check={check} typed={typed} onTyped={setTyped} />
-          <label class="field-label" for="clean-comment">
-            Comment (optional)
-          </label>
-          <div>
-            <textarea id="clean-comment" rows={3} value={comment} onInput={(event) => setComment((event.currentTarget as HTMLTextAreaElement).value)} />
-            <p class="muted">The comment is only used to write the prompt below. It is not saved with the case.</p>
-          </div>
           <label class="field-label" for="clean-like">
             Like case (optional)
           </label>

@@ -19,14 +19,13 @@ test('a clean case is made from a prompt and an answer, and checked as it is pas
   await testWindow(page).getByRole('button', { name: 'Clean case' }).click();
 
   await testWindow(page).getByLabel('Test case name').fill('Keeper');
-  await testWindow(page).getByLabel('Comment (optional)').fill('About a lighthouse');
+  await expect(testWindow(page).getByLabel('Comment (optional)')).toHaveCount(0); // T249
   await testWindow(page).getByLabel('Like case (optional)').selectOption({ index: 1 });
   const prompt = testWindow(page).getByRole('textbox', { name: 'Prompt for your LLM' });
-  await expect(prompt).toHaveValue(/About a lighthouse/);
   await expect(prompt).toHaveValue(/\{\{source_text\}\}/);
   await expect(prompt).toHaveValue(/factual-error/);
   await testWindow(page).getByRole('button', { name: 'Copy prompt' }).click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('About a lighthouse');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('{{source_text}}');
 
   // an answer with expected errors points to From JSON; nothing can be approved
   const box = testWindow(page).getByLabel('Answer of your LLM');
@@ -48,9 +47,9 @@ test('a clean case is made from a prompt and an answer, and checked as it is pas
   await row(page, 'Keeper').getByRole('button', { name: 'Open' }).click();
   await page.getByRole('button', { name: 'Recreate the test case' }).click();
   const original = page.getByRole('dialog', { name: 'Original prompt' });
-  await expect(original.getByRole('textbox', { name: 'Original prompt' })).toHaveValue(/About a lighthouse/);
+  await expect(original.getByRole('textbox', { name: 'Original prompt' })).toHaveValue(/\{\{source_text\}\}/);
   await original.getByRole('button', { name: 'Copy and recreate' }).click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('About a lighthouse');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('{{source_text}}');
   await expect(testWindow(page).getByLabel('Case JSON')).toHaveValue('');
   await testWindow(page).getByRole('button', { name: 'Close' }).click();
   await row(page, 'Keeper').getByRole('button', { name: 'Open' }).click();

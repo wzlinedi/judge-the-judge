@@ -72,7 +72,7 @@ version, and the tool opens the Test cases step (the first step with unfinished 
 
 ### V3. Clean cases (SC-021, SC-034, User Story 3)
 
-1. On Test cases choose "Add test case", then "Clean case"; type a name and a comment, pick a
+1. On Test cases choose "Add test case", then "Clean case"; type a name, pick a
    "Like case" when one exists, "Copy prompt", run it in an LLM, paste the answer into the box and
    "Save case".
 2. Paste an answer with expected errors into a new clean case window.
@@ -82,7 +82,7 @@ version, and the tool opens the Test cases step (the first step with unfinished 
 4. Try to remove a clean case that another case uses as its base.
 
 **Expected**: the prompt contains the judge prompt, its variables and judged text, the catalog,
-the comment and the fields of the picked case; the answer is checked as it is pasted, its fields
+the fields of the picked case; the answer is checked as it is pasted, its fields
 are shown read-only and the case is saved under the typed name; the answer with expected errors is
 a problem that points to "From JSON"; the table shows Kind "Clean" and the buttons Open,
 Rename and Remove on every row; the copy is a new case with no link to the original, the taken name is refused; the removal of the base is refused with the list of cases

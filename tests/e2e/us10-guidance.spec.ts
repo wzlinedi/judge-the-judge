@@ -56,7 +56,7 @@ test('a category shows its description, which holds its examples, where it is ch
   await win(page).getByRole('button', { name: 'Case with errors' }).click();
   const first = accuracy.judge_set.error_catalog[0] as { name: string; description: string };
   const second = accuracy.judge_set.error_catalog[1] as { name: string; description: string };
-  const row = win(page).getByRole('group', { name: 'Error 1' });
+  const row = win(page).getByRole('row', { name: 'Error 1' });
   await expect(row).toContainText(first.description);
   expect(first.description).toContain('Example:');
   await row.getByLabel('Category').selectOption(second.name);

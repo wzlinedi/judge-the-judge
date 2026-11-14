@@ -33,14 +33,15 @@ const answer = (over: Record<string, unknown> = {}) =>
 const paste = (value: string) => fireEvent.input(field('Case JSON'), { target: { value } });
 
 describe('parts 1 to 3: the base, the errors to prepare, the prompt', () => {
-  it('offers an optional base with its fields, a list of errors to prepare, own instructions and the prompt', () => {
+  it('offers an optional base with its fields, a table of errors to prepare and the prompt; no own instructions (T249)', () => {
     start();
     const base = field('Base case (optional)') as HTMLSelectElement;
     expect(Array.from(base.options).map((o) => o.textContent)).toEqual(expect.arrayContaining(['None (the LLM writes the whole case)', 'Anna']));
     fireEvent.change(base, { target: { value: '1' } });
     expect(within(win()).getAllByText(/Anna is a baker\./).length).toBeGreaterThan(0);
-    expect(within(win()).getByRole('group', { name: 'Error 1' })).toBeTruthy();
-    expect(field('Your own instructions (optional)')).toBeTruthy();
+    expect(within(win()).getByRole('row', { name: 'Error 1' })).toBeTruthy();
+    expect(within(within(win()).getByRole('table', { name: 'Errors to prepare' })).getAllByRole('columnheader').map((h) => h.textContent?.trim())).toEqual(['Category', 'Difficulty', 'Description', 'Actions']);
+    expect(within(win()).queryByLabelText('Your own instructions (optional)')).toBeNull();
     expect((field('Prompt for your LLM') as HTMLTextAreaElement).readOnly).toBe(true);
     expect(button('Copy prompt')).toBeTruthy();
   });
@@ -49,18 +50,18 @@ describe('parts 1 to 3: the base, the errors to prepare, the prompt', () => {
     start();
     const before = (field('Prompt for your LLM') as HTMLTextAreaElement).value;
     fireEvent.click(button('Add error'));
-    expect(within(win()).getByRole('group', { name: 'Error 2' })).toBeTruthy();
+    expect(within(win()).getByRole('row', { name: 'Error 2' })).toBeTruthy();
     const two = (field('Prompt for your LLM') as HTMLTextAreaElement).value;
     expect(two).not.toBe(before);
     expect(two).toContain('Error 2');
-    fireEvent.click(within(within(win()).getByRole('group', { name: 'Error 2' })).getByRole('button', { name: 'Remove' }));
-    expect(within(win()).queryByRole('group', { name: 'Error 2' })).toBeNull();
+    fireEvent.click(within(within(win()).getByRole('row', { name: 'Error 2' })).getByRole('button', { name: 'Remove' }));
+    expect(within(win()).queryByRole('row', { name: 'Error 2' })).toBeNull();
     expect((field('Prompt for your LLM') as HTMLTextAreaElement).value).toBe(before);
   });
 
   it('a category is picked from the catalog or typed as a new name; a catalog entry brings its description and example', () => {
     start();
-    const row = within(within(win()).getByRole('group', { name: 'Error 1' }));
+    const row = within(within(win()).getByRole('row', { name: 'Error 1' }));
     fireEvent.change(row.getByLabelText('Category'), { target: { value: 'wrong-number' } });
     const prompt = () => (field('Prompt for your LLM') as HTMLTextAreaElement).value;
     expect(prompt()).toContain('A number, year or amount that does not match the source.');
@@ -72,7 +73,7 @@ describe('parts 1 to 3: the base, the errors to prepare, the prompt', () => {
 
   it('a new category name is written the way the catalog writes it, and the window says so, and the prompt uses it', () => {
     start();
-    const row = within(within(win()).getByRole('group', { name: 'Error 1' }));
+    const row = within(within(win()).getByRole('row', { name: 'Error 1' }));
     const prompt = () => (field('Prompt for your LLM') as HTMLTextAreaElement).value;
     fireEvent.change(row.getByLabelText('Category'), { target: { value: '__new__' } });
     fireEvent.input(row.getByLabelText('New category name'), { target: { value: ' Tone Shift ' } });
@@ -84,15 +85,13 @@ describe('parts 1 to 3: the base, the errors to prepare, the prompt', () => {
     expect(row.getByText(/describe it in Error categories/i)).toBeTruthy();
   });
 
-  it('difficulty, what should be wrong, the base and own instructions all reach the prompt', () => {
+  it('difficulty, the description and the base all reach the prompt', () => {
     start();
     const prompt = () => (field('Prompt for your LLM') as HTMLTextAreaElement).value;
-    const row = within(within(win()).getByRole('group', { name: 'Error 1' }));
+    const row = within(within(win()).getByRole('row', { name: 'Error 1' }));
     fireEvent.change(row.getByLabelText('Difficulty'), { target: { value: 'subtle' } });
-    fireEvent.input(row.getByLabelText('What should be wrong'), { target: { value: 'Make the year wrong' } });
-    fireEvent.input(field('Your own instructions (optional)'), { target: { value: 'Write in a formal register.' } });
+    fireEvent.input(row.getByLabelText('Description'), { target: { value: 'Make the year wrong' } });
     fireEvent.change(field('Base case (optional)'), { target: { value: '1' } });
-    expect(prompt().startsWith('Write in a formal register.')).toBe(true);
     expect(prompt()).toMatch(/Difficulty: subtle/);
     expect(prompt()).toContain('Make the year wrong');
     expect(prompt()).toContain('Anna is a baker. She bought a second oven in 1998.');

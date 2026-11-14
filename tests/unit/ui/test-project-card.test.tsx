@@ -137,11 +137,11 @@ describe('help for a category where it is chosen', () => {
     fireEvent.click(within(screen.getByRole('dialog', { name: 'Test case' })).getByRole('button', { name: 'Case with errors' }));
     const win = screen.getByRole('dialog', { name: 'Test case' });
     const first = e.judge_set.error_catalog[0]!;
-    const row = within(win).getByRole('group', { name: 'Error 1' });
+    const row = within(win).getByRole('row', { name: 'Error 1' });
     expect(row.textContent).toContain(first.description as string);
     const second = e.judge_set.error_catalog[1]!;
     fireEvent.change(within(row).getByLabelText('Category'), { target: { value: second.name } });
-    expect(within(win).getByRole('group', { name: 'Error 1' }).textContent).toContain(second.description as string);
+    expect(within(win).getByRole('row', { name: 'Error 1' }).textContent).toContain(second.description as string);
   });
 
   it('shows no hint for a new category name', () => {

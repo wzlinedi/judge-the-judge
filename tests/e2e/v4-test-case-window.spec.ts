@@ -34,7 +34,7 @@ test('a case with injected errors on one page: base, errors, prompt, JSON, expec
   // part 1: a base, two errors (one with a new category), the prompt
   await win(page).getByLabel('Base case (optional)').selectOption({ index: 1 });
   await win(page).getByRole('button', { name: 'Add error' }).click();
-  const second = win(page).getByRole('group', { name: 'Error 2' });
+  const second = win(page).getByRole('row', { name: 'Error 2' });
   await second.getByLabel('Category').selectOption('New category…');
   await second.getByLabel('New category name').fill('tone-shift');
   await second.getByLabel('Difficulty').selectOption('Subtle');
@@ -170,8 +170,8 @@ test('the window is one page: the error row is on one line, nothing scrolls side
   await start(page);
   await page.getByRole('button', { name: 'Add test case…' }).click();
   await win(page).getByRole('button', { name: 'Case with errors' }).click();
-  const row = win(page).getByRole('group', { name: 'Error 1' });
-  // Category, Difficulty, What should be wrong and Remove sit side by side: their boxes overlap vertically
+  const row = win(page).getByRole('row', { name: 'Error 1' });
+  // Category, Difficulty, Description and Remove sit side by side, in one table row (T249): their boxes overlap vertically
   const boxes = await row.locator('select, input, button').evaluateAll((items) => items.map((i) => ({ top: i.getBoundingClientRect().top, bottom: i.getBoundingClientRect().bottom })));
   expect(boxes).toHaveLength(4);
   const line = { top: Math.max(...boxes.map((b) => b.top)), bottom: Math.min(...boxes.map((b) => b.bottom)) };
@@ -183,11 +183,11 @@ test('the window is one page: the error row is on one line, nothing scrolls side
   const saveBox = (await save.boundingBox())!;
   expect(saveBox.y + saveBox.height).toBeLessThanOrEqual(header!.y + header!.height + 1);
   await expect(win(page).locator('.case-window-footer')).toHaveCount(0);
-  // the category description stands under the whole row, not between the controls
+  // the category description stands under the category of its row, not between the controls (T249)
   const rowBox = (await row.boundingBox())!;
-  const fields = (await row.locator('.row-fields').boundingBox())!;
+  const select = (await row.getByLabel('Category').boundingBox())!;
   const hint = row.locator('.category-hint').first();
-  if (await hint.count()) expect((await hint.boundingBox())!.y).toBeGreaterThanOrEqual(fields.y + fields.height - 1);
+  if (await hint.count()) expect((await hint.boundingBox())!.y).toBeGreaterThanOrEqual(select.y + select.height - 1);
   expect(rowBox.height).toBeGreaterThan(0);
   // every part has a frame
   const frames = await win(page).locator('.case-part').evaluateAll((items) => items.map((i) => getComputedStyle(i).borderTopWidth));

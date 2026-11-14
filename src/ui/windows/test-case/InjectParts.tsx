@@ -21,71 +21,55 @@ const DIFFICULTIES: ReadonlyArray<{ value: PreparedDifficulty; label: string }> 
   { value: 'subtle', label: 'Subtle' },
 ];
 
+/** One row of the table "Errors to prepare" (T249): Category, Difficulty, Description, and Remove. */
 function Row({ row, number, state, onChange, onRemove }: { row: ErrorRow; number: number; state: AppState; onChange: (patch: Partial<Omit<ErrorRow, 'id'>>) => void; onRemove: () => void }) {
   const catalog = state.evaluation.judge_set.error_catalog;
-  const id = `inject-row-${row.id}`;
   const hint = row.isNew ? undefined : catalog.find((c) => c.name === row.category);
   return (
-    <div role="group" aria-label={`Error ${number}`} class="error-row">
-      <h4>{`Error ${number}`}</h4>
-      <div class="row-fields">
-        <div>
-          <label class="field-label" for={`${id}-category`}>
-            Category
-          </label>
-          <select id={`${id}-category`} value={row.isNew ? NEW_CATEGORY : row.category} onChange={(event) => {
+    <tr aria-label={`Error ${number}`}>
+      <td>
+        <select
+          aria-label="Category"
+          value={row.isNew ? NEW_CATEGORY : row.category}
+          onChange={(event) => {
             const value = (event.currentTarget as HTMLSelectElement).value;
             onChange(value === NEW_CATEGORY ? { category: '', isNew: true } : { category: value, isNew: false });
-          }}>
-            {catalog.map((c) => (
-              <option key={c.name} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-            <option value={NEW_CATEGORY}>New category…</option>
-          </select>
-        </div>
-        <div>
-          <label class="field-label" for={`${id}-difficulty`}>
-            Difficulty
-          </label>
-          <select id={`${id}-difficulty`} value={row.difficulty} onChange={(event) => onChange({ difficulty: (event.currentTarget as HTMLSelectElement).value as PreparedDifficulty })}>
-            {DIFFICULTIES.map((d) => (
-              <option key={d.value} value={d.value}>
-                {d.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div class="row-what">
-          <label class="field-label" for={`${id}-what`}>
-            What should be wrong
-          </label>
-          <input id={`${id}-what`} type="text" value={row.description} onInput={(event) => onChange({ description: (event.currentTarget as HTMLInputElement).value })} />
-        </div>
-        <div class="row-remove">
-          <span class="field-label" aria-hidden="true">
-            {'\u00a0'}
-          </span>
-          <button type="button" onClick={onRemove}>
-            {labels.remove}
-          </button>
-        </div>
-      </div>
-      {hint?.description ? <p class="muted category-hint">{hint.description}</p> : null}
-      {row.isNew ? (
-        <div class="form-grid new-category">
-          <label class="field-label" for={`${id}-new`}>
-            New category name
-          </label>
-          <div>
-            <input id={`${id}-new`} type="text" value={row.category} onInput={(event) => onChange({ category: (event.currentTarget as HTMLInputElement).value })} />
+          }}
+        >
+          {catalog.map((c) => (
+            <option key={c.name} value={c.name}>
+              {c.name}
+            </option>
+          ))}
+          <option value={NEW_CATEGORY}>New category…</option>
+        </select>
+        {hint?.description ? <p class="muted category-hint">{hint.description}</p> : null}
+        {row.isNew ? (
+          <div class="new-category">
+            <input type="text" aria-label="New category name" placeholder="New category name" value={row.category} onInput={(event) => onChange({ category: (event.currentTarget as HTMLInputElement).value })} />
             {row.category.trim() !== '' && normalizeCategoryName(row.category) !== row.category ? <p class="muted category-hint">{`It is written in lower case with dashes: ${normalizeCategoryName(row.category)}.`}</p> : null}
             <p class="muted category-hint">The category joins the catalog when the case is saved; describe it in Error categories afterwards.</p>
           </div>
-        </div>
-      ) : null}
-    </div>
+        ) : null}
+      </td>
+      <td>
+        <select aria-label="Difficulty" value={row.difficulty} onChange={(event) => onChange({ difficulty: (event.currentTarget as HTMLSelectElement).value as PreparedDifficulty })}>
+          {DIFFICULTIES.map((d) => (
+            <option key={d.value} value={d.value}>
+              {d.label}
+            </option>
+          ))}
+        </select>
+      </td>
+      <td>
+        <input type="text" aria-label="Description" placeholder="What should be wrong (optional)" value={row.description} onInput={(event) => onChange({ description: (event.currentTarget as HTMLInputElement).value })} />
+      </td>
+      <td>
+        <button type="button" onClick={onRemove}>
+          {labels.remove}
+        </button>
+      </td>
+    </tr>
   );
 }
 
@@ -128,20 +112,32 @@ export function InjectParts({ state, draft, onDraft, nameField }: InjectPartsPro
       </Part>
 
       <Part number={2} title="Errors to prepare">
-        {draft.rows.map((row, i) => (
-          <Row key={row.id} row={row} number={i + 1} state={state} onChange={(patch) => onDraft(updateRow(draft, row.id, patch))} onRemove={() => onDraft(removeRow(draft, row.id))} />
-        ))}
+        {draft.rows.length > 0 ? (
+          <div class="table-scroll">
+            <table class="categories-table errors-to-prepare" aria-label="Errors to prepare">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Difficulty</th>
+                  <th>Description</th>
+                  <th>
+                    <span class="visually-hidden">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {draft.rows.map((row, i) => (
+                  <Row key={row.id} row={row} number={i + 1} state={state} onChange={(patch) => onDraft(updateRow(draft, row.id, patch))} onRemove={() => onDraft(removeRow(draft, row.id))} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p class="muted">No error to prepare yet.</p>
+        )}
         <button type="button" onClick={() => onDraft(addRow(state, draft))}>
           {labels.addError}
         </button>
-        <div class="form-grid">
-          <label class="field-label" for="inject-instructions">
-            Your own instructions (optional)
-          </label>
-          <div>
-            <textarea id="inject-instructions" rows={3} value={draft.instructions} onInput={(event) => onDraft({ ...draft, instructions: (event.currentTarget as HTMLTextAreaElement).value })} />
-          </div>
-        </div>
       </Part>
 
       <Part number={3} title="Ask your LLM">

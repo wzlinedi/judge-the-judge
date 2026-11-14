@@ -18,18 +18,14 @@ export interface InjectErrorsInput {
   /** The clean case the errors go into; without one the LLM writes the whole case. */
   base?: Pick<TestCase, 'fields' | 'name'> | undefined;
   errors: readonly ErrorToPrepare[];
-  /** The user's own instructions; they come first. */
-  instructions: string;
 }
 
 const count = (n: number) => `${n} expected ${n === 1 ? 'error' : 'errors'}`;
 
-export function injectErrorsPrompt({ judgeSet, base, errors, instructions }: InjectErrorsInput): string {
+export function injectErrorsPrompt({ judgeSet, base, errors }: InjectErrorsInput): string {
   const variables = findVariables(judgeSet.prompt);
   const judged = judgeSet.judged_text ?? variables[variables.length - 1];
   const parts: string[] = [];
-
-  if (instructions.trim() !== '') parts.push(instructions.trim(), '');
 
   parts.push(
     `I am testing an LLM judge. Write ONE test case for it that contains ${count(errors.length)} that I choose below.`,

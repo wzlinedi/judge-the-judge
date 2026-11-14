@@ -169,9 +169,11 @@ which asks first when something was pasted or typed.
   closes; an answer with expected errors is a problem that points to **From JSON**.
 - **Case with errors**, five parts (FR-040, FR-041, FR-085):
   1. **Test case name** (see below) and the **Base case**: the optional base (any clean case, or none) with its fields.
-  2. **Errors to prepare**: one horizontal row per error (category from the catalog or typed as a
-     new name, difficulty obvious / subtle / left to the LLM, what should be wrong, **Remove**),
-     **Add error**, and optional own instructions.
+  2. **Errors to prepare**: a table in the form of the categories table (T249), one row per error,
+     with the columns **Category** (from the catalog or typed as a new name; the description of the
+     category under it), **Difficulty** (obvious / subtle / left to the LLM) and **Description**
+     (what should be wrong), and **Remove** in each row; below it **Add error**. There is no box for
+     own instructions.
   3. **Ask your LLM**: the prompt with **Copy prompt**.
   4. **Paste its answer**: the box for the JSON, checked as it changes; changed places that no
      expected error covers are warnings under it ("A changed place is not in the list: …").

@@ -22,7 +22,7 @@ export function InjectWindow({ state, onApply, onClose }: InjectWindowProps) {
   const [touched, setTouched] = useState(false);
   const [typed, setTyped] = useState<TypedName>(null);
   const first = newDraft(state);
-  const changed = touched || typed !== null || draft.base !== '' || draft.instructions !== '' || draft.rows.length !== first.rows.length || draft.rows.some((r, i) => r.description !== '' || r.difficulty !== 'llm' || r.category !== first.rows[i]?.category);
+  const changed = touched || typed !== null || draft.base !== '' || draft.rows.length !== first.rows.length || draft.rows.some((r, i) => r.description !== '' || r.difficulty !== 'llm' || r.category !== first.rows[i]?.category);
   const check = text.trim() === '' ? undefined : checkCaseJson(text, { ...contextOf(state), mode: 'inject', ...(draft.base !== '' ? { base: draft.base } : {}), errorsToPrepare: draft.rows.length, ...(typedNameOf(typed) !== undefined ? { name: typedNameOf(typed) as string } : {}) });
 
   return (
