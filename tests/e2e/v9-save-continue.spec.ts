@@ -35,7 +35,7 @@ test('Save evaluation asks for a file once, overwrites it later, and Load evalua
   // more work, second save: the same file, no picker
   await next(page).getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByRole('dialog', { name: /Case 10 / })).toBeVisible(); // its reply cannot be read
-  await page.getByRole('button', { name: 'Approve' }).click();
+  await page.getByRole('button', { name: 'No more findings' }).click();
   await page.getByRole('button', { name: 'Close' }).click();
   await page.getByRole('button', { name: 'Save evaluation', exact: true }).click();
   expect(memory.asked()).toBe(1);
@@ -78,7 +78,7 @@ test('when the file can no longer be written the work stays and the next save as
   await expect(page.getByText('All changes saved (gone.json)')).toBeVisible();
 
   await next(page).getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Approve' }).click();
+  await page.getByRole('button', { name: 'No more findings' }).click();
   await page.getByRole('button', { name: 'Close' }).click();
   memory.failWrites(true);
   await page.getByRole('button', { name: 'Save evaluation', exact: true }).click();

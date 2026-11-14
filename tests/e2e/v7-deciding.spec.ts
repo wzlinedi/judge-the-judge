@@ -32,7 +32,7 @@ test('the Run step has no second-opinion card; a second opinion is previewed, ap
   await expect(finding).toContainText('This finding matches no expected error');
 
   // the three buttons under the list are visible without opening anything
-  for (const name of ['Add finding', 'Note', 'Second opinion…']) await expect(win.getByRole('button', { name })).toBeVisible();
+  for (const name of ['Add finding', 'Second opinion…']) await expect(win.getByRole('button', { name })).toBeVisible();
 
   // 1. the window: prompt, box, preview; nothing changes before Apply opinion
   await win.getByRole('button', { name: 'Second opinion…' }).click();
@@ -95,7 +95,7 @@ test('only the cases awaiting verification; a reply that could not be read: Add 
   await win.getByRole('button', { name: 'Next test case' }).click();
   await expect(win).toContainText('Case 10');
   await expect(win).toContainText('The reply could not be read');
-  await expect(win).toContainText('The case needs Approve');
+  await expect(win).toContainText('press No more findings');
 
   // Add finding with a category and a difficulty
   await win.getByRole('button', { name: 'Add finding' }).click();

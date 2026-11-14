@@ -17,13 +17,13 @@ async function loadDemo(page: Page) {
 
 const goToResults = (page: Page) => page.getByRole('button', { name: /4\s*Results/ }).click();
 
-/** Settles the five cases that await verification: four with their opinion, the unreadable one with Approve. */
+/** Settles the five cases that await verification: four with their opinion, the unreadable one with No more findings. */
 async function decideEverything(page: Page) {
   for (const id of ['3', '10', '14', '17', '19']) {
     await next(page).getByRole('button', { name: 'Continue' }).click();
     await expect(caseWindow(page)).toContainText(`Case ${id} `);
     if (id === '10') {
-      await caseWindow(page).getByRole('button', { name: 'Approve' }).click(); // its reply cannot be read
+      await caseWindow(page).getByRole('button', { name: 'No more findings' }).click(); // its reply cannot be read
     } else {
       await caseWindow(page).getByRole('button', { name: 'Second opinion…' }).click();
       await page.getByRole('dialog', { name: 'Second opinion' }).getByRole('textbox', { name: 'Opinion of your LLM' }).fill(JSON.stringify(opinions[id]));

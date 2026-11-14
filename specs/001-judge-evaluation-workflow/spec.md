@@ -123,7 +123,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Prototype v15 review) What does the Judge step show, and where is "Save evaluation"? → A: Fewer buttons. The Judge step has no welcome section ("Start with your judge prompt, or look at a finished example first." and its three buttons are removed); loading an example, a test project or an evaluation is in the File menu only. The sample reply is read as soon as it is pasted or changed, so "Read sample reply" is removed; problems are shown under the box with where they are. The step's own buttons are "Add rule" (with "Add condition" and "Remove" inside a rule) and the one action of the "what next" line. "Save evaluation" and "Save evaluation as" are only on the Run step (and in the case window of Run); the header keeps the indicator of unsaved changes, the File menu and Help (FR-001, FR-008, FR-011, FR-076).
 - Q: (Clarify, prototype v15 review) May the warnings that protect unsaved work offer to save the evaluation, although "Save evaluation" is only on Run? → A: Yes. Before loading a file, "Start new evaluation", "Load example…", "Edit the judge and run again" and leaving the page, the warning offers "Save evaluation first", "Discard" and "Cancel"; this is a safeguard, not a standing action, and the Judge, Test cases and Results steps show no "Save evaluation". A threshold changed on Results is saved with the next "Save evaluation" on Run or "Save test project" (FR-051).
 - Q: (Clarify, prototype v15 review) How are clean cases and cases with injected errors shown on the Test cases step? → A: In one table of all test cases, where the Kind column says whether a case is "Clean" or has "Injected errors"; the filter can show one kind. There is no separate "Clean cases" section: its former content (adding a clean case by hand and generating many) is gone. The "Error categories" section can be collapsed and expanded: it is open while the test project has no test cases and starts collapsed when a test project with cases is loaded; a collapsed section shows a one-line summary in its heading ("8 categories"), and the state the user chooses is kept for the page session (FR-015, FR-023, FR-025, FR-087).
-- Q: (Prototype v15 review) What does the case window of Run show, and how is each item marked? → A: The case as in the read-only view, without JSON (fields with highlights, expected errors with "Show in text"), the judge prompt with "Copy prompt", and the box where the judge's reply is pasted as JSON. After the reply is saved, the tool reads it with the reply mapping and the error rules and marks every item: an expected error that a finding points at is "Found"; one that no finding points at, fully or partly, is added to the list as "Issue: missed" (the feedback's "expected issue not found") when the case has no additional finding, and otherwise stays undecided (see the next session answers); a finding that points at no expected error is listed as an additional finding for the user to mark "Issue: false positive" or "Real error". "Ignore" is available on every item, and every mark can be changed (FR-055, FR-060 to FR-062).
+- Q: (Prototype v15 review) What does the case window of Run show, and how is each item marked? → A: The case as in the read-only view, without JSON (fields with highlights, expected errors with "Show in text"), the judge prompt with "Copy prompt", and the box where the judge's reply is pasted as JSON. After the reply is saved, the tool reads it with the reply mapping and the error rules and marks every item: an expected error that a finding points at is "Found"; one that no finding points at, fully or partly, is added to the list as "Issue: missed" (the feedback's "expected issue not found") when the case has no additional finding, and otherwise stays undecided (see the next session answers); a finding that points at no expected error is listed as an additional finding for the user to mark "Issue: false positive" or "Real error". "Ignore" is available on every item, and every mark can be changed (FR-055, FR-060 to FR-062). The layout (and "Approve") was replaced by the answer "(Owner review 2026-11-14, Case window of Run)", and "Save reply" by the answer "(Owner review 2026-11-14, Reply box and note of the case window of Run)".
 - Q: (Clarify, prototype v15 review) Which marks does a finding that matches no expected error get on Run? → A: Three: "Issue: false positive", "Real error" and "Ignore". "Real error" means the judge found a true error that was not planned; it counts as a correct finding (in the false-positive rate it is among the findings but not a false positive) and the results show real errors as a separate count (FR-062, FR-066, FR-067).
 - (Prototype v15 review, decided without a question) The reply is pasted as JSON, but any text is still kept: a reply that is not JSON, or that lacks a field a rule needs, is saved with the problem and where it is shown under the box, nothing is marked automatically, and the user marks the items by hand (FR-056, FR-061).
 - (Prototype v14 review, decided without a question) The Judge step has no "Start from an example" section. One "Load example…" item in the File menu opens a small window that lists the ready examples Accuracy and Completeness (each starts a new test project with its judge, catalog and a few clean cases), the demo (a finished run of book summaries, formerly "Load demo data") and any example added with "Load metric definition…" in the same window. One route, no duplicate (FR-008, FR-019, FR-026).
@@ -138,7 +138,9 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-14, Judge) Why did "Add condition" show "Broken rule … with no value" after a typed value? → A: "Add condition" adds a new, empty condition, and the whole rule was then shown as broken, so the typed value looked lost. Now a short line beside the value box says that any value is kept as typed, and a condition just added without a value is shown as unfinished next to that condition ("Condition 3: type a value"). Such a rule is not used until it is complete, and the preview says so; "Broken rule" stays for a field that is not in the sample reply, a rule with no conditions and a rule with two lists (FR-013, FR-014).
 - Q: (Owner review 2026-11-14) Where is "Add test case"? → A: Not in the "what next" line on any step. It is a button above the list of cases: on Test cases above the table and on Run above the table of cases (after finalizing), disabled at the limit of 500 cases. The Judge step has no such button. With no cases, the "what next" line shows "Finalize test cases", disabled, and says to use the button below. "Edit test cases" stays in the line (FR-025, FR-053, FR-088).
 - Q: (Owner review 2026-11-14, Test case window) How is the test case window laid out? → A: As one vertical page for every way of adding a case; there are no two columns, no "Next", no "Back" and no "Part N of 3". The header holds only the title and "Close without saving" (Escape too; it asks first when something was typed or pasted). The save button, "Save case" (or "Approve and close" for a clean case), is at the bottom of the window, and while it is disabled the reason stands beside it. The parts are numbered from 1 in each window, from top to bottom. **Case with injected errors**: the base (optional, with its fields); the errors to prepare, one horizontal row per error (Category, Difficulty, What should be wrong, Remove) with "Add error", and the own instructions; the prompt with "Copy prompt"; the box for the LLM's JSON, checked as it changes, with the changed places that no expected error covers listed under it as warnings; the expected errors as a read-only list (each marked "not in the text" when its fragment is not found), changed only through the JSON. The list is not the case with its highlighted fields (decided). **Clean case**: Name, Comment and Like case; the prompt; the answer, with its fields shown read-only once valid; no errors to prepare and no list. **Paste JSON**: the JSON box and the expected errors only; a JSON with no expected errors says "No expected errors: this will be saved as a clean case." **Correct expected errors**: the same as Paste JSON. The read-only "Open" view is not changed. This replaces the earlier answers on the three parts of a case with injected errors and on "Next" (FR-040, FR-041, FR-083, FR-085, FR-090).
-- (Prototype v16 review, decided without a question) The box for the judge's reply is always visible in the case window of Run, never behind "More actions": under the four steps, with "Paste reply from clipboard" and "Save reply". It is checked as the text changes (FR-084). Once a reply is saved the box holds it; changing it and pressing "Save reply" replaces the reply (FR-056). The case window has no "More actions" section (FR-055, FR-063).
+- Q: (Owner review 2026-11-14, Case window of Run) How is the case window of Run laid out, and what happens to "Approve"? → A: As one vertical page of three numbered parts under a header that does not scroll. **1. Case**: every field of the case with the highlights of the expected errors, over the full width. **2. Marking**: one row with "Add finding", "Second opinion…", the meter "Marked N of M" (items that are not undecided, "Ignore" included, of all expected errors and additional findings) and the status of the case (Awaiting verification, Pass, Fail; the header no longer shows it). **3. Judge reply and errors**: two columns of the same width, stacked below 760 px. On the left "Judge reply": the four steps with "Copy prompt" and "Paste reply from clipboard", the complete judge prompt collapsed under "Show complete prompt", then the reply box with "Save reply". On the right "Errors": the expected errors and the additional findings with their marks, then the findings in the reply. Before a reply is saved part 2 shows only the status and the right column says that the errors appear when the reply is saved. **"Approve" is removed** from the actions of Run (decided): it saved nothing, it was taken for a duplicate of "Save evaluation", and for a reply that can be read it changed nothing. Only for a reply that cannot be read a button "No more findings" stands next to the message that says so; it confirms that the findings added by hand are all and sets the approval as "Approve" did, and the case awaits verification until then. This replaces the earlier answers on the two columns of the case window and on "Approve" (FR-055, FR-060, FR-064, the naming list).
+- Q: (Owner review 2026-11-14, Reply box and note of the case window of Run) When is a reply saved, and what happens to the note of a case? → A: **There is no "Save reply".** A reply that is readable JSON (the whole text, a code fence, or the first balanced block; FR-084) is saved as soon as it is in the box, typed or pasted, and the case is marked from it at once. Replacing a reply that has decisions still asks first, naming how many (FR-056); if the user cancels, the text stays in the box and nothing is saved. Text that is not JSON is not saved by itself: the box says "This is not JSON" with the line and column of the problem, and a button "Save as text anyway" (primary) keeps the text as the reply, as any text could always be kept (such a reply then needs "No more findings"). Leaving the case (Next, Previous, Close, Escape) with text in the box that is not saved still asks first (FR-055). **The per-case "Note" button and box are removed** (decided): the note of the run is the "Model details" box of the Run step (model name, temperature, settings), which is saved in the evaluation file and shown in the HTML report. A file that holds notes of cases still loads, the notes are kept when the file is saved again, and the HTML report and the read-only view still show a note a file has. This replaces the earlier answers on "Save reply" and on the short note (FR-055, FR-056, FR-062).
+- (Prototype v16 review, decided without a question) The box for the judge's reply is always visible in the case window of Run, never behind "More actions": under the four steps, with "Paste reply from clipboard" and "Save reply". It is checked as the text changes (FR-084). Once a reply is saved the box holds it; changing it and pressing "Save reply" replaces the reply (FR-056). The case window has no "More actions" section (FR-055, FR-063). The layout (and "Approve") was replaced by the answer "(Owner review 2026-11-14, Case window of Run)", and "Save reply" by the answer "(Owner review 2026-11-14, Reply box and note of the case window of Run)".
 - (Prototype v16 review, decided without a question) A finding added by hand ("Add finding") has "Remove"; findings read from the reply have none (they are marked, "Ignore" included). A finding added by hand may optionally get a category (from the catalog, or a new name that joins it) and a difficulty (obvious or subtle) (FR-062).
 - (Prototype v16 review, decided without a question) The second opinion is one button, "Second opinion…", under the list of items of a case with a reply. It opens a window for that case: the line saying what is checked, (1) the verification prompt read-only with "Copy prompt", (2) one box for the LLM's answer, checked as it changes, (3) a preview of every change ("E1 undecided → Found", with the LLM's reason and fragment), and "Apply opinion" and "Cancel". "Copy verification prompt", "Paste LLM opinion from clipboard", "Read LLM opinion" and the box shown only when the clipboard cannot be read are removed (FR-063).
 - (Prototype v16 review, decided without a question) When the opinion is readable but classifies none of the items (wrong numbers, missing "found" or "real", another case), the window says "The opinion classifies none of the N items of this case. Nothing will change.", names the reason for each item, keeps the pasted text and disables "Apply opinion"; the items keep their marks and reasons and the user marks them by hand. When it classifies only some items, "Apply opinion" changes only those, and the others keep their marks; an undecided one gets the reason "The LLM opinion gave no answer for this item" (FR-063).
@@ -472,10 +474,11 @@ reply.
    one list with their name, kind, number of expected errors and status, and a short summary shows
    the judge version, the test project name and version and the judged text.
 2. **Given** the list, **When** the user presses the button at a case, **Then** a window opens that
-   fills the screen in two columns: on the left the case in the same read-only layout as when it was
-   made but without its JSON (name, fields with highlighted fragments, expected errors with "Show in
-   text") and the judge prompt with "Copy prompt"; on the right "Judge's reply" with the four steps
-   to follow, "Paste reply from clipboard" and the box for the reply with "Save reply".
+   fills the screen as one page of three parts (see the Clarifications, Owner review 2026-11-14,
+   Case window of Run): the fields of the case with highlighted fragments; a row with "Add
+   finding", "Second opinion…", "Marked N of M" and the status; then, in two equal columns, "Judge
+   reply" (the four steps with "Copy prompt" and "Paste reply from clipboard", the complete prompt
+   under "Show complete prompt", the box for the reply, saved as soon as it is readable JSON) and the errors.
 3. **Given** the window of a case, **When** the user presses "Next test case" or "Previous test
    case" (or the matching keys), **Then** the window shows that case at once, with its position
    ("case 7 of 20"), without going back to the list.
@@ -491,7 +494,7 @@ reply.
    such decisions will be removed, and resets the case only after confirmation.
 7. **Given** the browser refuses to let the tool read the clipboard, **When** the user presses
    "Paste reply from clipboard", **Then** the tool says so and the user pastes with Ctrl+V into the
-   box, which is always shown, and presses "Save reply", with the same effect.
+   box, which is always shown, with the same effect: a reply that is readable JSON is saved at once, any other text with "Save as text anyway".
 8. **Given** a test project that is not finalized, **When** the user opens the Run step, **Then** the
    tool asks them to finalize the test cases first.
 9. **Given** replies saved since the last "Save evaluation", **When** the user looks at the Run step
@@ -1002,9 +1005,9 @@ case and confirm the new case has the same fields and expected errors.
   "Show in text", "Show JSON", "Copy JSON", "Copy prompt" and, after finalizing,
   "Correct expected errors".
   Run: "Save evaluation", "Save evaluation as", "Open" at each case; in its window "Previous test
-  case", "Next test case", "Show in text", "Copy prompt", "Paste reply from clipboard", "Save reply"
-  (for the box), the marks of an item ("Found", "Issue: missed", "Issue: false positive", "Real
-  error", "Ignore"), "Approve", "Add finding", "Remove" (for a finding added by hand), "Second
+  case", "Next test case", "Show in text", "Copy prompt", "Paste reply from clipboard", "Save as text anyway"
+  (for a text in the box that is not JSON), the marks of an item ("Found", "Issue: missed", "Issue: false positive", "Real
+  error", "Ignore"), "No more findings" (only for a reply that cannot be read), "Add finding", "Remove" (for a finding added by hand), "Second
   opinion…" (in its window "Copy prompt", "Apply opinion" and "Cancel") and "Save evaluation". Results: the views "Summary", "Error analysis" and "Test case list", and the actions
   "Export HTML report", "Load check settings" and "Edit the judge and run again". Removing
   something (a rule, condition, category, error to prepare or test case) is always named "Remove".
@@ -1022,9 +1025,10 @@ case and confirm the new case has the same fields and expected errors.
   are not offered. To keep the screens light, a table row MUST show its actions as visible buttons,
   never in a menu of the row: Test cases "Open", "Rename" and "Remove" (FR-025);
   Run and Results "Open". A click on the row also opens the case. In the case window of Run the one
-  action needed next ("Copy prompt", then "Paste reply from clipboard", then "Approve") MUST be the
-  primary one; the actions for the whole case that are needed less often, "Add finding" and
-  "Second opinion…", MUST be visible buttons under the list of items, never in a collapsed section
+  action needed next ("Copy prompt", then "Paste reply from clipboard", and nothing after it) MUST be the
+  primary one, and for a reply that cannot be read "No more findings"; the actions for the whole
+  case that are needed less often, "Add finding" and
+  "Second opinion…", MUST be visible buttons in the row of part 2, never in a collapsed section
   or a menu, and the marks of single items stay visible. "Continue"
   (FR-073) is the action of the "what next" line after a file is loaded, and on the Run step
   whenever a case is not run or awaits verification.
@@ -1383,24 +1387,32 @@ case and confirm the new case has the same fields and expected errors.
   version, the test project name and version, and the judged text. The judge prompt and the error rules
   are not repeated there; they are on the Judge step.
 - **FR-055**: Each case in the list MUST have an "Open" button that opens the **case window**. It
-  MUST fill the screen and show two columns, each scrolling on its own. The left column shows the
-  case read-only, as the read-only view of FR-086 does: name, fields with the
-  fragments of the expected errors highlighted and numbered, the list of expected errors with "Show
-  in text", and then the complete judge prompt with "Copy prompt". The right column, headed
-  "Judge's reply", holds the four steps to follow (Copy prompt; run it in a new conversation; copy
-  the answer; Paste reply from clipboard), "Paste reply from clipboard", and the box for the JSON
-  reply with "Save reply", always shown and never behind a collapsed section, checked as the text
-  changes (FR-084); once a reply is saved the box holds it, and below it the list of items with
-  their marks, "Add finding" and "Second opinion…" (FR-060 to FR-064). The window has no "More
-  actions" section. The window header MUST hold "Previous test case" and
+  MUST fill the screen and be one page of three numbered parts, from top to bottom. Part 1 shows
+  the case, as the read-only view of FR-086 does: the kind, the fields with the
+  fragments of the expected errors highlighted and numbered (marked found, missed, undecided or
+  ignored once there is a reply), over the full width. Part 2 is one row: "Add finding", "Second
+  opinion…", the meter "Marked N of M" and the status of the case. Part 3 has two columns of the
+  same width (stacked below 760 px). The left column, "Judge reply", holds the four steps to follow
+  (Copy prompt; run it in a new conversation; copy the answer; Paste reply from clipboard) with
+  "Copy prompt" and "Paste reply from clipboard", the complete judge prompt collapsed under "Show
+  complete prompt", and the box for the JSON reply, always shown, checked as the
+  text changes (FR-084); a reply that is readable JSON is saved as soon as it is in the box, and once
+  a reply is saved the box holds it. The right column, "Errors", lists
+  the expected errors and the additional findings with their marks, then the findings in the reply
+  (FR-060 to FR-064). The window has no "More
+  actions" section and no "Approve". The window header MUST hold "Previous test case" and
   "Next test case", always visible and also reachable from the keyboard, the position of the case
-  ("case 7 of 20"), its status, and "Save evaluation". Moving to another case MUST NOT lose a reply
-  that was typed but not saved: the system asks first.
+  ("case 7 of 20"), and "Save evaluation". Moving to another case MUST NOT lose a reply
+  that was typed but not saved (a text that is not JSON and was not kept with "Save as text
+  anyway"): the system asks first.
 - **FR-056**: Users MUST be able to enter the received reply for each case in one action with
-  "Paste reply from clipboard", which reads the clipboard and saves the reply, or by pasting into
-  the box and pressing "Save reply". The reply is expected as the judge's JSON, but the system MUST
-  keep any text: when the reply is not readable JSON, or lacks a field a rule needs, it is saved,
-  the problem and where it is (line and column, or the field path) are shown under the box (FR-084),
+  "Paste reply from clipboard", which reads the clipboard and saves the reply, or by pasting or
+  typing into the box: a reply that is readable JSON MUST be saved as soon as it is in the box,
+  with no "Save reply" button. The reply is expected as the judge's JSON, but the system MUST
+  keep any text: a text that is not readable JSON is not saved by itself; the box says "This is not
+  JSON" and where the problem is (line and column), and "Save as text anyway" keeps the text as the
+  reply. A reply that lacks a field a rule needs is readable JSON and is saved. For a saved reply
+  that has a problem, the problem and where it is (line and column, or the field path) are shown under the box (FR-084),
   nothing is marked automatically, and the user marks the items by hand. An empty clipboard or box
   is explained and changes nothing. Every new reply MUST reset the case: its decisions, the
   findings added by hand included, are removed and the automatic marks are computed again from the new reply. When
@@ -1428,7 +1440,7 @@ case and confirm the new case has the same fields and expected errors.
 - **FR-060**: Right after a reply is saved, the case window MUST show **one list of items** with
   their marks: every expected error of the case, and every additional finding (a finding that
   points at no expected error), each undecided item with its reason, together with the decisions
-  of FR-062 to FR-064 and "Approve". The marks are: for an expected error "Found", "Issue: missed"
+  of FR-062 to FR-064. The marks are: for an expected error "Found", "Issue: missed"
   or "Ignore"; for an additional finding "Issue: false positive", "Real error" or "Ignore". The two
   "Issue" marks count against the judge; "Ignore" leaves the item out of every count. "Previous
   test case" and "Next test case" MUST move through the cases, and the user MUST be able to limit
@@ -1465,7 +1477,9 @@ case and confirm the new case has the same fields and expected errors.
   marked "Ignore" MUST be left out of every count and listed as ignored in the report. An
   additional finding marked "Real error" (a true error that was not planned) is counted on its own
   (FR-066); it MUST NOT be added to the expected errors of the case. The user MUST be able to
-  change any mark, including an automatic one, and to add a short note.
+  change any mark, including an automatic one. A case has no note of its own in the case window:
+  the note of the run is the "Model details" box of the Run step (a note of a case in a loaded file
+  is kept and shown in the report).
 - **FR-063**: In the case window of every case with a reply, the system MUST offer a second
   opinion from the user's own LLM, one case at a time, through one button, "Second opinion…", under
   the list of items. It opens a **second-opinion window** for that case, not a collapsed section,
@@ -1498,8 +1512,8 @@ case and confirm the new case has the same fields and expected errors.
   approval of several cases in one action.
 - **FR-064**: Every test case MUST have a status: Not run, Awaiting verification, Pass, or Fail. A
   case awaits verification while any of its items is undecided, and a case whose reply could not
-  be read awaits verification until the user approves it, because the tool cannot know that the
-  reply holds no further findings. It is Pass when every expected
+  be read awaits verification until the user presses "No more findings", because the tool cannot
+  know that the reply holds no further findings. It is Pass when every expected
   error that is not ignored is "Found" and no additional finding is marked "Issue: false
   positive", otherwise Fail. The user's decision MUST be authoritative, and every decision MUST show its source:
   automatic, set by hand, or an LLM opinion approved by the user.
@@ -1732,7 +1746,7 @@ case and confirm the new case has the same fields and expected errors.
 - **FR-084**: Wherever the user pastes text that the tool reads (the sample reply, the answer for a
   clean case, the JSON of a case, the judge's reply, an LLM opinion), every problem MUST be shown
   directly under the box together with where it is: the line and column for text that is not
-  readable JSON, and the path of the field (for example `fields.summary`, `expected_errors[2].description`)
+  readable JSON (the judge's reply says "This is not JSON" first), and the path of the field (for example `fields.summary`, `expected_errors[2].description`)
   for a missing, unknown, empty or too long field. The pasted text MUST be kept, and nothing that
   was already saved is changed by a wrong paste.
 

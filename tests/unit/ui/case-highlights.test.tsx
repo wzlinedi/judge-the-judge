@@ -6,7 +6,7 @@ import { fieldMarks } from '../../../src/ui/windows/case-window/marks';
 import type { TestCase } from '../../../src/core/model';
 import { reviewEvaluation } from '../../../src/core/evaluation/results';
 import { markFindings } from '../../../src/core/evaluation/finding-marks';
-import { DecidePane } from '../../../src/ui/windows/case-window/DecidePane';
+import { ErrorsPane } from '../../../src/ui/windows/case-window/DecidePane';
 import { accuracyMetric, sampleEvaluation } from '../../helpers/fixtures';
 
 const text = 'One two. Three four. Five six. Seven eight. Nine ten.';
@@ -87,7 +87,7 @@ describe('the case window of Run', () => {
     const e = sampleEvaluation();
     const reviewed = reviewEvaluation(e, accuracyMetric).find((r) => r.testCase.id === '2')!;
     const noop = () => undefined;
-    const { getByRole } = render(<DecidePane reviewed={reviewed} effective={reviewed.effective!} replyChanged={false} onExpected={noop} onAdditional={noop} onApprove={noop} onShowInText={noop} onRemove={noop} onAddFinding={noop} onSecondOpinion={noop} note="" onNote={noop} />);
+    const { getByRole } = render(<ErrorsPane reviewed={reviewed} effective={reviewed.effective!} onExpected={noop} onAdditional={noop} onApprove={noop} onShowInText={noop} onRemove={noop} />);
     const list = getByRole('list', { name: 'Findings in the reply' });
     expect(list.textContent).toContain('matches error 1');
     expect(list.textContent).toContain('matches error 2');

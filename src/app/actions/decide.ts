@@ -59,11 +59,6 @@ export function removeFinding(evaluation: Evaluation, caseId: string, index: num
   });
 }
 
-export function setNote(evaluation: Evaluation, caseId: string, note: string): Evaluation {
-  if (note === '' && !evaluation.decisions[caseId]) return evaluation;
-  return withDecisions(evaluation, caseId, (d) => ({ ...d, note }));
-}
-
 /** "Apply opinion": the user's approval of everything the preview showed. New categories join the catalog. */
 export function applyOpinionTo(evaluation: Evaluation, caseId: string, plan: OpinionPlan): Evaluation {
   if (!plan.canApply) return evaluation;

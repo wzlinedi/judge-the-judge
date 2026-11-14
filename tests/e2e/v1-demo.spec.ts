@@ -53,7 +53,7 @@ test('deciding the five cases gives the numbers of the expected results file', a
   // 10: a reply that cannot be read; approve it
   await expect(page.getByRole('dialog', { name: /Case 10 /})).toBeVisible();
   await expect(page.getByText(/could not be read/i)).toBeVisible();
-  await page.getByRole('button', { name: 'Approve' }).click();
+  await page.getByRole('button', { name: 'No more findings' }).click();
   await page.getByRole('button', { name: 'Next test case' }).click();
 
   // 14: a partly matching finding is the error

@@ -8,8 +8,11 @@ export interface CaseWindowFrameProps {
   /** Zero-based position of the case and the number of cases. */
   index: number;
   total: number;
-  left: ComponentChildren;
-  right: ComponentChildren;
+  /** The two columns of the read-only views. */
+  left?: ComponentChildren;
+  right?: ComponentChildren;
+  /** Instead of the two columns: one vertical page of numbered parts (the case window of Run, T230). */
+  page?: ComponentChildren;
   onPrevious: () => void;
   onNext: () => void;
   onClose: () => void;
@@ -28,7 +31,7 @@ export interface CaseWindowFrameProps {
  * (research.md, section 20): fills the screen, a header that never scrolls, two columns that scroll
  * on their own and stack below 760 px.
  */
-export function CaseWindowFrame({ title, index, total, left, right, onPrevious, onNext, onClose, headerExtra, positionLabel, canPrevious, canNext, overlay }: CaseWindowFrameProps) {
+export function CaseWindowFrame({ title, index, total, left, right, page, onPrevious, onNext, onClose, headerExtra, positionLabel, canPrevious, canNext, overlay }: CaseWindowFrameProps) {
   const first = canPrevious === undefined ? index <= 0 : !canPrevious;
   const last = canNext === undefined ? index >= total - 1 : !canNext;
 
@@ -71,10 +74,16 @@ export function CaseWindowFrame({ title, index, total, left, right, onPrevious, 
           {labels.close}
         </button>
       </div>
-      <div class="case-columns">
-        <section class="case-pane">{left}</section>
-        <section class="case-pane">{right}</section>
-      </div>
+      {page !== undefined ? (
+        <div class="case-window-body">
+          <div class="case-page">{page}</div>
+        </div>
+      ) : (
+        <div class="case-columns">
+          <section class="case-pane">{left}</section>
+          <section class="case-pane">{right}</section>
+        </div>
+      )}
       {overlay}
     </div>
   );

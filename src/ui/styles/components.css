@@ -51,9 +51,21 @@
 .case-page { max-width: 64rem; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-5); }
 .case-part h3 { margin: 0 0 var(--space-2); font-size: var(--text-lg); }
 .case-part textarea, .case-part select { max-width: 100%; }
+.case-half { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); align-items: start; }
+.case-half > section { min-width: 0; }
+.case-half h4 { margin: 0 0 var(--space-2); font-size: var(--text-md); }
+.decide-pane h5 { margin: var(--space-4) 0 var(--space-2); font-size: var(--text-sm); color: var(--text-muted); }
+.decide-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.mark-meter { font-weight: 600; }
+.unreadable-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.unreadable-note .error-note { margin: 0; }
+.prompt-details { margin: var(--space-3) 0; }
+.prompt-details summary { cursor: pointer; }
+.prompt-details textarea { width: 100%; margin-top: var(--space-2); }
 .case-window-footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: var(--surface); }
 @media (max-width: 759px) {
   .case-columns { grid-template-columns: 1fr; overflow: auto; }
+  .case-half { grid-template-columns: 1fr; }
   .case-pane { overflow: visible; border-right: 0; border-bottom: 1px solid var(--border); }
 }
 

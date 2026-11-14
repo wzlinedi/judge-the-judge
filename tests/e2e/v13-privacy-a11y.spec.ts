@@ -250,13 +250,13 @@ test('Escape does not lose a reply that was typed and not saved: the window asks
   await loadDemo(page);
   await next(page).getByRole('button', { name: 'Continue' }).click();
   const caseWindow = page.getByRole('dialog', { name: /^Case \d+ / });
-  await caseWindow.getByRole('textbox', { name: 'Judge reply' }).fill('{"claims": []} typed by hand');
+  await caseWindow.getByRole('textbox', { name: 'Judge reply' }).fill('half a reply, typed by hand');
   await page.keyboard.press('Escape');
   const ask = page.getByRole('dialog', { name: 'The reply in the box is not saved' });
   await expect(ask).toBeVisible();
   await expect(caseWindow).toBeVisible();
   await ask.getByRole('button', { name: 'Cancel' }).click();
-  await expect(caseWindow.getByRole('textbox', { name: 'Judge reply' })).toHaveValue('{"claims": []} typed by hand');
+  await expect(caseWindow.getByRole('textbox', { name: 'Judge reply' })).toHaveValue('half a reply, typed by hand');
 });
 
 test.describe('at 360 px wide', () => {
@@ -264,7 +264,7 @@ test.describe('at 360 px wide', () => {
 
   const fits = (page: Page) => page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
 
-  test('no screen scrolls sideways, the case window stacks its columns and the action row of the second opinion stays visible', async ({ page }) => {
+  test('no screen scrolls sideways, the case window stacks the columns of its part 3 and the action row of the second opinion stays visible', async ({ page }) => {
     await page.goto('/');
     const sideways: string[] = [];
     const measure = async (label: string) => {
@@ -293,14 +293,14 @@ test.describe('at 360 px wide', () => {
     await expect(caseWindow).toBeVisible();
     await measure('Case window');
 
-    // the case on one side and the judge's reply on the other stand one above the other
-    const columns = await caseWindow.locator('.case-columns > *').evaluateAll((nodes) =>
+    // the judge's reply and the errors of part 3 stand one above the other
+    const columns = await caseWindow.locator('.case-half > section').evaluateAll((nodes) =>
       nodes.slice(0, 2).map((n) => {
         const box = n.getBoundingClientRect();
         return { left: Math.round(box.left), top: Math.round(box.top), width: Math.round(box.width) };
       }),
     );
-    expect(columns, 'the case window has two columns').toHaveLength(2);
+    expect(columns, 'part 3 has two columns').toHaveLength(2);
     expect(columns[1]!.top, 'the second column is below the first').toBeGreaterThan(columns[0]!.top);
     expect(columns[1]!.left, 'both columns start at the same edge').toBe(columns[0]!.left);
 

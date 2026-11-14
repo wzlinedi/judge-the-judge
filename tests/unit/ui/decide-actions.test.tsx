@@ -30,9 +30,9 @@ const addFinding = (text: string, category = '', difficulty = '') => {
 };
 
 describe('the buttons under the list', () => {
-  it('keeps Add finding, Note and Second opinion… always visible, never in a collapsed section', () => {
+  it('keeps Add finding and Second opinion… always visible, never in a collapsed section', () => {
     open('3');
-    for (const name of ['Add finding', 'Note', 'Second opinion…']) {
+    for (const name of ['Add finding', 'Second opinion…']) {
       const button = within(win()).getByRole('button', { name });
       expect(button.closest('details')).toBeNull();
     }
@@ -88,30 +88,25 @@ describe('Add finding', () => {
     expect(seen.at(-1)?.decisions['3']?.added_findings).toEqual([]);
   });
 
-  it('is offered for a reply that could not be read, with the note that the case needs Approve', () => {
+  it('is offered for a reply that could not be read, with the note that the case needs No more findings', () => {
     open('10');
     expect(win().textContent).toMatch(/could not be read/);
-    expect(within(win()).getByText(/The case needs Approve/)).toBeTruthy();
+    expect(within(win()).getByText(/press No more findings/)).toBeTruthy();
     addFinding('The summary has no content');
     expect(document.querySelector('[data-additional="added#1"]')).not.toBeNull();
-    expect(within(win()).getByRole('button', { name: 'Approve' })).toBeTruthy();
+    expect(within(win()).getByRole('button', { name: 'No more findings' })).toBeTruthy();
   });
 });
 
-describe('Note', () => {
-  it('opens a box for a short note on the case and keeps what is typed', () => {
-    const seen = open('3');
-    fireEvent.click(within(win()).getByRole('button', { name: 'Note' }));
-    const box = within(win()).getByRole('textbox', { name: 'Note' }) as HTMLTextAreaElement;
-    fireEvent.input(box, { target: { value: 'checked with the book' } });
-    expect(seen.at(-1)?.decisions['3']?.note).toBe('checked with the book');
-  });
-
-  it('shows the box already open when the case has a note', () => {
+describe('the note of a case', () => {
+  it('has no Note button or box in the window, and a note a file holds is kept', () => {
     const e = structuredClone(demo);
     e.decisions['3'] = { expected: {}, additional: {}, added_findings: [], approved: false, note: 'an earlier note' };
-    open('3', e);
-    expect((within(win()).getByRole('textbox', { name: 'Note' }) as HTMLTextAreaElement).value).toBe('an earlier note');
+    const seen = open('3', e);
+    expect(within(win()).queryByRole('button', { name: 'Note' })).toBeNull();
+    expect(within(win()).queryByRole('textbox', { name: 'Note' })).toBeNull();
+    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Real error' }));
+    expect(seen.at(-1)?.decisions['3']?.note).toBe('an earlier note');
   });
 });
 

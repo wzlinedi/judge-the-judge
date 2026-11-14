@@ -21,7 +21,7 @@ async function decideEverything(page: Page) {
     await next(page).getByRole('button', { name: 'Continue' }).click();
     await expect(caseWindow(page)).toContainText(`Case ${id} `);
     if (id === '10') {
-      await caseWindow(page).getByRole('button', { name: 'Approve' }).click();
+      await caseWindow(page).getByRole('button', { name: 'No more findings' }).click();
     } else {
       await caseWindow(page).getByRole('button', { name: 'Second opinion…' }).click();
       await page.getByRole('dialog', { name: 'Second opinion' }).getByRole('textbox', { name: 'Opinion of your LLM' }).fill(JSON.stringify(opinions[id]));

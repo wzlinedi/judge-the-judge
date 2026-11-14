@@ -209,14 +209,16 @@ Opened by **Open** (FR-055, FR-060).
 
 - **Fills the screen.** A header that never scrolls: **Previous test case**, **Next test case**,
   the position, the checkbox "only cases awaiting verification", the case name with its
-  identifier, a status pill, "N not saved", **Save evaluation**, **Save evaluation as**, **Close**.
-  Alt + Left and Alt + Right do the same as the two buttons.
-- **Two columns that scroll on their own**: data on the left, outcome on the right. Below 760 px
-  wide they stack.
+  identifier, "N not saved", **Save evaluation**, **Save evaluation as**, **Close**.
+  Alt + Left and Alt + Right do the same as the two buttons. The status is in part 2.
+- **One vertical page of three numbered parts** (the same page layout as the test case window;
+  Owner review 2026-11-14, Case window of Run). The page scrolls as a whole.
 
-| Left column | Right column |
+| Part | Content |
 |---|---|
-| Kind and base; the expected errors with **Show in text**; the case's fields with the fragments highlighted and numbered (and, after a reply, marked found, missed, undecided or ignored); the complete judge prompt | Headed "Judge's reply". **Without a reply**: the four steps in one line (1 Copy prompt, 2 run it in a new conversation, 3 copy the answer, 4 Paste reply from clipboard), then **Copy prompt** and **Paste reply from clipboard** side by side (the one needed next is primary), and below them the reply box, always visible, with **Save reply**. **With a reply**: the reply box holding the reply (changing it and pressing **Save reply** replaces it; **Paste reply from clipboard** beside it), checked as it changes with line and column; then the status and **Approve** (primary while the case awaits verification); for a judge evaluated per case one line saying so; the list of items: each expected error with its mark (**Found**, **Issue: missed**, **Ignore**), each additional finding with its mark (**Issue: false positive**, **Real error**, **Ignore**), the reason for anything undecided and the source of every mark; a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**. Under the list, always visible: **Add finding** (text, optional category, optional difficulty), **Note**, and **Second opinion…**. |
+| **1. Case** | Kind and base; every field of the case, over the full width, with the fragments of the expected errors highlighted and numbered (and, after a reply, marked found, missed, undecided or ignored). |
+| **2. Marking** | One row: **Add finding** (text, optional category, optional difficulty), **Second opinion…**, the meter "Marked N of M" and the status of the case (Awaiting verification, Pass, Fail). **Without a reply** only the status is shown. There is no **Approve**. |
+| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: the four steps in one list (1 Copy prompt, 2 run it in a new conversation, 3 copy the answer, 4 Paste reply from clipboard) with **Copy prompt** and **Paste reply from clipboard** (the one needed next is primary), the complete judge prompt collapsed under **Show complete prompt**, then the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column. A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Save as text anyway** (primary) keeps it. **Right, "Errors"**: without a reply "The errors appear here when the judge’s reply is saved."; with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; **Expected errors**, each with its mark (**Found**, **Issue: missed**, **Ignore**), **Show in text**, the reason for anything undecided and the source of every mark; **Additional findings**, each with its mark (**Issue: false positive**, **Real error**, **Ignore**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**; then **Findings in the reply** with the words that go with their colours. |
 
 - A decision made in the window takes effect at once and the window stays open.
 - A new reply resets the case: its decisions, the added findings included, are removed and the
@@ -227,7 +229,7 @@ Opened by **Open** (FR-055, FR-060).
   clipboard not readable (says so and points to the box); replacing a reply when the case has
   decisions set by hand or from an applied opinion (asks, saying how many will be removed);
   reply that cannot be read (kept, line and column shown, nothing marked automatically, the case
-  needs **Approve** after marking by hand).
+  needs **No more findings** after the findings are added by hand).
 
 ### Window: Second opinion
 
@@ -323,7 +325,8 @@ offers no action that changes the case, and **Open on Run** leads to the case wi
 - One obvious primary action per step, in the "what next" line; the only other primary-colored
   controls are **Save evaluation** on the Run step and the confirming button of a window the user
   has opened and must answer (**Save case**, **Approve and close**, **Apply opinion**, **Import
-  test cases** in the import summary, **Approve** in the case window). Inside a window, the action
+  test cases** in the import summary, **No more findings** in the case window of a reply that
+  cannot be read). Inside a window, the action
   needed next is the primary one.
 - Action names follow FR-008: taking text from the clipboard is "Paste … from clipboard", keeping
   something is "Save …", removing is "Remove"; the same action has the same name everywhere. Text

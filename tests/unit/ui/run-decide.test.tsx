@@ -99,9 +99,10 @@ describe('case window of Run, with a reply', () => {
     expect(e2.querySelector('.reason')?.textContent).toMatch(/only partly matches/);
   });
 
-  it('makes Approve the primary button while the case awaits verification', () => {
+  it('has no Approve for a reply that can be read: the case awaits until its items are marked', () => {
     render(<Window caseId="14" />);
-    expect(screen.getByRole('button', { name: 'Approve' }).classList.contains('primary')).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Approve' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'No more findings' })).toBeNull();
     expect(screen.getAllByText(/Awaiting verification/).length).toBeGreaterThan(0);
   });
 
@@ -126,11 +127,11 @@ describe('case window of Run, with a reply', () => {
     expect(document.querySelector('[data-additional]')?.textContent).toContain('Victor and the creature');
   });
 
-  it('keeps a reply that could not be read, says why, and needs Approve after marking by hand', () => {
+  it('keeps a reply that could not be read, says why, and needs No more findings after marking by hand', () => {
     render(<Window caseId="10" />);
     expect(screen.getByText(/could not be read/i)).toBeTruthy();
     expect(screen.getAllByText(/Awaiting verification/).length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+    fireEvent.click(screen.getByRole('button', { name: 'No more findings' }));
     expect(screen.getAllByText(/Pass/).length).toBeGreaterThan(0);
   });
 

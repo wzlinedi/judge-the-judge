@@ -1,15 +1,16 @@
 import { useRef, useState } from 'preact/hooks';
-import { addFinding, applyOpinionTo, removeFinding, setNote } from '../../../app/actions/decide';
+import { addFinding, applyOpinionTo, removeFinding } from '../../../app/actions/decide';
 import { approveCase, setAddedMark, setAdditionalMark, setExpectedMark } from '../../../app/actions/decisions';
 import { reminderDue, type ReplyOutcome } from '../../../app/actions/replies';
 import type { ReviewedCase } from '../../../core/evaluation/results';
 import { composePrompt } from '../../../core/judge/compose';
+import { extractJson } from '../../../core/judge/extract-json';
 import type { Evaluation } from '../../../core/model';
 import { CaseWindowFrame } from '../../components/CaseWindowFrame';
 import { Dialog } from '../../components/Dialog';
-import { StatusMark } from '../../components/StatusMark';
+import { Part } from '../../components/CasePart';
 import { labels } from '../../labels';
-import { DecidePane } from './DecidePane';
+import { DecideBar, ErrorsPane } from './DecidePane';
 import { MarkedFields } from './MarkedFields';
 import { SecondOpinionWindow } from '../second-opinion/SecondOpinionWindow';
 import { AddFindingDialog } from './AddFindingDialog';
@@ -65,46 +66,38 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
     el?.focus();
   };
 
-  const left = (
-    <div class="case-data">
-      <p>
-        <span class="muted">Kind: </span>
-        <strong>{testCase.expected_errors.length === 0 ? 'Clean' : 'Injected errors'}</strong>
-        {testCase.base ? <span class="muted">{` · Base: ${testCase.base}${base ? ` (${base.name})` : ''}`}</span> : null}
-      </p>
-      <MarkedFields testCase={testCase} judged={judged} effective={effective} uncovered={[]} rootRef={textRef} />
-      <label class="field-label" for="complete-prompt">
-        Complete judge prompt
-      </label>
-      <textarea id="complete-prompt" class="json" rows={8} readOnly value={prompt} aria-label="Complete judge prompt" />
-    </div>
-  );
-
   const text = drafts[caseId] ?? reply?.reply ?? '';
   const changed = text !== (reply?.reply ?? '');
   const setText = (value: string) => setDrafts((d) => ({ ...d, [caseId]: value }));
-  const clearDraft = () =>
+  /** Forgets the draft of this case; with `only`, only while the box still holds that text (the user may have typed on). */
+  const clearDraft = (only?: string) =>
     setDrafts((d) => {
+      if (!(caseId in d) || (only !== undefined && d[caseId] !== only)) return d;
       const { [caseId]: _gone, ...rest } = d;
       return rest;
     });
 
   /** The result of an action on the reply: what to say, whether to ask, and the draft that is now saved. */
-  const settle = (outcome: ReplyOutcome) => {
+  const settle = (outcome: ReplyOutcome, sent?: string) => {
     if (outcome.status === 'needs_confirmation') {
       setMessage('');
-      setReplacing({ text: outcome.text ?? text, count: outcome.replaces ?? 0 });
+      setReplacing({ text: outcome.text ?? sent ?? text, count: outcome.replaces ?? 0 });
       return;
     }
     setMessage(outcome.message ?? '');
-    if (outcome.status === 'saved' || outcome.status === 'unchanged') clearDraft();
+    if (outcome.status === 'saved' || outcome.status === 'unchanged') clearDraft(sent);
   };
-  const saveReply = async () => settle(await replyActions.save(caseId, text));
+  const saveText = async (value: string) => settle(await replyActions.save(caseId, value), value);
   const pasteReply = async () => settle(await replyActions.paste(caseId));
   const confirmReplace = async () => {
     const pending = replacing;
     setReplacing(null);
-    if (pending) settle(await replyActions.save(caseId, pending.text, true));
+    if (pending) settle(await replyActions.save(caseId, pending.text, true), pending.text);
+  };
+  /** A reply that is readable JSON is saved as soon as it is in the box, typed or pasted (FR-056). */
+  const onText = (value: string) => {
+    setText(value);
+    if (value.trim() !== '' && value !== (reply?.reply ?? '') && extractJson(value).ok) void saveText(value);
   };
 
   /** Moving or closing with a reply that was typed and not saved asks first (FR-055). */
@@ -124,35 +117,52 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
     go?.();
   };
 
-  const right = (
+  const page = (
     <>
-      <ReplyPane
-        prompt={prompt}
-        saved={reply?.reply}
-        text={text}
-        onText={setText}
-        copied={copied[caseId] === true}
-        onCopied={() => setCopied((c) => ({ ...c, [caseId]: true }))}
-        onSave={() => void saveReply()}
-        onPaste={() => void pasteReply()}
-        message={message}
-      />
-      {reply && effective ? (
-        <DecidePane
-          reviewed={current}
-          effective={effective}
-          replyChanged={changed && text.trim() !== ''}
-          onExpected={(id, state) => onChange(setExpectedMark(evaluation, caseId, id, state))}
-          onAdditional={(item, state) => onChange(item.added !== undefined ? setAddedMark(evaluation, caseId, item.added, state) : setAdditionalMark(evaluation, caseId, item.key, state))}
-          onApprove={() => onChange(approveCase(evaluation, caseId))}
-          onShowInText={showInText}
-          onRemove={(item) => item.added !== undefined && onChange(removeFinding(evaluation, caseId, item.added))}
-          onAddFinding={() => setAdding(true)}
-          onSecondOpinion={() => setOpinionOpen(true)}
-          note={evaluation.decisions[caseId]?.note ?? ''}
-          onNote={(text) => onChange(setNote(evaluation, caseId, text))}
-        />
-      ) : null}
+      <Part number={1} title="Case">
+        <p>
+          <span class="muted">Kind: </span>
+          <strong>{testCase.expected_errors.length === 0 ? 'Clean' : 'Injected errors'}</strong>
+          {testCase.base ? <span class="muted">{` · Base: ${testCase.base}${base ? ` (${base.name})` : ''}`}</span> : null}
+        </p>
+        <MarkedFields testCase={testCase} judged={judged} effective={effective} uncovered={[]} rootRef={textRef} />
+      </Part>
+
+      <Part number={2} title="Marking">
+        <DecideBar reviewed={current} effective={effective ?? null} onAddFinding={() => setAdding(true)} onSecondOpinion={() => setOpinionOpen(true)} />
+      </Part>
+
+      <Part number={3} title="Judge reply and errors">
+        <div class="case-half">
+          <ReplyPane
+            prompt={prompt}
+            saved={reply?.reply}
+            text={text}
+            onText={onText}
+            copied={copied[caseId] === true}
+            onCopied={() => setCopied((c) => ({ ...c, [caseId]: true }))}
+            onSaveAsText={() => void saveText(text)}
+            onPaste={() => void pasteReply()}
+            message={message}
+          />
+          {reply && effective ? (
+            <ErrorsPane
+              reviewed={current}
+              effective={effective}
+              onExpected={(id, state) => onChange(setExpectedMark(evaluation, caseId, id, state))}
+              onAdditional={(item, state) => onChange(item.added !== undefined ? setAddedMark(evaluation, caseId, item.added, state) : setAdditionalMark(evaluation, caseId, item.key, state))}
+              onApprove={() => onChange(approveCase(evaluation, caseId))}
+              onShowInText={showInText}
+              onRemove={(item) => item.added !== undefined && onChange(removeFinding(evaluation, caseId, item.added))}
+            />
+          ) : (
+            <section class="decide-pane">
+              <h4>Errors</h4>
+              <p class="muted">The errors appear here when the judge’s reply is saved.</p>
+            </section>
+          )}
+        </div>
+      </Part>
     </>
   );
 
@@ -167,14 +177,12 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
       onPrevious={() => previous && leave(() => onNavigate(previous.testCase.id))}
       onNext={() => next && leave(() => onNavigate(next.testCase.id))}
       onClose={() => leave(onClose)}
-      left={left}
-      right={right}
+      page={page}
       headerExtra={
         <>
           <label class="inline-check">
             <input type="checkbox" checked={onlyAwaiting} onChange={(event) => onOnlyAwaitingChange((event.currentTarget as HTMLInputElement).checked)} /> Only cases awaiting verification
           </label>
-          <StatusMark status={current.status} />
           <span class="muted">{`${saveBar.repliesSinceSave} not saved`}</span>
           {reminderDue(saveBar.repliesSinceSave) ? (
             <span role="alert" class="save-reminder">
@@ -244,7 +252,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
               </>
             }
           >
-            <p>You typed or pasted a reply and did not press Save reply. If you go on, the text is lost.</p>
+            <p>The text in the box is not JSON and was not saved. Press Save as text anyway to keep it, or go on and the text is lost.</p>
           </Dialog>
         </>
       }

@@ -105,14 +105,15 @@ describe('a test project that is not finalized', () => {
 describe('the case window of Run, without a reply', () => {
   const open = (ports = createFakePorts(), evaluation = noReplies()) => renderApp(ports, stateOn(evaluation, { openCase: '1' }));
 
-  it('shows "Judge’s reply" with the four steps, the always visible box and Save reply, and has no collapsed section or "More actions"', () => {
+  it('shows "Judge reply" with the four steps, the complete prompt collapsed, the always visible box and no Save reply, and no "More actions"', () => {
     open();
     const win = windowOf();
-    expect(within(win).getByRole('heading', { name: 'Judge’s reply' })).toBeTruthy();
+    expect(within(win).getByRole('heading', { name: 'Judge reply' })).toBeTruthy();
     expect(within(win).getAllByRole('listitem').filter((li) => li.closest('ol[aria-label="Steps"]'))).toHaveLength(4);
     expect(replyBox().value).toBe('');
-    expect(within(win).getByRole('button', { name: 'Save reply' })).toBeTruthy();
-    expect(win.querySelector('details')).toBeNull();
+    expect(within(win).queryByRole('button', { name: 'Save reply' })).toBeNull();
+    expect((win.querySelector('details.prompt-details') as HTMLDetailsElement).open).toBe(false);
+    expect(win.querySelectorAll('details')).toHaveLength(1);
     expect(win.textContent).not.toMatch(/More actions/);
   });
 
@@ -145,7 +146,8 @@ describe('the case window of Run, without a reply', () => {
     await waitFor(() => expect(replyBox().value).toBe(reply));
     expect(within(windowOf()).getByText('1 not saved')).toBeTruthy();
     expect(within(windowOf()).getByText(/Pass/)).toBeTruthy();
-    expect(within(windowOf()).getByRole('button', { name: 'Approve' })).toBeTruthy();
+    expect(within(windowOf()).queryByRole('button', { name: 'Approve' })).toBeNull();
+    expect(within(windowOf()).getByText(/Marked \d+ of \d+/)).toBeTruthy();
   });
 
   it('explains an empty clipboard and changes nothing', async () => {
@@ -176,34 +178,32 @@ describe('replacing a reply', () => {
   it('does not ask when the case has only automatic decisions', async () => {
     const ports = createFakePorts();
     open('1', ports);
-    fireEvent.input(replyBox(), { target: { value: 'a different reply' } });
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Save reply' }));
+    fireEvent.input(replyBox(), { target: { value: '{"claims": []}' } });
     await waitFor(() => expect(within(windowOf()).getByText('1 not saved')).toBeTruthy());
     expect(screen.queryByRole('dialog', { name: /Replace/ })).toBeNull();
-    expect(replyBox().value).toBe('a different reply');
+    expect(replyBox().value).toBe('{"claims": []}');
   });
 
   it('asks when the case has decisions by hand, naming how many, and keeps everything on Cancel', async () => {
     open('2');
-    fireEvent.input(replyBox(), { target: { value: 'a different reply' } });
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Save reply' }));
+    fireEvent.input(replyBox(), { target: { value: '{"claims": []}' } });
     const question = await screen.findByRole('dialog', { name: /Replace this reply/ });
     expect(question.textContent).toMatch(/2 decisions/);
     fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('dialog', { name: /Replace this reply/ })).toBeNull();
     expect(within(windowOf()).getByText('0 not saved')).toBeTruthy();
-    expect(replyBox().value).toBe('a different reply');
+    expect(replyBox().value).toBe('{"claims": []}');
   });
 
   it('replaces the reply after the question, which resets the case', async () => {
     open('2');
-    fireEvent.input(replyBox(), { target: { value: 'a different reply' } });
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Save reply' }));
+    fireEvent.input(replyBox(), { target: { value: '{"claims": []}' } });
     const question = await screen.findByRole('dialog', { name: /Replace this reply/ });
     fireEvent.click(within(question).getByRole('button', { name: 'Replace reply' }));
     await waitFor(() => expect(within(windowOf()).getByText('1 not saved')).toBeTruthy());
     expect(screen.queryByText('The oven was never bought')).toBeNull();
-    expect(within(windowOf()).getByText(/Awaiting verification/)).toBeTruthy();
+    // the new reply holds no findings, so the automatic marks put every expected error as missed
+    expect(within(windowOf()).getAllByText(/Fail/).length).toBeGreaterThan(0);
   });
 
   it('asks the same question for a paste from the clipboard', async () => {
@@ -216,9 +216,9 @@ describe('replacing a reply', () => {
     await waitFor(() => expect(replyBox().value).toBe('pasted reply'));
   });
 
-  it('changes nothing when the same reply is saved again', async () => {
+  it('changes nothing when the box gets the reply that is already saved', async () => {
     open('1');
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Save reply' }));
+    fireEvent.input(replyBox(), { target: { value: sampleEvaluation().replies['1']!.reply } });
     expect(within(windowOf()).getByText('0 not saved')).toBeTruthy();
   });
 });

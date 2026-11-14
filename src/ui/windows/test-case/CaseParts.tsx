@@ -1,4 +1,3 @@
-import type { ComponentChildren } from 'preact';
 import { listCheckOf, uncoveredLines } from '../../../app/actions/test-case-window';
 import type { AppState } from '../../../app/store';
 import { findVariables } from '../../../core/judge/variables';
@@ -35,15 +34,7 @@ export function Status({ check, hideCleanKind = false }: { check: CaseJsonCheck;
   );
 }
 
-/** One numbered part of the test case window; the parts follow one another from top to bottom (T229). */
-export function Part({ number, title, children }: { number: number; title: string; children: ComponentChildren }) {
-  return (
-    <section class="case-part">
-      <h3>{`${number}. ${title}`}</h3>
-      {children}
-    </section>
-  );
-}
+export { Part } from '../../components/CasePart';
 
 export interface AnswerBoxProps {
   label: string;

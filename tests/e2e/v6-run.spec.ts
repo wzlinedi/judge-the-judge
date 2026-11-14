@@ -60,7 +60,7 @@ test('the Run step shows the judge on one line, the model details and the evalua
   const frame = await win.boundingBox();
   expect(frame).toMatchObject({ width: 1280, height: 720 });
   await expect(win).toContainText('1 of 20');
-  await expect(win.getByRole('heading', { name: 'Judge’s reply' })).toBeVisible();
+  await expect(win.getByRole('heading', { name: 'Judge reply', exact: true })).toBeVisible();
   await expect(win.getByRole('button', { name: 'Copy prompt' })).toHaveClass(/primary/);
   await expect(box(page)).toBeVisible();
 
@@ -101,14 +101,12 @@ test('replacing a reply asks only when decisions were set by hand, and an empty 
 
   // a case with only automatic decisions: the reply is replaced without a question
   await box(page).fill(replyOf('3'));
-  await win.getByRole('button', { name: 'Save reply' }).click();
   await expect(win).toContainText('3 not saved');
   await expect(page.getByRole('dialog', { name: /Replace this reply/ })).toHaveCount(0);
 
   // a decision by hand: the second replacement asks and names it
   await page.locator('[data-expected], [data-additional]').first().getByRole('button').first().click();
   await box(page).fill(replyOf('1'));
-  await win.getByRole('button', { name: 'Save reply' }).click();
   const question = page.getByRole('dialog', { name: /Replace this reply/ });
   await expect(question).toContainText('1 decision');
   await question.getByRole('button', { name: 'Replace reply' }).click();
@@ -131,15 +129,17 @@ test('replacing a reply asks only when decisions were set by hand, and an empty 
   // a reply that is not JSON, pasted into the box with Ctrl + V
   await box(page).fill('{"claims": [');
   await expect(win).toContainText(/Line 1, column/);
+  await expect(win.getByRole('button', { name: 'Save reply' })).toHaveCount(0);
   await box(page).fill('');
   await box(page).focus();
   await page.evaluate(() => navigator.clipboard.writeText('I looked at it and it seems fine to me.'));
   await page.keyboard.press('Control+V');
   await expect(box(page)).toHaveValue('I looked at it and it seems fine to me.');
-  await win.getByRole('button', { name: 'Save reply' }).click();
+  await expect(win).toContainText(/This is not JSON/);
+  await win.getByRole('button', { name: 'Save as text anyway' }).click();
   await expect(win).toContainText('5 not saved');
   await expect(win).toContainText('Awaiting verification');
-  await expect(win.getByRole('button', { name: 'Approve' })).toHaveClass(/primary/);
+  await expect(win.getByRole('button', { name: 'No more findings' })).toHaveClass(/primary/);
   await expect(win.locator('[aria-pressed="true"]')).toHaveCount(0);
 });
 
@@ -161,8 +161,7 @@ test('a reply that was typed and not saved is not lost by moving; and the remind
   await expect(win).toContainText('20 not saved');
   for (let i = 0; i < 5; i++) {
     await win.getByRole('button', { name: 'Previous test case' }).click();
-    await box(page).fill(`changed reply ${i}`);
-    await win.getByRole('button', { name: 'Save reply' }).click();
+    await box(page).fill(`{"claims": [], "changed": ${i}}`);
     if (i < 4) await expect(win.getByRole('alert')).toHaveCount(0);
   }
   await expect(win).toContainText('25 not saved');
@@ -172,4 +171,42 @@ test('a reply that was typed and not saved is not lost by moving; and the remind
   await win.getByRole('button', { name: 'Save evaluation', exact: true }).click();
   await expect(win).toContainText('0 not saved');
   await expect(win.getByRole('alert')).toHaveCount(0);
+});
+
+test('the case window of Run is one page: the fields, the actions row, then the judge reply and the errors side by side (T230)', async ({ page }) => {
+  await openRunWithoutReplies(page);
+  await next(page).getByRole('button', { name: 'Continue' }).click();
+  const win = caseWindow(page);
+  await win.getByRole('button', { name: 'Copy prompt' }).click();
+  await clip(page, replyOf('1'));
+  await win.getByRole('button', { name: 'Paste reply from clipboard' }).click();
+  await expect(box(page)).toHaveValue(replyOf('1'));
+
+  const heading = (n: number) => win.locator('.case-part > h3').nth(n - 1);
+  await expect(heading(1)).toHaveText('1. Case');
+  await expect(heading(2)).toHaveText('2. Marking');
+  await expect(heading(3)).toHaveText('3. Judge reply and errors');
+  const tops = await Promise.all([1, 2, 3].map(async (n) => (await heading(n).boundingBox())!.y));
+  expect(tops[0]!).toBeLessThan(tops[1]!);
+  expect(tops[1]!).toBeLessThan(tops[2]!);
+
+  await expect(win.getByText(/Marked \d+ of \d+/)).toBeVisible();
+  await expect(win.getByRole('button', { name: 'Approve' })).toHaveCount(0);
+  const prompt = win.getByLabel('Complete judge prompt');
+  await expect(prompt).toBeHidden();
+  await win.getByText('Show complete prompt').click();
+  await expect(prompt).toBeVisible();
+
+  // 1280 px: the two columns of part 3 share the row, about half each
+  const [left, right] = await Promise.all([win.locator('.case-half > section').nth(0).boundingBox(), win.locator('.case-half > section').nth(1).boundingBox()]);
+  expect(Math.abs(left!.y - right!.y)).toBeLessThan(4);
+  expect(right!.x).toBeGreaterThan(left!.x + left!.width - 2);
+  expect(Math.abs(left!.width - right!.width)).toBeLessThan(8);
+
+  // 360 px: one below the other, and the page does not scroll sideways
+  await page.setViewportSize({ width: 360, height: 740 });
+  const [a, b] = await Promise.all([win.locator('.case-half > section').nth(0).boundingBox(), win.locator('.case-half > section').nth(1).boundingBox()]);
+  expect(b!.y).toBeGreaterThan(a!.y + a!.height - 2);
+  const body = win.locator('.case-window-body');
+  expect(await body.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
 });

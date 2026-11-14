@@ -139,21 +139,23 @@ other cases are kept.
    case.
 2. "Copy prompt", copy a reply into the clipboard, "Paste reply from clipboard", "Next test case".
    Repeat with Alt + Right.
-3. Change the text of a saved reply in its box and "Save reply" for a case that has only automatic
-   decisions, then for a case with a decision set by hand.
+3. Change the text of a saved reply in its box (a readable JSON is saved at once) for a case that
+   has only automatic decisions, then for a case with a decision set by hand.
 4. With an empty clipboard press "Paste reply from clipboard"; then deny clipboard permission and
-   press it again; paste a reply that is not JSON into the box with Ctrl+V and "Save reply".
+   press it again; paste a reply that is not JSON into the box with Ctrl+V: it says "This is not JSON", and "Save as
+   text anyway" keeps it.
 5. Save 25 replies without "Save evaluation".
 
 **Expected**: the Run step shows one summary line (judge version, test project name, test cases
 version, judged text) with no prompt or rules, a multi-line "Model details" box whose lines are
 kept, and the evaluation file with "Save evaluation" and "Save evaluation as"; the page header has
-no save button. The window fills the screen at 1280 x 720 with data on the left and "Judge's
-reply" with the four steps on the right, without scrolling the page; "Copy prompt" is the primary
+no save button. The window fills the screen at 1280 x 720 as one page of three parts (the case with its
+highlights; a row with "Add finding", "Second opinion…", "Marked N of M" and the status; then "Judge
+reply" with the four steps on the left and the errors on the right), which scrolls as a whole; "Copy prompt" is the primary
 button until it is pressed, then "Paste reply from clipboard"; the reply box is always visible and
-never behind a collapsed section; the reply is saved by the paste itself and the marks appear under
-it, with "Approve" as the primary action and "Add finding", "Note" and "Second opinion…" as
-visible buttons; the position ("case 2 of 20") is always visible; one case takes no more than three
+never behind a collapsed section, and the complete prompt is collapsed under "Show complete prompt";
+the reply is saved by the paste itself and the marks appear on the right, with no "Approve" and
+"Add finding" and "Second opinion…" as visible buttons; the position ("case 2 of 20") is always visible; one case takes no more than three
 actions; the first replacement happens without a question and the second asks, naming one
 decision; both reset the case and recompute the automatic marks; an empty clipboard is explained
 and changes nothing; a refused clipboard points to the box; the non-JSON reply is kept, its line
@@ -170,7 +172,7 @@ produced it; the number of unsaved replies is shown and a reminder to save appea
 4. Tick "only cases awaiting verification" in the case window and use "Next test case".
 5. For a reply that could not be read, "Add finding" with a category and difficulty; mark it;
    remove another added finding; "Second opinion…" with an opinion that adds a new finding;
-   "Approve".
+   "No more findings".
 
 **Expected**: the Run step has no second-opinion card; clear items are already marked, with
 source "automatic"; every expected error has a mark or a reason; the verification prompt covers

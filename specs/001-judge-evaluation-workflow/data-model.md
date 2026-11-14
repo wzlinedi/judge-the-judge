@@ -215,8 +215,8 @@ written whole to the evaluation file (FR-073).
 
 **Reply**: `prompt` (the composed judge prompt at the moment the reply was saved) and `reply` (text
 of any format, never rejected for its format, not empty) (FR-056, FR-057). It arrives from
-"Paste reply from clipboard" or from the always-visible box with "Save reply"; both have the same
-effect. The box is checked as it changes (line and column). Saving a new reply for a case resets
+"Paste reply from clipboard" or from the always-visible box (a readable JSON is saved as soon as it is in the box; any
+other text with "Save as text anyway"); all have the same effect. The box is checked as it changes (line and column). Saving a new reply for a case resets
 it: its decisions, the added findings included, are removed and the automatic part is computed
 again. The tool asks first, saying how many will be removed, only when the case has
 decisions with source `manual` or `llm-approved`; with automatic results only it replaces the
@@ -250,9 +250,9 @@ Built from the case, its findings and the matching rule (research.md, sections 1
 | `expected` | expected error id → Decision | State `found`, `missed` or `ignored`. |
 | `additional` | finding key → Decision | State `real_error`, `false_positive` or `ignored`. |
 | `added_findings` | list | Findings added with "Add finding", or by an applied LLM opinion (`from_opinion`): `text`, optional `category` (a catalog name; a new one joins the catalog) and `difficulty` (`obvious` or `subtle`), and a Decision. The only findings with "Remove" (FR-062). |
-| `approved` | yes/no | Set by "Approve" and by "Apply opinion"; required when the reply could not be read. |
+| `approved` | yes/no | Set by "No more findings" (formerly "Approve") and by "Apply opinion"; required when the reply could not be read. |
 | no answer | item → yes, not stored | Items an applied opinion did not answer and that were undecided; their reason becomes "The LLM opinion gave no answer for this item" (FR-063). |
-| `note` | text | Optional. |
+| `note` | text | Optional. Not written by the case window any more (T231); a file that holds it is read, kept and shown in the report and the read-only view. |
 
 **Decision**: `state` and `source`: `manual` (set by hand) or `llm-approved` (an LLM opinion the
 user applied with "Apply opinion"). Automatic results are not stored; their source is shown as

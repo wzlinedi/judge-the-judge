@@ -130,7 +130,7 @@ ReplyBatch
 
 | Adapter | `request` | Used by |
 |---|---|---|
-| Pasted reply | one case identifier and the text read from the clipboard or typed into the always-visible box | The case window of Run ("Paste reply from clipboard", "Save reply") |
+| Pasted reply | one case identifier and the text read from the clipboard or typed into the always-visible box | The case window of Run ("Paste reply from clipboard", the box, "Save as text anyway") |
 
 - The application passes every `ReplyBatch` to one function, `attachReplies(evaluation, batch,
   replaceChoice)`, which matches by identifier, stores each reply together with the prompt composed
