@@ -1,6 +1,6 @@
 // Browser adapters: the File System Access API and the asynchronous clipboard (Chrome and Edge).
 // The environment is passed in, so tests can stub it and the adapters never reach for `window`.
-import type { ClipboardReader, ClipboardResult, FileHandleLike, SaveResult, SaveTarget } from './types';
+import type { ClipboardReader, ClipboardResult, FileHandleLike, FileOpener, SaveResult, SaveTarget } from './types';
 
 export interface BrowserEnv {
   showSaveFilePicker?: (options: unknown) => Promise<FileHandleLike>;
@@ -114,4 +114,8 @@ export function createBrowserClipboardReader(env: BrowserEnv): ClipboardReader {
       }
     },
   };
+}
+
+export function createBrowserOpener(env: BrowserEnv): FileOpener {
+  return { open: () => openWithPicker(env) };
 }

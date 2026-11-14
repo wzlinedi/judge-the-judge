@@ -30,10 +30,14 @@ export const judgeSetSchema = z.object({
   error_catalog: z.array(categorySchema).default([]),
 });
 
-/** Drops absent optional keys so a written file holds only what the user has. */
+/** Drops absent optional keys so a written file holds only what the user has, in the order of the contract. */
 export function cleanJudgeSet(set: JudgeSet): JudgeSet {
-  const out: JudgeSet = { prompt: set.prompt, reply_mapping: set.reply_mapping, error_rules: set.error_rules, error_catalog: set.error_catalog };
-  if (set.judged_text !== undefined) out.judged_text = set.judged_text;
-  if (set.sample_reply !== undefined) out.sample_reply = set.sample_reply;
-  return out;
+  return {
+    prompt: set.prompt,
+    ...(set.judged_text !== undefined ? { judged_text: set.judged_text } : {}),
+    ...(set.sample_reply !== undefined ? { sample_reply: set.sample_reply } : {}),
+    reply_mapping: set.reply_mapping,
+    error_rules: set.error_rules,
+    error_catalog: set.error_catalog,
+  };
 }

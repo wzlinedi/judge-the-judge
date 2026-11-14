@@ -1,17 +1,14 @@
 // Loading a whole evaluation into the session (FR-026, FR-073).
 import { readEvaluation } from '../../core/io/evaluation-file';
 import type { Evaluation } from '../../core/model';
-import { reviewEvaluation } from '../../core/evaluation/results';
+import { resumePoint } from '../../core/evaluation/resume';
 import type { MetricDefinition } from '../../core/metrics/types';
 import { forgetBothFiles, type AppState, type StepId } from '../store';
 import type { Ports } from '../ports/types';
 
-/** The first step with unfinished work (FR-073): Judge with no prompt, Test cases when not finalized, Run while a case is undecided, else Results. */
+/** The first step with unfinished work (FR-073). */
 export function firstUnfinishedStep(evaluation: Evaluation, metric?: Pick<MetricDefinition, 'parameters'>): StepId {
-  if (evaluation.judge_set.prompt.trim() === '') return 'judge';
-  if (!evaluation.dataset.finalized) return 'cases';
-  const undecided = reviewEvaluation(evaluation, metric).some((r) => r.status === 'not_run' || r.status === 'awaiting');
-  return undecided ? 'run' : 'results';
+  return resumePoint(evaluation, metric).step;
 }
 
 /** "Load example…" with the demo: both remembered files are forgotten (FR-076) and the demo opens where work is unfinished. */

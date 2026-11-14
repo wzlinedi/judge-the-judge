@@ -5,6 +5,8 @@
   "saved": "2026-11-13T10:00:00Z",
   "judge_set": {
     "prompt": "You are a strict fact-checker. Read the SOURCE and the SUMMARY.\nSplit the SUMMARY into separate claims. For each claim decide whether the SOURCE supports it.\nAnswer only with JSON in this form:\n{\"claims\": [{\"text\": \"the claim\", \"verdict\": \"supported | contradicted | unsupported\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\n{{source_text}}\n\nSUMMARY:\n{{summary}}",
+    "judged_text": "summary",
+    "sample_reply": "{\"claims\":[{\"text\":\"The book was published in 1890.\",\"verdict\":\"contradicted\",\"reason\":\"The source says 1887.\"},{\"text\":\"The hero is a merchant.\",\"verdict\":\"supported\",\"reason\":\"Stated in the source.\"}]}",
     "reply_mapping": {
       "finding_text": {
         "claims[]": "claims[].text"
@@ -54,9 +56,7 @@
         "description": "A true statement given to the wrong person or place.",
         "example": "The brother, not the sister, leaves the town."
       }
-    ],
-    "judged_text": "summary",
-    "sample_reply": "{\"claims\":[{\"text\":\"The book was published in 1890.\",\"verdict\":\"contradicted\",\"reason\":\"The source says 1887.\"},{\"text\":\"The hero is a merchant.\",\"verdict\":\"supported\",\"reason\":\"Stated in the source.\"}]}"
+    ]
   },
   "judge_version": "afa4c94191a8",
   "reply_judge_version": "afa4c94191a8",

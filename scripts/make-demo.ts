@@ -7,6 +7,7 @@ import checksDefault from '../src/core/metrics/builtin/checks.default.json';
 import { testCasesVersion } from '../src/core/cases/version';
 import { computeResults, reviewEvaluation } from '../src/core/evaluation/results';
 import { writeEvaluation } from '../src/core/io/evaluation-file';
+import { writeTestProject } from '../src/core/io/test-project-file';
 import { composePrompt } from '../src/core/judge/compose';
 import { judgeVersion } from '../src/core/judge/version';
 import type { CaseDecisions, Evaluation, JudgeSet, TestCase } from '../src/core/model';
@@ -128,22 +129,6 @@ console.log('after deciding:', afterDeciding.overall.result, afterDeciding.overa
 mkdirSync('examples/demo', { recursive: true });
 const json = (v: unknown) => JSON.stringify(v, null, 2) + '\n';
 writeFileSync('examples/demo/evaluation.json', writeEvaluation(evaluation, asLoaded, { now: NOW, toolVersion: TOOL_VERSION, ...versions }));
-writeFileSync(
-  'examples/demo/test-project.json',
-  json({
-    format: 'judge-the-judge-test-project',
-    schema_version: 1,
-    tool_version: TOOL_VERSION,
-    judge_set,
-    dataset: {
-      name: evaluation.dataset.name,
-      version: versions.testCasesVersion,
-      finalized: true,
-      cases: JSON.parse(writeEvaluation(evaluation, null, { now: NOW, toolVersion: TOOL_VERSION, ...versions })).dataset.cases,
-    },
-    metric: evaluation.metric,
-    checks,
-  }),
-);
+writeFileSync('examples/demo/test-project.json', writeTestProject(evaluation, { toolVersion: TOOL_VERSION, testCasesVersion: versions.testCasesVersion }));
 writeFileSync('examples/demo/opinions.json', json(opinions));
 writeFileSync('examples/demo/expected-results.json', json({ awaiting_verification: awaiting, decisions_after: decisionsAfter, as_loaded: asLoaded, after_deciding: afterDeciding }));

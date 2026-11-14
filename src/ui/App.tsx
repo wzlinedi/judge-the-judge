@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import demoEvaluation from '../../examples/demo/evaluation.json?raw';
 import { loadExample } from '../app/actions/evaluation';
+import { continueWork, loadEvaluation, loadTestProject, saveEvaluation, saveEvaluationAs, saveTestProject, saveTestProjectAs, type FileEnv } from '../app/actions/files';
 import { guardFor, installBeforeUnload, type GuardedAction } from '../app/guard';
 import { metricFor } from '../app/metrics';
 import { browserSupported, type BrowserEnv } from '../app/ports/browser';
 import { createBrowserPorts } from '../app/ports';
 import type { Ports } from '../app/ports/types';
-import { caseToContinue, nextAction, stepGate } from '../app/selectors';
-import { createState, goToStep, saveEvaluation, saveEvaluationAs, startNewEvaluation, type AppState, type StepId } from '../app/store';
+import { nextAction, stepGate } from '../app/selectors';
+import { createState, goToStep, startNewEvaluation, type AppState, type StepId } from '../app/store';
 import { computeResults, reviewEvaluation } from '../core/evaluation/results';
-import { testCasesVersion } from '../core/cases/version';
-import { writeEvaluation } from '../core/io/evaluation-file';
-import { judgeVersion } from '../core/judge/version';
-import type { Evaluation } from '../core/model';
+import type { Evaluation, Problem } from '../core/model';
 import { Dialog } from './components/Dialog';
+import { ErrorMessage } from './components/ErrorMessage';
 import type { FileAction } from './components/shell/FileMenu';
 import { BrowserNotice } from './components/shell/BrowserNotice';
 import { Footer } from './components/shell/Footer';
@@ -31,17 +30,22 @@ export interface AppProps {
   ports?: Ports;
   env?: BrowserEnv;
   initialState?: AppState;
+  /** The clock and tool version for the files the page writes; the defaults are the real ones. */
+  fileEnv?: FileEnv;
   /** File actions other than the ones the shell handles itself; wired by the steps that own them. */
   onFileAction?: (action: FileAction, state: AppState) => void;
 }
 
-export function App({ ports, env, initialState, onFileAction }: AppProps) {
+const REAL_FILE_ENV: FileEnv = { now: () => new Date().toISOString(), toolVersion: __TOOL_VERSION__ };
+
+export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileAction }: AppProps) {
   const browser = env ?? (globalThis as unknown as BrowserEnv);
   const [state, setState] = useState<AppState>(initialState ?? createState());
   const [showExamples, setShowExamples] = useState(false);
   const [pending, setPending] = useState<FileAction | null>(null);
   const [onlyAwaiting, setOnlyAwaiting] = useState(false);
   const [notice, setNotice] = useState('');
+  const [problems, setProblems] = useState<Problem[]>([]);
   const portsRef = useRef<Ports>(ports ?? createBrowserPorts(browser, () => stateRef.current.evaluation.dataset.name));
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -58,24 +62,38 @@ export function App({ ports, env, initialState, onFileAction }: AppProps) {
   const go = (step: StepId) => setState((s) => goToStep(s, step));
   const change = (next: Evaluation) => setState((s) => ({ ...s, evaluation: next, unsaved: true }));
 
-  const serialize = async (s: AppState) =>
-    writeEvaluation(s.evaluation, computeResults(s.evaluation, metricFor(s.evaluation.metric.id)), {
-      now: new Date().toISOString(),
-      toolVersion: __TOOL_VERSION__,
-      judgeVersion: await judgeVersion(s.evaluation.judge_set),
-      testCasesVersion: await testCasesVersion(s.evaluation.dataset.cases),
-    });
+  const say = (message: string | undefined) => {
+    setProblems([]);
+    setNotice(message ?? '');
+  };
 
-  const save = async (as: boolean): Promise<boolean> => {
-    const result = await (as ? saveEvaluationAs : saveEvaluation)(stateRef.current, portsRef.current, serialize);
+  const save = async (as: boolean, project = false): Promise<boolean> => {
+    const action = project ? (as ? saveTestProjectAs : saveTestProject) : as ? saveEvaluationAs : saveEvaluation;
+    const result = await action(stateRef.current, portsRef.current, fileEnv);
     setState(result.state);
-    setNotice(result.message ?? (result.outcome === 'saved' ? 'The evaluation was saved.' : result.outcome === 'cancelled' ? 'Nothing was saved.' : ''));
+    const done = project ? 'The test project was saved.' : 'The evaluation was saved.';
+    say(result.message ?? (result.outcome === 'saved' ? done : result.outcome === 'cancelled' ? 'Nothing was saved.' : undefined));
     return result.outcome === 'saved';
+  };
+
+  const load = async (kind: 'evaluation' | 'project') => {
+    const result = await (kind === 'evaluation' ? loadEvaluation : loadTestProject)(stateRef.current, portsRef.current, fileEnv);
+    setState(result.state);
+    if (result.outcome === 'invalid') {
+      setNotice('');
+      setProblems(result.problems ?? []);
+    } else if (result.outcome === 'loaded') say(result.message);
   };
 
   const perform = (action: FileAction) => {
     if (action === 'load-example') setShowExamples(true);
-    else if (action === 'start-new-evaluation') setState((s) => startNewEvaluation(s, portsRef.current));
+    else if (action === 'start-new-evaluation') {
+      setState((s) => startNewEvaluation(s, portsRef.current));
+      say('Started a new evaluation.');
+    } else if (action === 'load-evaluation') void load('evaluation');
+    else if (action === 'load-test-project') void load('project');
+    else if (action === 'save-test-project') void save(false, true);
+    else if (action === 'save-test-project-as') void save(true, true);
     else onFileAction?.(action, stateRef.current);
   };
 
@@ -89,7 +107,7 @@ export function App({ ports, env, initialState, onFileAction }: AppProps) {
     setShowExamples(false);
     if (example === 'demo') {
       setState((s) => loadExample(s, demoEvaluation, portsRef.current, metricFor('accuracy')));
-      setNotice('The demo was loaded.');
+      say('The demo was loaded.');
     }
   };
 
@@ -100,6 +118,7 @@ export function App({ ports, env, initialState, onFileAction }: AppProps) {
     if (next.action.openCase) setState((s) => ({ ...s, openCase: next.action.openCase ?? null }));
     else if (next.action.go) go(next.action.go);
   };
+  const onResultsContinue = () => setState((s) => continueWork(s));
 
   return (
     <div class="app">
@@ -109,6 +128,7 @@ export function App({ ports, env, initialState, onFileAction }: AppProps) {
       <div role="status" class="notice-line" aria-live="polite">
         {notice}
       </div>
+      <ErrorMessage problems={problems} title="The file was not loaded. Nothing has changed." />
       <main class="app-main">
         {state.step === 'help' ? (
           <HelpStep />
@@ -117,7 +137,7 @@ export function App({ ports, env, initialState, onFileAction }: AppProps) {
         ) : state.step === 'results' ? (
           <ResultsStep
             results={results}
-            onContinue={() => setState((s) => ({ ...s, step: 'run', openCase: caseToContinue(reviewed) ?? null }))}
+            onContinue={onResultsContinue}
             onExport={undefined}
           />
         ) : (

@@ -1,5 +1,5 @@
 // In-memory fakes of the two ports, used by unit, component and integration tests.
-import type { ClipboardReader, ClipboardResult, Ports, SaveResult, SaveTarget } from './types';
+import type { ClipboardReader, ClipboardResult, FileOpener, OpenedFile, Ports, SaveResult, SaveTarget } from './types';
 
 export interface FakeSaveTarget extends SaveTarget {
   /** The text of the last successful write. */
@@ -65,10 +65,29 @@ export function createFakeClipboard(text = ''): FakeClipboard {
   return clipboard;
 }
 
+export interface FakeOpener extends FileOpener {
+  /** The file the next `open` returns; null means the user cancels. It is used once. */
+  next: { name: string; text: string } | null;
+}
+
+export function createFakeOpener(): FakeOpener {
+  const opener: FakeOpener = {
+    next: null,
+    async open(): Promise<OpenedFile | null> {
+      const file = opener.next;
+      opener.next = null;
+      if (!file) return null;
+      return { text: file.text, handle: { name: file.name, createWritable: async () => ({ write: async () => {}, close: async () => {} }) } };
+    },
+  };
+  return opener;
+}
+
 export interface FakePorts extends Ports {
   testProjectTarget: FakeSaveTarget;
   evaluationTarget: FakeSaveTarget;
   clipboard: FakeClipboard;
+  opener: FakeOpener;
 }
 
 export function createFakePorts(): FakePorts {
@@ -76,5 +95,6 @@ export function createFakePorts(): FakePorts {
     testProjectTarget: createFakeSaveTarget('test-project.json'),
     evaluationTarget: createFakeSaveTarget('evaluation.json'),
     clipboard: createFakeClipboard(),
+    opener: createFakeOpener(),
   };
 }

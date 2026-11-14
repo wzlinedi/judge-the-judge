@@ -36,8 +36,20 @@ export interface ClipboardReader {
   readText(): Promise<ClipboardResult>;
 }
 
+/** A file the user picked to load: its text and the handle that makes it the current file for later saves. */
+export interface OpenedFile {
+  text: string;
+  handle: FileHandleLike;
+}
+
+export interface FileOpener {
+  /** Asks the user for a file; null when they cancel. */
+  open(): Promise<OpenedFile | null>;
+}
+
 export interface Ports {
   testProjectTarget: SaveTarget;
   evaluationTarget: SaveTarget;
   clipboard: ClipboardReader;
+  opener: FileOpener;
 }

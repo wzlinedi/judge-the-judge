@@ -1,5 +1,7 @@
 import { DemoData } from './sections/DemoData';
+import { Files } from './sections/Files';
 import { FourSteps } from './sections/FourSteps';
+import { Privacy } from './sections/Privacy';
 import { ReadingResults } from './sections/ReadingResults';
 import { TestSize } from './sections/TestSize';
 import { WhatTheToolDoes } from './sections/WhatTheToolDoes';
@@ -12,6 +14,8 @@ export function HelpStep() {
       <WhatTheToolDoes />
       <TestSize />
       <FourSteps />
+      <Files />
+      <Privacy />
       <DemoData />
       <ReadingResults />
     </div>
