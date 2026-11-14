@@ -4,6 +4,7 @@ import { caseToJson, checkCaseJson } from '../../core/cases/case-json';
 import { canChangeCase, markLate } from '../../core/cases/case-actions';
 import { assignIdentifiers } from '../../core/cases/identifiers';
 import { normalizeName } from '../../core/cases/validate';
+import { MAX_CASES } from '../../core/schemas/test-case';
 import { findVariables } from '../../core/judge/variables';
 import type { CaseJsonMode, Category, Problem, TestCase } from '../../core/model';
 import { edit, type AppState } from '../store';
@@ -42,6 +43,9 @@ function contextOf(state: AppState) {
 
 /** Checks the pasted JSON and, when it is valid, adds it as a new case (FR-041, FR-083, FR-090). */
 export function saveCaseFromJson(state: AppState, text: string, options: SaveOptions): CaseEdit {
+  if (state.evaluation.dataset.cases.length >= MAX_CASES) {
+    return { state, problems: [{ message: `The test project already has ${MAX_CASES} test cases, the most it can hold. Remove a case before adding another.` }] };
+  }
   const check = checkCaseJson(text, { ...contextOf(state), mode: options.mode, ...(options.base !== undefined ? { base: options.base } : {}), ...(options.name !== undefined ? { name: options.name } : {}), ...(options.errorsToPrepare !== undefined ? { errorsToPrepare: options.errorsToPrepare } : {}) });
   if (!check.case) return { state, problems: check.problems };
   const [saved] = assignIdentifiers([check.case], state.evaluation.dataset.cases);

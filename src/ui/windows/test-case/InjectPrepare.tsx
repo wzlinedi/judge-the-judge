@@ -30,6 +30,7 @@ const DIFFICULTIES: ReadonlyArray<{ value: PreparedDifficulty; label: string }> 
 function Row({ row, number, state, onChange, onRemove }: { row: ErrorRow; number: number; state: AppState; onChange: (patch: Partial<Omit<ErrorRow, 'id'>>) => void; onRemove: () => void }) {
   const catalog = state.evaluation.judge_set.error_catalog;
   const id = `inject-row-${row.id}`;
+  const hint = row.isNew ? undefined : catalog.find((c) => c.name === row.category);
   return (
     <div role="group" aria-label={`Error ${number}`} class="error-row">
       <h3>{`Error ${number}`}</h3>
@@ -49,6 +50,12 @@ function Row({ row, number, state, onChange, onRemove }: { row: ErrorRow; number
             ))}
             <option value={NEW_CATEGORY}>New category…</option>
           </select>
+          {hint ? (
+            <p class="muted category-hint">
+              {hint.description ? hint.description : null}
+              {hint.example ? ` Example: ${hint.example}` : null}
+            </p>
+          ) : null}
           {row.isNew ? (
             <>
               <label class="field-label" for={`${id}-new`}>

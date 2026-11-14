@@ -545,11 +545,20 @@ finalized test project written by the test instead.
 
 **Independent Test**: only cases with injected errors warn; a duplicate text is flagged.
 
-- [ ] T171 [US10] Write `tests/e2e/us10-guidance.spec.ts` covering the acceptance scenarios of User Story 10
-- [ ] T172 [P] [US10] Write `tests/unit/core/cases/feedback.test.ts`: counts; a missing kind warns that some measures cannot be computed; "Two cases whose fields are all identical are flagged as duplicates"; remaining capacity to 500; cases grouped by number of errors; totals against 30 and 10 as met or "missing N"; for a judge evaluated per case, cases with expected errors counted against 30 instead of injected errors; no subtle error warned (FR-045, FR-046)
-- [ ] T173 [P] [US10] Write `tests/unit/ui/test-project-card.test.tsx`: name, test cases version, counts, test-size summary with its sentence, warnings, capacity; adding beyond 500 refused; category description and example shown where a category is chosen; no unsaved indicator of its own (the header has the one indicator)
-- [ ] T174 [US10] Implement `src/core/cases/feedback.ts` to pass T172
-- [ ] T175 [US10] Implement `src/ui/steps/cases/TestProjectCard.tsx` and the category hint in `src/ui/windows/test-case/InjectPrepare.tsx` to pass T173 and T171
+- [X] T171 [US10] Write `tests/e2e/us10-guidance.spec.ts` covering the acceptance scenarios of User Story 10
+- [X] T172 [P] [US10] Write `tests/unit/core/cases/feedback.test.ts`: counts; a missing kind warns that some measures cannot be computed; "Two cases whose fields are all identical are flagged as duplicates"; remaining capacity to 500; cases grouped by number of errors; totals against 30 and 10 as met or "missing N"; for a judge evaluated per case, cases with expected errors counted against 30 instead of injected errors; no subtle error warned (FR-045, FR-046)
+- [X] T173 [P] [US10] Write `tests/unit/ui/test-project-card.test.tsx`: name, test cases version, counts, test-size summary with its sentence, warnings, capacity; adding beyond 500 refused; category description and example shown where a category is chosen; no unsaved indicator of its own (the header has the one indicator)
+- [X] T174 [US10] Implement `src/core/cases/feedback.ts` to pass T172
+- [X] T175 [US10] Implement `src/ui/steps/cases/TestProjectCard.tsx` and the category hint in `src/ui/windows/test-case/InjectPrepare.tsx` to pass T173 and T171
+
+**Done 2026-11-14.** US10 is complete. `testProjectFeedback` (`src/core/cases/feedback.ts`) gives the counts, the groups by
+number of errors, the test size against 30 and 10 (cases with expected errors for a judge evaluated per case), the warnings
+(a missing kind with the measure that cannot be computed, no subtle error, duplicates) and the capacity. Two cases are
+duplicates when their fields are all identical (same names, same texts); the table says "Identical fields to case N" in the
+Warnings cell of each. The card also lists the readability warnings of the Judge step. The card sits between the error
+categories and the table. The 500 limit: **Add test case** is disabled at the limit with the reason in the card, and
+`saveCaseFromJson` refuses with a message (a clone or a pasted JSON reaches it too); the import already refused by count.
+The category's description and example show under the Category select of every error row.
 
 ---
 

@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
 import { removeCase, renameCase, type CaseEdit } from '../../../app/actions/cases';
 import type { AppState } from '../../../app/store';
+import { testProjectFeedback } from '../../../core/cases/feedback';
 import { normalizeName } from '../../../core/cases/validate';
 import { composePrompt } from '../../../core/judge/compose';
 import type { TestCase } from '../../../core/model';
@@ -14,8 +15,10 @@ export interface CasesTableProps {
   onEdit: (edit: CaseEdit) => void;
 }
 
-function warningsOf(testCase: TestCase, all: readonly TestCase[], prompt: string): string[] {
+function warningsOf(testCase: TestCase, all: readonly TestCase[], prompt: string, duplicates: readonly (readonly string[])[]): string[] {
   const warnings: string[] = [];
+  const twin = duplicates.find((ids) => ids.includes(testCase.id))?.find((id) => id !== testCase.id);
+  if (twin !== undefined) warnings.push(`Identical fields to case ${twin}`);
   const missing = composePrompt(prompt, testCase).missing;
   if (missing.length > 0) warnings.push(`No field for ${missing.join(', ')}`);
   const same = all.find((c) => c.id !== testCase.id && normalizeName(c.name) !== '' && normalizeName(c.name) === normalizeName(testCase.name));
@@ -29,6 +32,7 @@ export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) 
   const [newName, setNewName] = useState('');
   const [removing, setRemoving] = useState<TestCase | null>(null);
   const { dataset, replies, judge_set } = state.evaluation;
+  const { duplicates } = testProjectFeedback(state.evaluation);
 
   /** A case that cannot be removed (a base in use) is refused at once, with the reason; others ask first. */
   const askRemove = (c: TestCase) => {
@@ -78,7 +82,7 @@ export function CasesTable({ state, onOpen, onClone, onEdit }: CasesTableProps) 
                   <td>{c.base ? `${c.base}${base ? ` (${base.name})` : ''}` : ''}</td>
                   <td>{c.expected_errors.length}</td>
                   <td>{categories.join(', ')}</td>
-                  <td>{warningsOf(c, dataset.cases, judge_set.prompt).join('; ')}</td>
+                  <td>{warningsOf(c, dataset.cases, judge_set.prompt, duplicates).join('; ')}</td>
                   <td onClick={(event) => event.stopPropagation()}>
                     <div class="button-row">
                       <button type="button" onClick={() => onOpen(c.id)}>
