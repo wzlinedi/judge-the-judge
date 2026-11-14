@@ -11,7 +11,8 @@
     "preview": "vite preview --port 4173 --strictPort",
     "e2e": "playwright test",
     "lint": "eslint .",
-    "demo": "tsx scripts/make-demo.ts"
+    "demo": "tsx scripts/make-demo.ts",
+    "examples": "tsx scripts/make-example-files.ts"
   },
   "dependencies": {
     "diff": "^9.0.0",

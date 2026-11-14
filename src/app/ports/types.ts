@@ -39,17 +39,24 @@ export interface ClipboardReader {
 /** A file the user picked to load: its text and the handle that makes it the current file for later saves. */
 export interface OpenedFile {
   text: string;
+  /** The raw bytes, given for an import, which decides the encoding itself. */
+  bytes?: Uint8Array;
   handle: FileHandleLike;
 }
 
+/** `json` is a saved work; `import` is a file of test cases, CSV or JSON. */
+export type OpenKind = 'json' | 'import';
+
 export interface FileOpener {
   /** Asks the user for a file; null when they cancel. */
-  open(): Promise<OpenedFile | null>;
+  open(kind?: OpenKind): Promise<OpenedFile | null>;
 }
 
 export interface Ports {
   testProjectTarget: SaveTarget;
   evaluationTarget: SaveTarget;
+  /** "Export test cases": asks for a file name every time and remembers none (FR-050). */
+  exportTarget: SaveTarget;
   clipboard: ClipboardReader;
   opener: FileOpener;
 }

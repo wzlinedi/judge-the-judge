@@ -67,17 +67,21 @@ export function createFakeClipboard(text = ''): FakeClipboard {
 
 export interface FakeOpener extends FileOpener {
   /** The file the next `open` returns; null means the user cancels. It is used once. */
-  next: { name: string; text: string } | null;
+  next: { name: string; text: string; bytes?: Uint8Array } | null;
+  /** The kind of the last request, to check that an import asks for CSV and JSON files. */
+  lastKind: 'json' | 'import' | undefined;
 }
 
 export function createFakeOpener(): FakeOpener {
   const opener: FakeOpener = {
     next: null,
-    async open(): Promise<OpenedFile | null> {
+    lastKind: undefined,
+    async open(kind): Promise<OpenedFile | null> {
+      opener.lastKind = kind;
       const file = opener.next;
       opener.next = null;
       if (!file) return null;
-      return { text: file.text, handle: { name: file.name, createWritable: async () => ({ write: async () => {}, close: async () => {} }) } };
+      return { text: file.text, bytes: file.bytes ?? new TextEncoder().encode(file.text), handle: { name: file.name, createWritable: async () => ({ write: async () => {}, close: async () => {} }) } };
     },
   };
   return opener;
@@ -86,6 +90,7 @@ export function createFakeOpener(): FakeOpener {
 export interface FakePorts extends Ports {
   testProjectTarget: FakeSaveTarget;
   evaluationTarget: FakeSaveTarget;
+  exportTarget: FakeSaveTarget;
   clipboard: FakeClipboard;
   opener: FakeOpener;
 }
@@ -94,6 +99,7 @@ export function createFakePorts(): FakePorts {
   return {
     testProjectTarget: createFakeSaveTarget('test-project.json'),
     evaluationTarget: createFakeSaveTarget('evaluation.json'),
+    exportTarget: createFakeSaveTarget('test-cases.json'),
     clipboard: createFakeClipboard(),
     opener: createFakeOpener(),
   };

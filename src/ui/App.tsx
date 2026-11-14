@@ -30,6 +30,9 @@ import { JudgeStep } from './steps/judge/JudgeStep';
 import { RunStep } from './steps/run/RunStep';
 import { CaseWindow } from './windows/case-window/CaseWindow';
 import { TestCaseWindow, type TestWindowView } from './windows/test-case/TestCaseWindow';
+import { ImportWindow } from './windows/import/ImportWindow';
+import { applyImport, downloadExample, exportTestCases, prepareImport } from '../app/actions/test-cases-file';
+import { download } from './components/download';
 import { DEMO, LoadExampleWindow } from './windows/load-example/LoadExampleWindow';
 import type { MetricDefinition } from '../core/metrics/types';
 
@@ -58,6 +61,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const [pendingReplace, setPendingReplace] = useState<{ metric: MetricDefinition; message: string } | null>(null);
   const [metricsVersion, setMetricsVersion] = useState(0);
   const [testWindow, setTestWindow] = useState<TestWindowView | null>(null);
+  const [importing, setImporting] = useState(false);
   const portsRef = useRef<Ports>(ports ?? createBrowserPorts(browser, () => stateRef.current.evaluation.dataset.name));
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -127,6 +131,11 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     say(result.note);
   };
 
+  const exportCases = async () => {
+    const result = await exportTestCases(stateRef.current, portsRef.current, fileEnv);
+    say(result.message);
+  };
+
   const perform = (action: FileAction) => {
     if (action === 'load-example') setShowExamples(true);
     else if (action === 'start-new-evaluation') {
@@ -136,6 +145,8 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     else if (action === 'load-test-project') void load('project');
     else if (action === 'save-test-project') void save(false, true);
     else if (action === 'save-test-project-as') void save(true, true);
+    else if (action === 'import-test-cases') setImporting(true);
+    else if (action === 'export-test-cases') void exportCases();
     else onFileAction?.(action, stateRef.current);
   };
 
@@ -237,6 +248,22 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
         />
       ) : null}
       {testWindow ? <TestCaseWindow state={state} view={testWindow} onView={setTestWindow} onApply={applyCase} /> : null}
+      {importing ? (
+        <ImportWindow
+          open
+          onChoose={() => prepareImport(stateRef.current, portsRef.current)}
+          onDownloadExample={() => {
+            const example = downloadExample(stateRef.current);
+            download(example.fileName, example.text, 'text/csv');
+            if (example.note) say(example.note);
+          }}
+          onImport={(prepared) => {
+            setImporting(false);
+            applyCase(applyImport(stateRef.current, prepared.plan));
+          }}
+          onClose={() => setImporting(false)}
+        />
+      ) : null}
       <LoadExampleWindow
         key={metricsVersion}
         open={showExamples}

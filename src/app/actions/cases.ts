@@ -27,7 +27,7 @@ export interface SaveOptions {
 
 const hasReplies = (state: AppState): boolean => Object.keys(state.evaluation.replies).length > 0;
 
-function withCases(state: AppState, cases: TestCase[], catalog?: Category[]): AppState {
+export function withCases(state: AppState, cases: TestCase[], catalog?: Category[]): AppState {
   return edit(state, (e) => {
     const { version: _stale, ...dataset } = e.dataset;
     return { ...e, dataset: { ...dataset, cases }, ...(catalog ? { judge_set: { ...e.judge_set, error_catalog: catalog } } : {}) };

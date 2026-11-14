@@ -9,7 +9,7 @@ describe('Help (Principle VIII)', () => {
   it('has the sections written so far, in plain headings', () => {
     render(<HelpStep />);
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Error categories', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results']);
+    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results']);
   });
 
   it('quotes the numbers of the demo from the demo files, so they cannot drift', () => {
@@ -86,5 +86,14 @@ describe('Help (Principle VIII)', () => {
     expect(text).toContain('docs/how-to-add-a-metric.md');
     expect(text).toMatch(/graded ratings/);
     expect(text).toMatch(/30 expected errors and 10 clean cases/);
+  });
+});
+
+describe('Help: importing test cases', () => {
+  it('quotes the example files the tests validate, word for word', () => {
+    render(<HelpStep />);
+    const shown = Array.from(document.querySelectorAll('pre.example')).map((p) => p.textContent);
+    expect(shown).toContain(readFileSync('examples/files/test-cases-example.csv', 'utf8').replace(/^﻿/, '').trimEnd());
+    expect(shown).toContain(readFileSync('examples/files/test-cases-example.json', 'utf8').trimEnd());
   });
 });

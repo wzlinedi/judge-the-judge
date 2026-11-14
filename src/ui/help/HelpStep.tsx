@@ -2,6 +2,7 @@ import { DemoData } from './sections/DemoData';
 import { AddingCases } from './sections/AddingCases';
 import { ErrorCategories } from './sections/ErrorCategories';
 import { Files } from './sections/Files';
+import { ImportingCases } from './sections/ImportingCases';
 import { FourSteps } from './sections/FourSteps';
 import { MetricsAndChecks } from './sections/MetricsAndChecks';
 import { Privacy } from './sections/Privacy';
@@ -22,6 +23,7 @@ export function HelpStep() {
       <Variables />
       <SampleReplyRules />
       <AddingCases />
+      <ImportingCases />
       <ErrorCategories />
       <Files />
       <Privacy />

@@ -43,7 +43,7 @@ export async function installMemoryFiles(page: Page): Promise<MemoryFiles> {
         let buffer = '';
         return { write: async (text: string) => void (buffer += text), close: async () => w['__memWrite'](name, buffer) };
       },
-      getFile: async () => ({ name, text: async () => w['__memRead'](name) }),
+      getFile: async () => ({ name, text: async () => w['__memRead'](name), arrayBuffer: async () => new TextEncoder().encode(await w['__memRead'](name)).buffer }),
     });
     w['showSaveFilePicker'] = async (options: { suggestedName: string }) => handle(await w['__memAsked'](options.suggestedName));
     w['showOpenFilePicker'] = async () => [handle(await w['__memOpenName']())];

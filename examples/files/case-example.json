@@ -1,0 +1,16 @@
+{
+  "name": "Anna, one wrong number",
+  "base": "1",
+  "fields": {
+    "source_text": "Anna is a baker in a small town. She opens her shop at five every morning and sells bread to the neighbours. In 1998 she bought a second oven.",
+    "summary": "Anna, a baker in a small town, opens her shop at five each morning. In 2005 she bought a second oven."
+  },
+  "expected_errors": [
+    {
+      "category": "wrong-number",
+      "fragment": "In 2005 she bought a second oven",
+      "description": "The source says 1998.",
+      "difficulty": "subtle"
+    }
+  ]
+}

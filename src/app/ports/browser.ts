@@ -4,11 +4,12 @@ import type { ClipboardReader, ClipboardResult, FileHandleLike, FileOpener, Save
 
 export interface BrowserEnv {
   showSaveFilePicker?: (options: unknown) => Promise<FileHandleLike>;
-  showOpenFilePicker?: (options: unknown) => Promise<Array<FileHandleLike & { getFile(): Promise<{ text(): Promise<string>; name: string }> }>>;
+  showOpenFilePicker?: (options: unknown) => Promise<Array<FileHandleLike & { getFile(): Promise<{ text(): Promise<string>; arrayBuffer?(): Promise<ArrayBuffer>; name: string }> }>>;
   navigator?: { clipboard?: { readText?: () => Promise<string> } };
 }
 
 const JSON_TYPES = [{ description: 'JSON file', accept: { 'application/json': ['.json'] } }];
+const IMPORT_TYPES = [{ description: 'CSV or JSON file', accept: { 'text/csv': ['.csv'], 'application/json': ['.json'], 'text/plain': ['.txt'] } }];
 
 function isAbort(error: unknown): boolean {
   return error instanceof Error && error.name === 'AbortError';
@@ -84,16 +85,21 @@ export function createBrowserSaveTarget(env: BrowserEnv, suggestedName: () => st
 
 export interface PickedFile {
   text: string;
+  bytes?: Uint8Array;
   handle: FileHandleLike;
 }
 
 /** "Load …" through the browser's picker, so a later save goes to the same file. Null when cancelled. */
-export async function openWithPicker(env: BrowserEnv): Promise<PickedFile | null> {
+export async function openWithPicker(env: BrowserEnv, kind: 'json' | 'import' = 'json'): Promise<PickedFile | null> {
   if (typeof env.showOpenFilePicker !== 'function') return null;
   try {
-    const [picked] = await env.showOpenFilePicker({ types: JSON_TYPES, multiple: false });
+    const [picked] = await env.showOpenFilePicker({ types: kind === 'import' ? IMPORT_TYPES : JSON_TYPES, multiple: false });
     if (!picked) return null;
     const file = await picked.getFile();
+    if (kind === 'import' && typeof file.arrayBuffer === 'function') {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      return { text: new TextDecoder().decode(bytes), bytes, handle: picked };
+    }
     return { text: await file.text(), handle: picked };
   } catch (error) {
     if (isAbort(error)) return null;
@@ -117,5 +123,5 @@ export function createBrowserClipboardReader(env: BrowserEnv): ClipboardReader {
 }
 
 export function createBrowserOpener(env: BrowserEnv): FileOpener {
-  return { open: () => openWithPicker(env) };
+  return { open: (kind) => openWithPicker(env, kind) };
 }

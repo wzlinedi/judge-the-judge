@@ -1,0 +1,3 @@
+﻿name,field:source_text,field:summary
+"First clean case","Correct text for source_text","Correct text for summary"
+"Second clean case","Another correct text for source_text","Another correct text for summary"

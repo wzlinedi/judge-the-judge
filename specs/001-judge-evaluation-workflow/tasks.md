@@ -352,25 +352,34 @@ with the test project (Phase 4).
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T117 [US5] Write `tests/e2e/v5-load-file.spec.ts` implementing quickstart.md V5 (all steps) with **Import test cases**, including a 100-case file whose summary appears within 5 seconds (SC-015) and **Export test cases**
-- [ ] T118 [P] [US5] Write `tests/unit/core/io/decode.test.ts`: UTF-8 with and without byte order mark; Windows-1250 fallback reported; any line endings
-- [ ] T119 [P] [US5] Write `tests/contract/test-cases-export.test.ts`: **Export test cases** writes `format` `judge-the-judge-test-cases` with every case, clean ones included, without the catalog or `finalized`; importing it into an empty test project gives identical content and an identical version (FR-050, SC-019)
-- [ ] T120 [P] [US5] Write `tests/contract/test-cases-csv.test.ts`: the shortened CSV of FR-031 (`name` and `field:<variable>` columns; every row a clean case; any other column ignored and named); header names case-insensitive except after `field:`; commas, quotes, line breaks, Polish characters; more than 500 cases in the test project after the import rejected stating the limit and the number found; field above 100,000 an invalid row; row numbers and reasons; unmatched columns and missing variables reported; an empty file, a file with only a header and a file with one case; a failed or cancelled import changes nothing (FR-027, FR-028 to FR-032, FR-037, SC-016, SC-017)
-- [ ] T121 [P] [US5] Write `tests/contract/test-cases-json.test.ts`: `format` `judge-the-judge-test-cases` read with the case rules of contracts/file-formats.md section 3; a test project file is read through its `dataset.cases`; error ids assigned; identifiers already used get new ones and `base` follows them; a name already used is kept and both cases warn (FR-020, FR-027, FR-079, SC-019)
-- [ ] T122 [P] [US5] Write `tests/unit/core/io/example-csv.test.ts`: `name` and one `field:` column per variable, two clean cases, byte order mark, `field:field_1` with a note when there are no variables; imports back without problems (FR-030)
-- [ ] T123 [P] [US5] Write `tests/unit/ui/import-summary.test.tsx`: **Import test cases** in the File menu opens the import panel with **Download example file** (explained behind **Explain**); the summary shows counts (clean, with injected errors), invalid rows with position and reason, unmatched fields, missing variables, missing categories with the choice to add them, encoding, new identifiers and names used twice; **Import test cases** adds the valid cases to those already here; **Cancel** changes nothing (FR-027, FR-028 to FR-030)
-- [ ] T124 [P] [US5] Write `tests/integration/import-adds-cases.test.ts`: importing into a test project that already has cases adds the valid ones and keeps the existing ones; importing after finalizing adds them too, they start as Not run, the replies and decisions of the other cases are kept, the test cases version changes, and once replies exist they are marked "added after first reply" (FR-053)
+- [X] T117 [US5] Write `tests/e2e/v5-load-file.spec.ts` implementing quickstart.md V5 (all steps) with **Import test cases**, including a 100-case file whose summary appears within 5 seconds (SC-015) and **Export test cases**
+- [X] T118 [P] [US5] Write `tests/unit/core/io/decode.test.ts`: UTF-8 with and without byte order mark; Windows-1250 fallback reported; any line endings
+- [X] T119 [P] [US5] Write `tests/contract/test-cases-export.test.ts`: **Export test cases** writes `format` `judge-the-judge-test-cases` with every case, clean ones included, without the catalog or `finalized`; importing it into an empty test project gives identical content and an identical version (FR-050, SC-019)
+- [X] T120 [P] [US5] Write `tests/contract/test-cases-csv.test.ts`: the shortened CSV of FR-031 (`name` and `field:<variable>` columns; every row a clean case; any other column ignored and named); header names case-insensitive except after `field:`; commas, quotes, line breaks, Polish characters; more than 500 cases in the test project after the import rejected stating the limit and the number found; field above 100,000 an invalid row; row numbers and reasons; unmatched columns and missing variables reported; an empty file, a file with only a header and a file with one case; a failed or cancelled import changes nothing (FR-027, FR-028 to FR-032, FR-037, SC-016, SC-017)
+- [X] T121 [P] [US5] Write `tests/contract/test-cases-json.test.ts`: `format` `judge-the-judge-test-cases` read with the case rules of contracts/file-formats.md section 3; a test project file is read through its `dataset.cases`; error ids assigned; identifiers already used get new ones and `base` follows them; a name already used is kept and both cases warn (FR-020, FR-027, FR-079, SC-019)
+- [X] T122 [P] [US5] Write `tests/unit/core/io/example-csv.test.ts`: `name` and one `field:` column per variable, two clean cases, byte order mark, `field:field_1` with a note when there are no variables; imports back without problems (FR-030)
+- [X] T123 [P] [US5] Write `tests/unit/ui/import-summary.test.tsx`: **Import test cases** in the File menu opens the import panel with **Download example file** (explained behind **Explain**); the summary shows counts (clean, with injected errors), invalid rows with position and reason, unmatched fields, missing variables, missing categories with the choice to add them, encoding, new identifiers and names used twice; **Import test cases** adds the valid cases to those already here; **Cancel** changes nothing (FR-027, FR-028 to FR-030)
+- [X] T124 [P] [US5] Write `tests/integration/import-adds-cases.test.ts`: importing into a test project that already has cases adds the valid ones and keeps the existing ones; importing after finalizing adds them too, they start as Not run, the replies and decisions of the other cases are kept, the test cases version changes, and once replies exist they are marked "added after first reply" (FR-053)
 
 ### Implementation for User Story 5
 
-- [ ] T125 [P] [US5] Implement `src/core/io/decode.ts` to pass T118
+- [X] T125 [P] [US5] Implement `src/core/io/decode.ts` to pass T118
 - [ ] T126 [P] [US5] Retired (FR-031 since the review of prototype v14): the shortened CSV has no expected-error column, so there is no one-line convention to implement. Nothing to build; the number is kept so that references stay valid.
-- [ ] T127 [US5] Implement `src/core/schemas/test-cases.ts`, `src/core/cases/validate-test-cases.ts` and `src/core/io/test-cases-json.ts` (`readTestCasesJson`, `writeTestCases`) to pass T119 and T121
-- [ ] T128 [US5] Implement `src/core/io/test-cases-csv.ts` (Papa Parse) to pass T120
-- [ ] T129 [P] [US5] Implement `src/core/io/example-csv.ts` to pass T122, and create `examples/files/test-cases-example.csv`, `examples/files/test-cases-example.json` and `examples/files/case-example.json`
-- [ ] T130 [US5] Implement `src/app/actions/test-cases-file.ts` (`importTestCases` with summary, valid rows added or cancel, categories by consent, nothing changed on cancel or failure, allowed after finalizing with `markLate`; `exportTestCases`; `downloadExampleFile`) to pass T124 (FR-027 to FR-029, FR-050, FR-053)
-- [ ] T131 [US5] Implement `src/ui/steps/cases/ImportPanel.tsx` and `ImportSummaryDialog.tsx` (its **Import test cases** button is the confirming primary button), and **Import test cases** / **Export test cases** in `FileMenu.tsx`, to pass T123 and T117 (FR-030)
-- [ ] T132 [US5] Write the Help section "Importing test cases from a file" with the CSV example from `examples/files/`
+- [X] T127 [US5] Implement `src/core/schemas/test-cases.ts`, `src/core/cases/validate-test-cases.ts` and `src/core/io/test-cases-json.ts` (`readTestCasesJson`, `writeTestCases`) to pass T119 and T121
+- [X] T128 [US5] Implement `src/core/io/test-cases-csv.ts` (Papa Parse) to pass T120
+- [X] T129 [P] [US5] Implement `src/core/io/example-csv.ts` to pass T122, and create `examples/files/test-cases-example.csv`, `examples/files/test-cases-example.json` and `examples/files/case-example.json`
+- [X] T130 [US5] Implement `src/app/actions/test-cases-file.ts` (`importTestCases` with summary, valid rows added or cancel, categories by consent, nothing changed on cancel or failure, allowed after finalizing with `markLate`; `exportTestCases`; `downloadExampleFile`) to pass T124 (FR-027 to FR-029, FR-050, FR-053)
+- [X] T131 [US5] Implement `src/ui/steps/cases/ImportPanel.tsx` and `ImportSummaryDialog.tsx` (its **Import test cases** button is the confirming primary button), and **Import test cases** / **Export test cases** in `FileMenu.tsx`, to pass T123 and T117 (FR-030)
+- [X] T132 [US5] Write the Help section "Importing test cases from a file" with the CSV example from `examples/files/`
+
+**Done 2026-11-14.** US5 is complete. Notes: `Ports` gained `exportTarget` (a save target that asks for a name each
+time and is forgotten at once) and `FileOpener.open` takes a kind (`import` accepts CSV and JSON and returns the
+bytes, so `decodeBytes` can fall back to Windows-1250). `planImport` (`validate-test-cases.ts`) is the one place
+that decides what is valid; the summary and `applyImport` only show and apply it. Missing categories are added by
+the **Import test cases** button itself, after the summary names them (no extra checkbox). Row numbers of a CSV
+count the header as row 1 and keep blank lines. `examples/files/test-cases-example.csv` is written by
+`npm run examples`; a test pins it to `exampleCsv`. Step 5 of V5 (thresholds, **Edit test cases**) belongs to
+US9 and US11.
 
 ---
 
