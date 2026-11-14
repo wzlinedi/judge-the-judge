@@ -141,7 +141,7 @@ describe('rules (FR-013, FR-014)', () => {
     type('Sample reply', SAMPLE);
   };
 
-  it('each rule about a list has its own "Where the error is": proposed automatically, changeable, and absent in the file while it is the proposal (T232)', () => {
+  it('"Where the error is" is shown for a rule about a list only when its items have more than one text field; it is proposed, changeable, and absent in the file while it is the proposal (T232)', () => {
     withSample();
     fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
     fireEvent.change(screen.getByLabelText(/Field of condition 1 of rule 1/), { target: { value: 'claims[].verdict' } });
@@ -152,6 +152,13 @@ describe('rules (FR-013, FR-014)', () => {
     expect(latest.evaluation.judge_set.error_rules[0]?.finding_text).toBe('claims[].verdict');
     fireEvent.change(select, { target: { value: 'claims[].text' } });
     expect(latest.evaluation.judge_set.error_rules[0]).not.toHaveProperty('finding_text');
+  });
+
+  it('with one text field per item there is nothing to choose, so "Where the error is" is not shown (T232)', () => {
+    show();
+    type('Sample reply', JSON.stringify({ claims: [{ text: 'A', ok: true }, { text: 'B', ok: false }] }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
+    expect(screen.queryByLabelText(/Where the error is/)).toBeNull();
   });
 
   it('a rule about the whole reply has no "Where the error is"', () => {
@@ -214,6 +221,26 @@ describe('rules (FR-013, FR-014)', () => {
     expect(rows).toHaveLength(2);
     expect(rows[0]!.textContent).toMatch(/The hero is a doctor.*Finding.*Bad claim/);
     expect(rows[1]!.textContent).toMatch(/No finding/);
+  });
+
+  it('a rule that has no value yet is named as the reason, and the parts of the sample are listed as no finding (preview)', () => {
+    withSample();
+    fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
+    fireEvent.change(screen.getByLabelText(/Field of condition 1 of rule 1/), { target: { value: 'claims[].verdict' } });
+    expect(screen.queryByText(/No rule can be used yet/)).toBeNull();
+    expect(screen.getByText('Rule 1 is not used in this preview until every condition has a value.')).toBeTruthy();
+    const rows = within(screen.getByRole('table', { name: 'Preview of the findings' })).getAllByRole('row').slice(1);
+    expect(rows).toHaveLength(2);
+    for (const row of rows) expect(row.textContent).toMatch(/No finding/);
+  });
+
+  it('a broken rule is named with its reason in the preview', () => {
+    withSample();
+    fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
+    fireEvent.change(screen.getByLabelText(/Field of condition 1 of rule 1/), { target: { value: 'claims[].verdict' } });
+    type(/Value of condition 1 of rule 1/, 'contradicted');
+    type('Sample reply', JSON.stringify({ items: [{ label: 'x' }] }));
+    expect(screen.getByText(/^Rule 1 is broken: /)).toBeTruthy();
   });
 
   it('marks a rule broken when the new sample lacks its field, and warns about readability', () => {

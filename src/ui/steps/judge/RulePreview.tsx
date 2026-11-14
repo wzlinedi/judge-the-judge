@@ -12,11 +12,16 @@ export function RulePreview({ set }: { set: JudgeSet }) {
     return <p class="muted">Add a rule to see which parts of the sample are findings.</p>;
   }
   const preview = previewRules(sample, set.error_rules, set.reply_mapping.finding_text, recognized);
-  if (!preview.readable) return <p class="muted">No rule can be used yet, so the preview is empty.</p>;
-  const unfinished = validateRules(set.error_rules, recognized).flatMap((v, i) => (!v.usable && v.unfinished ? [i + 1] : []));
+  if (!preview.readable) return <p class="muted">{`The sample reply cannot be read. ${preview.reason}`}</p>;
+  const validations = validateRules(set.error_rules, recognized);
+  const unfinished = validations.flatMap((v, i) => (!v.usable && v.unfinished ? [i + 1] : []));
+  const broken = validations.flatMap((v, i) => (!v.usable && !v.unfinished ? [{ n: i + 1, reason: v.reason }] : []));
   return (
     <>
     {unfinished.length > 0 ? <p class="muted">{`${unfinished.map((n) => `Rule ${n}`).join(', ')} ${unfinished.length === 1 ? 'is' : 'are'} not used in this preview until every condition has a value.`}</p> : null}
+    {broken.map((b) => (
+      <p key={b.n} class="muted">{`Rule ${b.n} is broken: ${b.reason}`}</p>
+    ))}
     <TableScroll label="Preview of the findings, table">
       <table aria-label="Preview of the findings">
         <thead>

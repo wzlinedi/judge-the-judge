@@ -131,12 +131,13 @@ interface WhereProps {
   onChange: (field: string) => void;
 }
 
-/** "Where the error is" (T232): the text field of the list item that shows where the error is, proposed automatically and changeable. A rule about the whole reply has none. */
+/** "Where the error is" (T232): the text field of the list item that shows where the error is, proposed automatically and changeable. A rule about the whole reply has none. It is shown only when the items have more than one text field to choose from. */
 function WhereTheErrorIs({ rule, number, fields, mapping, onChange }: WhereProps) {
   const list = ruleList(rule);
   if (list === undefined) return null;
   const choices = fields.fields.filter((f) => f.list === list && f.kind === 'text');
   const current = whereTheErrorIs(rule, list, mapping);
+  if (choices.length < 2 && current !== undefined) return null;
   return (
     <label class="where-the-error-is">
       {`Where the error is in rule ${number}`}

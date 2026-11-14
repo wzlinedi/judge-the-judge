@@ -149,6 +149,14 @@ describe('previewRules', () => {
     }
   });
 
+  it('still lists the parts of the sample, all as no finding, while no rule is usable (a rule with no value yet)', () => {
+    const unfinished: ErrorRule = { name: 'New', match: 'all', conditions: [{ field: 'claims[].verdict', comparison: 'equals', value: '' }] };
+    const sample = recognizeFields(reply);
+    expect(sample.ok).toBe(true);
+    const rows = previewRules(reply, [unfinished], findingText, sample.ok ? sample : undefined);
+    expect(rows.readable && rows.rows.map((r) => r.rules)).toEqual([[], [], []]);
+  });
+
   it('is not readable for a broken sample', () => {
     expect(previewRules('{', [bad], findingText).readable).toBe(false);
   });

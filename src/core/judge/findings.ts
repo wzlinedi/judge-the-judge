@@ -122,10 +122,11 @@ export type RulePreview = { readable: true; rows: PreviewRow[] } | { readable: f
 
 /** For the Judge step: every part of the sample with its finding (and rule names) or "no finding". */
 export function previewRules(sampleReply: string, rules: readonly ErrorRule[], findingText: Record<string, string>, recognized?: RecognizedFields): RulePreview {
-  const result = findFindings(sampleReply, rules, findingText, recognized);
-  if (!result.readable) return { readable: false, reason: result.reason ?? 'The sample cannot be read.' };
   const extracted = extractJson(sampleReply);
   if (!extracted.ok) return { readable: false, reason: extracted.message };
+  // While no rule is usable (a rule with no value yet) the parts of the sample are still listed, all as "no finding".
+  const found = findFindings(sampleReply, rules, findingText, recognized);
+  const result = found.readable ? found : { ...found, findings: [] as Finding[] };
   const lists = [...new Set(rules.flatMap((r) => r.conditions.map((c) => listOfPath(c.field))).filter((l): l is string => l !== undefined))];
   const rows: PreviewRow[] = [];
   for (const list of lists) {

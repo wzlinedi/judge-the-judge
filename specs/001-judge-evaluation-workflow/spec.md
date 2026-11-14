@@ -1062,7 +1062,7 @@ case and confirm the new case has the same fields and expected errors.
 - **FR-012**: Each error rule that is about a list of the sample reply MUST have its own "Where the
   error is": one recognized text field of the items of that list, the words of the judged data that
   the judge is pointing at. The system proposes the most likely field (the one it proposes for the
-  list) and the user confirms or changes it; the Judge step has no separate choice per list. When
+  list) and the user confirms or changes it; the choice is shown in the rule only when the items have more than one text field to choose from (decided 2026-11-14: with one field there is nothing to choose); the Judge step has no separate choice per list. When
   two rules hold for the same item with different fields, the first rule in the list gives the text
   of the finding. A rule about the whole reply has none. The file keeps the proposal per list in
   `reply_mapping.finding_text` and a rule carries `finding_text` only when its field differs from it,

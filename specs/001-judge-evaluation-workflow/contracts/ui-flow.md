@@ -84,8 +84,8 @@ Compare step and no result shelf.
      it"), each removable with **Remove**; a condition just added without a value shows "Condition N:
      type a value" beside it and the rule says it is not used until every condition has a value; for a
      rule about a list, **Where the error is in rule N**: a choice of the text field of the items of
-     that list, proposed automatically and changeable (a rule about the whole reply has none); under the rules a live preview of which parts
-     of the sample are findings and by which rule. When every rule uses only fields outside any
+     that list, proposed automatically and changeable, shown only when the items have more than one text field to choose from (a rule about the whole reply has none); under the rules a live preview of which parts
+     of the sample are findings and by which rule; while no rule is usable the preview still lists the parts of the sample as "No finding" and says for each rule why it is not used (no value yet, or broken with the reason), never a bare "no rule can be used". When every rule uses only fields outside any
      list, a note says that the judge is evaluated per case (FR-061).
 - There is no error catalog and no clean case section on this step.
 - **States**: empty (the "what next" line names what is missing; examples are loaded from the
