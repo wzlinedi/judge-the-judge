@@ -1,5 +1,7 @@
 import type { Results } from '../../../core/evaluation/results';
 import { MINIMUM_SAMPLE } from '../../../core/evaluation/results';
+import type { Evaluation } from '../../../core/model';
+import { DetailsSection } from './DetailsSection';
 
 const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
 
@@ -21,7 +23,14 @@ function Group({ title, children }: { title: string; children: preact.ComponentC
   );
 }
 
-export function SummaryView({ results }: { results: Results }) {
+export interface SummaryViewProps {
+  results: Results;
+  evaluation: Evaluation;
+  onThreshold: (measure: string, value: number) => void;
+  onLoadChecks: () => void;
+}
+
+export function SummaryView({ results, evaluation, onThreshold, onLoadChecks }: SummaryViewProps) {
   const c = results.counters;
   const rateIds = results.evaluated_per === 'case' ? ['case_detection_rate', 'clean_case_false_positive_rate'] : ['detection_rate', 'false_positive_rate'];
   const ignored = c.ignored_expected + c.ignored_additional;
@@ -36,6 +45,8 @@ export function SummaryView({ results }: { results: Results }) {
           {`These results are provisional: ${results.undecided} ${results.undecided === 1 ? 'case is' : 'cases are'} not decided yet (${c.cases_not_run} not run, ${c.cases_awaiting} awaiting verification).`}
         </p>
       ) : null}
+
+      {c.cases_decided === 0 ? <p class="muted">No case is decided yet, so there is no result to show. Run the cases and decide what awaits you on the Run step.</p> : null}
 
       <div role="group" aria-label="Counts" class="counts">
         <Group title="Expected errors">
@@ -91,6 +102,8 @@ export function SummaryView({ results }: { results: Results }) {
         <p>{`A final answer needs at least ${MINIMUM_SAMPLE.expected_errors} injected errors and ${MINIMUM_SAMPLE.clean_cases} clean cases.`}</p>
         <p>{`Decided so far: ${have} of ${MINIMUM_SAMPLE.expected_errors} ${perCase ? 'cases with errors' : 'expected errors'}, ${c.clean_cases_decided} of ${MINIMUM_SAMPLE.clean_cases} clean cases.`}</p>
       </section>
+
+      <DetailsSection results={results} rules={evaluation.checks.rules} onThreshold={onThreshold} onLoadChecks={onLoadChecks} />
     </div>
   );
 }

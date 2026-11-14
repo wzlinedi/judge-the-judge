@@ -1,0 +1,85 @@
+import { errorAnalysis, MIN_GROUP, type AdditionalRow, type GroupRow } from '../../../core/evaluation/analysis';
+import type { Results } from '../../../core/evaluation/results';
+
+const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
+
+function Groups({ label, rows }: { label: string; rows: GroupRow[] }) {
+  return (
+    <div class="table-scroll">
+      <table aria-label={label}>
+        <thead>
+          <tr>
+            <th>Group</th>
+            <th>Expected errors</th>
+            <th>Found</th>
+            <th>Missed</th>
+            <th>Detection rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.name}>
+              <td>{r.name}</td>
+              <td>{r.expected}</td>
+              <td>{r.found}</td>
+              <td>{r.missed}</td>
+              <td>{r.rate === null ? 'counts only' : pct(r.rate)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Additional({ label, first, rows }: { label: string; first: string; rows: ReadonlyArray<AdditionalRow | { name: string; real: number; fp: number }> }) {
+  return (
+    <div class="table-scroll">
+      <table aria-label={label}>
+        <thead>
+          <tr>
+            <th>{first}</th>
+            <th>Real errors</th>
+            <th>False positives</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={3}>None</td>
+            </tr>
+          ) : (
+            rows.map((r) => (
+              <tr key={r.name}>
+                <td>{r.name}</td>
+                <td>{r.real}</td>
+                <td>{r.fp}</td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** The Error analysis view (FR-070): groups below 10 expected errors show counts only; additional findings are counted apart. */
+export function ErrorAnalysisView({ results }: { results: Results }) {
+  const a = errorAnalysis(results.counters);
+  return (
+    <div class="analysis-view">
+      <h2 class="visually-hidden">Error analysis</h2>
+      <h3>By category</h3>
+      <Groups label="By category" rows={a.byCategory} />
+      <h3>By difficulty</h3>
+      <Groups label="By difficulty" rows={a.byDifficulty} />
+      <p class="muted">{`A group with fewer than ${MIN_GROUP} expected errors shows counts only, with no rate, because a rate of so few errors says too little.`}</p>
+      <h3>Additional findings per rule</h3>
+      <Additional label="Additional findings per rule" first="Rule" rows={a.perRule.map((r) => ({ name: r.rule, real: r.real, fp: r.fp }))} />
+      <h3>Additional findings per category</h3>
+      <Additional label="Additional findings per category" first="Category" rows={a.additionalByCategory} />
+      <h3>Additional findings per difficulty</h3>
+      <Additional label="Additional findings per difficulty" first="Difficulty" rows={a.additionalByDifficulty} />
+    </div>
+  );
+}

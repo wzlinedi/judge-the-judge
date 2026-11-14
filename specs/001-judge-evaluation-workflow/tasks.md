@@ -471,19 +471,33 @@ read-only case view, and the HTML report at any time. Results changes nothing bu
 
 ### Tests for User Story 9 ⚠️
 
-- [ ] T151 [US9] Write `tests/e2e/us9-results.spec.ts`: three views, the read-only case view with **Previous test case** and **Next test case**, the report exported while cases are undecided (marked provisional) and again when all are decided, the report opened on its own and printed to PDF (SC-008), and quickstart.md V12 step 3
-- [ ] T152 [P] [US9] Write `tests/contract/checks-file.test.ts`: `format` `judge-the-judge-checks`; `at_least` / `at_most`; values 0 to 1; unknown measure, comparison or range rejected with the rules unchanged; `minimum_sample` ignored and reported as fixed (FR-069)
-- [ ] T153 [P] [US9] Write `tests/contract/html-report.test.ts`: self-contained, no `<script>`, no external resources; order of contracts/file-formats.md section 8 including model details, judged text and the cases added or corrected after the first reply; every prompt, expected error, reply, decision with source, added finding with category and difficulty, and ignored item; Error analysis with additional findings per category and difficulty; "Provisional" with the number of undecided cases when cases are not run or await verification; `<script>` in a value escaped; details expanded in print (FR-072)
-- [ ] T154 [P] [US9] Write `tests/unit/ui/results-views.test.tsx`: Details collapsed by default with thresholds, **Load check settings**, intervals, both borderline notes, the two informational shares; the thresholds are the only controls that change data; Error analysis per category, difficulty and rule, and additional findings per category and difficulty with "(no category)" and "(not set)", counts only (FR-070); the notice of cases added or corrected after the first reply; Test case list with the category and difficulty of added findings and **Open** opening the read-only case view with no control that changes the case and **Open on Run**; **Export HTML report** and **Edit the judge and run again** in the "Report and next version" card; no **Export JSON**; states of contracts/ui-flow.md (FR-065, FR-069 to FR-072 incl. FR-071, SC-007)
+- [X] T151 [US9] Write `tests/e2e/us9-results.spec.ts`: three views, the read-only case view with **Previous test case** and **Next test case**, the report exported while cases are undecided (marked provisional) and again when all are decided, the report opened on its own and printed to PDF (SC-008), and quickstart.md V12 step 3
+- [X] T152 [P] [US9] Write `tests/contract/checks-file.test.ts`: `format` `judge-the-judge-checks`; `at_least` / `at_most`; values 0 to 1; unknown measure, comparison or range rejected with the rules unchanged; `minimum_sample` ignored and reported as fixed (FR-069)
+- [X] T153 [P] [US9] Write `tests/contract/html-report.test.ts`: self-contained, no `<script>`, no external resources; order of contracts/file-formats.md section 8 including model details, judged text and the cases added or corrected after the first reply; every prompt, expected error, reply, decision with source, added finding with category and difficulty, and ignored item; Error analysis with additional findings per category and difficulty; "Provisional" with the number of undecided cases when cases are not run or await verification; `<script>` in a value escaped; details expanded in print (FR-072)
+- [X] T154 [P] [US9] Write `tests/unit/ui/results-views.test.tsx`: Details collapsed by default with thresholds, **Load check settings**, intervals, both borderline notes, the two informational shares; the thresholds are the only controls that change data; Error analysis per category, difficulty and rule, and additional findings per category and difficulty with "(no category)" and "(not set)", counts only (FR-070); the notice of cases added or corrected after the first reply; Test case list with the category and difficulty of added findings and **Open** opening the read-only case view with no control that changes the case and **Open on Run**; **Export HTML report** and **Edit the judge and run again** in the "Report and next version" card; no **Export JSON**; states of contracts/ui-flow.md (FR-065, FR-069 to FR-072 incl. FR-071, SC-007)
 
 ### Implementation for User Story 9
 
-- [ ] T155 [P] [US9] Implement `src/core/schemas/checks.ts`, `src/core/io/checks-file.ts` and `examples/metrics/checks-example.json` to pass T152
-- [ ] T156 [P] [US9] Implement `src/core/io/html-report.ts` (`buildHtmlReport`) to pass T153 Include the table of additional findings per category and difficulty in Error analysis (T153).
-- [ ] T157 [US9] Implement `src/ui/steps/results/DetailsSection.tsx`, `ErrorAnalysisView.tsx` (with the table of additional findings per category and difficulty), `CaseListView.tsx`, `src/ui/windows/case-window/ReadOnlyCaseView.tsx` (on `CaseWindowFrame`) and `src/app/actions/export.ts`, and the "Report and next version" card in `ResultsStep.tsx`, to pass T154 and T151
-- [ ] T158 [US9] Write the Help sections "Overall result and thresholds" and "Exporting the report, and what provisional means" (with the check settings example from `examples/metrics/`) in `src/ui/help/sections/`
+- [X] T155 [P] [US9] Implement `src/core/schemas/checks.ts`, `src/core/io/checks-file.ts` and `examples/metrics/checks-example.json` to pass T152
+- [X] T156 [P] [US9] Implement `src/core/io/html-report.ts` (`buildHtmlReport`) to pass T153 Include the table of additional findings per category and difficulty in Error analysis (T153).
+- [X] T157 [US9] Implement `src/ui/steps/results/DetailsSection.tsx`, `ErrorAnalysisView.tsx` (with the table of additional findings per category and difficulty), `CaseListView.tsx`, `src/ui/windows/case-window/ReadOnlyCaseView.tsx` (on `CaseWindowFrame`) and `src/app/actions/export.ts`, and the "Report and next version" card in `ResultsStep.tsx`, to pass T154 and T151
+- [X] T158 [US9] Write the Help sections "Overall result and thresholds" and "Exporting the report, and what provisional means" (with the check settings example from `examples/metrics/`) in `src/ui/help/sections/`
 
 **Checkpoint**: All P1 stories work end to end on a real judge
+
+**Done 2026-11-14.** US9 is complete (the Phase 12 checkpoint: all P1 stories now work end to end). The check rules
+reader is `readChecks(text, knownMeasures)`; the known measures are the two per-error ones, the two case-level ones
+and those of the active metric, a measure may have one rule only, and `minimum_sample` is ignored with a note.
+`examples/metrics/checks-example.json` already existed. The report is built by `buildHtmlReport(evaluation, results,
+reviewed, meta)` and downloaded by the page (`Export HTML report` has no file picker); its details are `<details>`
+that print expanded through `::details-content` (checked in Chrome with `emulateMedia('print')`). The tables of the
+Error analysis come from `core/evaluation/analysis.ts`, shared by the view and the report, and the wording of sources
+and states from `core/evaluation/source-labels.ts`. **Export HTML report** is in the "what next" line when the result is
+final and in the "Report and next version" card while it is provisional, so the name is never on two buttons.
+**Edit the judge and run again** is not on the card yet: it arrives with US12 (T185). The Error analysis counts per
+expected error only; its per-case form arrives with US14 part 2 (T169). A race in `CaseWindowFrame` was fixed on the
+way: Alt + Left or Right pressed right after a move acted on the case that had just been left (the key handler now
+reads the latest handlers from a ref).
 
 ---
 

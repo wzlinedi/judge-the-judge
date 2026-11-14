@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useRef } from 'preact/hooks';
 import { labels } from '../labels';
 
 export interface CaseWindowFrameProps {
@@ -31,20 +31,24 @@ export function CaseWindowFrame({ title, index, total, left, right, onPrevious, 
   const first = canPrevious === undefined ? index <= 0 : !canPrevious;
   const last = canNext === undefined ? index >= total - 1 : !canNext;
 
+  // The key handler reads the latest values from a ref: a key pressed right after a move must not act on the case that was left.
+  const latest = useRef({ first, last, onPrevious, onNext });
+  latest.current = { first, last, onPrevious, onNext };
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (!event.altKey) return;
-      if (event.key === 'ArrowLeft' && !first) {
+      const now = latest.current;
+      if (event.key === 'ArrowLeft' && !now.first) {
         event.preventDefault();
-        onPrevious();
-      } else if (event.key === 'ArrowRight' && !last) {
+        now.onPrevious();
+      } else if (event.key === 'ArrowRight' && !now.last) {
         event.preventDefault();
-        onNext();
+        now.onNext();
       }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [first, last, onPrevious, onNext]);
+  }, []);
 
   return (
     <div class="case-window" role="dialog" aria-modal="true" aria-label={title}>

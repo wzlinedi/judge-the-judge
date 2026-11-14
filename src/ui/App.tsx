@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import demoEvaluation from '../../examples/demo/evaluation.json?raw';
 import { loadExample } from '../app/actions/evaluation';
+import { changeThreshold, loadChecksFromFile } from '../app/actions/checks';
 import { correctRules } from '../app/actions/decide';
+import { exportReport } from '../app/actions/export';
 import { modelDetailsEdit, pasteReplyFromClipboard, saveReply, type ReplyOutcome } from '../app/actions/replies';
 import { cloneCase, type CaseEdit } from '../app/actions/cases';
 import type { CatalogEdit } from '../app/actions/catalog';
@@ -31,6 +33,7 @@ import { CasesStep } from './steps/cases/CasesStep';
 import { JudgeStep } from './steps/judge/JudgeStep';
 import { RunStep } from './steps/run/RunStep';
 import { CaseWindow } from './windows/case-window/CaseWindow';
+import { ReadOnlyCaseView } from './windows/case-window/ReadOnlyCaseView';
 import { TestCaseWindow, type TestWindowView } from './windows/test-case/TestCaseWindow';
 import { ImportWindow } from './windows/import/ImportWindow';
 import { applyImport, downloadExample, exportTestCases, prepareImport } from '../app/actions/test-cases-file';
@@ -64,6 +67,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const [metricsVersion, setMetricsVersion] = useState(0);
   const [testWindow, setTestWindow] = useState<TestWindowView | null>(null);
   const [importing, setImporting] = useState(false);
+  const [viewCase, setViewCase] = useState<string | null>(null);
   const portsRef = useRef<Ports>(ports ?? createBrowserPorts(browser, () => stateRef.current.evaluation.dataset.name));
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -143,6 +147,21 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     paste: async (caseId: string) => applyReply(await pasteReplyFromClipboard(stateRef.current, caseId, portsRef.current)),
   };
 
+  const exportHtml = async () => {
+    const report = await exportReport(stateRef.current, fileEnv, metricFor(stateRef.current.evaluation.metric.id));
+    download(report.fileName, report.html, 'text/html');
+    say(report.message);
+  };
+
+  const loadChecks = async () => {
+    const result = await loadChecksFromFile(stateRef.current, portsRef.current, metricFor(stateRef.current.evaluation.metric.id));
+    setState(result.state);
+    if (result.outcome === 'invalid') {
+      setNotice('');
+      setProblems(result.problems ?? []);
+    } else if (result.outcome === 'loaded') say(result.message);
+  };
+
   const exportCases = async () => {
     const result = await exportTestCases(stateRef.current, portsRef.current, fileEnv);
     say(result.message);
@@ -182,7 +201,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     }
   };
 
-  const windowOpen = (state.step === 'run' && state.openCase !== null) || testWindow !== null;
+  const windowOpen = (state.step === 'run' && state.openCase !== null) || (state.step === 'results' && viewCase !== null) || testWindow !== null;
   const gate = stepGate(state, state.step);
   const next = nextAction(state, state.step, reviewed);
   const runAction = () => {
@@ -209,8 +228,13 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
         ) : state.step === 'results' ? (
           <ResultsStep
             results={results}
+            evaluation={state.evaluation}
+            reviewed={reviewed}
             onContinue={onResultsContinue}
-            onExport={undefined}
+            onExport={() => void exportHtml()}
+            onThreshold={(measure, value) => setState((s) => changeThreshold(s, measure, value))}
+            onLoadChecks={() => void loadChecks()}
+            onOpenCase={setViewCase}
           />
         ) : (
           <>
@@ -259,6 +283,19 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           onOnlyAwaitingChange={setOnlyAwaiting}
           saveBar={{ fileName: state.evaluationFile, repliesSinceSave: state.repliesSinceSave, onSave: () => void save(false), onSaveAs: () => void save(true) }}
           reply={replyActions}
+        />
+      ) : null}
+      {state.step === 'results' && viewCase ? (
+        <ReadOnlyCaseView
+          evaluation={state.evaluation}
+          reviewed={reviewed}
+          caseId={viewCase}
+          onNavigate={setViewCase}
+          onClose={() => setViewCase(null)}
+          onOpenOnRun={(id) => {
+            setViewCase(null);
+            setState((s) => ({ ...s, step: 'run', openCase: id }));
+          }}
         />
       ) : null}
       {testWindow ? <TestCaseWindow state={state} view={testWindow} onView={setTestWindow} onApply={applyCase} /> : null}

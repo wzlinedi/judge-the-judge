@@ -9,7 +9,7 @@ describe('Help (Principle VIII)', () => {
   it('has the sections written so far, in plain headings', () => {
     render(<HelpStep />);
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Marking after each reply: Add finding, Remove, the second opinion and Ignore', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results']);
+    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Marking after each reply: Add finding, Remove, the second opinion and Ignore', 'Files: the test project and the evaluation', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results', 'Overall result and thresholds', 'Exporting the report, and what provisional means']);
   });
 
   it('quotes the numbers of the demo from the demo files, so they cannot drift', () => {
@@ -154,5 +154,37 @@ describe('Help for marking after each reply (US8)', () => {
       }
     };
     expect(pre.map(compact)).toContain(JSON.stringify(opinions['17']));
+  });
+});
+
+describe('Help for the Results step (US9)', () => {
+  it('explains the overall result, the thresholds in Details and Load check settings', () => {
+    render(<HelpStep />);
+    const text = document.body.textContent ?? '';
+    for (const label of ['Details', 'Load check settings', 'Works', 'Does not work', 'Inconclusive', 'borderline', '95% interval']) expect(text).toContain(label);
+    expect(text).toMatch(/at least 80%/);
+    expect(text).toMatch(/at most 10%/);
+    expect(text).toMatch(/minimum test size is fixed/i);
+  });
+
+  it('explains the three views, the read-only case view and what the report holds, and that files contain your data', () => {
+    render(<HelpStep />);
+    const text = document.body.textContent ?? '';
+    for (const label of ['Export HTML report', 'Error analysis', 'Test case list', 'Open on Run', 'provisional', 'counts only']) expect(text).toContain(label);
+    expect(text).toMatch(/contain your data/i);
+    expect(text).toMatch(/print/i);
+  });
+
+  it('quotes the example of check settings from examples/metrics', () => {
+    render(<HelpStep />);
+    const example = JSON.stringify(JSON.parse(readFileSync('examples/metrics/checks-example.json', 'utf8')));
+    const pre = [...document.querySelectorAll('pre.example')].map((p) => {
+      try {
+        return JSON.stringify(JSON.parse(p.textContent ?? ''));
+      } catch {
+        return undefined;
+      }
+    });
+    expect(pre).toContain(example);
   });
 });
