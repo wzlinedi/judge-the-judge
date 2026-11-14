@@ -220,8 +220,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const gate = stepGate(state, state.step);
   const next = nextAction(state, state.step, reviewed);
   const doIntent = (intent: NextIntent | undefined) => {
-    if (intent === 'add') setTestWindow({ view: 'choice' });
-    else if (intent === 'finalize') setFinalizing(true);
+    if (intent === 'finalize') setFinalizing(true);
     else if (intent === 'edit-cases') {
       const result = editTestCases(stateRef.current);
       setState(result.state);
@@ -288,6 +287,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
                 fileName={state.evaluationFile}
                 repliesSinceSave={state.repliesSinceSave}
                 onOpen={(id) => setState((s) => ({ ...s, openCase: id }))}
+                onAdd={() => setTestWindow({ view: 'choice' })}
                 onSave={() => void save(false)}
                 onSaveAs={() => void save(true)}
                 onModelDetails={(text) => setState((s) => modelDetailsEdit(s, text))}

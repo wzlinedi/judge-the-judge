@@ -26,6 +26,7 @@ describe('the Run step', () => {
     fileName: null,
     repliesSinceSave: 3,
     onOpen: vi.fn(),
+    onAdd: vi.fn(),
     onSave: vi.fn(),
     onSaveAs: vi.fn(),
     onModelDetails: vi.fn(),

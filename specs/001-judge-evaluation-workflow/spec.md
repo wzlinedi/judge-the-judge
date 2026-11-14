@@ -134,6 +134,9 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Clarify, prototype v15 review) Which ways of adding a test case does "Add test case" offer, and what happens to a pasted JSON that does not match the chosen kind? → A: Three choices: "Paste JSON", "Clean case" and "Case with injected errors". "Paste JSON" takes any case JSON the user already has and saves it as a clean case when it has no expected errors, or as a case with injected errors when it has some. "Clean case" and "Case with injected errors" prepare the case with the user's LLM; the latter no longer has its own "Paste a ready JSON" route. An answer with expected errors pasted in the clean case view is a problem that points to "Paste JSON". There is no "Clone" (FR-078).
 - Q: (Clarify, prototype v15 review) After finalizing, can a test case without a reply be removed or renamed? → A: Yes. A case without a reply can still be renamed and removed after finalizing (each change gives a new test cases version); for a case with a reply "Rename" and "Remove" are disabled with the reason "This case has a reply" (FR-025, FR-039, FR-053).
 - Q: (Clarify, prototype v15 review) Should "Clone" stay? → A: No (owner review, Session 2026-11-14; this answer replaces the earlier ones that kept it). Copying a clean case is covered by "Like case" in the clean case view, which shows an existing case to the LLM as an example. Copying a case with injected errors is problematic: its errors are exported in the JSON too and would have to be changed by hand. The window already makes a clean case and a case with injected errors without copying. A wrong case is changed with "Show JSON", "Copy JSON" and "Paste JSON" and the old one is removed; before its first reply, its expected errors are corrected with "Correct expected errors" (FR-078, FR-089).
+- Q: (Owner review 2026-11-14, Judge) Are the "Values seen" of the sample reply a closed list? → A: No. The sample reply may hold only part of the values the judge can return, so they are examples. The column says so, and a rule can use any value typed by hand. The fields stay limited to the sample reply: no field is typed by hand (FR-013, FR-014).
+- Q: (Owner review 2026-11-14, Judge) Why did "Add condition" show "Broken rule … with no value" after a typed value? → A: "Add condition" adds a new, empty condition, and the whole rule was then shown as broken, so the typed value looked lost. Now a short line beside the value box says that any value is kept as typed, and a condition just added without a value is shown as unfinished next to that condition ("Condition 3: type a value"). Such a rule is not used until it is complete, and the preview says so; "Broken rule" stays for a field that is not in the sample reply, a rule with no conditions and a rule with two lists (FR-013, FR-014).
+- Q: (Owner review 2026-11-14) Where is "Add test case"? → A: Not in the "what next" line on any step. It is a button above the list of cases: on Test cases above the table and on Run above the table of cases (after finalizing), disabled at the limit of 500 cases. The Judge step has no such button. With no cases, the "what next" line shows "Finalize test cases", disabled, and says to use the button below. "Edit test cases" stays in the line (FR-025, FR-053, FR-088).
 - (Prototype v16 review, decided without a question) The box for the judge's reply is always visible in the case window of Run, never behind "More actions": under the four steps, with "Paste reply from clipboard" and "Save reply". It is checked as the text changes (FR-084). Once a reply is saved the box holds it; changing it and pressing "Save reply" replaces the reply (FR-056). The case window has no "More actions" section (FR-055, FR-063).
 - (Prototype v16 review, decided without a question) A finding added by hand ("Add finding") has "Remove"; findings read from the reply have none (they are marked, "Ignore" included). A finding added by hand may optionally get a category (from the catalog, or a new name that joins it) and a difficulty (obvious or subtle) (FR-062).
 - (Prototype v16 review, decided without a question) The second opinion is one button, "Second opinion…", under the list of items of a case with a reply. It opens a window for that case: the line saying what is checked, (1) the verification prompt read-only with "Copy prompt", (2) one box for the LLM's answer, checked as it changes, (3) a preview of every change ("E1 undecided → Found", with the LLM's reason and fragment), and "Apply opinion" and "Cancel". "Copy verification prompt", "Paste LLM opinion from clipboard", "Read LLM opinion" and the box shown only when the clipboard cannot be read are removed (FR-063).
@@ -224,8 +227,19 @@ the findings shown for the sample are correct.
    one instead.
 8. **Given** the Judge step, **When** the user looks for its buttons, **Then** apart from the header
    ("File" menu and Help) there are only "Add rule" (with "Add condition" and "Remove" inside each
-   rule) and the one action of the "what next" line; there is no "Save evaluation" and no "Read
-   sample reply".
+   rule) and the one action of the "what next" line; there is no "Save evaluation", no "Read
+   sample reply" and no "Add test case".
+9. **Given** a sample reply that holds only some of the values the judge can return, **When** the
+   user looks at the "Values seen" and writes a condition, **Then** the column says the values are
+   examples, the value box accepts any text and keeps it as typed, and a line beside the box says so.
+10. **Given** a rule with `claims[].verdict` equals "aaa" and `claims[].text` equals "bbb", **When**
+    the user presses "Add condition", **Then** the two typed values are kept, the new condition says
+    "Condition 3: type a value" next to it, the rule is not shown as "Broken rule" and is marked as
+    not used until every condition has a value, and the preview says so.
+11. **Given** finalized test cases, **When** the user looks at the Judge, Test cases and Run steps,
+    **Then** "Add test case" is not in the "what next" line of any of them; it is a button above the
+    table of cases on Test cases and on Run (disabled at the limit of cases), and "Edit test cases"
+    stays in the line while no reply exists.
 
 ---
 
@@ -971,7 +985,7 @@ case and confirm the new case has the same fields and expected errors.
   actions are:
   Judge: "Add rule" (with "Add condition" and "Remove" inside a rule); these and the one action of
   the "what next" line are the only buttons of the Judge step (FR-011, FR-088).
-  Test cases: "Add category", "Rename" and "Remove" in the "Error categories" section; "Add test case"; "Open", "Rename" and "Remove" at
+  Test cases: "Add category", "Rename" and "Remove" in the "Error categories" section; "Add test case" (above the list; Run has the same button above its cases); "Open", "Rename" and "Remove" at
   each case; "Finalize test cases", "Edit test cases" (FR-053); in the test cases part of the
   "File" menu: "Import test cases" (adds cases from a CSV or JSON file), "Export test cases" (all
   cases to a JSON file) and, in the import window, "Download example file".
@@ -1048,7 +1062,8 @@ case and confirm the new case has the same fields and expected errors.
   any one of them ("or"); the number of conditions and of rules is not limited. A condition
   names one recognized field of the reply, a comparison (equals, does not equal, is greater
   than, is less than, is empty, is not empty) and, where needed, a value, which the user can
-  pick from the values seen in the sample or type. Text is compared ignoring letter case. The
+  type or pick from the values seen in the sample. The values seen are examples, not a closed
+  list: the value is free text, kept as it is typed, and a short line beside the value box says so. Text is compared ignoring letter case. The
   judge has reported an error when at least one rule holds; to combine "and" with "or", the user
   writes several rules.
 - **FR-014**: A rule whose fields belong to the items of a list MUST be checked for each item
@@ -1061,7 +1076,11 @@ case and confirm the new case has the same fields and expected errors.
   a rule as broken when its field disappears after the sample reply is replaced. With the sample
   reply and the rules, the system MUST show which parts of the sample are findings and by which
   rule, updated as the rules change. When a real reply lacks a field a rule needs, the system
-  MUST NOT guess; the case awaits verification with the reason (FR-061).
+  MUST NOT guess; the case awaits verification with the reason (FR-061). A condition that still
+  has no value (just added) is not an error of the rule: it is shown as unfinished next to that
+  condition, the rule is not used until every condition has a value, and the preview and the
+  readability warning say so; "Broken rule" is kept for a field that is not in the sample reply, a
+  rule with no conditions and a rule that uses two lists.
 - **FR-015**: The error catalog (the error categories of the test project, each with a name, an
   optional description and an optional example) MUST be managed in one compact "Error categories"
   section on the Test cases step, which can be collapsed (FR-087); the Judge step has no catalog
@@ -1146,7 +1165,7 @@ case and confirm the new case has the same fields and expected errors.
 - **FR-025**: The Test cases step MUST show all test cases, clean and with injected errors, in one
   table below the "Error categories" section (FR-087). Each row shows the case's
   identifier, name, kind ("Clean" or "Injected errors"), base case,
-  number of expected errors, categories and any warnings. "Add test case" is above the table, and the
+  number of expected errors, categories and any warnings. "Add test case" is above the table (and, after finalizing, above the table of cases on Run), never in the "what next" line, and the
   user can search, sort and filter it, including by kind. Each row MUST show three buttons: "Open" (the read-only
   view, FR-086; a click on the row does the same), "Rename" (asks for the new
   name; a name another case has is refused, FR-079) and "Remove" (asks for confirmation; refused
@@ -1336,7 +1355,7 @@ case and confirm the new case has the same fields and expected errors.
   be kept, and the judge gets a new version (FR-075). Two changes to the test cases MAY also be made
   after finalizing, each giving a new test cases version: the expected errors of a case that has no
   reply yet are corrected through its JSON (FR-089), and new test cases are added with "Add test
-  case" or "Import test cases"; a new case starts as Not run, and the replies and
+  case" (a button above the list of cases on Test cases and on Run, disabled at the limit of cases, never in the "what next" line) or "Import test cases"; a new case starts as Not run, and the replies and
   decisions of the other cases are kept. A case with a reply is not corrected: an expected error
   that should not count is marked "Ignore" on Run (FR-062). A category may still be renamed
   (FR-015). After finalizing, a test case without a reply can still be renamed and removed (the test

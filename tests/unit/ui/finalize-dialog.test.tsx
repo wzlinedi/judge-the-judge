@@ -6,6 +6,7 @@ import { createFakePorts } from '../../../src/app/ports/fakes';
 import { nextAction } from '../../../src/app/selectors';
 import { createState, type AppState, type StepId } from '../../../src/app/store';
 import type { Evaluation } from '../../../src/core/model';
+import { MAX_CASES } from '../../../src/core/schemas/test-case';
 import { sampleEvaluation } from '../../helpers/fixtures';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
@@ -89,17 +90,17 @@ describe('the "what next" line after finalizing', () => {
     expect(nextAction(stateOf('cases', { finalized: true, replies: true }), 'cases').others ?? []).toEqual([]);
   });
 
-  it('Judge: says what is fixed and what may still change, with Add test case and Edit test cases beside Continue', () => {
+  it('Judge: says what is fixed and what may still change, with Edit test cases beside Continue and no Add test case (T228)', () => {
     const next = nextAction(stateOf('judge', { finalized: true }), 'judge');
     expect(next.sentence).toMatch(/fixed/);
     expect(next.detail).toMatch(/reply mapping and the error rules/);
-    expect(next.others?.map((o) => o.label)).toEqual(['Add test case', 'Edit test cases']);
-    expect(nextAction(stateOf('judge', { finalized: true, replies: true }), 'judge').others?.map((o) => o.label)).toEqual(['Add test case']);
+    expect(next.others?.map((o) => o.label)).toEqual(['Edit test cases']);
+    expect(nextAction(stateOf('judge', { finalized: true, replies: true }), 'judge').others ?? []).toEqual([]);
   });
 
-  it('Run: Add test case and Edit test cases beside the primary action; no Edit after the first reply', () => {
-    expect(nextAction(stateOf('run', { finalized: true }), 'run').others?.map((o) => o.label)).toEqual(['Add test case', 'Edit test cases']);
-    expect(nextAction(stateOf('run', { finalized: true, replies: true }), 'run').others?.map((o) => o.label)).toEqual(['Add test case']);
+  it('Run: Edit test cases beside the primary action, no Add test case in the bar (T228); no Edit after the first reply', () => {
+    expect(nextAction(stateOf('run', { finalized: true }), 'run').others?.map((o) => o.label)).toEqual(['Edit test cases']);
+    expect(nextAction(stateOf('run', { finalized: true, replies: true }), 'run').others ?? []).toEqual([]);
   });
 
   it('Results and the steps before finalizing have no extra actions', () => {
@@ -127,10 +128,25 @@ describe('the "what next" line after finalizing', () => {
     expect(screen.getByRole('table', { name: 'Test cases' })).toBeTruthy();
   });
 
-  it('on Judge and Run, Add test case opens the window to add a case', () => {
+  it('on Run, Add test case stands above the table of cases, not in the bar, and opens the window (T228)', () => {
     show(stateOf('run', { finalized: true }));
-    fireEvent.click(within(bar()).getByRole('button', { name: 'Add test case' }));
+    expect(within(bar()).queryByRole('button', { name: 'Add test case' })).toBeNull();
+    const cases = screen.getByRole('region', { name: 'Cases' });
+    fireEvent.click(within(cases).getByRole('button', { name: 'Add test case' }));
     expect(screen.getByRole('dialog', { name: 'Test case' })).toBeTruthy();
+  });
+
+  it('on Judge there is no Add test case button at all (T228)', () => {
+    show(stateOf('judge', { finalized: true }));
+    expect(screen.queryByRole('button', { name: 'Add test case' })).toBeNull();
+  });
+
+  it('on Run the button above the cases is disabled at the limit of cases (T228, FR-053)', () => {
+    const base = stateOf('run', { finalized: true });
+    const one = base.evaluation.dataset.cases[0]!;
+    const cases = Array.from({ length: MAX_CASES }, (_, i) => ({ ...one, id: String(i + 1), name: `Case ${i + 1}` }));
+    show({ ...base, evaluation: { ...base.evaluation, dataset: { ...base.evaluation.dataset, cases } } });
+    expect((within(screen.getByRole('region', { name: 'Cases' })).getByRole('button', { name: 'Add test case' }) as HTMLButtonElement).disabled).toBe(true);
   });
 });
 

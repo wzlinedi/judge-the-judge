@@ -1,5 +1,6 @@
 import { previewRules } from '../../../core/judge/findings';
 import { recognizeFields } from '../../../core/judge/fields';
+import { validateRules } from '../../../core/judge/rules';
 import type { JudgeSet } from '../../../core/model';
 import { TableScroll } from '../../components/TableScroll';
 
@@ -12,7 +13,10 @@ export function RulePreview({ set }: { set: JudgeSet }) {
   }
   const preview = previewRules(sample, set.error_rules, set.reply_mapping.finding_text, recognized);
   if (!preview.readable) return <p class="muted">No rule can be used yet, so the preview is empty.</p>;
+  const unfinished = validateRules(set.error_rules, recognized).flatMap((v, i) => (!v.usable && v.unfinished ? [i + 1] : []));
   return (
+    <>
+    {unfinished.length > 0 ? <p class="muted">{`${unfinished.map((n) => `Rule ${n}`).join(', ')} ${unfinished.length === 1 ? 'is' : 'are'} not used in this preview until every condition has a value.`}</p> : null}
     <TableScroll label="Preview of the findings, table">
       <table aria-label="Preview of the findings">
         <thead>
@@ -33,5 +37,6 @@ export function RulePreview({ set }: { set: JudgeSet }) {
         </tbody>
       </table>
     </TableScroll>
+    </>
   );
 }

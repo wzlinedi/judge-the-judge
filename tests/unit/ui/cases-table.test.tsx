@@ -116,9 +116,10 @@ describe('after finalizing (FR-053)', () => {
 });
 
 describe('the "what next" line', () => {
-  it('offers Add test case with no cases, and Finalize test cases otherwise', () => {
+  it('offers a disabled Finalize test cases with no cases (Add test case is above the list, T228), and Finalize test cases otherwise', () => {
     const empty = { ...createState(), step: 'cases' as const };
-    expect(nextAction(empty, 'cases').action.label).toBe('Add test case');
+    expect(nextAction(empty, 'cases').action).toMatchObject({ label: 'Finalize test cases', disabled: true });
+    expect(nextAction(empty, 'cases').sentence).toMatch(/button below/);
     expect(nextAction(stateOf(), 'cases').action.label).toBe('Finalize test cases');
   });
 

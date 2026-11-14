@@ -1,7 +1,7 @@
 import { useId } from 'preact/hooks';
 import { addCondition, addRule, removeCondition, removeRule, updateCondition, updateRule } from '../../../app/actions/judge';
 import { recognizeFields } from '../../../core/judge/fields';
-import { validateRules } from '../../../core/judge/rules';
+import { hasNoValue, needsValue, validateRules } from '../../../core/judge/rules';
 import type { Comparison } from '../../../core/model';
 import { Explain } from '../../components/Explain';
 import { labels } from '../../labels';
@@ -31,7 +31,7 @@ export function RulesSection({ state, onEdit }: SectionProps) {
   return (
     <section class="card" aria-labelledby={`${id}-h`}>
       <h2 id={`${id}-h`}>Error rules</h2>
-      <Explain>A rule says when the judge has reported an error. The judge has reported an error when at least one rule holds.</Explain>
+      <Explain>A rule says when the judge has reported an error. The judge has reported an error when at least one rule holds. The fields come from the sample reply, but a rule can use any value, not only the values seen in the sample.</Explain>
       {set.error_rules.map((rule, r) => {
         const n = r + 1;
         const validation = validations[r];
@@ -54,11 +54,13 @@ export function RulesSection({ state, onEdit }: SectionProps) {
                 {labels.remove}
               </button>
             </div>
-            {validation && !validation.usable ? <p class="error-note">{`Broken rule: ${validation.reason}`}</p> : null}
+            {validation && !validation.usable && !validation.unfinished ? <p class="error-note">{`Broken rule: ${validation.reason}`}</p> : null}
+            {validation && !validation.usable && validation.unfinished ? <p class="muted unfinished-note">{`Rule ${n} is not used until every condition has a value.`}</p> : null}
             {rule.conditions.map((condition, c) => {
               const m = c + 1;
               const known = fields?.fields.find((f) => f.path === condition.field);
-              const needsValue = condition.comparison !== 'is_empty' && condition.comparison !== 'is_not_empty';
+              const takesValue = needsValue(condition);
+              const unfinished = fields !== null && hasNoValue(condition);
               const listId = `${id}-values-${r}-${c}`;
               return (
                 <div key={c} class="condition">
@@ -78,7 +80,7 @@ export function RulesSection({ state, onEdit }: SectionProps) {
                       </option>
                     ))}
                   </select>
-                  {needsValue ? (
+                  {takesValue ? (
                     <>
                       <input
                         type="text"
@@ -92,6 +94,8 @@ export function RulesSection({ state, onEdit }: SectionProps) {
                           <option key={v} value={v} />
                         ))}
                       </datalist>
+                      <span class="muted value-hint">Any value; it is kept as you type it.</span>
+                      {unfinished ? <span class="unfinished-note">{`Condition ${m}: type a value`}</span> : null}
                     </>
                   ) : null}
                   {rule.conditions.length > 1 ? (

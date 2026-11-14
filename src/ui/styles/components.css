@@ -98,6 +98,8 @@ textarea.json { font-size: var(--text-sm); }
 .reason { margin: var(--space-1) 0; color: var(--warning); font-size: var(--text-sm); font-weight: 600; }
 .reason::before { content: "? "; }
 .error-note { color: var(--error); font-weight: 600; }
+.unfinished-note { font-weight: 600; }
+.value-hint { font-size: 0.875rem; }
 .marks { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
 .marks button.pressed { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
 .marks button.pressed::before { content: "● "; }

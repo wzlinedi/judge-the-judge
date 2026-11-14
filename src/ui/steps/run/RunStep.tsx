@@ -3,6 +3,7 @@ import type { ReviewedCase } from '../../../core/evaluation/results';
 import type { Evaluation } from '../../../core/model';
 import { EmptyState } from '../../components/EmptyState';
 import { StatusMark } from '../../components/StatusMark';
+import { testProjectFeedback } from '../../../core/cases/feedback';
 import { labels } from '../../labels';
 import { JudgeSummary } from './JudgeSummary';
 import { SaveReminder } from './SaveReminder';
@@ -15,6 +16,8 @@ export interface RunStepProps {
   fileName: string | null;
   repliesSinceSave: number;
   onOpen: (caseId: string) => void;
+  /** Opens the window to add a test case; the button stands above the list of cases (FR-053). */
+  onAdd: () => void;
   onSave: () => void;
   onSaveAs: () => void;
   onModelDetails: (text: string) => void;
@@ -29,9 +32,10 @@ export function itemsToDecide(r: ReviewedCase): number {
   return undecided + (r.effective.needsApproval && !r.effective.approved && undecided === 0 ? 1 : 0);
 }
 
-export function RunStep({ evaluation, reviewed, fileName, repliesSinceSave, onOpen, onSave, onSaveAs, onModelDetails }: RunStepProps) {
+export function RunStep({ evaluation, reviewed, fileName, repliesSinceSave, onOpen, onAdd, onSave, onSaveAs, onModelDetails }: RunStepProps) {
   const [show, setShow] = useState<Show>('all');
   const versions = useVersions(evaluation);
+  const full = testProjectFeedback(evaluation).capacity.full;
   const decided = reviewed.filter((r) => r.status === 'pass' || r.status === 'fail').length;
   const received = reviewed.filter((r) => r.status !== 'not_run').length;
   const toDecide = reviewed.reduce((sum, r) => sum + itemsToDecide(r), 0);
@@ -87,6 +91,9 @@ export function RunStep({ evaluation, reviewed, fileName, repliesSinceSave, onOp
       <section class="card" aria-label="Cases">
         <div class="list-head">
           <h2>Cases</h2>
+          <button type="button" onClick={onAdd} disabled={full}>
+            {labels.addTestCase}
+          </button>
           <label>
             Show{' '}
             <select value={show} onChange={(event) => setShow((event.currentTarget as HTMLSelectElement).value as Show)}>

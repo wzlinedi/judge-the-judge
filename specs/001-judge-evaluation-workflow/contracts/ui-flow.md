@@ -56,7 +56,7 @@ Chrome and Microsoft Edge (FR-003).
 | Step | Available when | Primary action in the "what next" line |
 |---|---|---|
 | 1 Judge | Always | **Next: Test cases** once the judge is complete; **Continue** after finalizing |
-| 2 Test cases | Always (useful once the prompt has variables) | **Add test case** with no cases; **Finalize test cases**; **Continue** after finalizing (with **Add test case** beside it) |
+| 2 Test cases | Always (useful once the prompt has variables) | **Finalize test cases** (disabled while there are no cases, with a sentence pointing to **Add test case** above the list); **Continue** after finalizing |
 | 3 Run | Test cases finalized | **Continue** (opens the next case to work on); **Next: Results** when all are decided |
 | 4 Results | Finalized | **Continue** while cases are undecided; **Export HTML report** when all are decided |
 
@@ -75,18 +75,22 @@ Compare step and no result shelf.
      is the **judged text** (the last one proposed, FR-010), and the judge version.
   2. **Sample reply and its fields**: a box for one reply, read as soon as it is pasted or
      changed (no read button); a problem is shown under the box with its line and column, and the
-     fields of the last readable sample stay. Then a table of fields (path, kind, values seen) and,
+     fields of the last readable sample stay. Then a table of fields (path, kind, values seen) with a
+     line saying that the values are examples from the sample, not a closed list, and,
      for each list, a choice of the field that holds the text a finding points at.
   3. **Error rules**: **Add rule**; per rule its name, "all of these hold" or "any of these
-     holds", and conditions (field from the recognized list, comparison, value with the values
-     seen offered), each removable with **Remove**; under the rules a live preview of which parts
+     holds", and conditions (field from the recognized list, comparison, value as free text with the
+     values seen offered as suggestions and a line beside the box: "Any value; it is kept as you type
+     it"), each removable with **Remove**; a condition just added without a value shows "Condition N:
+     type a value" beside it and the rule says it is not used until every condition has a value; under the rules a live preview of which parts
      of the sample are findings and by which rule. When every rule uses only fields outside any
      list, a note says that the judge is evaluated per case (FR-061).
 - There is no error catalog and no clean case section on this step.
 - **States**: empty (the "what next" line names what is missing; examples are loaded from the
   File menu); prompt with no variables (warning); judged-text variable removed (the last variable
   proposed again, with a note); sample that cannot be read (line and column, text kept, fields
-  unchanged); broken rule (marked, with the missing field named); replies not readable
+  unchanged); broken rule (marked, with the missing field named; a condition without a value yet is
+  "unfinished", not broken); replies not readable
   automatically (warning naming what is missing); invalid file (message, nothing replaced); after
   finalizing (prompt and judged text read-only; sample, finding text and rules still editable).
 
@@ -123,7 +127,7 @@ Compare step and no result shelf.
 - **States**: no cases yet (points to **Add test case**, the File menu and the Judge step); 500-case
   limit reached; text too long; identifier collision on import (new identifiers, said in the
   summary); name used twice (both cases show the warning); finalized (**Add test case**
-  and **Import test cases** stay available and new cases start as Not run; **Rename** and
+  above the list and **Import test cases** stay available and new cases start as Not run; **Rename** and
   **Remove** are disabled with "This case has a reply" for a case with a reply; while no reply
   exists, **Edit test cases** opens the test project again).
 
@@ -186,7 +190,8 @@ which asks first when something was pasted or typed.
     evaluation as** (FR-059, FR-076).
   - **Progress**: replies received and cases decided out of all cases; the number of items still
     to decide; "N replies not saved to a file".
-  - **One list of all cases**: identifier, name, kind (with "added after first reply" when it
+  - **One list of all cases**, with **Add test case** above it (disabled at the limit of cases; the
+    "what next" line has no such button): identifier, name, kind (with "added after first reply" when it
     applies), number of expected errors, status (Not run, Awaiting verification, Pass, Fail, each
     with a word and a sign, never color alone), items to decide, and **Open**; a choice "all
     cases" / "awaiting verification first" / "only awaiting verification".

@@ -78,7 +78,16 @@ export function listOfPath(path: string): string | undefined {
   return i === -1 ? undefined : path.slice(0, i + 2);
 }
 
-export type RuleValidation = { usable: true; list: string | undefined } | { usable: false; reason: string };
+/** `unfinished` is set when the only thing missing is a value a condition still waits for: the rule is not used yet, but it is not broken. */
+export type RuleValidation = { usable: true; list: string | undefined } | { usable: false; reason: string; unfinished?: true };
+
+export function needsValue(condition: Condition): boolean {
+  return condition.comparison !== 'is_empty' && condition.comparison !== 'is_not_empty';
+}
+
+export function hasNoValue(condition: Condition): boolean {
+  return needsValue(condition) && (condition.value === undefined || condition.value === '');
+}
 
 export function validateRules(rules: readonly ErrorRule[], recognized: RecognizedFields): RuleValidation[] {
   const known = new Set(recognized.fields.map((f) => f.path));
@@ -89,14 +98,12 @@ export function validateRules(rules: readonly ErrorRule[], recognized: Recognize
       if (!known.has(condition.field)) {
         return { usable: false, reason: `"${rule.name}" uses the field ${condition.field}, which the sample reply does not contain.` };
       }
-      const needsValue = condition.comparison !== 'is_empty' && condition.comparison !== 'is_not_empty';
-      if (needsValue && (condition.value === undefined || condition.value === '')) {
-        return { usable: false, reason: `"${rule.name}" has a condition on ${condition.field} with no value.` };
-      }
       const list = listOfPath(condition.field);
       if (list) lists.add(list);
     }
     if (lists.size > 1) return { usable: false, reason: `"${rule.name}" uses two lists (${[...lists].join(' and ')}); one rule can use only one.` };
+    const waiting = rule.conditions.find(hasNoValue);
+    if (waiting) return { usable: false, unfinished: true, reason: `"${rule.name}" has a condition on ${waiting.field} with no value.` };
     return { usable: true, list: [...lists][0] };
   });
 }

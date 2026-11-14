@@ -210,6 +210,50 @@ describe('rules (FR-013, FR-014)', () => {
     expect([...field.options].some((o) => /not in the sample reply/.test(o.textContent ?? ''))).toBe(true);
   });
 
+  it('T226: the values seen are examples from the sample, and a rule may use any value', () => {
+    withSample();
+    expect(screen.getByText(/examples from your sample/i)).toBeTruthy();
+    expect(screen.getByText(/can use any value/i)).toBeTruthy();
+  });
+
+  it('T227: beside the value box a line says that any value is kept as it is typed', () => {
+    withSample();
+    fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
+    expect(screen.getAllByText(/Any value; it is kept as you type it/).length).toBeGreaterThan(0);
+    type(/Value of condition 1 of rule 1/, 'aaa');
+    expect((screen.getByLabelText(/Value of condition 1 of rule 1/) as HTMLInputElement).value).toBe('aaa');
+    expect(latest.evaluation.judge_set.error_rules[0]!.conditions[0]!.value).toBe('aaa');
+  });
+
+  it("T227: the owner's steps (verdict equals aaa, text equals bbb, Add condition) show an unfinished condition, not a broken rule", () => {
+    withSample();
+    fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
+    fireEvent.change(screen.getByLabelText(/Field of condition 1 of rule 1/), { target: { value: 'claims[].verdict' } });
+    type(/Value of condition 1 of rule 1/, 'aaa');
+    fireEvent.click(screen.getByRole('button', { name: 'Add condition' }));
+    fireEvent.change(screen.getByLabelText(/Field of condition 2 of rule 1/), { target: { value: 'claims[].text' } });
+    type(/Value of condition 2 of rule 1/, 'bbb');
+    fireEvent.click(screen.getByRole('button', { name: 'Add condition' }));
+    expect(screen.queryByText(/Broken rule/)).toBeNull();
+    const third = screen.getByLabelText(/Value of condition 3 of rule 1/).closest('.condition') as HTMLElement;
+    expect(third.textContent).toContain('Condition 3: type a value');
+    expect((screen.getByLabelText(/Value of condition 1 of rule 1/) as HTMLInputElement).value).toBe('aaa');
+    expect((screen.getByLabelText(/Value of condition 2 of rule 1/) as HTMLInputElement).value).toBe('bbb');
+    expect(screen.getByText(/Rule 1 is not used until every condition has a value/)).toBeTruthy();
+    expect(screen.getByRole('status', { name: 'Readability' }).textContent).toMatch(/not used|unfinished/i);
+    type(/Value of condition 3 of rule 1/, 'ccc');
+    expect(screen.queryByText(/Condition 3: type a value/)).toBeNull();
+    expect(screen.queryByText(/is not used until/)).toBeNull();
+  });
+
+  it('T227: a rule with a field that is not in the sample is still "Broken rule"', () => {
+    withSample();
+    fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
+    type(/Value of condition 1 of rule 1/, 'x');
+    type('Sample reply', JSON.stringify({ items: [{ label: 'x' }] }));
+    expect(screen.getByText(/Broken rule/)).toBeTruthy();
+  });
+
   it('warns when replies cannot be read automatically, with no sample and no rule', () => {
     show(accuracy());
     type('Sample reply', '');

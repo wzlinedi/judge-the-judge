@@ -38,7 +38,7 @@ const item = (kind: 'expected' | 'additional', id: string) => document.querySele
 
 describe('Run list', () => {
   const reviewed = reviewEvaluation(demo, accuracyMetric);
-  const props = { evaluation: demo, reviewed, fileName: null, repliesSinceSave: 3, onOpen: vi.fn(), onSave: vi.fn(), onSaveAs: vi.fn(), onModelDetails: vi.fn() };
+  const props = { evaluation: demo, reviewed, fileName: null, repliesSinceSave: 3, onOpen: vi.fn(), onAdd: vi.fn(), onSave: vi.fn(), onSaveAs: vi.fn(), onModelDetails: vi.fn() };
 
   it('shows every case with its status as a word and a sign, and Open', () => {
     render(<RunStep {...props} />);

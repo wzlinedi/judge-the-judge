@@ -19,7 +19,7 @@ export function readabilityWarnings(set: JudgeSet): string[] {
     warnings.push(`There is no error rule. ${CONSEQUENCE}`);
   } else if (recognized?.ok) {
     validateRules(set.error_rules, recognized).forEach((validation, i) => {
-      if (!validation.usable) warnings.push(`The rule "${set.error_rules[i]?.name}" is broken: ${validation.reason} ${CONSEQUENCE}`);
+      if (!validation.usable) warnings.push(`The rule "${set.error_rules[i]?.name}" is ${validation.unfinished ? 'unfinished' : 'broken'}: ${validation.reason} ${CONSEQUENCE}`);
     });
   }
   if (recognized?.ok) {

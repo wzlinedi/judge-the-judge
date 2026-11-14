@@ -80,7 +80,8 @@ test('cases from a file and cases made by hand join one test project; the summar
   await page.getByRole('button', { name: /1\s*Judge/ }).click();
   await expect(page.getByLabel('Judge prompt')).toHaveAttribute('readonly', '');
   await expect(page.getByText(/The prompt is fixed/)).toContainText('Start new evaluation');
-  expect(await buttons(page)).toEqual(['Continue', 'Add test case', 'Edit test cases']);
+  expect(await buttons(page)).toEqual(['Continue', 'Edit test cases']);
+  await expect(page.getByRole('button', { name: 'Add test case' })).toHaveCount(0); // T228: on Judge there is no such button
 
   // a case can still be added, and it joins the same project
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
@@ -90,9 +91,10 @@ test('cases from a file and cases made by hand join one test project; the summar
   await expect(card(page)).toContainText('The test cases are finalized');
 });
 
-test('Add test case and Edit test cases stand in the "what next" line of Run; Edit test cases keeps the file and opens the prompt again; after the first reply it is gone', async ({ page }) => {
+test('Edit test cases stands in the "what next" line of Run and Add test case above its cases; Edit test cases keeps the file and opens the prompt again; after the first reply it is gone', async ({ page }) => {
   const memory = await openDemoRun(page);
-  expect(await buttons(page)).toEqual(['Continue', 'Add test case', 'Edit test cases']);
+  expect(await buttons(page)).toEqual(['Continue', 'Edit test cases']);
+  await expect(page.getByRole('region', { name: 'Cases' }).getByRole('button', { name: 'Add test case' })).toBeEnabled();
 
   await next(page).getByRole('button', { name: 'Edit test cases' }).click();
   await expect(page.getByRole('button', { name: /2\s*Test cases/ })).toHaveAttribute('aria-current', 'step');
@@ -122,7 +124,8 @@ test('Add test case and Edit test cases stand in the "what next" line of Run; Ed
   await caseWindow.getByRole('button', { name: 'Close' }).click();
 
   expect(await buttons(page)).not.toContain('Edit test cases');
-  expect(await buttons(page)).toContain('Add test case');
+  expect(await buttons(page)).not.toContain('Add test case');
+  await expect(page.getByRole('region', { name: 'Cases' }).getByRole('button', { name: 'Add test case' })).toBeEnabled();
 });
 
 test('leaving the page with unsaved cases warns; after saving the test project it does not (FR-004)', async ({ page }) => {

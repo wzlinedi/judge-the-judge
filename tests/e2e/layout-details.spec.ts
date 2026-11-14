@@ -50,7 +50,7 @@ test('the marker of a mark has room before the text it marks', async ({ page }) 
 
 test('the disabled Approve and close is quiet, not pale red, and says what is needed', async ({ page }) => {
   await openDemoCases(page);
-  await page.getByRole('button', { name: 'Add test case' }).first().click(); // cases can still be added after the test cases are finalized
+  await page.getByRole('button', { name: 'Add test case' }).click(); // cases can still be added after the test cases are finalized
   await page.getByRole('button', { name: 'Clean case' }).click();
   const approve = page.getByRole('button', { name: 'Approve and close' });
   await expect(approve).toBeDisabled();

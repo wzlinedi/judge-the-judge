@@ -55,6 +55,7 @@ export function SampleReplySection({ state, onEdit }: SectionProps) {
               </tbody>
             </table>
           </TableScroll>
+          <p class="muted">The values are examples from your sample, not a closed list: the judge may return others, and a rule can use any value.</p>
           {fields.lists.map((list) => {
             const choices = fields.fields.filter((f) => f.list === list && f.kind === 'text');
             return (

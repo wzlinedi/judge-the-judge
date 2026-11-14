@@ -1,6 +1,5 @@
 // Derived values for the interface, recomputed from state and never stored in it.
 import type { ReviewedCase } from '../core/evaluation/results';
-import { MAX_CASES } from '../core/schemas/test-case';
 import { findVariables } from '../core/judge/variables';
 import type { AppState, StepId } from './store';
 
@@ -12,7 +11,7 @@ export const STEPS: ReadonlyArray<{ id: Exclude<StepId, 'help'>; number: number;
 ];
 
 /** What a button of the "what next" line does, when it is not a plain move to another step. */
-export type NextIntent = 'finalize' | 'add' | 'edit-cases';
+export type NextIntent = 'finalize' | 'edit-cases';
 
 export interface NextAction {
   sentence: string;
@@ -55,12 +54,11 @@ export function caseToContinue(reviewed: readonly ReviewedCase[]): string | unde
   return (reviewed.find((r) => r.status === 'awaiting') ?? reviewed.find((r) => r.status === 'not_run'))?.testCase.id;
 }
 
-/** After finalizing: cases may still be added (not on Test cases, which has the button above its table), and while no reply exists the test cases may be opened again (FR-053). */
-function afterFinalizing(state: AppState, step: StepId): NextAction['others'] {
+/** After finalizing, while no reply exists the test cases may be opened again (FR-053). Adding a case is a button above the list of cases (Test cases, Run), never in this bar. */
+function afterFinalizing(state: AppState): NextAction['others'] {
   const { dataset, replies } = state.evaluation;
   if (!dataset.finalized) return [];
   const others: NonNullable<NextAction['others']> = [];
-  if (step !== 'cases') others.push({ label: 'Add test case', intent: 'add', disabled: dataset.cases.length >= MAX_CASES });
   if (Object.keys(replies).length === 0) others.push({ label: 'Edit test cases', intent: 'edit-cases' });
   return others;
 }
@@ -76,9 +74,9 @@ export function nextAction(state: AppState, step: StepId = state.step, reviewed:
       if (dataset.finalized) {
         return {
           sentence: 'The judge prompt and the test cases are fixed. Go on with the run.',
-          detail: 'The reply mapping and the error rules can still be changed, and test cases can still be added.',
+          detail: 'The reply mapping and the error rules can still be changed. Test cases can still be added on the Test cases step.',
           action: { label: 'Continue', go: 'run' },
-          others: afterFinalizing(state, 'judge'),
+          others: afterFinalizing(state),
         };
       }
       const needed: string[] = [];
@@ -101,18 +99,18 @@ export function nextAction(state: AppState, step: StepId = state.step, reviewed:
           sentence: 'The test cases are finalized. Go on with the run.',
           detail: `${count} test cases. The prompt and the fields are fixed; cases can still be added.`,
           action: { label: 'Continue', go: 'run' },
-          others: afterFinalizing(state, 'cases'),
+          others: afterFinalizing(state),
         };
       }
       if (count === 0) {
-        return { sentence: 'Add your first test case, or import test cases from the File menu.', action: { label: 'Add test case', intent: 'add' } };
+        return { sentence: 'Add your first test case with the button below, or import test cases from the File menu.', action: { label: 'Finalize test cases', intent: 'finalize', disabled: true } };
       }
       return { sentence: 'Finalize the test cases when they are ready.', detail: `${count} test cases`, action: { label: 'Finalize test cases', intent: 'finalize' } };
     case 'run': {
       const decided = reviewed.filter((r) => r.status === 'pass' || r.status === 'fail').length;
       const next = caseToContinue(reviewed);
       const detail = `${decided} of ${reviewed.length} cases decided`;
-      const others = afterFinalizing(state, 'run');
+      const others = afterFinalizing(state);
       if (next === undefined) return { sentence: 'Every case is decided. Read the results.', detail, action: { label: 'Next: Results', go: 'results' }, others };
       return { sentence: 'Continue with the next case that needs you.', detail, note: NEW_CONVERSATION, action: { label: 'Continue', openCase: next }, others };
     }
