@@ -232,8 +232,18 @@ Opened by **Open** (FR-055, FR-060).
 |---|---|
 | **1. Case** | Kind and base; every field of the case, over the full width, with the fragments of the expected errors highlighted and numbered (and, after a reply, marked found, missed, undecided or ignored); then **Show prompt** (a dialog with the whole prompt and only **Close**) and **Copy prompt** (primary until pressed). |
 | **2. Marking** | One row: **Add finding** (text, optional category, optional difficulty), **Second opinion…**, the meter "Marked N of M" and the status of the case (Awaiting verification, Pass, Fail). **Without a reply** only the status is shown. There is no **Approve**. |
-| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column, and **Paste reply** below it (primary once **Copy prompt** was pressed). A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. **Right, "Errors"**: without a reply "The errors appear here when the judge’s reply is saved."; with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; **Expected errors**, each with its mark (**Found**, **Issue: missed**, **Ignore**), the field the fragment is in ("in summary", or "not found in the case" with no button), **Show the issue** (scrolls to part 1 and highlights the place strongly for a moment), the reason for anything undecided and the source of every mark; **Additional findings**, each with its mark (**Issue: false positive**, **Real error**, **Ignore**), its field and **Show the issue** by the same rule (a finding with no text has neither); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**; then **Findings in the reply** with the words that go with their colours. |
+| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column, and **Paste reply** below it (primary once **Copy prompt** was pressed). A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. **Right, "Errors"**: without a reply "The errors appear here when the judge’s reply is saved."; with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; two groups (T252), each item shown by the shared error component (below): **Expected errors**, each with its marks (**Found**, **Not found**, **Ignored**), the reason for anything undecided and the source of every mark; **Additional errors**, each with its marks (**Real error (missed in scenario)**, **False positive**, **Ignored**; a finding with no text has no passage and no **Show the issue**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**; then **Findings in the reply** with the words that go with their colours. |
 
+- **The shared error component** (T251) shows an error the same way in Test cases (Open and the
+  windows for adding a case), in Run and in Results: its number (E1 …) for an expected error, what is
+  wrong, a quiet line with the category, the difficulty and the rule, then one line per side with
+  the name of the field before the passage: the words of the source first (`source_fragment`, looked
+  for in the fields other than the judged text), then the words of the judged text (`fragment`, or
+  the text of a finding of the judge). The names are those of the fields of the case, so they follow
+  the variables and the judged text set on Judge. A passage that is in no field says "not found in
+  the case". **Show the issue** is offered when a passage is in the case: it scrolls to the fields,
+  puts the focus on the passage of the judged text and highlights both passages strongly for a
+  moment.
 - A decision made in the window takes effect at once and the window stays open.
 - A new reply resets the case: its decisions, the added findings included, are removed and the
   automatic marks are computed again (FR-056). Running one case takes three actions: **Open** or
@@ -326,7 +336,7 @@ leads to the case window.
   categories; adding test cases (From JSON, Clean case, Case with errors, the case JSON
   layout, Open, Recreate the test case, Edit expected errors); importing test cases from a file;
   pasting replies and what happens when a reply is replaced; marking after each reply, Add finding
-  and Remove, the second opinion window and "Ignore"; the two files (the test project, reused for
+  and Remove, the second opinion window and "Ignored"; the two files (the test project, reused for
   every run; the evaluation, the progress of one run), the indicator of unsaved changes, "… as",
   loading back and **Continue**; judges that give only a verdict and are evaluated per case, with
   a worked example; each count and rate with a worked example and its limitations; the overall

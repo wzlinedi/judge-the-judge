@@ -83,14 +83,14 @@ describe('case window of Run, with a reply', () => {
     const finding = item('additional', 'claims[]#2');
     expect(finding.textContent).toContain('The prince speaks about the rose he loves.');
     expect(finding.textContent).toContain('Contradicted or unsupported claim');
-    for (const name of ['False positive', 'Real error', 'Ignore']) expect(within(finding).getByRole('button', { name })).toBeTruthy();
+    for (const name of ['Real error (missed in scenario)', 'False positive', 'Ignored']) expect(within(finding).getByRole('button', { name })).toBeTruthy();
     expect(finding.querySelector('[aria-pressed="true"]')).toBeNull();
   });
 
-  it('shows each expected error with Found, Issue: missed and Ignore, its source and the reason when undecided', () => {
+  it('shows each expected error with Found, Not found and Ignored (T252), its source and the reason when undecided', () => {
     render(<Window caseId="14" />);
     const e1 = item('expected', 'e1');
-    for (const name of ['Found', 'Missed', 'Ignore']) expect(within(e1).getByRole('button', { name })).toBeTruthy();
+    for (const name of ['Found', 'Not found', 'Ignored']) expect(within(e1).getByRole('button', { name })).toBeTruthy();
     expect(within(e1).getByRole('button', { name: 'Found' }).getAttribute('aria-pressed')).toBe('true');
     expect(e1.textContent).toContain('Automatic');
     const e2 = item('expected', 'e2');
@@ -114,14 +114,14 @@ describe('case window of Run, with a reply', () => {
 
   it('a real error does not fail the case', () => {
     render(<Window caseId="3" />);
-    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Real error' }));
+    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Real error (missed in scenario)' }));
     expect(screen.getAllByText(/Pass/).length).toBeGreaterThan(0);
   });
 
   it('turns a partly matching finding into an additional finding when its error is marked missed', () => {
     render(<Window caseId="14" />);
     expect(document.querySelector('[data-additional]')).toBeNull();
-    fireEvent.click(within(item('expected', 'e2')).getByRole('button', { name: 'Missed' }));
+    fireEvent.click(within(item('expected', 'e2')).getByRole('button', { name: 'Not found' }));
     expect(document.querySelector('[data-additional]')?.textContent).toContain('Victor and the creature');
   });
 

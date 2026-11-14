@@ -15,8 +15,8 @@ export interface MarkedFieldsProps {
   uncovered: readonly ChangedPlace[];
   /** The expected error that "Show in text" points at. */
   strong?: string | readonly string[] | null;
-  /** The text of an additional finding that "Show the issue" points at. */
-  shown?: ShownSpot | null;
+  /** Other places that "Show the issue" points at: the words of the source, or the text of a finding of the judge (T251). */
+  shown?: readonly ShownSpot[];
   rootRef?: RefObject<HTMLDivElement | null>;
 }
 
@@ -24,7 +24,7 @@ export interface MarkedFieldsProps {
  * The fields of a case with the fragments of its expected errors highlighted (FR-077). Every highlight
  * carries its number (E1 …) and a word, so a colour is never the only sign; the text itself is never changed.
  */
-export function MarkedFields({ testCase, judged, effective, uncovered, strong, shown = null, rootRef }: MarkedFieldsProps) {
+export function MarkedFields({ testCase, judged, effective, uncovered, strong, shown = [], rootRef }: MarkedFieldsProps) {
   return (
     <div ref={rootRef} class="marked-fields">
       {Object.keys(testCase.fields).map((name) => (

@@ -10,8 +10,8 @@ export const SOURCE_LABELS: Record<EffectiveSource, string> = {
 export const STATE_LABELS: Record<string, string> = {
   undecided: 'Undecided',
   found: 'Found',
-  missed: 'Issue: missed',
+  missed: 'Not found',
   ignored: 'Ignored',
-  false_positive: 'Issue: false positive',
-  real_error: 'Real error',
+  false_positive: 'False positive',
+  real_error: 'Real error (missed in scenario)',
 };

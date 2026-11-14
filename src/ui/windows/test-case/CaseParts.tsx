@@ -97,7 +97,7 @@ export function ExpectedErrorsPart({ state, text, check }: { state: AppState; te
     <>
       <CaseSummary testCase={shown} baseName={baseNameOf(state, shown.base)} />
       {shown.expected_errors.length > 0 || !list.agrees ? <CheckLine list={list} testCase={shown} /> : null}
-      {shown.expected_errors.length === 0 ? <p>No expected errors: this will be saved as a clean case.</p> : <ErrorList testCase={shown} notInText={new Set(list.notInText.map((m) => m.index))} />}
+      {shown.expected_errors.length === 0 ? <p>No expected errors: this will be saved as a clean case.</p> : <ErrorList testCase={shown} judged={state.evaluation.judge_set.judged_text} />}
     </>
   );
 }

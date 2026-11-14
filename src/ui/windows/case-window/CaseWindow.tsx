@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { addFinding, applyOpinionTo, removeFinding } from '../../../app/actions/decide';
 import { approveCase, setAddedMark, setAdditionalMark, setExpectedMark } from '../../../app/actions/decisions';
 import { reminderDue, type ReplyOutcome } from '../../../app/actions/replies';
@@ -13,7 +13,7 @@ import { PromptButtons } from '../../components/PromptButtons';
 import { labels } from '../../labels';
 import { DecideBar, ErrorsPane } from './DecidePane';
 import { MarkedFields } from './MarkedFields';
-import type { ShownSpot } from './marks';
+import { useShowIssue } from './useShowIssue';
 import { SecondOpinionWindow } from '../second-opinion/SecondOpinionWindow';
 import { AddFindingDialog } from './AddFindingDialog';
 import { ReplyPane } from './ReplyPane';
@@ -47,18 +47,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   const [leaving, setLeaving] = useState<(() => void) | null>(null);
   const [adding, setAdding] = useState(false);
   const [opinionOpen, setOpinionOpen] = useState(false);
-  const [strong, setStrong] = useState<string | null>(null);
-  const [shown, setShown] = useState<ShownSpot | null>(null);
-  const lit = strong !== null || shown !== null;
-  // the strong highlight of "Show the issue" lasts a moment
-  useEffect(() => {
-    if (!lit) return;
-    const timer = setTimeout(() => {
-      setStrong(null);
-      setShown(null);
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, [lit, strong, shown]);
+  const { strong, shown, show: showInText } = useShowIssue(textRef);
   const position = reviewed.findIndex((r) => r.testCase.id === caseId);
   const current = reviewed[position];
   if (!current) return null;
@@ -74,18 +63,6 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   const judged = evaluation.judge_set.judged_text;
   const prompt = reply?.prompt ?? composePrompt(evaluation.judge_set.prompt, testCase).text;
   const base = testCase.base ? reviewed.find((r) => r.testCase.id === testCase.base)?.testCase : undefined;
-
-  const showInText = (target: { expectedId?: string; spot?: ShownSpot }) => {
-    setStrong(target.expectedId ?? null);
-    setShown(target.spot ?? null);
-    // after the highlight is drawn, bring part 1 into view and put the focus on the place
-    setTimeout(() => {
-      const root = textRef.current;
-      const el = (target.expectedId ? root?.querySelector<HTMLElement>(`mark[data-error="${target.expectedId}"]`) : root?.querySelector<HTMLElement>('mark[data-shown]')) ?? root?.querySelector<HTMLElement>(`[data-field="${target.spot?.field}"]`);
-      el?.scrollIntoView?.({ block: 'center' });
-      el?.focus?.();
-    }, 0);
-  };
 
   const text = drafts[caseId] ?? reply?.reply ?? '';
   const changed = text !== (reply?.reply ?? '');

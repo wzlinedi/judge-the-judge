@@ -9,7 +9,7 @@ export interface Segment {
   error?: { id: string; label: string; state: string };
   /** Set for a changed place that no expected error covers: the words beside its colour. */
   warning?: string;
-  /** Set for the text of an additional finding that "Show the issue" points at. */
+  /** Set for a text that "Show the issue" points at and that is not the fragment of an expected error: the words of the source, or the text of a finding. */
   shown?: boolean;
 }
 
@@ -39,6 +39,39 @@ export function whereInCase(testCase: Pick<TestCase, 'fields'>, judgedField: str
   return undefined;
 }
 
+/** One side of an error (T251): the words of the source it contradicts, or the words of the judged text. */
+export interface ErrorSide {
+  role: 'source' | 'judged';
+  text: string;
+  /** The field that holds the text; absent when no field does. */
+  field?: string;
+  spot?: ShownSpot;
+}
+
+/**
+ * The sides of an error, the source first: `source_fragment` is looked for in the other fields before the field of the
+ * fragment, the fragment in the judged text before the others. A finding of the judge has only its own text.
+ */
+export function errorSides(testCase: Pick<TestCase, 'fields'>, judgedField: string | undefined, error: { fragment?: string | undefined; source_fragment?: string | undefined }): ErrorSide[] {
+  const sides: ErrorSide[] = [];
+  const own = error.fragment ? whereInCase(testCase, judgedField, error.fragment) : undefined;
+  if (error.source_fragment) {
+    const names = Object.keys(testCase.fields);
+    const avoid = own?.field ?? judgedField;
+    let spot: ShownSpot | undefined;
+    for (const field of [...names.filter((n) => n !== avoid), ...names.filter((n) => n === avoid)]) {
+      const found = findFragment(testCase.fields[field] ?? '', error.source_fragment);
+      if (found) {
+        spot = { field, ...found };
+        break;
+      }
+    }
+    sides.push({ role: 'source', text: error.source_fragment, ...(spot ? { field: spot.field, spot } : {}) });
+  }
+  if (error.fragment) sides.push({ role: 'judged', text: error.fragment, ...(own ? { field: own.field, spot: own } : {}) });
+  return sides;
+}
+
 type Shown = Pick<TestCase, 'fields' | 'expected_errors'>;
 
 /** Where each expected error is: in the judged text when its fragment occurs there, otherwise in the first other field that holds it (an omission). */
@@ -60,7 +93,7 @@ export function locateFragments(testCase: Shown, judgedField: string | undefined
 }
 
 /** The text of one field cut into plain pieces and highlighted ones (non-overlapping). */
-export function fieldMarks(testCase: Shown, field: string, judgedField: string | undefined, effective: Effective | null, uncovered: readonly ChangedPlace[] = [], shown: ShownSpot | null = null): Segment[] {
+export function fieldMarks(testCase: Shown, field: string, judgedField: string | undefined, effective: Effective | null, uncovered: readonly ChangedPlace[] = [], shown: readonly ShownSpot[] = []): Segment[] {
   const text = testCase.fields[field] ?? '';
   const spots: Spot[] = [];
   const free = (start: number, end: number) => !spots.some((s) => start < s.end && end > s.start);
@@ -73,7 +106,9 @@ export function fieldMarks(testCase: Shown, field: string, judgedField: string |
     if (place.field !== field || place.end <= place.start || !free(place.start, place.end)) continue;
     spots.push({ start: place.start, end: place.end, warning: 'not in the list' });
   }
-  if (shown && shown.field === field && free(shown.start, shown.end)) spots.push({ start: shown.start, end: shown.end, shown: true });
+  for (const place of shown) {
+    if (place.field === field && free(place.start, place.end)) spots.push({ start: place.start, end: place.end, shown: true });
+  }
   spots.sort((a, b) => a.start - b.start);
   const segments: Segment[] = [];
   let at = 0;

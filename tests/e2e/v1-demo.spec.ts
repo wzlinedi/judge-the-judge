@@ -60,18 +60,18 @@ test('deciding the five cases gives the numbers of the expected results file', a
 
   // 14: a partly matching finding is the error
   await expect(page.getByRole('dialog', { name: /Case 14 /})).toBeVisible();
-  await item(page, 'expected', 'e2').getByRole('button', { name: 'Found' }).click();
+  await item(page, 'expected', 'e2').getByRole('button', { name: /^(● )?Found$/ }).click();
   await page.getByRole('button', { name: 'Next case' }).click();
 
   // 17: a missed error and a false positive
   await expect(page.getByRole('dialog', { name: /Case 17 /})).toBeVisible();
-  await item(page, 'expected', 'e2').getByRole('button', { name: 'Missed' }).click();
+  await item(page, 'expected', 'e2').getByRole('button', { name: 'Not found' }).click();
   await item(page, 'additional', 'claims[]#2').getByRole('button', { name: 'False positive' }).click();
   await page.getByRole('button', { name: 'Next case' }).click();
 
   // 19: a real error that was not injected
   await expect(page.getByRole('dialog', { name: /Case 19 /})).toBeVisible();
-  await item(page, 'additional', 'claims[]#3').getByRole('button', { name: 'Real error' }).click();
+  await item(page, 'additional', 'claims[]#3').getByRole('button', { name: 'Real error (missed in scenario)' }).click();
   await page.getByRole('button', { name: 'Close' }).click();
 
   await expect(page.getByRole('region', { name: 'What next' })).toContainText('20 of 20 cases decided');

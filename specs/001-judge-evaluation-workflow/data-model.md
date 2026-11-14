@@ -151,7 +151,7 @@ any ──"Load evaluation" / "Load demo…"──> exactly the saved state (ope
   reply exists, "Reopen test cases" returns to Open without losing anything (FR-053). Cases may still
   be added and imported; a case without a reply may be renamed, removed or have its
   expected errors corrected through its JSON (FR-089); a case with a reply is not changed (an
-  expected error that should not count is marked "Ignore" on Run). The reply mapping and the error
+  expected error that should not count is marked "Ignored" on Run). The reply mapping and the error
   rules may still be corrected; automatic results are recomputed and decisions made by hand are
   kept.
 - Finalizing is refused for empty test cases or an empty judge prompt. Everything else (one kind of
@@ -259,8 +259,8 @@ Built from the case, its findings and the matching rule (research.md, sections 1
 
 **Decision**: `state` and `source`: `manual` (set by hand) or `llm-approved` (an LLM opinion the
 user applied with "Apply opinion"). Automatic results are not stored; their source is shown as
-`automatic`. The states are shown as "Found", "Issue: missed", "Ignore", "Issue: false positive"
-and "Real error".
+`automatic`. The states are shown as "Found", "Not found", "Ignored", "False positive"
+and "Real error (missed in scenario)".
 
 - The effective state of an item is the stored decision when there is one, otherwise the automatic
   state.

@@ -54,10 +54,10 @@ test('the Run step has no second-opinion card; a second opinion is previewed, ap
   await expect(opinionWindow(page)).toHaveCount(0);
   await expect(finding).toContainText('LLM opinion, approved by the user');
   await expect(win).not.toContainText('Awaiting verification');
-  await finding.getByRole('button', { name: 'Real error' }).click();
+  await finding.getByRole('button', { name: 'Real error (missed in scenario)' }).click();
   await expect(finding).toContainText('Set by hand');
-  await finding.getByRole('button', { name: 'Ignore' }).click();
-  await expect(finding.getByRole('button', { name: 'Ignore' })).toHaveAttribute('aria-pressed', 'true');
+  await finding.getByRole('button', { name: 'Ignored' }).click();
+  await expect(finding.getByRole('button', { name: 'Ignored' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText(/not saved/).first()).toBeVisible();
 });
 
@@ -124,11 +124,30 @@ test('only the cases awaiting verification; a reply that could not be read: Add 
   const dialog = opinionWindow(page);
   await opinionBox(page).fill(JSON.stringify({ opinion: { id: '10', expected: [], additional: [{ index: 1, real: true, reason: 'It is a real gap.' }], new: [{ text: 'The reply is not an analysis', real: true, reason: 'It has no claims.', category: 'omission', difficulty: 'obvious' }] } }));
   await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('+ new finding “The reply is not an analysis” → Real error');
-  await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('A1 False positive → Real error (replaces a mark set by hand)');
+  await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('A1 False positive → Real error (missed in scenario) (replaces a mark set by hand)');
   await dialog.getByRole('button', { name: 'Apply opinion' }).click();
   const added = item(page, 'additional', 'added#2');
   await expect(added).toContainText('The reply is not an analysis');
   await expect(added).toContainText('omission');
   await expect(added.getByRole('button', { name: 'Remove' })).toBeVisible();
   await expect(win).not.toContainText('Awaiting verification');
+});
+
+test('an error shows the words of the source beside the words of the judged text, and "Show the issue" highlights both in the fields (T251, T252)', async ({ page }) => {
+  await loadDemo(page);
+  await page.getByRole('row').filter({ hasText: 'Moby-Dick + 3 errors' }).getByRole('button', { name: 'Open' }).click();
+  const win = caseWindow(page);
+  await expect(win.getByRole('list', { name: 'Expected errors' })).toBeVisible();
+  const e2 = item(page, 'expected', 'e2');
+  await expect(e2.locator('.error-side')).toHaveText(['source_text“lost his leg to a white whale”', 'summary“the whale that took his arm”']);
+  await expect(e2.getByRole('group', { name: 'Mark for E2' }).getByRole('button')).toHaveText(['Found', 'Not found', 'Ignored']);
+
+  await e2.getByRole('button', { name: 'Show the issue' }).click();
+  const source = win.locator('[data-field="source_text"] mark.fragment-strong');
+  const summary = win.locator('[data-field="summary"] mark.fragment-strong');
+  await expect(source).toHaveText('lost his leg to a white whale');
+  await expect(summary).toContainText('the whale that took his arm');
+  await expect(summary).toBeInViewport();
+  // the strong highlight lasts a moment
+  await expect(win.locator('mark.fragment-strong')).toHaveCount(0, { timeout: 6000 });
 });

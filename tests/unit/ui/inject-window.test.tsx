@@ -33,7 +33,7 @@ describe('parts 4 and 5: live checks', () => {
     expect(within(win()).getByText('Text and list agree')).toBeTruthy();
     fireEvent.input(box(), { target: { value: json('Anna is a lawyer. She bought a second oven in 1998.', [doctor]) } });
     expect(within(win()).getByText(/1 expected error not in the text/)).toBeTruthy();
-    expect(within(win()).getByText(/not in the text/, { selector: '.not-in-text' })).toBeTruthy();
+    expect(within(win()).getByText('not found in the case', { selector: '.error-side.not-found dt' })).toBeTruthy();
   });
 
   it('a changed place that no expected error covers is a warning under the box: "A changed place is not in the list"', () => {
@@ -51,10 +51,10 @@ describe('parts 4 and 5: live checks', () => {
     expect(within(win()).queryByRole('list', { name: 'Changed places not in the list' })).toBeNull();
   });
 
-  it('a fragment that is not found is marked "not in the text" in the list', () => {
+  it('a fragment that is not found is marked "not found in the case" in the list', () => {
     open();
     toCaseView(json('Anna is a doctor.', [{ ...doctor, fragment: 'Anna is a lawyer' }]));
-    expect(within(win()).getByText('not in the text', { selector: '.not-in-text' })).toBeTruthy();
+    expect(within(win()).getByText('not found in the case', { selector: '.error-side.not-found dt' })).toBeTruthy();
   });
 
   it('while the JSON is invalid the list is not shown, the problem is under the box, and Save case is disabled', () => {

@@ -25,6 +25,21 @@ describe('the read-only view', () => {
     expect(view().querySelector('mark.fragment-strong')?.textContent).toContain('Anna is a doctor');
   });
 
+  it('shows both sides of an error, the source first, and Show the issue highlights both passages (T251)', () => {
+    const state = draft();
+    const cases = state.evaluation.dataset.cases.map((c, i) => (i === 1 ? { ...c, expected_errors: c.expected_errors.map((x, n) => (n === 0 ? { ...x, source_fragment: 'Anna is a baker' } : x)) } : c));
+    show({ ...state, evaluation: { ...state.evaluation, dataset: { ...state.evaluation.dataset, cases } } });
+    open('Anna + 2 errors');
+    const [first, second] = within(within(view()).getByRole('list', { name: 'Expected errors' })).getAllByRole('listitem') as [HTMLElement, HTMLElement];
+    expect([...first.querySelectorAll('.error-side')].map((s) => `${s.querySelector('dt')?.textContent}: ${s.querySelector('dd')?.textContent}`)).toEqual(['source_text: “Anna is a baker”', 'summary: “Anna is a doctor”']);
+    expect([...second.querySelectorAll('.error-side dt')].map((d) => d.textContent)).toEqual(['summary']);
+    Element.prototype.scrollIntoView = vi.fn();
+    fireEvent.click(within(first).getByRole('button', { name: 'Show the issue' }));
+    const strong = [...view().querySelectorAll<HTMLElement>('mark.fragment-strong')];
+    expect(strong.map((m) => m.closest<HTMLElement>('[data-field]')?.dataset['field']).sort()).toEqual(['source_text', 'summary']);
+    expect(view().querySelector('[data-field="source_text"] mark[data-shown]')?.textContent).toBe('Anna is a baker');
+  });
+
   it('shows the check line for a case with a base', () => {
     show();
     open('Anna + 2 errors');

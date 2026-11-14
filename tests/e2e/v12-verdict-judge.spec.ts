@@ -67,7 +67,7 @@ test('a verdict judge: the Judge step says so, replies decide whole cases, the S
   await pasteReply(page, '{"biased": true}');
   await expect(win).toContainText('This judge is evaluated per case. The text was flagged.');
   for (const id of ['e1', 'e2']) {
-    await expect(item(page, 'expected', id).getByRole('button', { name: 'Found' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(item(page, 'expected', id).getByRole('button', { name: /^(● )?Found$/ })).toHaveAttribute('aria-pressed', 'true');
     await expect(item(page, 'expected', id)).toContainText('Automatic');
   }
   await expect(win).toContainText('Pass');
@@ -76,7 +76,7 @@ test('a verdict judge: the Judge step says so, replies decide whole cases, the S
   // an unflagged case with errors fails
   await pasteReply(page, '{"biased": false}');
   await expect(win).toContainText('The text was not flagged.');
-  await expect(item(page, 'expected', 'e1').getByRole('button', { name: 'Missed' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(item(page, 'expected', 'e1').getByRole('button', { name: 'Not found' })).toHaveAttribute('aria-pressed', 'true');
   await expect(win).toContainText('Fail');
   await win.getByRole('button', { name: 'Next case' }).click();
 

@@ -2,8 +2,10 @@ import type { RefObject } from 'preact';
 import type { ChangedPlace, ListCheck } from '../../../core/cases/text-list-check';
 import type { AppState } from '../../../app/store';
 import type { TestCase } from '../../../core/model';
-import { labels } from '../../labels';
+import { ErrorCard } from '../case-window/ErrorCard';
 import { MarkedFields } from '../case-window/MarkedFields';
+import { errorSides, type ShownSpot } from '../case-window/marks';
+import { showTargetOf, type ShowTarget } from '../case-window/useShowIssue';
 
 /** The name of the case another case was made from, for "Base: 4 (Anna)". */
 export function baseNameOf(state: AppState, base: string | undefined): string | undefined {
@@ -19,6 +21,7 @@ export interface CaseDataProps {
   judged: string | undefined;
   uncovered?: readonly ChangedPlace[];
   strong?: string | null;
+  shown?: readonly ShownSpot[];
   rootRef?: RefObject<HTMLDivElement | null>;
   /** The name of the base case, shown beside its number. */
   baseName?: string | undefined;
@@ -44,11 +47,11 @@ export function CaseSummary({ testCase, baseName }: { testCase: Shown; baseName?
 }
 
 /** A case read-only: its fields, with the fragments of the expected errors highlighted and numbered. */
-export function CaseData({ testCase, judged, uncovered = [], strong, rootRef, baseName }: CaseDataProps) {
+export function CaseData({ testCase, judged, uncovered = [], strong, shown = [], rootRef, baseName }: CaseDataProps) {
   return (
     <div class="case-data">
       <CaseSummary testCase={testCase} baseName={baseName} />
-      <MarkedFields testCase={testCase} judged={judged} effective={null} uncovered={uncovered} strong={strong} rootRef={rootRef} />
+      <MarkedFields testCase={testCase} judged={judged} effective={null} uncovered={uncovered} strong={strong} shown={shown} rootRef={rootRef} />
     </div>
   );
 }
@@ -83,32 +86,24 @@ export function CheckLine({ list, testCase }: { list: ListCheck; testCase: Shown
 
 export interface ErrorListProps {
   testCase: Shown;
-  /** "Show in text" for each error; the button is disabled with the words "not in the text" for an error that is in no field. */
-  onShow?: (expectedId: string) => void;
-  notInText?: ReadonlySet<number>;
+  /** The judged text field, which the search for a fragment starts with. */
+  judged: string | undefined;
+  /** "Show the issue" for each error whose passages are in the case. */
+  onShow?: (target: ShowTarget) => void;
 }
 
-/** The expected errors of a case as a list: number, category, difficulty, fragment, description. */
-export function ErrorList({ testCase, onShow, notInText }: ErrorListProps) {
+/** The expected errors of a case as a list, each shown by the shared component (T251): number, category, difficulty, description and its passages. */
+export function ErrorList({ testCase, judged, onShow }: ErrorListProps) {
   if (testCase.expected_errors.length === 0) return <p class="muted">This case has no expected errors.</p>;
   return (
     <ol class="plain-list error-list" aria-label="Expected errors">
       {testCase.expected_errors.map((error, i) => {
-        const missing = notInText?.has(i) ?? false;
+        const sides = errorSides(testCase, judged, error);
         return (
-          <li key={i} class="decide-item">
-            <div class="item-head">
-              <strong>{`E${i + 1}`}</strong>
-              <span class="muted">{`${[error.category ?? 'no category', error.difficulty ?? 'no difficulty'].join(' · ')}`}</span>
-              {onShow && error.fragment ? (
-                <button type="button" class="link-button" disabled={missing} onClick={() => onShow(error.id)}>
-                  {labels.showInText}
-                </button>
-              ) : null}
-              {missing ? <span class="not-in-text warning-text">not in the text</span> : null}
-            </div>
-            {error.fragment ? <p class="item-fragment">{`“${error.fragment}”`}</p> : <p class="item-fragment muted">No fragment</p>}
-            <p class="source">{error.description}</p>
+          <li key={i} class="decide-item" data-expected={error.id}>
+            <ErrorCard name={`E${i + 1}`} title={error.description} facts={[error.category ?? 'no category', error.difficulty ?? 'no difficulty']} sides={sides} onShow={onShow ? () => onShow(showTargetOf(sides, error.id)) : undefined}>
+              {error.fragment ? null : <p class="item-fragment muted">No fragment</p>}
+            </ErrorCard>
           </li>
         );
       })}

@@ -165,7 +165,7 @@ produced it; the number of unsaved replies is shown and a reminder to save appea
 
 1. "Open" a case that awaits verification; "Second opinion…"; in the window "Copy prompt", run
    it, paste the answer into the box.
-2. Read the preview; "Apply opinion". Change one of the marks it set; "Ignore" one item.
+2. Read the preview; "Apply opinion". Change one of the marks it set; "Ignored" one item.
 3. Open "Second opinion…" again and paste an opinion meant for another case; then one that answers
    no item; "Cancel".
 4. Tick "only cases awaiting verification" in the case window and use "Next case".

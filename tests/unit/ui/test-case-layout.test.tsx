@@ -100,14 +100,15 @@ describe('case with injected errors: five parts from top to bottom', () => {
     expect(warnings.compareDocumentPosition(box()) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });
 
-  it('part 5 is a read-only list: no fields with highlights, no Show the issue, "not in the text" for a fragment that is not found', () => {
+  it('part 5 is a read-only list: no fields with highlights, no Show the issue, "not found in the case" for a fragment that is not found', () => {
     start('Case with errors');
     fireEvent.input(box(), { target: { value: json('Anna is a doctor.', [doctor, { ...doctor, fragment: 'Anna is a lawyer' }]) } });
     const list = within(win()).getByRole('list', { name: 'Expected errors' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(2);
     expect(win().querySelectorAll('mark')).toHaveLength(0);
     expect(within(win()).queryByRole('button', { name: 'Show the issue' })).toBeNull();
-    expect(within(list).getAllByText('not in the text')).toHaveLength(1);
+    expect(within(list).getAllByText('not found in the case')).toHaveLength(1);
+    expect(within(list).getAllByText('summary', { selector: 'dt' })).toHaveLength(1);
     expect(within(list).queryAllByRole('textbox')).toHaveLength(0);
   });
 

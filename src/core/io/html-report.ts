@@ -60,9 +60,9 @@ function summary(evaluation: Evaluation, results: Results, reviewed: ReviewedCas
           table('Clean cases', ['Decided', 'Flagged wrongly', 'Not flagged'], [[String(c.clean_cases_decided), String(c.clean_cases_with_false_positive), String(c.clean_cases_decided - c.clean_cases_with_false_positive)]]),
         ]
       : [
-          table('Expected errors', ['Total', 'Found', 'Missed'], [[String(c.expected_total), String(c.expected_found), String(c.expected_missed)]]),
+          table('Expected errors', ['Total', 'Found', 'Not found'], [[String(c.expected_total), String(c.expected_found), String(c.expected_missed)]]),
           table('Additional findings', ['Total', 'Real errors', 'False positives'], [[String(c.additional_total), String(c.real_errors), String(c.false_positives)]]),
-          table('Subtle errors', ['Total', 'Found', 'Missed'], [[String(c.subtle_total), String(c.subtle_found), String(c.subtle_missed)]]),
+          table('Subtle errors', ['Total', 'Found', 'Not found'], [[String(c.subtle_total), String(c.subtle_found), String(c.subtle_missed)]]),
         ]),
   );
 
@@ -111,7 +111,7 @@ function summary(evaluation: Evaluation, results: Results, reviewed: ReviewedCas
 function analysis(results: Results): string {
   const perCase = results.evaluated_per === 'case';
   const a = errorAnalysis(results.counters, perCase);
-  const head = perCase ? ['Group', 'Cases with errors', 'Flagged', 'Not flagged'] : ['Group', 'Expected errors', 'Found', 'Missed', 'Detection rate'];
+  const head = perCase ? ['Group', 'Cases with errors', 'Flagged', 'Not flagged'] : ['Group', 'Expected errors', 'Found', 'Not found', 'Detection rate'];
   return [
     '<section id="error-analysis"><h2>2. Error analysis</h2>',
     '<h3>By category</h3>',

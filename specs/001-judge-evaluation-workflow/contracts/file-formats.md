@@ -345,8 +345,8 @@ evaluation", and the demo of "Load demo…"; it is also the result as JSON (ther
 - Always complete: the judge set, every case, every composed prompt and reply, every decision with
   its source, ignored items, thresholds and versions; there is no option to leave anything out
   (FR-072).
-- `state` is one of `found`, `missed` ("Issue: missed"), `ignored`, `real_error`,
-  `false_positive` ("Issue: false positive"); `source` is `automatic`, `manual` (set by hand) or
+- `state` is one of `found`, `missed` ("Not found"), `ignored`, `real_error`,
+  `false_positive` ("False positive"); `source` is `automatic`, `manual` (set by hand) or
   `llm-approved` (an LLM opinion applied by the user with "Apply opinion", FR-063).
 - `added_findings` are the findings added by hand ("Add finding") or by an applied LLM opinion
   (`from_opinion: true`), in their order; each may carry `category` and `difficulty` (FR-062).

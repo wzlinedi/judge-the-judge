@@ -60,11 +60,11 @@ test('a case with injected errors on one page: base, errors, prompt, JSON, expec
   await expect(win(page).locator('mark')).toHaveCount(0);
   expect(await axe(page)).toEqual([]);
 
-  // a fragment that no longer occurs turns the line into "not in the text" at once
+  // a fragment that no longer occurs turns the line into "not in the text" at once, and the error says "not found in the case"
   const text = await box.inputValue();
   await box.fill(text.replace(/"fragment":\s*"Quartz\."/, '"fragment": "Quartzzz"'));
   await expect(win(page).getByText(/1 expected error not in the text/)).toBeVisible();
-  await expect(win(page).getByText('not in the text', { exact: true })).toBeVisible();
+  await expect(win(page).getByText('not found in the case', { exact: true })).toBeVisible();
   await win(page).getByRole('button', { name: 'Save case' }).click();
   const ask = page.getByRole('dialog', { name: 'Save with a mismatch?' });
   await expect(ask).toContainText('Quartzzz');

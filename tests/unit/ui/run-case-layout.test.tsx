@@ -71,7 +71,7 @@ describe('the case window of Run: three parts from top to bottom', () => {
     open('3');
     const before = meterOf('3');
     expect(within(part(2)).getByText(before)).toBeTruthy();
-    fireEvent.click(within(document.querySelector('[data-additional="claims[]#2"]') as HTMLElement).getByRole('button', { name: 'Real error' }));
+    fireEvent.click(within(document.querySelector('[data-additional="claims[]#2"]') as HTMLElement).getByRole('button', { name: 'Real error (missed in scenario)' }));
     expect(within(part(2)).queryByText(before)).toBeNull();
     expect(within(part(2)).getByText(/Pass/)).toBeTruthy();
   });
@@ -103,12 +103,12 @@ describe('the case window of Run: three parts from top to bottom', () => {
     for (const n of [1, 2, 3]) expect(part(n).classList.contains('case-part')).toBe(true);
   });
 
-  it('the right column lists the expected errors, the additional findings and the findings in the reply, with their marks', () => {
+  it('the right column lists the expected errors, the additional errors and the findings in the reply, with their marks (T252)', () => {
     open('3');
     const right = part(3).querySelectorAll<HTMLElement>('.case-half > section')[1] as HTMLElement;
-    expect(within(right).getByRole('list', { name: 'Additional findings' })).toBeTruthy();
+    expect(within(right).getByRole('list', { name: 'Additional errors' })).toBeTruthy();
     expect(within(right).getByRole('list', { name: 'Findings in the reply' })).toBeTruthy();
-    expect(within(right).getAllByRole('button', { name: 'Ignore' }).length).toBeGreaterThan(0);
+    expect(within(right).getAllByRole('button', { name: 'Ignored' }).length).toBeGreaterThan(0);
   });
 
   it('before a reply is saved, marking is not offered and the case says so', () => {
@@ -125,38 +125,55 @@ describe('the case window of Run: three parts from top to bottom', () => {
 describe('T240: where each finding is, and Show the issue', () => {
   const items = (label: string) => [...win().querySelectorAll<HTMLElement>(`ul[aria-label="${label}"] > li`)];
 
-  it('every expected error says in which field it is', () => {
+  it('every expected error shows both sides: the words of the source, then the words of the judged text, each with the name of its field (T251)', () => {
     open('11');
     const list = items('Expected errors');
     expect(list.length).toBeGreaterThan(0);
-    for (const li of list) expect(li.querySelector('.item-place')?.textContent).toMatch(/^(in \S+|not found in the case)$/);
-    expect(list.some((li) => /^in /.test(li.querySelector('.item-place')?.textContent ?? ''))).toBe(true);
+    for (const li of list) {
+      const sides = [...li.querySelectorAll<HTMLElement>('.error-side')];
+      expect(sides.map((s) => s.dataset['side'])).toEqual(['source', 'judged']);
+      expect(sides.map((s) => s.querySelector('dt')?.textContent)).toEqual(['source_text', 'summary']);
+      const meta = demo.dataset.cases.find((c) => c.id === '11')!.expected_errors.find((x) => x.id === li.dataset['expected'])!;
+      expect(sides[0]?.querySelector('dd')?.textContent).toBe(`“${meta.source_fragment}”`);
+      expect(sides[1]?.querySelector('dd')?.textContent).toBe(`“${meta.fragment}”`);
+    }
   });
 
-  it('an additional finding whose text is in a field names it and has the button; one that is in no field says so and has no button', () => {
+  it('an error without a source fragment shows one side only', () => {
+    const e = structuredClone(demo);
+    for (const x of e.dataset.cases.find((c) => c.id === '11')!.expected_errors) delete x.source_fragment;
+    open('11', e);
+    for (const li of items('Expected errors')) expect([...li.querySelectorAll<HTMLElement>('.error-side')].map((s) => s.dataset['side'])).toEqual(['judged']);
+  });
+
+  it('an additional error whose text is in a field names it and has the button; one that is in no field says so and has no button', () => {
     open('3');
-    const found = items('Additional findings').filter((li) => /^in /.test(li.querySelector('.item-place')?.textContent ?? ''));
+    const found = items('Additional errors').filter((li) => li.querySelector('.error-side:not(.not-found)'));
     for (const li of found) expect(within(li).getByRole('button', { name: 'Show the issue' })).toBeTruthy();
-    const lost = items('Additional findings').filter((li) => li.querySelector('.not-found'));
+    const lost = items('Additional errors').filter((li) => li.querySelector('.error-side.not-found'));
     for (const li of lost) {
-      expect(li.querySelector('.item-place')?.textContent).toBe('not found in the case');
+      expect(li.querySelector('.error-side dt')?.textContent).toBe('not found in the case');
       expect(within(li).queryByRole('button', { name: 'Show the issue' })).toBeNull();
     }
     expect(found.length + lost.length).toBeGreaterThan(0);
   });
 
-  it('Show the issue on an expected error highlights its fragment strongly in part 1', () => {
+  it('Show the issue on an expected error highlights both passages strongly in part 1: the fragment in the judged text and the words of the source (T251)', () => {
     open('11');
     expect(part(1).querySelector('.fragment-strong')).toBeNull();
     const li = items('Expected errors').find((x) => within(x).queryByRole('button', { name: 'Show the issue' }))!;
     fireEvent.click(within(li).getByRole('button', { name: 'Show the issue' }));
-    expect(part(1).querySelectorAll('.fragment-strong')).toHaveLength(1);
+    const strong = [...part(1).querySelectorAll<HTMLElement>('.fragment-strong')];
+    expect(strong.map((m) => m.closest<HTMLElement>('[data-field]')?.dataset['field']).sort()).toEqual(['source_text', 'summary']);
+    const meta = demo.dataset.cases.find((c) => c.id === '11')!.expected_errors.find((x) => x.id === li.dataset['expected'])!;
+    expect(part(1).querySelector('[data-field="source_text"] mark[data-shown]')?.textContent).toBe(meta.source_fragment);
+    expect(part(1).querySelector(`[data-field="summary"] mark[data-error="${meta.id}"]`)?.classList.contains('fragment-strong')).toBe(true);
   });
 
   it('a finding with no text has no field line and no button', () => {
     open('3');
-    for (const li of items('Additional findings').filter((x) => /whole reply/.test(x.textContent ?? ''))) {
-      expect(li.querySelector('.item-place')).toBeNull();
+    for (const li of items('Additional errors').filter((x) => /whole reply/.test(x.textContent ?? ''))) {
+      expect(li.querySelector('.error-side')).toBeNull();
       expect(within(li).queryByRole('button', { name: 'Show the issue' })).toBeNull();
     }
   });

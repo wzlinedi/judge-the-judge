@@ -70,7 +70,7 @@ export function SummaryView({ results, evaluation, onThreshold, onLoadChecks }: 
             <Group title="Expected errors">
               <Count label="Total" value={c.expected_total} />
               <Count label="Found" value={c.expected_found} />
-              <Count label="Missed" value={c.expected_missed} />
+              <Count label="Not found" value={c.expected_missed} />
             </Group>
             <Group title="Additional findings">
               <Count label="Total" value={c.additional_total} />
@@ -80,7 +80,7 @@ export function SummaryView({ results, evaluation, onThreshold, onLoadChecks }: 
             <Group title="Subtle errors">
               <Count label="Total" value={c.subtle_total} />
               <Count label="Found" value={c.subtle_found} />
-              <Count label="Missed" value={c.subtle_missed} />
+              <Count label="Not found" value={c.subtle_missed} />
             </Group>
           </>
         )}

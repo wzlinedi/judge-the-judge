@@ -11,7 +11,7 @@ const required = [
   // the rest of FR-008
   'Load evaluation…', 'New evaluation', 'Add rule', 'Add condition', 'Remove', 'Add categories',
   'Finalize test cases…', 'Download example file', 'Next', 'Copy prompt', 'Add error', 'Previous case',
-  'Next case', 'Found', 'Missed', 'False positive', 'Real error', 'Ignore', 'Cancel',
+  'Next case', 'Found', 'Not found', 'False positive', 'Real error (missed in scenario)', 'Ignored', 'Cancel',
   'Summary', 'Error analysis', 'Test case list', 'Export HTML report…', 'Load check settings…',
   'Run again with a new judge…', 'Help',
 ];

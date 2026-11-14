@@ -42,10 +42,10 @@ describe('the buttons under the list', () => {
   it('shows Ignore on every item, expected errors and additional findings alike', () => {
     open('17');
     for (const el of document.querySelectorAll<HTMLElement>('[data-expected], [data-additional]')) {
-      expect(within(el).getByRole('button', { name: 'Ignore' })).toBeTruthy();
+      expect(within(el).getByRole('button', { name: 'Ignored' })).toBeTruthy();
     }
-    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Ignore' }));
-    expect(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Ignore' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Ignored' }));
+    expect(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Ignored' }).getAttribute('aria-pressed')).toBe('true');
   });
 });
 
@@ -105,7 +105,7 @@ describe('the note of a case', () => {
     const seen = open('3', e);
     expect(within(win()).queryByRole('button', { name: 'Note' })).toBeNull();
     expect(within(win()).queryByRole('textbox', { name: 'Note' })).toBeNull();
-    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Real error' }));
+    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Real error (missed in scenario)' }));
     expect(seen.at(-1)?.decisions['3']?.note).toBe('an earlier note');
   });
 });
@@ -127,8 +127,8 @@ describe('the source of every mark', () => {
   it('keeps the marks of single items visible after pressing them', () => {
     open('17');
     const e2 = item('expected', 'e2');
-    fireEvent.click(within(e2).getByRole('button', { name: 'Missed' }));
-    expect(within(item('expected', 'e2')).getByRole('button', { name: 'Missed' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(e2).getByRole('button', { name: 'Not found' }));
+    expect(within(item('expected', 'e2')).getByRole('button', { name: 'Not found' }).getAttribute('aria-pressed')).toBe('true');
   });
 });
 

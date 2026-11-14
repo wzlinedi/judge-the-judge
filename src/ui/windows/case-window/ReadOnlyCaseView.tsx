@@ -10,8 +10,8 @@ import { StatusMark } from '../../components/StatusMark';
 import { Part } from '../../components/CasePart';
 import { PromptButtons } from '../../components/PromptButtons';
 import { MarkedFields } from './MarkedFields';
-import { Place } from './DecidePane';
-import { whereInCase } from './marks';
+import { ErrorCard } from './ErrorCard';
+import { errorSides } from './marks';
 
 export interface ReadOnlyCaseViewProps {
   evaluation: Evaluation;
@@ -81,10 +81,10 @@ export function ReadOnlyCaseView({ evaluation, reviewed, caseId, onNavigate, onC
                     const meta = testCase.expected_errors.find((x) => x.id === e.id);
                     return (
                       <li key={e.id} class="decide-item">
-                        <strong>{`E${i + 1}`}</strong> {meta?.description} <span>{`— ${STATE_LABELS[e.state]}`}</span>
-                        {meta?.fragment ? <p class="muted item-fragment">{`Fragment: “${meta.fragment}”`}</p> : null}
-                        <Place field={meta?.fragment ? whereInCase(testCase, judged, meta.fragment)?.field : null} />
-                        {e.state !== 'undecided' ? <p class="source muted">{SOURCE_LABELS[e.source]}</p> : <p class="reason">{e.reason ?? 'Not decided.'}</p>}
+                        <ErrorCard name={`E${i + 1}`} title={meta?.description ?? ''} facts={[meta?.category, meta?.difficulty].filter((x): x is NonNullable<typeof x> => !!x)} sides={errorSides(testCase, judged, meta ?? {})}>
+                          <p class="error-state">{STATE_LABELS[e.state]}</p>
+                          {e.state !== 'undecided' ? <p class="source muted">{SOURCE_LABELS[e.source]}</p> : <p class="reason">{e.reason ?? 'Not decided.'}</p>}
+                        </ErrorCard>
                       </li>
                     );
                   })}
@@ -93,14 +93,14 @@ export function ReadOnlyCaseView({ evaluation, reviewed, caseId, onNavigate, onC
             ) : null}
             {effective.additional.length > 0 ? (
               <>
-                <h4>Additional findings</h4>
-                <ul class="decide-list" aria-label="Additional findings">
+                <h4>Additional errors</h4>
+                <ul class="decide-list" aria-label="Additional errors">
                   {effective.additional.map((a) => (
                     <li key={a.key} class="decide-item">
-                      {a.text === '' ? 'A finding about the whole reply' : a.text} <span>{`— ${STATE_LABELS[a.state]}`}</span>
-                      <Place field={a.text === '' ? null : whereInCase(testCase, judged, a.text)?.field} />
-                      {a.category || a.difficulty ? <p class="muted">{[a.category, a.difficulty].filter(Boolean).join(' · ')}</p> : null}
-                      {a.state !== 'undecided' ? <p class="source muted">{SOURCE_LABELS[a.source]}</p> : null}
+                      <ErrorCard title={a.text === '' ? 'A finding about the whole reply' : 'Found by the judge'} facts={[a.category, a.difficulty].filter((x): x is NonNullable<typeof x> => !!x)} sides={a.text === '' ? [] : errorSides(testCase, judged, { fragment: a.text })}>
+                        <p class="error-state">{STATE_LABELS[a.state]}</p>
+                        {a.state !== 'undecided' ? <p class="source muted">{SOURCE_LABELS[a.source]}</p> : null}
+                      </ErrorCard>
                     </li>
                   ))}
                 </ul>

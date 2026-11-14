@@ -14,7 +14,7 @@ function Groups({ label, rows, perCase }: { label: string; rows: GroupRow[]; per
             <th>Group</th>
             <th>{perCase ? 'Cases with errors' : 'Expected errors'}</th>
             <th>{perCase ? 'Flagged' : 'Found'}</th>
-            <th>{perCase ? 'Not flagged' : 'Missed'}</th>
+            <th>{perCase ? 'Not flagged' : 'Not found'}</th>
             {perCase ? null : <th>Detection rate</th>}
           </tr>
         </thead>

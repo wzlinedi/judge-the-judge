@@ -253,7 +253,7 @@ describe('the read-only case view', () => {
     const result = within(win).getByRole('heading', { name: '2. Result' }).closest('.case-part') as HTMLElement;
     expect(result.textContent).toMatch(/Marked \d+ of \d+/);
     const errors = within(win).getByRole('heading', { name: '4. Errors' }).closest('.case-part') as HTMLElement;
-    expect(errors.textContent).toMatch(/in summary|in source_text|not found in the case/);
+    expect(errors.querySelector('.error-side dt')?.textContent).toMatch(/^(summary|source_text|not found in the case)$/);
   });
 
   it('says so for a case without a reply', () => {

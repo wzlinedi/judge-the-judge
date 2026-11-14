@@ -50,8 +50,8 @@ describe('the case window of Run', () => {
       expect(item.textContent).toContain('Automatic');
     }
     const first = document.querySelector<HTMLElement>('[data-expected="e1"]') as HTMLElement;
-    fireEvent.click(within(first).getByRole('button', { name: 'Missed' }));
-    expect(within(first).getByRole('button', { name: 'Missed' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(first).getByRole('button', { name: 'Not found' }));
+    expect(within(first).getByRole('button', { name: 'Not found' }).getAttribute('aria-pressed')).toBe('true');
   });
 
   it('leaves a flagged clean case to the user as an additional finding', () => {

@@ -198,6 +198,17 @@ mark.fragment-uncovered { background: var(--warning-bg); border-bottom: 4px dash
 .error-list .decide-item { padding: var(--space-2) var(--space-3); }
 .error-list .item-fragment, .error-list .source { margin: 0; }
 .category-hint { margin: var(--space-1) 0 0; }
+
+/* One error, the same in Test cases, Run and Results (T251): its passages side by side, the name of the field before each */
+.error-card { display: flex; flex-direction: column; gap: var(--space-1); }
+.error-card .error-title { font-weight: 600; }
+.error-facts { margin: 0; }
+.error-sides { margin: var(--space-1) 0; display: grid; grid-template-columns: max-content 1fr; column-gap: var(--space-3); row-gap: var(--space-1); }
+.error-side { display: contents; }
+.error-side dt { color: var(--text-muted); font-family: var(--font-mono, monospace); font-size: var(--text-sm); }
+.error-side dd { margin: 0; }
+.error-side.not-found dt { color: var(--warning); font-family: inherit; }
+.error-state { margin: 0; font-weight: 600; }
 .base-fields { max-height: 12rem; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; }
 mark.finding { padding: 0 2px; color: var(--text); border-bottom: 2px solid transparent; }
 mark.finding-clear { background: var(--success-bg); border-bottom-color: var(--success); }

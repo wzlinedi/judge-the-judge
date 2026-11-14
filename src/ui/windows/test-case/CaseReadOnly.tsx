@@ -7,6 +7,7 @@ import { CopyButton } from '../../components/CopyButton';
 import { Dialog } from '../../components/Dialog';
 import { PromptButtons } from '../../components/PromptButtons';
 import { labels } from '../../labels';
+import { useShowIssue } from '../case-window/useShowIssue';
 import { baseNameOf, CaseData, CheckLine, ErrorList } from './CaseData';
 
 export interface CaseReadOnlyProps {
@@ -22,8 +23,8 @@ export interface CaseReadOnlyProps {
 /** "Open": a saved case read-only (FR-086). Nothing in it can be edited. */
 export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onRecreate, onClose }: CaseReadOnlyProps) {
   const [recreating, setRecreating] = useState(false);
-  const [strong, setStrong] = useState<string | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
+  const { strong, shown, show: showInText } = useShowIssue(textRef);
   const { dataset, replies, judge_set } = state.evaluation;
   const index = dataset.cases.findIndex((c) => c.id === caseId);
   const testCase = dataset.cases[index];
@@ -32,12 +33,6 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onRecreate,
   const prompt = reply?.prompt ?? composePrompt(judge_set.prompt, testCase).text;
   const original = testCase.generation_prompt;
   const list = testCase.expected_errors.length > 0 ? listCheckOf(state, testCase) : undefined;
-  const showInText = (expectedId: string) => {
-    setStrong(expectedId);
-    const element = textRef.current?.querySelector<HTMLElement>(`mark[data-error="${expectedId}"]`);
-    element?.scrollIntoView?.({ block: 'center' });
-    element?.focus();
-  };
   const copyAndRecreate = async () => {
     try {
       await navigator.clipboard.writeText(original ?? '');
@@ -78,7 +73,7 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onRecreate,
       left={
         <>
           <section class="frame" aria-label="Case data">
-            <CaseData testCase={testCase} judged={judge_set.judged_text} uncovered={list?.uncovered ?? []} strong={strong} rootRef={textRef} baseName={baseNameOf(state, testCase.base)} />
+            <CaseData testCase={testCase} judged={judge_set.judged_text} uncovered={list?.uncovered ?? []} strong={strong} shown={shown} rootRef={textRef} baseName={baseNameOf(state, testCase.base)} />
           </section>
           <section class="frame" aria-label="Prompt">
             <h3>Prompt</h3>
@@ -91,7 +86,7 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onRecreate,
           <section class="frame" aria-label="Expected errors">
             <h3>Expected errors</h3>
             {list ? <CheckLine list={list} testCase={testCase} /> : null}
-            <ErrorList testCase={testCase} onShow={showInText} notInText={new Set(list?.notInText.map((m) => m.index) ?? [])} />
+            <ErrorList testCase={testCase} judged={judge_set.judged_text} onShow={showInText} />
             {dataset.finalized && reply ? <p class="muted">This case has a reply, so its expected errors cannot be corrected.</p> : null}
           </section>
         </>
