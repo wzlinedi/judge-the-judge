@@ -14,7 +14,7 @@ export interface MarkedFieldsProps {
   /** Changed places that no expected error covers (FR-080). */
   uncovered: readonly ChangedPlace[];
   /** The expected error that "Show in text" points at. */
-  strong?: string | null;
+  strong?: string | readonly string[] | null;
   /** The text of an additional finding that "Show the issue" points at. */
   shown?: ShownSpot | null;
   rootRef?: RefObject<HTMLDivElement | null>;
@@ -39,7 +39,7 @@ export function MarkedFields({ testCase, judged, effective, uncovered, strong, s
                 const { id, label, state } = segment.error;
                 const sign = effective ? ` ${SIGNS[state] ?? ''}` : '';
                 return (
-                  <mark key={i} class={`fragment${effective ? ` fragment-${state}` : ''}${strong === id ? ' fragment-strong' : ''}`} data-error={id} tabIndex={-1} title={effective ? `${label} ${state}` : label}>
+                  <mark key={i} class={`fragment${effective ? ` fragment-${state}` : ''}${(Array.isArray(strong) ? strong.includes(id) : strong === id) ? ' fragment-strong' : ''}`} data-error={id} tabIndex={-1} title={effective ? `${label} ${state}` : label}>
                     <sup>{`${label}${sign}`}</sup>
                     {segment.text}
                   </mark>

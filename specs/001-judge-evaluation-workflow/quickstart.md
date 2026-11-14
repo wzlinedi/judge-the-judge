@@ -256,7 +256,7 @@ unchanged every time.
 1. Load a test project that carries the metric of `examples/metrics/bias-example.json` in
    `metric.definition` ("Load test project…"); no other step is needed.
 2. On Test cases expand "Error categories"; type a new category name for an error to prepare in a
-   case with injected errors and save the case; rename a used category; try to remove it; remove an
+   case with injected errors and save the case; open **Example** of a used category and move with Next case; rename a used category (the window says what changes); try to remove it; remove an
    unused one.
 3. "Load check settings" with `examples/metrics/checks-example.json`.
 4. Load a test project that carries the metric of `examples/metrics/bias-verdict-example.json`,

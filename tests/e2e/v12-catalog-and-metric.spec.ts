@@ -40,7 +40,7 @@ test('the Error categories section: a new category from a case, rename, remove',
   await expect(heading).toContainText('4 categories');
 
   await heading.click();
-  const category = (name: string) => page.getByRole('listitem', { name, exact: true });
+  const category = (name: string) => page.getByRole('row', { name, exact: true });
   await expect(category('exclusion')).toContainText('Used by 1 test case');
   await expect(category('exclusion').getByRole('button', { name: 'Remove' })).toBeDisabled();
   await expect(category('exclusion')).toContainText('Remove that test case first, or rename the category.');

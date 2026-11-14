@@ -238,3 +238,7 @@ mark.finding-none { background: var(--error-bg); border-bottom-color: var(--erro
 .cases-table th { white-space: nowrap; vertical-align: bottom; }
 .cases-table .sort-button { min-height: 0; line-height: inherit; }
 .cases-table .button-row { flex-wrap: nowrap; }
+
+/* The table of error categories: the description is edited in its cell (T237) */
+.categories-table td input[type="text"] { width: 100%; min-width: 14rem; }
+.categories-table .button-row { flex-wrap: nowrap; }

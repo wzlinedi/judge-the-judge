@@ -53,6 +53,7 @@ export const labels = {
   showInText: 'Show the issue',
   saveCase: 'Save case',
   closeWithoutSaving: 'Close without saving',
+  example: 'Example',
   recreateTestCase: 'Recreate the test case',
   copyAndRecreate: 'Copy and recreate',
   showJson: 'Show JSON',
