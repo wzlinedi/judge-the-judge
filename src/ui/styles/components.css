@@ -200,9 +200,9 @@ mark.fragment-uncovered { background: var(--warning-bg); border-bottom: 4px dash
 .category-hint { margin: var(--space-1) 0 0; }
 
 /* One error, the same in Test cases, Run and Results (T251): its passages side by side, the name of the field before each */
-.error-card { display: flex; flex-direction: column; gap: var(--space-1); }
+.error-card { display: flex; flex-direction: column; gap: 0; }
 .error-card .error-title { font-weight: 600; }
-.error-facts { margin: 0; }
+.error-facts { margin: 0; font-size: var(--text-sm); }
 .error-sides { margin: var(--space-1) 0; display: grid; grid-template-columns: max-content 1fr; column-gap: var(--space-3); row-gap: var(--space-1); }
 .error-side { display: contents; }
 .error-side dt { color: var(--text-muted); font-family: var(--font-mono, monospace); font-size: var(--text-sm); }

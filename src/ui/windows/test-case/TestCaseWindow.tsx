@@ -5,15 +5,14 @@ import { InjectWindow } from './InjectWindow';
 import { CaseReadOnly } from './CaseReadOnly';
 import { CleanCaseView } from './CleanCaseView';
 import { JsonCaseView } from './JsonCaseView';
-import { caseToJson } from '../../../core/cases/case-json';
 
 export type TestWindowView =
   | { view: 'choice' }
-  | { view: 'paste'; text: string }
+  /** `prompt`: the original prompt of a case that is made again; "Show prompt" stands at the top of the window (T255). */
+  | { view: 'paste'; text: string; prompt?: string }
   | { view: 'clean' }
   | { view: 'inject' }
-  | { view: 'open'; id: string }
-  | { view: 'correct'; id: string };
+  | { view: 'open'; id: string };
 
 export interface TestCaseWindowProps {
   state: AppState;
@@ -32,7 +31,7 @@ export function TestCaseWindow({ state, view, onView, onApply }: TestCaseWindowP
     case 'inject':
       return <InjectWindow state={state} onApply={onApply} onClose={close} />;
     case 'paste':
-      return <JsonCaseView key={view.text} state={state} mode="paste" initialText={view.text} onApply={onApply} onClose={close} />;
+      return <JsonCaseView key={`${view.prompt ?? ''}|${view.text}`} state={state} initialText={view.text} recreatePrompt={view.prompt} onApply={onApply} onClose={close} />;
     case 'clean':
       return <CleanCaseView state={state} onApply={onApply} onClose={close} />;
     case 'open':
@@ -41,15 +40,10 @@ export function TestCaseWindow({ state, view, onView, onApply }: TestCaseWindowP
           state={state}
           caseId={view.id}
           onNavigate={(id) => onView({ view: 'open', id })}
-          onCorrect={(id) => onView({ view: 'correct', id })}
-          onRecreate={() => onView({ view: 'paste', text: '' })}
+          onApply={onApply}
+          onRecreate={(prompt) => onView({ view: 'paste', text: '', prompt })}
           onClose={close}
         />
       );
-    case 'correct': {
-      const original = state.evaluation.dataset.cases.find((c) => c.id === view.id);
-      if (!original) return null;
-      return <JsonCaseView key={view.id} state={state} mode="correct" caseId={view.id} initialText={caseToJson(original)} onApply={onApply} onClose={close} />;
-    }
   }
 }

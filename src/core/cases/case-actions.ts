@@ -4,8 +4,7 @@ import type { ChangedAfterFirstReply, Reply, TestCase } from '../model';
 export type CaseAction = 'rename' | 'remove' | 'correct';
 export type CaseChange = { allowed: true } | { allowed: false; reason: string };
 
-export function canChangeCase(cases: readonly TestCase[], replies: Readonly<Record<string, Reply>>, _finalized: boolean, id: string, action: CaseAction): CaseChange {
-  if (action === 'correct' && replies[id] !== undefined) return { allowed: false, reason: 'This case has a reply' };
+export function canChangeCase(cases: readonly TestCase[], _replies: Readonly<Record<string, Reply>>, _finalized: boolean, id: string, action: CaseAction): CaseChange {
   if (action === 'remove') {
     const dependants = cases.filter((c) => c.base === id);
     if (dependants.length > 0) {

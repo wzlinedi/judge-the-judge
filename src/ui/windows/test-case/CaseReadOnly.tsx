@@ -8,21 +8,24 @@ import { Dialog } from '../../components/Dialog';
 import { PromptButtons } from '../../components/PromptButtons';
 import { labels } from '../../labels';
 import { useShowIssue } from '../case-window/useShowIssue';
+import type { CaseEdit } from '../../../app/actions/cases';
+import { ExpectedErrorsDialog } from './ExpectedErrorsDialog';
 import { baseNameOf, CaseData, CheckLine, ErrorList } from './CaseData';
 
 export interface CaseReadOnlyProps {
   state: AppState;
   caseId: string;
   onNavigate: (caseId: string) => void;
-  onCorrect: (caseId: string) => void;
-  /** Opens an empty "From JSON" window, after the original prompt was copied. */
-  onRecreate: () => void;
+  onApply: (edit: CaseEdit) => void;
+  /** Opens an empty "From JSON" window, after the original prompt was copied; the window shows that prompt with "Show prompt" (T255). */
+  onRecreate: (prompt: string) => void;
   onClose: () => void;
 }
 
 /** "Open": a saved case read-only (FR-086). Nothing in it can be edited. */
-export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onRecreate, onClose }: CaseReadOnlyProps) {
+export function CaseReadOnly({ state, caseId, onNavigate, onApply, onRecreate, onClose }: CaseReadOnlyProps) {
   const [recreating, setRecreating] = useState(false);
+  const [editing, setEditing] = useState(false);
   const textRef = useRef<HTMLDivElement>(null);
   const { strong, shown, show: showInText } = useShowIssue(textRef);
   const { dataset, replies, judge_set } = state.evaluation;
@@ -40,7 +43,7 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onRecreate,
       // the browser may refuse the copy; the window still opens and the prompt stays in the dialog until then
     }
     setRecreating(false);
-    onRecreate();
+    onRecreate(original ?? '');
   };
   const previous = dataset.cases[index - 1];
   const next = dataset.cases[index + 1];
@@ -63,11 +66,9 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onRecreate,
               This case does not keep the prompt it was made with.
             </span>
           ) : null}
-          {dataset.finalized && !reply ? (
-            <button type="button" onClick={() => onCorrect(caseId)}>
-              {labels.correctExpectedErrors}
-            </button>
-          ) : null}
+          <button type="button" onClick={() => setEditing(true)}>
+            {labels.correctExpectedErrors}
+          </button>
         </>
       }
       left={
@@ -87,11 +88,12 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onRecreate,
             <h3>Expected errors</h3>
             {list ? <CheckLine list={list} testCase={testCase} /> : null}
             <ErrorList testCase={testCase} judged={judge_set.judged_text} onShow={showInText} />
-            {dataset.finalized && reply ? <p class="muted">This case has a reply, so its expected errors cannot be corrected.</p> : null}
           </section>
         </>
       }
       overlay={
+        <>
+        {editing ? <ExpectedErrorsDialog state={state} caseId={caseId} onApply={onApply} onClose={() => setEditing(false)} /> : null}
         <Dialog
           open={recreating}
           title="Original prompt"
@@ -111,6 +113,7 @@ export function CaseReadOnly({ state, caseId, onNavigate, onCorrect, onRecreate,
         >
           <textarea class="json prompt-full" rows={4} readOnly value={original ?? ''} aria-label="Original prompt" />
         </Dialog>
+        </>
       }
     />
   );

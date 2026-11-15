@@ -4,7 +4,6 @@ import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
-import { caseToJson } from '../../../src/core/cases/case-json';
 import { sampleEvaluation } from '../../helpers/fixtures';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
@@ -176,46 +175,40 @@ describe('the read-only view (Open)', () => {
       expect((within(win).getByLabelText('Case JSON') as HTMLTextAreaElement).value).toBe('');
       expect(screen.queryByRole('dialog', { name: /Anna \+ 2 errors/ })).toBeNull();
     });
+
+    it('the new window has Show prompt at the top: it opens the copied prompt in the standard large dialog (T255)', async () => {
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockResolvedValue(undefined), readText: vi.fn() }, configurable: true });
+      start();
+      fireEvent.click(within(original()).getByRole('button', { name: 'Copy and recreate' }));
+      const win = await screen.findByRole('dialog', { name: 'Test case' });
+      const body = win.querySelector('.case-window-body') as HTMLElement;
+      const show = within(win).getByRole('button', { name: 'Show prompt' });
+      expect(body.firstElementChild?.contains(show)).toBe(true); // above part 1
+      expect(within(win).queryByRole('button', { name: 'Copy prompt' })).toBeNull();
+      fireEvent.click(show);
+      const prompt = screen.getByRole('dialog', { name: 'Complete judge prompt' });
+      expect(prompt.classList.contains('dialog-wide')).toBe(true);
+      expect((within(prompt).getByRole('textbox') as HTMLTextAreaElement).value).toBe('Write a case about Anna.');
+      expect(within(prompt.querySelector('.dialog-actions') as HTMLElement).getAllByRole('button').map((b) => b.textContent)).toEqual(['Copy prompt', 'Close']);
+    });
+
+    it('a case saved from that window keeps the prompt, so it can be recreated again', async () => {
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockResolvedValue(undefined), readText: vi.fn() }, configurable: true });
+      start();
+      fireEvent.click(within(original()).getByRole('button', { name: 'Copy and recreate' }));
+      const win = await screen.findByRole('dialog', { name: 'Test case' });
+      fireEvent.input(within(win).getByLabelText('Case JSON'), { target: { value: JSON.stringify({ name: 'Again', fields: { source_text: 'Anna is a baker.', summary: 'Anna is a pilot.' }, expected_errors: [{ category: 'factual-error', fragment: 'Anna is a pilot', description: 'x' }] }) } });
+      fireEvent.click(within(win).getByRole('button', { name: 'Save case' }));
+      expect(screen.queryByRole('dialog', { name: 'Test case' })).toBeNull();
+      open('Again');
+      expect((screen.getByRole('button', { name: 'Recreate the test case' }) as HTMLButtonElement).disabled).toBe(false);
+    });
   });
 
   it('has no Clone button in the read-only view (T218)', () => {
     show();
     open('Anna + 2 errors');
     expect(within(screen.getByRole('dialog', { name: /Anna \+ 2 errors/ })).queryByRole('button', { name: 'Clone' })).toBeNull();
-  });
-
-  it('Edit expected errors is offered after finalizing for a case without a reply, and says why when there is a reply', () => {
-    const s = withCases();
-    const finalized: AppState = { ...s, evaluation: { ...s.evaluation, dataset: { ...s.evaluation.dataset, finalized: true } } };
-    const { unmount } = show(finalized);
-    open('Anna + 2 errors');
-    expect(screen.getByRole('button', { name: 'Edit expected errors' })).toBeTruthy();
-    unmount();
-    const e = sampleEvaluation();
-    show({ ...finalized, evaluation: { ...finalized.evaluation, replies: { '2': e.replies['2']! } } });
-    open('Anna + 2 errors');
-    expect(screen.queryByRole('button', { name: 'Edit expected errors' })).toBeNull();
-    expect(within(screen.getByRole('dialog', { name: /Anna \+ 2 errors/ })).getByText(/has a reply/)).toBeTruthy();
-  });
-
-  it('Edit expected errors saves a changed difficulty and refuses a changed field', () => {
-    const s = withCases();
-    const finalized: AppState = { ...s, evaluation: { ...s.evaluation, dataset: { ...s.evaluation.dataset, finalized: true } } };
-    show(finalized);
-    open('Anna + 2 errors');
-    fireEvent.click(screen.getByRole('button', { name: 'Edit expected errors' }));
-    const box = within(windowOf()).getByLabelText('Case JSON') as HTMLTextAreaElement;
-    const edited = JSON.parse(box.value);
-    edited.fields.summary = 'changed';
-    fireEvent.input(box, { target: { value: JSON.stringify(edited) } });
-    expect(screen.getByText(/fields cannot change/i)).toBeTruthy();
-    expect((within(windowOf()).getByRole('button', { name: 'Save case' }) as HTMLButtonElement).disabled).toBe(true);
-    edited.fields.summary = JSON.parse(caseToJson(sampleEvaluation().dataset.cases[1]!)).fields.summary;
-    edited.expected_errors[0].difficulty = 'subtle';
-    fireEvent.input(box, { target: { value: JSON.stringify(edited) } });
-    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Save case' }));
-    expect(screen.queryByRole('dialog', { name: 'Test case' })).toBeNull();
-    expect(screen.getByText('Unsaved changes')).toBeTruthy();
   });
 });
 

@@ -164,6 +164,8 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-14, third look, T251) How is an error shown in Test cases, Run and Results? → A: By one shared component: its number, what is wrong, the category and difficulty, then one line per side with the name of the field before the passage, the words of the source first and the words of the judged text second ("source_text: “lost his leg to a white whale”", "summary: “the whale that took his arm”"). The field names come from the case, so they follow the variables and the judged text of Judge. "Show the issue" scrolls to the fields and highlights both passages strongly for a moment. A finding of the judge, and an error without `source_fragment`, show one side (FR-062, FR-063, FR-086).
 - Q: (Owner review 2026-11-14, third look, T252) What are the marks called? → A: The errors of Run are in two groups. **Expected errors**: Found · Not found · Ignored. **Additional errors**: Real error (missed in scenario) · False positive · Ignored. The same words are used for the state of an item in Results, in the preview of a second opinion and in the HTML report, and the count columns say "Not found" (was "Missed"). This replaces "Missed", "Ignore", "Real error", "Issue: missed" and "Issue: false positive" (FR-008, FR-062, FR-064).
 - Q: (Owner review 2026-11-14, third look, T253) What happens to an additional error marked "Real error (missed in scenario)"? → A: It is added at once, with no question, to the expected errors of its test case, and a banner in the window says so ("Added to the expected errors of case 15 as E4."). It stays in "Additional errors" with its mark and the words "Added to the expected errors as E4"; it is counted once, as an expected error that was found (not as an additional real error). Changing the mark or removing the finding takes the expected error out again; when the replies are cleared the error stays. The decision keeps the link (`promoted_to`); the test cases version changes and the case is marked "corrected" after the first reply. The demo results change accordingly (31 expected errors, 28 found). This replaces FR-062: "it MUST NOT be added to the expected errors".
+- Q: (Owner review 2026-11-14, third look, T254) Where and when can the expected errors of a case be edited? → A: On every case in Open, before and after finalizing, with or without a reply. "Edit expected errors" opens the standard large dialog with the JSON of the list of the expected errors only (each with its `id`), checked as it changes. An error that keeps its `id` and its words keeps its mark. For a case with a reply Save asks first: the marks of the changed and removed errors are dropped, the case is marked again from the reply and the test cases version changes. This replaces FR-089 (only a case without a reply, after finalizing, in the From JSON window).
+- Q: (Owner review 2026-11-14, third look, T255) What does "Copy and recreate" open? → A: The empty "From JSON" window, as before (the box is the place for the new case, nothing is pasted into it), now with **Show prompt** at the top: it opens the prompt that was copied, in the standard large dialog (with **Copy prompt** and **Close**), in case it is needed again. The case saved from that window keeps that prompt as its `generation_prompt`. This replaces the part of T238 that opened the window with nothing on it (FR-086).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -1820,11 +1822,13 @@ case and confirm the new case has the same fields and expected errors.
   judged text and the sample reply are read as they change, with no action of their own; "Explain"
   hints open on demand. The step MUST NOT show a welcome section or "Save evaluation".
 
-- **FR-089**: After the test cases are finalized, the read-only view of a case that has no reply
-  yet MUST offer "Edit expected errors". It opens the page of FR-085 with the case's JSON (parts 4 and 5 only):
-  only its `expected_errors` may change; a change to its fields or name is shown under the box as a
-  problem and blocks "Save case". The checks of FR-041, FR-080 and FR-084 apply. Saving gives a new
-  test cases version. Once the case has a reply, the action is not offered and the view says why.
+- **FR-089**: The read-only view of every case, whether or not the test cases are finalized and
+  whether or not the case has a reply, MUST offer "Edit expected errors" (T254). It opens the standard large dialog with the JSON of the
+  list of the expected errors of that case only, each with its `id`; the name, the base and the fields cannot change there (they are not in the JSON). The JSON is checked as
+  it changes (FR-041, FR-084); "Save" is disabled with the reason beside it while there is a problem or nothing changed. An error that keeps its
+  `id` and its words keeps its mark; an error without `id` is a new one and gets the next free identifier. Saving gives a new test cases version; after the first reply the
+  case is marked "corrected". For a case with a reply "Save" asks first: the marks set by hand or by an opinion for the changed and removed errors are dropped, the case is marked again from
+  the reply, and an error that a real-error mark made (T253) that is removed sets that finding to "Ignored".
 
 - **FR-090**: "From JSON" MUST open the page of FR-085 with only the JSON box of FR-041 and the list of expected errors under it, for a case JSON the user
   already has (prepared elsewhere, or exported). The checks of FR-041 and

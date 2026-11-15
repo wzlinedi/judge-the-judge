@@ -127,43 +127,57 @@ test('five expected errors are visible without scrolling, and From JSON adds a c
   await expect(position).toHaveText(/4 of 5/);
 });
 
-test('after finalizing only the expected errors of a case without a reply can be corrected', async ({ page }) => {
+test('Edit expected errors is on every case: a case without a reply saves at once, a case with a reply asks first (T254)', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
-  await page.getByRole('button', { name: /3\s*Run/ }).click();
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Edit expected errors' });
 
-  // a case added after the first reply has no reply
+  // a case added after the first reply has no reply: it saves at once
   await page.getByRole('button', { name: 'Add test case…' }).click();
   await win(page).getByRole('button', { name: 'From JSON' }).click();
-  await win(page).getByLabel('Case JSON').fill(JSON.stringify({ name: 'Late case', fields: { source_text: 'A keeper lights the lamp every evening.', summary: 'A keeper lights the lamp each morning.' }, expected_errors: [{ category: 'factual-error', fragment: 'each morning', description: 'Evening became morning', difficulty: 'obvious' }] }));
+  await win(page).getByLabel('Case JSON').fill(JSON.stringify({ name: 'Late case', fields: { source_text: 'A keeper lights the lamp every evening.', summary: 'A keeper lights the lamp each morning.' }, expected_errors: [{ category: 'factual-error', fragment: 'each morning', description: 'The lamp is lit in the evening.', difficulty: 'obvious' }] }));
   await win(page).getByRole('button', { name: 'Save case' }).click();
   const row = page.getByRole('row').filter({ hasText: 'Late case' });
-  await expect(row).toContainText('added after first reply');
-
   await row.getByRole('button', { name: 'Open' }).click();
   await page.getByRole('button', { name: 'Edit expected errors' }).click();
-  const box = win(page).getByLabel('Case JSON');
-  const original = await box.inputValue();
-  await box.fill(original.replace('The expected', 'x').replace('"obvious"', '"subtle"'));
-  await win(page).getByRole('button', { name: 'Save case' }).click();
-  await expect(win(page)).toHaveCount(0);
+  await expect(dialog).toBeVisible();
+  const box = dialog.getByLabel('Expected errors');
+  const items = JSON.parse(await box.inputValue());
+  expect(items).toHaveLength(1);
+  items[0].difficulty = 'subtle';
+  items[0].source_fragment = 'every evening';
+  await box.fill(JSON.stringify(items));
+  await dialog.getByRole('button', { name: 'Save' }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Save the expected errors?' })).toHaveCount(0);
+  await expect(page.getByRole('listitem').filter({ hasText: 'E1' }).locator('.error-side').first()).toContainText('every evening');
 
-  // a field cannot change
-  await row.getByRole('button', { name: 'Open' }).click();
+  // the JSON of the list has no place for the fields: a broken list is refused with its place, and Save stays off
   await page.getByRole('button', { name: 'Edit expected errors' }).click();
-  await box.fill((await box.inputValue()).replace('each morning', 'each night'));
-  await expect(win(page).getByText(/fields cannot change/i)).toBeVisible();
-  await expect(win(page).getByRole('button', { name: 'Save case' })).toBeDisabled();
+  await box.fill('[ { "description": ');
+  await expect(dialog.getByText(/Line 1, column/)).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Save' })).toBeDisabled();
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
 
-  // a case with a reply offers no correction
-  await win(page).getByRole('button', { name: 'Close without saving' }).click();
-  await page.getByRole('dialog', { name: 'Close without saving?' }).getByRole('button', { name: 'Close without saving' }).click();
+  // a case with a reply: Edit expected errors is there, and Save asks first
   await page.getByRole('row').nth(1).getByRole('button', { name: 'Open' }).click();
-  await expect(page.getByRole('button', { name: 'Edit expected errors' })).toHaveCount(0);
-  await expect(page.getByRole('dialog', { name: /Case 1/ }).getByText(/has a reply/)).toBeVisible();
+  await page.getByRole('button', { name: 'Edit expected errors' }).click();
+  const withReply = JSON.parse(await box.inputValue());
+  withReply.push({ category: 'omission', description: 'a new one' });
+  await box.fill(JSON.stringify(withReply));
+  await dialog.getByRole('button', { name: 'Save' }).click();
+  const ask = page.getByRole('dialog', { name: 'Save the expected errors?' });
+  await expect(ask).toContainText('This case has a reply.');
+  await ask.getByRole('button', { name: 'Cancel' }).click();
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Save' }).click();
+  await page.getByRole('dialog', { name: 'Save the expected errors?' }).getByRole('button', { name: 'Save' }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByText('Unsaved changes').first()).toBeVisible();
 });
 
 test('the window is one page: the error row is on one line, nothing scrolls sideways, Save case is in the header, the parts are in frames (T229, T233)', async ({ page }) => {

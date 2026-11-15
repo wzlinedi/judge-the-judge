@@ -1,8 +1,8 @@
 // The actions of the Test cases step (FR-017, FR-023, FR-025, FR-039, FR-053, FR-078, FR-089).
 import { describe, expect, it } from 'vitest';
-import { correctExpectedErrors, removalImpact, removeCase, renameCase, saveCaseFromJson } from '../../../src/app/actions/cases';
+import { removalImpact, removeCase, renameCase, saveCaseFromJson, saveExpectedErrors } from '../../../src/app/actions/cases';
+import { expectedErrorsToJson } from '../../../src/core/cases/expected-errors';
 import { createState, type AppState } from '../../../src/app/store';
-import { caseToJson } from '../../../src/core/cases/case-json';
 import { sampleEvaluation } from '../../helpers/fixtures';
 
 const open = (): AppState => {
@@ -100,34 +100,76 @@ describe('rename and remove', () => {
   });
 });
 
-describe('correctExpectedErrors', () => {
-  it('replaces only the expected errors of a case without a reply, and marks it corrected after the first reply', () => {
+describe('saveExpectedErrors (T254)', () => {
+  const listOf = (state: AppState, id: string) => JSON.parse(expectedErrorsToJson(state.evaluation.dataset.cases.find((c) => c.id === id)!)) as Array<Record<string, unknown>>;
+  const withMark = (state: AppState, id: string, errorId: string): AppState => ({ ...state, evaluation: { ...state.evaluation, decisions: { [id]: { expected: { [errorId]: { state: 'found', source: 'manual' } }, additional: {}, added_findings: [], approved: false, note: '' } } } });
+
+  it('replaces only the expected errors of a case without a reply, drops the version and keeps the fields', () => {
     const state = finalized(false);
     const original = state.evaluation.dataset.cases[1]!;
-    const edited = JSON.parse(caseToJson(original));
-    edited.expected_errors[0].difficulty = 'subtle';
-    const r = correctExpectedErrors(state, '2', JSON.stringify(edited));
-    expect(r.problems).toEqual([]);
-    expect(r.state.evaluation.dataset.cases[1]?.expected_errors[0]?.difficulty).toBe('subtle');
-    expect(r.state.evaluation.dataset.cases[1]?.fields).toEqual(original.fields);
+    const items = listOf(state, '2');
+    items[0]!['difficulty'] = 'subtle';
+    const r = saveExpectedErrors(state, '2', JSON.stringify(items));
+    expect(r.problems ?? []).toEqual([]);
+    const saved = r.state.evaluation.dataset.cases[1]!;
+    expect(saved.expected_errors[0]?.difficulty).toBe('subtle');
+    expect(saved.expected_errors[0]?.id).toBe(original.expected_errors[0]?.id);
+    expect(saved.fields).toEqual(original.fields);
+    expect(r.state.evaluation.dataset.version).toBeUndefined();
+    expect(r.state.unsaved).toBe(true);
   });
 
-  it('refuses a change to the fields or a case with a reply', () => {
-    const state = finalized(false);
-    const edited = JSON.parse(caseToJson(state.evaluation.dataset.cases[1]!));
-    edited.fields.summary = 'changed';
-    expect(correctExpectedErrors(state, '2', JSON.stringify(edited)).problems?.length).toBeGreaterThan(0);
-    const withReply = finalized(true);
-    expect(correctExpectedErrors(withReply, '2', caseToJson(withReply.evaluation.dataset.cases[1]!)).note).toBe('This case has a reply');
-  });
-
-  it('marks a corrected case when other cases already have replies', () => {
-    const state = finalized(true);
-    const { changed_after_first_reply: _mark, ...unmarked } = state.evaluation.dataset.cases[1]!;
-    const cases = [state.evaluation.dataset.cases[0]!, unmarked];
-    const noReply = { ...state, evaluation: { ...state.evaluation, dataset: { ...state.evaluation.dataset, cases }, replies: { '1': state.evaluation.replies['1']! } } };
-    const r = correctExpectedErrors(noReply, '2', caseToJson(noReply.evaluation.dataset.cases[1]!));
+  it('works on a case that has a reply too: the marks of the changed and removed errors go, the other marks stay (T254)', () => {
+    const reset = finalized(true);
+    const base: AppState = { ...reset, evaluation: { ...reset.evaluation, dataset: { ...reset.evaluation.dataset, cases: reset.evaluation.dataset.cases.map(({ changed_after_first_reply: _mark, ...c }) => c) } } };
+    const first = base.evaluation.dataset.cases[1]!.expected_errors[0]!.id;
+    const second = base.evaluation.dataset.cases[1]!.expected_errors[1]!.id;
+    const state: AppState = { ...base, evaluation: { ...base.evaluation, decisions: { '2': { expected: { [first]: { state: 'found', source: 'manual' }, [second]: { state: 'missed', source: 'manual' } }, additional: {}, added_findings: [], approved: false, note: '' } } } };
+    const items = listOf(state, '2');
+    items[0]!['difficulty'] = items[0]!['difficulty'] === 'subtle' ? 'obvious' : 'subtle';
+    const r = saveExpectedErrors(state, '2', JSON.stringify(items));
+    expect(r.problems ?? []).toEqual([]);
+    expect(r.state.evaluation.decisions['2']!.expected[first]).toBeUndefined();
+    expect(r.state.evaluation.decisions['2']!.expected[second]).toEqual({ state: 'missed', source: 'manual' });
+    expect(r.state.evaluation.replies).toEqual(state.evaluation.replies);
     expect(r.state.evaluation.dataset.cases[1]?.changed_after_first_reply).toBe('corrected');
+  });
+
+  it('adds, removes and renumbers: a new error gets a free identifier, a removed one loses its mark, an empty list makes a clean case', () => {
+    const state = withMark(finalized(true), '2', 'e2');
+    const items = listOf(state, '2');
+    const r = saveExpectedErrors(state, '2', JSON.stringify([items[0], { description: 'a third', fragment: 'Anna is a doctor' }]));
+    const ids = r.state.evaluation.dataset.cases[1]!.expected_errors.map((e) => e.id);
+    expect(new Set(ids).size).toBe(2);
+    expect(r.state.evaluation.decisions['2']!.expected['e2']).toBeUndefined();
+    expect(saveExpectedErrors(state, '2', '[]').state.evaluation.dataset.cases[1]!.expected_errors).toEqual([]);
+  });
+
+  it('a new category joins the catalog; unchanged text changes nothing and says so', () => {
+    const state = finalized(false);
+    const items = listOf(state, '2');
+    const r = saveExpectedErrors(state, '2', JSON.stringify([{ ...items[0], category: 'brand-new' }, items[1]]));
+    expect(r.state.evaluation.judge_set.error_catalog.map((c) => c.name)).toContain('brand-new');
+    const same = saveExpectedErrors(state, '2', JSON.stringify(items));
+    expect(same.state).toBe(state);
+    expect(same.note).toBe('Nothing changed.');
+  });
+
+  it('removing an error that a real-error mark made sets that finding to Ignored, so the next sync does not add it again', () => {
+    const base = finalized(true);
+    const made = base.evaluation.dataset.cases[1]!.expected_errors[0]!.id;
+    const state: AppState = { ...base, evaluation: { ...base.evaluation, decisions: { '2': { expected: {}, additional: { 'claims[]#1': { state: 'real_error', source: 'manual', promoted_to: made } }, added_findings: [{ text: 'x', state: 'real_error', source: 'manual', promoted_to: made }], approved: false, note: '' } } } };
+    const r = saveExpectedErrors(state, '2', JSON.stringify(listOf(state, '2').slice(1)));
+    expect(r.state.evaluation.decisions['2']!.additional['claims[]#1']).toEqual({ state: 'ignored', source: 'manual' });
+    expect(r.state.evaluation.decisions['2']!.added_findings[0]).toEqual({ text: 'x', state: 'ignored', source: 'manual' });
+  });
+
+  it('refuses a list with a problem and says where it is; the state is untouched', () => {
+    const state = finalized(false);
+    const r = saveExpectedErrors(state, '2', JSON.stringify([{ category: 'x' }]));
+    expect(r.state).toBe(state);
+    expect(r.problems?.map((p) => p.path)).toContain('expected_errors[0].description');
+    expect(saveExpectedErrors(state, 'nope', '[]').note).toBe('This case no longer exists.');
   });
 });
 
@@ -152,7 +194,7 @@ describe('generation_prompt (T238)', () => {
     const base = open();
     const saved = saveCaseFromJson(base, json(), { mode: 'inject', generationPrompt: 'Make a case.' }).state;
     const id = saved.evaluation.dataset.cases[2]!.id;
-    const done = correctExpectedErrors({ ...saved, evaluation: { ...saved.evaluation, dataset: { ...saved.evaluation.dataset, finalized: true } } }, id, caseToJson(saved.evaluation.dataset.cases[2]!));
+    const done = saveExpectedErrors({ ...saved, evaluation: { ...saved.evaluation, dataset: { ...saved.evaluation.dataset, finalized: true } } }, id, JSON.stringify([{ ...JSON.parse(expectedErrorsToJson(saved.evaluation.dataset.cases[2]!))[0], difficulty: 'subtle' }]));
     expect(done.state.evaluation.dataset.cases[2]?.generation_prompt).toBe('Make a case.');
   });
 });

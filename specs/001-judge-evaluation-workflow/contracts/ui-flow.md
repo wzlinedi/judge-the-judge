@@ -186,13 +186,14 @@ which asks first when something was pasted or typed.
   it asks for confirmation; a case identical to its base is refused.
 - **Open** (FR-086): the case read-only (its own layout, with highlighted fields), with **Previous test
   case**, **Next case** and the position ("case 7 of 20") in the header (Alt + Left/Right do
-  the same), **Recreate the test case** (enabled when the case keeps `generation_prompt`; opens **Original prompt** with **Copy**, **Copy and recreate** and **Close**; **Copy and recreate** copies the prompt and opens an empty **From JSON** window; no **Show JSON** or **Copy JSON**), and after finalizing,
-  for a case without a reply, **Edit expected errors**; also **Show prompt** (a dialog of about 90% of the screen with
+  the same), **Recreate the test case** (enabled when the case keeps `generation_prompt`; opens **Original prompt** with **Copy**, **Copy and recreate** and **Close**; **Copy and recreate** copies the prompt and opens an empty **From JSON** window, which has **Show prompt** at the top (the standard large dialog with the copied prompt, **Copy prompt** and **Close**), and the case saved from it keeps that prompt; no **Show JSON** or **Copy JSON**), and, on every case, **Edit expected errors**; also **Show prompt** (a dialog of about 90% of the screen with
   the whole composed prompt and only **Close**) with **Copy prompt**. No reply is shown (a reply belongs to Run).
   Sections are in frames and the expected errors are highlighted strongly. A saved case is never edited.
-- **Edit expected errors** (FR-089): the page of **From JSON** with the case's JSON, where only
-  `expected_errors` may change; a change to the name or the fields is a problem under the box.
-  **Save case** gives a new test cases version.
+- **Edit expected errors** (FR-089, T254): the standard large dialog with the JSON of the list of the expected errors of the case
+  only (with their `id`), checked as it changes, with **Cancel** and **Save** at the bottom; **Save** is disabled with the reason beside it
+  ("Fix the problems listed under the JSON to save." or "Change the JSON to save."). For a case with a reply **Save** asks first
+  ("Save the expected errors?": the marks of the changed and removed errors are dropped, the case is marked again from the reply, the
+  test cases version changes). Saving closes the dialog.
 - **States**: malformed JSON (line and column, text kept); missing variable, empty field, missing
   description (field path); nothing pasted yet; name taken; identical to base (refused); test
   project full; JSON with no expected errors in a case with injected errors (saved as clean, the

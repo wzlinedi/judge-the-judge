@@ -28,6 +28,20 @@ export function caseToJson(testCase: TestCase): string {
   return JSON.stringify(json, null, 2);
 }
 
+/** In "Edit expected errors" an error keeps the identifier it has when the case has it; the first of two with the same one keeps it, the others get the next free `e<number>`. */
+function uniqueIds(errors: readonly ExpectedError[], known: ReadonlySet<string>): ExpectedError[] {
+  const kept = new Set<string>();
+  const wanted = errors.map((e) => (known.has(e.id) && !kept.has(e.id) ? (kept.add(e.id), e.id) : undefined));
+  let n = 0;
+  const next = () => {
+    do n++;
+    while (kept.has(`e${n}`));
+    kept.add(`e${n}`);
+    return `e${n}`;
+  };
+  return errors.map((e, i) => ({ ...e, id: wanted[i] ?? next() }));
+}
+
 function pickOne(value: unknown, problems: Problem[]): unknown {
   if (Array.isArray(value)) {
     if (value.length === 1) return value[0];
@@ -96,9 +110,12 @@ export function checkCaseJson(input: string, context: CaseJsonCheckContext): Cas
       if (fragment === undefined) warnings.push(`${at}: there is no fragment, so it cannot be matched automatically and is decided by hand on Run.`);
       if (category === undefined) warnings.push(`${at}: there is no category, so it is not grouped in the error analysis.`);
       else if (!context.catalog.some((c) => c.name === category)) notes.push(`The category "${category}" is new and is added to the catalog when the case is saved.`);
-      errors.push({ id: `e${i + 1}`, description, ...(category !== undefined ? { category } : {}), ...(fragment !== undefined ? { fragment } : {}), ...(sourceFragment !== undefined ? { source_fragment: sourceFragment } : {}), ...(difficulty === 'obvious' || difficulty === 'subtle' ? { difficulty: difficulty as Difficulty } : {}) });
+      const kept = context.mode === 'correct' && typeof item['id'] === 'string' && context.original?.expected_errors.some((x) => x.id === item['id']) ? (item['id'] as string) : undefined;
+      errors.push({ id: kept ?? `e${i + 1}`, description, ...(category !== undefined ? { category } : {}), ...(fragment !== undefined ? { fragment } : {}), ...(sourceFragment !== undefined ? { source_fragment: sourceFragment } : {}), ...(difficulty === 'obvious' || difficulty === 'subtle' ? { difficulty: difficulty as Difficulty } : {}) });
     });
   }
+
+  if (context.mode === 'correct') errors.splice(0, errors.length, ...uniqueIds(errors, new Set(context.original?.expected_errors.map((x) => x.id))));
 
   // name
   const typedName = context.name?.trim();

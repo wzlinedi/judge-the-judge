@@ -98,8 +98,8 @@ made from it.
 4. "Add test case", "From JSON", paste a JSON identical to its base but with one expected error.
 5. "Open" a case with five expected errors at 1280 x 720; there is no "Show JSON"; use
    "Next case".
-6. Finalize; "Open" a case without a reply, "Edit expected errors", change one difficulty and
-   save; try to change a field.
+6. Finalize; "Open" a case, with or without a reply, "Edit expected errors", change one difficulty and
+   save (a case with a reply asks first); break the JSON and see the place.
 
 **Expected**: the prompt contains the judge prompt, the base case, the judged text and each error
 with its category's description; the JSON box shows problems with their line and

@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { correctExpectedErrors, saveCaseFromJson, type CaseEdit } from '../../../app/actions/cases';
+import { saveCaseFromJson, type CaseEdit } from '../../../app/actions/cases';
 import { listCheckOf, mismatchLines } from '../../../app/actions/test-case-window';
 import type { AppState } from '../../../app/store';
 import type { CaseJsonCheck } from '../../../core/model';
@@ -9,8 +9,7 @@ import { labels } from '../../labels';
 export interface SaveCaseButtonProps {
   state: AppState;
   text: string;
-  mode: 'paste' | 'inject' | 'correct';
-  caseId?: string;
+  mode: 'paste' | 'inject';
   base?: string;
   errorsToPrepare?: number;
   /** The prompt of the window, kept with the case (T238). */
@@ -25,15 +24,12 @@ export interface SaveCaseButtonProps {
 }
 
 /** "Save case" (FR-085) at the bottom of the window: enabled only while the JSON is valid and, when it is not, saying why; a mismatch of FR-080 asks first. */
-export function SaveCaseButton({ state, text, mode, caseId, base, errorsToPrepare, generationPrompt, name, check, emptyReason, onApply, onClose }: SaveCaseButtonProps) {
+export function SaveCaseButton({ state, text, mode, base, errorsToPrepare, generationPrompt, name, check, emptyReason, onApply, onClose }: SaveCaseButtonProps) {
   const [asking, setAsking] = useState<string[] | null>(null);
 
   const save = () => {
     setAsking(null);
-    const edit =
-      mode === 'correct' && caseId
-        ? correctExpectedErrors(state, caseId, text)
-        : saveCaseFromJson(state, text, { mode: mode === 'inject' ? 'inject' : 'paste', ...(base !== undefined && base !== '' ? { base } : {}), ...(errorsToPrepare !== undefined ? { errorsToPrepare } : {}), ...(name !== undefined ? { name } : {}), ...(generationPrompt !== undefined ? { generationPrompt } : {}) });
+    const edit = saveCaseFromJson(state, text, { mode, ...(base !== undefined && base !== '' ? { base } : {}), ...(errorsToPrepare !== undefined ? { errorsToPrepare } : {}), ...(name !== undefined ? { name } : {}), ...(generationPrompt !== undefined ? { generationPrompt } : {}) });
     onApply(edit);
     if ((!edit.problems || edit.problems.length === 0) && edit.state !== state) onClose();
   };

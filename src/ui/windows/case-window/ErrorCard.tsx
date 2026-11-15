@@ -30,6 +30,7 @@ export function ErrorCard({ name, title, facts = [], sides, onShow, actions, chi
       <div class="item-head">
         {name ? <strong>{name}</strong> : null}
         <span class="error-title">{title}</span>
+        {facts.length > 0 ? <span class="muted error-facts">{facts.join(' · ')}</span> : null}
         {onShow && inCase ? (
           <button type="button" class="link-button" onClick={onShow}>
             {labels.showInText}
@@ -37,7 +38,6 @@ export function ErrorCard({ name, title, facts = [], sides, onShow, actions, chi
         ) : null}
         {actions}
       </div>
-      {facts.length > 0 ? <p class="muted error-facts">{facts.join(' · ')}</p> : null}
       {sides.length > 0 ? (
         <dl class="error-sides">
           {sides.map((side) => (

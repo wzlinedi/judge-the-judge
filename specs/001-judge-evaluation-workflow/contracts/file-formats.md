@@ -183,8 +183,8 @@ edits (FR-089).
 - "Export test cases" writes `name`, `base` (only when there is one), `fields` and `expected_errors`
   (without `id`), so that the JSON pasted into a new case gives the same fields and expected
   errors (SC-036).
-- In "Edit expected errors" only `expected_errors` may change; a change to `name` or `fields`
-  is a problem.
+- "Edit expected errors" edits the list `expected_errors` alone, each error with its `id`; the name and the fields are not in it. An
+  `id` that is not an error of the case is not kept (the error is a new one).
 
 ## 3. Test-case file (JSON) and the stored case layout
 

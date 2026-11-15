@@ -51,6 +51,11 @@ test('a clean case is made from a prompt and an answer, and checked as it is pas
   await original.getByRole('button', { name: 'Copy and recreate' }).click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('{{source_text}}');
   await expect(testWindow(page).getByLabel('Case JSON')).toHaveValue('');
+  // T255: the new window has Show prompt at the top, with the prompt that was copied
+  await testWindow(page).getByRole('button', { name: 'Show prompt' }).click();
+  const shown = page.getByRole('dialog', { name: 'Complete judge prompt' });
+  await expect(shown.getByRole('textbox')).toHaveValue(/\{\{source_text\}\}/);
+  await shown.getByRole('button', { name: 'Close' }).click();
   await testWindow(page).getByRole('button', { name: 'Close' }).click();
   await row(page, 'Keeper').getByRole('button', { name: 'Open' }).click();
   await page.getByRole('button', { name: 'Previous case' }).click();

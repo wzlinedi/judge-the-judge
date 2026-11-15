@@ -1,7 +1,7 @@
 // User Story 11: imported and added cases join one test project, are finalized, and what stays fixed or open afterwards
 // (FR-039, FR-049, FR-053, FR-076, FR-089).
 import { describe, expect, it } from 'vitest';
-import { correctExpectedErrors, removeCase, renameCase, saveCaseFromJson } from '../../src/app/actions/cases';
+import { removeCase, renameCase, saveCaseFromJson, saveExpectedErrors } from '../../src/app/actions/cases';
 import { editTestCases, finalize } from '../../src/app/actions/finalize';
 import { setJudgedText, setRuleWhere, setPrompt, updateRule } from '../../src/app/actions/judge';
 import { saveReply } from '../../src/app/actions/replies';
@@ -88,13 +88,12 @@ describe('what is fixed after finalizing', () => {
     expect(judged.state).toBe(state);
   });
 
-  it('the fields and identifiers of a case are fixed: correcting expected errors through JSON cannot change a field', async () => {
+  it('the fields and the name of a case are fixed: the JSON of the expected errors has no place for them', async () => {
     const state = await finalized();
     const original = state.evaluation.dataset.cases.find((c) => c.id === '12')!;
-    const changed = JSON.stringify({ fields: { ...original.fields, summary: 'Anna is a lawyer.' }, expected_errors: original.expected_errors });
-    const refused = correctExpectedErrors(state, '12', changed);
-    expect(refused.state).toBe(state);
-    expect(refused.problems?.length).toBeGreaterThan(0);
+    const withFields = JSON.stringify({ fields: { ...original.fields, summary: 'Anna is a lawyer.' }, expected_errors: original.expected_errors });
+    const saved = saveExpectedErrors(state, '12', withFields);
+    expect(saved.state.evaluation.dataset.cases.find((c) => c.id === '12')?.fields).toEqual(original.fields);
   });
 
   it('replies are accepted only after finalizing', async () => {
@@ -119,22 +118,21 @@ describe('what may still change after finalizing', () => {
     expect(state.evaluation.dataset.finalized).toBe(true);
   });
 
-  it('a case without a reply may be renamed, removed and have its expected errors corrected; a case with a reply may be renamed and removed (with its reply), but its expected errors may not be corrected', async () => {
+  it('every case may be renamed, removed (a case with a reply with its reply) and have its expected errors edited', async () => {
     let state = await finalized();
     const reply = sampleEvaluation().replies['1']!.reply;
     state = (await saveReply(state, '1', reply)).state;
 
     expect(renameCase(state, '2', 'Renamed').state.evaluation.dataset.cases.find((c) => c.id === '2')?.name).toBe('Renamed');
     expect(removeCase(state, '3').state.evaluation.dataset.cases).toHaveLength(11);
-    const original = state.evaluation.dataset.cases.find((c) => c.id === '12')!;
-    const corrected = correctExpectedErrors(state, '12', JSON.stringify({ fields: original.fields, expected_errors: [{ ...doctor, difficulty: 'obvious' }] }));
+    const corrected = saveExpectedErrors(state, '12', JSON.stringify([{ ...doctor, difficulty: 'obvious' }]));
     expect(corrected.state.evaluation.dataset.cases.find((c) => c.id === '12')?.expected_errors[0]?.difficulty).toBe('obvious');
 
     expect(renameCase(state, '1', 'No').state.evaluation.dataset.cases.find((c) => c.id === '1')?.name).toBe('No');
     const removed = removeCase(state, '1').state.evaluation;
     expect(removed.dataset.cases.some((c) => c.id === '1')).toBe(false);
     expect(removed.replies['1']).toBeUndefined();
-    expect(correctExpectedErrors(state, '1', json('x', 'y')).state).toBe(state);
+    expect(saveExpectedErrors(state, '1', '[]').state.evaluation.dataset.cases.find((c) => c.id === '1')?.expected_errors).toEqual([]);
   });
 
   it('the reply mapping and the error rules may be corrected', async () => {

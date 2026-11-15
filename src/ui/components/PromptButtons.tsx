@@ -9,26 +9,31 @@ export interface PromptButtonsProps {
   /** "Copy prompt" is the primary action of the window until it is pressed. */
   primary?: boolean;
   onCopied?: () => void;
+  /** Only "Show prompt": the prompt was copied already (the window after "Copy and recreate", T255); the dialog still has Copy. */
+  shownOnly?: boolean;
 }
 
 /** "Show prompt" (the standard large dialog with the whole prompt and only Close, T247) and "Copy prompt", for the case windows (T234, T235). */
-export function PromptButtons({ prompt, primary, onCopied }: PromptButtonsProps) {
+export function PromptButtons({ prompt, primary, onCopied, shownOnly }: PromptButtonsProps) {
   const [open, setOpen] = useState(false);
   return (
     <div class="button-row prompt-buttons">
       <button type="button" onClick={() => setOpen(true)}>
         {labels.showFullPrompt}
       </button>
-      <CopyButton text={prompt} label={labels.copyPrompt} primary={primary} {...(onCopied ? { onPress: onCopied } : {})} />
+      {shownOnly ? null : <CopyButton text={prompt} label={labels.copyPrompt} primary={primary} {...(onCopied ? { onPress: onCopied } : {})} />}
       <Dialog
         open={open}
         title="Complete judge prompt"
         wide
         onClose={() => setOpen(false)}
         actions={
-          <button type="button" onClick={() => setOpen(false)}>
-            {labels.close}
-          </button>
+          <>
+            {shownOnly ? <CopyButton text={prompt} label={labels.copyPrompt} /> : null}
+            <button type="button" onClick={() => setOpen(false)}>
+              {labels.close}
+            </button>
+          </>
         }
       >
         <textarea class="json prompt-full" rows={4} readOnly value={prompt} aria-label="Complete judge prompt" />

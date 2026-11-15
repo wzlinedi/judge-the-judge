@@ -179,18 +179,3 @@ describe('From JSON: only the box and the expected errors', () => {
     expect(within(win()).getByText('Fix the problems listed under the JSON to save.')).toBeTruthy();
   });
 });
-
-describe('Edit expected errors uses the From JSON layout', () => {
-  it('shows the case JSON and the list, with Save case in the header', () => {
-    const s = draftState();
-    const finalized: AppState = { ...s, evaluation: { ...s.evaluation, dataset: { ...s.evaluation.dataset, finalized: true } } };
-    render(<App ports={createFakePorts()} env={env} initialState={finalized} />);
-    const row = screen.getAllByRole('row').find((r) => r.textContent?.includes('Anna + 2 errors')) as HTMLElement;
-    fireEvent.click(within(row).getByRole('button', { name: 'Open' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit expected errors' }));
-    expectOnePage('Save case');
-    expect(headings()).toEqual(['Case JSON', 'Expected errors']);
-    expect(within(within(win()).getByRole('list', { name: 'Expected errors' })).getAllByRole('listitem')).toHaveLength(2);
-    expect(within(win().querySelector('.case-window-header') as HTMLElement).getByRole('button', { name: 'Save case' })).toBeTruthy();
-  });
-});
