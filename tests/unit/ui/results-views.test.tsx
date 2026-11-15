@@ -315,4 +315,15 @@ describe('the read-only case view', () => {
     render(<ReadOnlyCaseView evaluation={e} reviewed={reviewEvaluation(e, accuracyMetric)} caseId="1" onNavigate={() => {}} onClose={() => {}} onOpenOnRun={() => {}} />);
     expect(screen.getByText(/This case has no reply yet/)).toBeTruthy();
   });
+
+  it('T272: a case without a reply lists its expected errors read-only, as the case window of Run does', () => {
+    const e = { ...evaluation, replies: {}, decisions: {} };
+    const withErrors = e.dataset.cases.find((c) => c.expected_errors.length > 0)!;
+    render(<ReadOnlyCaseView evaluation={e} reviewed={reviewEvaluation(e, accuracyMetric)} caseId={withErrors.id} onNavigate={() => {}} onClose={() => {}} onOpenOnRun={() => {}} />);
+    const list = screen.getByRole('list', { name: 'Expected errors' });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(withErrors.expected_errors.length);
+    expect(list.textContent).toContain(withErrors.expected_errors[0]!.description);
+    expect(screen.queryByText('The errors appear when the judge’s reply is saved.')).toBeNull();
+    expect(within(list).queryAllByRole('button', { name: /Found|Missed|Ignored/ })).toHaveLength(0);
+  });
 });

@@ -124,8 +124,23 @@ export function ReadOnlyCaseView({ evaluation, reviewed, caseId, onNavigate, onC
               </>
             ) : null}
           </>
+        ) : !reply && testCase.expected_errors.length > 0 ? (
+          <>
+            <h4>Expected errors</h4>
+            <ul class="decide-list" aria-label="Expected errors">
+              {testCase.expected_errors.map((error, i) => {
+                const sides = errorSides(testCase, judged, error);
+                return (
+                  <li key={error.id} class="decide-item" data-expected={error.id}>
+                    <ErrorCard name={`E${i + 1}`} title={error.description} facts={[error.category, error.difficulty].filter((x): x is NonNullable<typeof x> => !!x)} sides={sides} onShow={() => show(showTargetOf(sides, error.id))} />
+                  </li>
+                );
+              })}
+            </ul>
+            <p class="muted">The judge’s findings and the marks appear when its reply is saved.</p>
+          </>
         ) : (
-          <p class="muted">{reply ? 'No errors were expected or found in this case.' : 'The errors appear when the judge’s reply is saved.'}</p>
+          <p class="muted">{reply ? 'No errors were expected or found in this case.' : 'No expected errors.'}</p>
         )}
       </Part>
     </>
