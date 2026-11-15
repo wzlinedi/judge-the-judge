@@ -390,8 +390,8 @@ replies, and opens the first step with unfinished work.
 
 Defined in [contracts/metric-and-checks.md](./contracts/metric-and-checks.md). A MetricDefinition
 supplies a complete starter judge set, matching parameters and the list of measures. A
-CheckConfiguration supplies the thresholds. The MetricRegistry holds the two built-in definitions
-and any carried by a loaded test project during the session (T243).
+CheckConfiguration supplies the thresholds. The MetricRegistry holds the default metric file (Accuracy)
+and the definitions carried by loaded test projects during the session (T243).
 
 ## Summaries shown before something is accepted
 

@@ -1908,8 +1908,8 @@ case and confirm the new case has the same fields and expected errors.
   optional fragment, a description, and an optional difficulty (obvious or subtle).
 - **Case JSON**: One test case written in the one JSON layout of FR-031 (name, fields, expected
   errors, and optionally base). It is what the user's LLM
-  returns, what is pasted and edited when a case with injected errors is made, what "Show JSON"
-  gives back, and what "Export test cases" writes. Until saved it is a
+  returns, what is pasted and edited when a case with injected errors is made, and what "Export
+  test cases" writes. Until saved it is a
   proposal for the user to review.
 - **Import Summary**: The report shown after reading a file or a pasted answer: counts, invalid
   rows with reasons, and the user's choice on how to proceed.

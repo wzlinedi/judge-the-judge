@@ -3,7 +3,8 @@
 **Date**: 2026-11-11 | **Plan**: [../plan.md](../plan.md) | **Constitution**: Principle VI
 
 A **metric** is one kind of judge evaluation, for example Accuracy (is every claim of the summary
-supported by the source?) or Completeness (is every element of the source present in the summary?).
+supported by the source?) or Completeness (is every element of the source present in the summary?). Completeness is a
+metric a user can load; the application does not include it.
 A **measure** is a number computed from the results, for example the detection rate. A **check** is
 a pass-or-fail rule on a measure.
 
@@ -124,12 +125,11 @@ repeated runs) cannot be expressed in this version; the guide states this.
 
 ### How a metric is used
 
-1. In the "Load example…" window (File menu) each registered metric is a choice (Accuracy,
-   Completeness, and one per loaded definition), beside the demo.
-2. Choosing one starts a new test project from its `judge_set` (prompt, sample reply, finding
-   text, rules, catalog) with its `clean_base_cases` as clean test cases, after asking before
-   replacing existing work (Save evaluation first, Discard, Cancel), and makes that metric the
-   active one.
+1. A metric reaches the session in one of two ways. A new test project starts with the default
+   metric file (Accuracy). A loaded test project file carries the definition of its metric.
+2. The default metric file gives the starter `judge_set` (prompt, sample reply, finding text,
+   rules, catalog) and `clean_base_cases` of a new test project. There is no window to choose a
+   metric. A loaded definition with the same id replaces the default.
 3. The active metric supplies the matching parameters and the list of measures. The two required
    measures appear in the Summary; any further measures appear only in "Details". When the user
    writes their own judge without an example, the default parameters and the two standard measures
