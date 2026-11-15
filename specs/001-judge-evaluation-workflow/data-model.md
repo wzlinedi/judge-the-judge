@@ -327,7 +327,7 @@ except the two "ignored" ones.
 |---|---|
 | Detection rate | `expected_found / expected_total`. |
 | False-positive rate | `false_positives / findings_total`; "not available" when `findings_total` is 0. |
-| Per category, per difficulty | Detection rate; counts only when fewer than 10 expected errors. |
+| Per category, per difficulty | Detection rate, for every group whatever its size (T268); "Details" says that a group of fewer than 10 expected errors says little. |
 
 **Per case** (counting mode `per_case`, FR-061, FR-066, FR-067, FR-070): in a case with a reply,
 a flagged reply makes every expected error found and an unflagged one makes every expected error
@@ -338,9 +338,9 @@ clean cases: flagged wrongly, not flagged); the two measures are the **case dete
 (`clean_cases_with_false_positive / clean_cases_decided`); the category and difficulty groups count
 cases (a case once in each category and difficulty its errors have) and show counts only.
 
-Both rates carry a 95% interval that is shown only in "Details". Everything is labeled
-"provisional" while `cases_awaiting` or `cases_not_run` is above 0, on screen and in both exported
-files. There is no combined score.
+Both rates carry a 95% interval that is shown only in "Details". While `cases_awaiting` or `cases_not_run` is above 0, the
+screen and the HTML report say how many cases are not decided yet; there is no "provisional" or
+"final" label, because the test cases can change at any time (T267). There is no combined score.
 
 ## TestSizeSummary (derived)
 

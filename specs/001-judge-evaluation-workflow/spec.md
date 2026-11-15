@@ -167,12 +167,21 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-14, third look, T254) Where and when can the expected errors of a case be edited? → A: On every case in Open, before and after finalizing, with or without a reply. "Edit expected errors" opens the standard large dialog with the JSON of the list of the expected errors only (each with its `id`), checked as it changes. An error that keeps its `id` and its words keeps its mark. For a case with a reply Save asks first: the marks of the changed and removed errors are dropped, the case is marked again from the reply and the test cases version changes. This replaces FR-089 (only a case without a reply, after finalizing, in the From JSON window).
 - Q: (Owner review 2026-11-14, third look, T255) What does "Copy and recreate" open? → A: The empty "From JSON" window, as before (the box is the place for the new case, nothing is pasted into it), now with **Show prompt** at the top: it opens the prompt that was copied, in the standard large dialog (with **Copy prompt** and **Close**), in case it is needed again. The case saved from that window keeps that prompt as its `generation_prompt`. This replaces the part of T238 that opened the window with nothing on it (FR-086).
 - Q: (Owner review 2026-11-14, third look, T256) What does Open show in Results › Test case list, and can marks be changed there? → A: The same layout as Run, read-only, in three parts: 1. Case (the fields with the highlights and the complete prompt, no buttons), 2. Judge reply, 3. Errors, which begins with a summary line ("3 expected: 2 found, 1 not found · Additional: 2 false positive") and then the two groups with the shared error component and "Show the issue". The part "Result" and the meter "Marked N of M" go; the status is in the header. Marks cannot be changed there; "Open on Run" stays as the way to change them. This replaces T241 and keeps FR-071 ("no action that changes the case"). (The owner's list said "Test Run"; this is the screen understood by it.)
+### Session 2026-11-15
+
 - Q: (Owner review 2026-11-15, fourth look, T259) Is a real error of the judge that the test case missed still added to the expected errors? → A: No. It stays in "Additional errors" with its mark (Genuine error, T260) and is counted on its own, so the owner gets the feedback that the test case was not complete; Results › Summary lists every such finding with its case and Open ("Genuine errors the test cases missed"). Adding it to the case is a separate step (Test cases › Open › Edit expected errors). This replaces the answer of T253; a file with `promoted_to` loads and the key is dropped. The demo is back to 27 of 30 found and 1 genuine error.
 - Q: (Owner review 2026-11-15, fourth look, T260) A shorter name for "Real error (missed in scenario)"? → A: **Genuine error**: the judge was right and the test case missed it, so it may be added to the case. Used in Run, Results (counts "Genuine errors"), the second opinion preview and the HTML report; the state value `real_error` in the files stays. Replaces the name of T252.
 - Q: (Owner review 2026-11-15, fourth look, T258) Does "Findings in the reply" repeat the expected and additional errors? → A: Yes; the list goes. The one thing only it showed, which words of the judge match an expected error and whether fully or partly, moves into the card of that expected error ("Judge: “…” (matches)" or "(partly matches)"). Replaces the reply part of FR-077.
 - Q: (Owner review 2026-11-15, fourth look, T257) Should the fields of a case highlight the expected errors all the time? → A: No; that is redundant with "Show the issue". The fields of Test cases › Open, Run part 1 and Results part 1 show no highlight of their own; "Show the issue" highlights both passages of the error for a moment, with its number (and its state after a reply). The warnings of FR-080 ("not in the list") stay. Replaces the always-on highlights of FR-077.
 - Q: (Owner review 2026-11-15, fourth look, T261) Pasting or typing over a saved judge reply changes the results; what should the box do? → A: It stays editable, but the first change (typed or Paste reply) asks "Change the judge’s reply?": the reply is what the judge returned and the results are counted from it; the case is marked again from the changed text and the marks set by hand are removed (named with their number). Cancel keeps the reply; after Change reply the case can be edited freely until the window moves to another case. Replaces the question of FR-056 that asked only when there were marks set by hand.
 - Q: (Owner review 2026-11-15, fourth look, T262) Is "Recreate the test case" needed, when "Add test case" already makes clean cases and cases with errors? → A: No; it goes, and From JSON loses its Show prompt. Instead "Case with errors" can start from a case with errors: "Base case" lists the clean cases and the cases with errors; choosing a case with errors copies its errors into "Errors to prepare" (still editable) and uses its own clean base, if it has one, as the base text (its text with the errors is not used as the base, so the LLM does not have to keep old errors in place). The prompts of Case with errors and Clean case can be edited before they are copied; an edited prompt is no longer rebuilt, and Rebuild prompt asks first. `generation_prompt` stays in the format and holds the prompt in the box. Replaces T238 and T255.
+- Q: (Owner review 2026-11-15, fifth look, T263) What does the table of the Run step count for each case? → A: Four counts side by side: "Expected errors", "Additional findings" (the judge's findings that point at no expected error), "Added by hand" (the findings added with "Add finding…" or a second opinion) and "Items to decide" (unchanged). Each is 0 before the reply; the two kinds of additional findings stay apart.
+- Q: (Owner review 2026-11-15, fifth look, T264) What does the case window of Run show before the judge's reply is saved? → A: The expected errors of the case at once (description, fragment, category, difficulty, "Show the issue"), with no marks; the marks, "Judge: …" and the additional findings appear when the reply is saved.
+- Q: (Owner review 2026-11-15, fifth look, T265) Where is "Details" in the Summary view? → A: At the top of the view, above the counts, still closed by default.
+- Q: (Owner review 2026-11-15, fifth look, T266) Is "Load check settings" needed for two thresholds? → A: No; it goes. The two thresholds keep their defaults and stay editable in "Details"; they are still saved in the test project and the evaluation file. The tool no longer reads a check configuration file, so its format, schema and example go too.
+- Q: (Owner review 2026-11-15, fifth look, T267) Is the section "Report and next version" of Results needed, and is there a final result? → A: No and no: the section goes, and so do the words "provisional" and "final", because the test cases can change at any time. The bar of Results always says how many cases are decided (and how many are not yet), its main action is always "Export HTML report", next to "Run again with a new judge…"; there is no "Continue" there. The Summary, the report and the export message still say how many cases are not decided yet, and the report's file name has no "(provisional)".
+- Q: (Owner review 2026-11-15, fifth look, T268) Error analysis shows "counts only" for a group below 10 expected errors and a rate above it, which reads as a jump (a group of 15 found 15 shows 100%); what should it show? → A: The detection rate of every group, whatever its size (per expected error; a judge evaluated per case still has no rate). How much data a rate needs is said in "Details" by the thresholds: the overall result needs at least 30 expected errors and 10 clean cases, and a group of fewer than 10 expected errors says little.
+- Q: (Owner review 2026-11-15, fifth look, T270) The Test project card still says "A final answer needs…", though there is no final result (T267); what should it say? → A: "A reliable answer needs at least 30 injected errors and 10 clean cases; until then the result is Inconclusive.", the same words as the test size of the Summary. The minimum sample of FR-068 is unchanged; only the word changes (the sentence of the card, FR-045, FR-052, FR-068, and the same on Results).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -622,12 +631,13 @@ report can be read without the tool.
    and decisions are shown and none of them can be changed there.
 6. **Given** a result, **When** the user presses "Export HTML report", **Then** an HTML report is
    produced with the full prompts, replies and decisions.
-7. **Given** cases that are not run or await verification, **When** the user exports the report or
-   saves the evaluation, **Then** the report and the evaluation file are marked provisional and say
-   how many cases are not decided.
+7. **Given** cases that are not run or await verification, **When** the user exports the report,
+   **Then** the report says how many cases are not decided yet, and it is not called provisional;
+   the main action of the Results bar is "Export HTML report" whether or not every case is decided (T267).
 8. **Given** the Results step, **When** the user looks for an export of the result as JSON, **Then**
-   there is no separate "Export JSON" and no save action; the step says that "Save evaluation" on
-   the Run step (or "Save evaluation as" for a copy) writes the result as JSON.
+   there is no separate "Export JSON" and no save action; the Help says that "Save evaluation" on
+   the Run step (or "Save evaluation as" for a copy) writes the result as JSON (the step no longer
+   has the card that said it, T267).
 
 ---
 
@@ -636,7 +646,7 @@ report can be read without the tool.
 While building the test project, the user sees help: a short description and an example for each
 category, and live feedback on the test project being built, such as how many cases are clean and how
 many have injected errors, whether the balance is poor, whether any text is duplicated, whether the test is big
-enough for a final answer, and how far it is from the size limit.
+enough for a reliable answer, and how far it is from the size limit.
 
 **Why this priority**: The user is not a specialist in test design; guidance prevents weak
 test projects (for example, only cases with injected errors) that would make the results meaningless.
@@ -906,14 +916,14 @@ case and confirm the new case has the same fields and expected errors.
   ("Case with errors" started from it, or "From JSON"), corrects it, saves it and removes the original; after finalizing, its expected
   errors are corrected with "Edit expected errors" while it has no reply, and are marked
   "Ignored" on Run once it has one (FR-053, FR-089).
-- A case added after the first reply: it is Not run, so the result stays provisional until it is
+- A case added after the first reply: it is Not run, so it is counted among the cases not decided yet until it is
   run and decided; the result and the report list it as added after the first reply (FR-075).
 
 **Running, verifying and results**
 
 - Some cases have no reply: results can be viewed as partial and are clearly labeled as such,
   with the number of cases still missing.
-- Very small test projects: the tool states that the sample is too small for a final answer.
+- Very small test projects: the tool states that the sample is too small for a reliable answer.
 - A reply that is free text, partly JSON, or in an unexpected format: it is kept, the problem and
   where it is are shown under the reply box, nothing is marked automatically, and the user marks
   the items in the case window (FR-056).
@@ -933,9 +943,8 @@ case and confirm the new case has the same fields and expected errors.
   classifies only some: only those items change (FR-063).
 - The browser refuses to let the tool read the clipboard: the tool says so and offers a box to
   paste into with Ctrl+V instead.
-- The user exports the report or saves the evaluation while cases are not run or await
-  verification: the report and the file are marked provisional and say how many cases are not
-  decided.
+- The user exports the report while cases are not run or await verification: the report says
+  how many cases are not decided yet (T267).
 - A remembered file (judge set, test cases or evaluation) was moved or removed, or the browser
   withdrew permission: the tool says so, forgets it and asks for a file again; the work on the
   page is kept.
@@ -994,7 +1003,7 @@ case and confirm the new case has the same fields and expected errors.
   their JSON, getting a case's JSON back with "Show JSON" and cloning; categories and finalizing;
   the marks of Run ("Found", "Not found", "False positive", "Genuine error", "Ignored");
   loading test cases
-  from a file, loading check settings and loading demo data; the manual copy-paste workflow,
+  from a file and loading demo data; the manual copy-paste workflow,
   including the second opinion from an LLM for one case; the two files (the test project, reused for
   every run, and the evaluation), the indicator of unsaved changes, loading back and "Continue";
   "Reopen test cases" before the first reply; judges that give only a verdict and are evaluated per
@@ -1030,7 +1039,7 @@ case and confirm the new case has the same fields and expected errors.
   "Ignored"), "No more findings" (only for a reply that cannot be read), "Add finding…", "Remove" (for
   a finding added by hand), "Second opinion…" (in its window "Copy prompt", "Apply opinion" and
   "Cancel") and "Save evaluation". Results: the views "Summary", "Error analysis" and "Test case
-  list", and the actions "Export HTML report…", "Load check settings…" and "Run again with a new judge…". Removing
+  list", and the actions "Export HTML report…" and "Run again with a new judge…". Removing
   something (a rule, condition, category, error to prepare or test case) is always named "Remove".
   Available at any time, in the header: the indicator of unsaved changes, the "More" menu with
   "Load demo…" (the demo, loaded at once),
@@ -1347,9 +1356,9 @@ case and confirm the new case has the same fields and expected errors.
   injected errors (for example "10 cases with 2 errors"), and total injected errors. The totals of
   injected errors and clean cases MUST be shown against the fixed minimums (30 injected errors, 10
   clean cases) as met or missing N, with the plain statement that the system needs them to give a
-  final answer (FR-068), so the user knows before running whether the answer can be other than
+  reliable answer (FR-068), so the user knows before running whether the answer can be other than
   Inconclusive. This count is taken from the test project and is a forecast; the minimum that decides
-  the final answer is counted from decided items (FR-068). The user never enters or calculates
+  the answer is counted from decided items (FR-068). The user never enters or calculates
   these numbers. When the judge is evaluated per case (FR-061), the summary MUST count cases with
   expected errors instead of injected errors and show them against the minimum of 30 cases with
   expected errors and 10 clean cases.
@@ -1383,7 +1392,7 @@ case and confirm the new case has the same fields and expected errors.
   while no reply has been entered it also clears after "Save test project" or "Save test project as",
   because the test project then holds all the work. Once a reply exists, saving the test project does not
   clear it, and the tool says that the replies are saved only by "Save evaluation". Any change sets
-  it, including a threshold changed in "Details" and "Load check settings", because both files
+  it, including a threshold changed in "Details", because both files
   store the thresholds (FR-020, FR-069); such a change is saved by the next "Save evaluation" on
   the Run step or "Save test project".
 - **FR-052**: Users MUST be able to finalize the test cases after seeing a summary of counts, balance
@@ -1414,7 +1423,9 @@ case and confirm the new case has the same fields and expected errors.
 **Step 3: Run**
 
 - **FR-054**: The Run step MUST show all test cases in one list, each with its name, kind, number of
-  expected errors and status (Not run, Awaiting verification, Pass, Fail), together with the
+  expected errors, number of additional findings (the judge's findings that point at no expected
+  error), number of findings added by hand, number of items to decide and status (Not run,
+  Awaiting verification, Pass, Fail; the counts are 0 before the reply, T263), together with the
   progress (replies received and cases decided, out of all cases) and the number of items still to
   decide. The user MUST be able to show the cases that await verification first, or only those.
   Above the list the Run step MUST show a short summary of the judge being run: the judge
@@ -1430,6 +1441,8 @@ case and confirm the new case has the same fields and expected errors.
   JSON reply, always shown, checked as the text changes (FR-084) with only the problems said ("This is
   not JSON" and its place, an empty or refused clipboard); a reply that is readable JSON is saved as soon as it is in the box, and once
   a reply is saved the box holds it. The right column, "Errors", lists
+  the expected errors from the start, before any reply, with their description, fragment, category,
+  difficulty and "Show the issue" but no marks (T264); once a reply is saved it lists
   the expected errors and the additional findings with their marks
   (FR-060 to FR-064); there is no separate list of the findings in the reply (T258). The window has no "More
   actions" section and no "Approve". The window header MUST hold "Previous case" and
@@ -1561,8 +1574,11 @@ case and confirm the new case has the same fields and expected errors.
   list. Summary is shown first. The Results step MUST be read-only: no reply, decision, expected
   error, rule or reply mapping can be changed there; changes are made on the Run step or the
   Judge step. The only exception is the thresholds in "Details" (FR-069). Results MUST be computed
-  from the cases that are decided, labeled "provisional" while any case is not run or awaits
-  verification, with the number of such cases shown.
+  from the cases that are decided; while any case is not run or awaits verification the number of
+  such cases MUST be shown. There is no "provisional" or "final" result, because the test cases
+  can change at any time (T267). The bar of the Results step says how many cases are decided, and
+  how many are not yet; its main action is always "Export HTML report", with "Run again with a new judge…"
+  beside it. The step has no section "Report and next version".
 - **FR-066**: The Summary view MUST show these counts before anything else: the total number of
   expected errors, with how many were found and how many missed; the number of additional
   findings the judge reported, with how many were confirmed as real errors and how many were
@@ -1593,25 +1609,27 @@ case and confirm the new case has the same fields and expected errors.
   ignored. Threshold defaults: detection rate at least 80%, false-positive
   rate at most 10%. The minimum sample is fixed in the tool and not editable: 30 expected errors
   and 10 clean cases. The "Test size" summary (FR-046) MUST be shown with the plain statement
-  that the system needs at least 30 injected errors and 10 clean cases to give a final answer.
+  that the system needs at least 30 injected errors and 10 clean cases to give a reliable answer.
   There is no combined score.
   For a judge evaluated per case the two case-level measures (FR-067) have thresholds of their
-  own in the check configuration, with the same defaults (case detection rate at least 80%,
+  own, with the same defaults (case detection rate at least 80%,
   clean-case false-positive rate at most 10%); only the thresholds of the measures in use apply and
   are shown in "Details". The minimum sample is then 30 cases with expected errors and 10 clean
   cases.
 - **FR-069**: Thresholds and advanced statistics MUST NOT draw attention away from the counts.
-  They MUST sit in a "Details" section of the Summary view that is closed by default: the two
-  thresholds, each with a one-sentence plain-language explanation, which the user can change
-  there or load from a check configuration file ("Load check settings"), with the overall result
-  updating at once; the
+  They MUST sit in a "Details" section at the top of the Summary view, above the counts, closed by
+  default (T265): the two thresholds, each with a one-sentence plain-language explanation, which
+  the user can change there, with the overall result updating at once (there is no "Load check
+  settings", T266), and a sentence on how much data a rate needs (at least 30 expected errors and
+  10 clean cases for the overall result; a group of fewer than 10 expected errors says little,
+  T268); the
   95% confidence interval of each rate, with a "borderline" note when an interval includes its
   threshold; and, as information, the share of cases with at least one false positive and the
   same share for clean cases alone. The values used MUST be stored with the result and shown in
   the report.
 - **FR-070**: The Error analysis view MUST show a breakdown per category and a breakdown per
-  difficulty (obvious, subtle, not set): expected errors, found, missed and the detection rate.
-  A group with fewer than 10 expected errors MUST show counts only, with no rate. The view MUST
+  difficulty (obvious, subtle, not set): expected errors, found, missed and the detection rate,
+  shown for every group whatever its size (T268). The view MUST
   also show the number of additional findings, real errors and false positives per error rule,
   and a table of additional findings per category and per difficulty (real errors, false
   positives; counts only, with no rate), which counts the findings added by hand that have a
@@ -1628,8 +1646,8 @@ case and confirm the new case has the same fields and expected errors.
   case" and "Show the issue" for each error (T256); it MUST offer no action that changes the case.
 - **FR-072**: Users MUST be able to export the result as an HTML report at any time ("Export HTML
   report"). The result as JSON is the evaluation file of FR-073; there is no separate "Export
-  JSON". While any case is not run or awaits verification, the report and the evaluation file MUST
-  be marked provisional and say how many cases are not decided. The HTML report MUST contain the
+  JSON". While any case is not run or awaits verification, the report MUST say how many cases are not
+  decided yet (not run, awaiting verification); it is not called "provisional" (T267). The HTML report MUST contain the
   three views in the same order, be readable without the tool, and print cleanly to PDF from the
   browser. The report and the evaluation file MUST always contain the judge set (prompt,
   reply mapping, error rules, error catalog), the full final prompts with the real input data
@@ -1650,7 +1668,7 @@ case and confirm the new case has the same fields and expected errors.
   is not finalized, Run when any case is not run or awaits verification (so a finalized test project
   opens on Run), and Results when every case is decided. The "what next" line MUST then say how far the work is (for example "12 of 20
   cases decided") and offer "Continue", which on the Run step opens the first case that is not run
-  or awaits verification.
+  or awaits verification. On the Results step the line has no "Continue" (FR-065, T267).
 - **FR-074**: The system MUST offer "Run again with a new judge…" on the Results step. It keeps
   the finalized test cases, offers to save and export the current result first, clears the
   replies and decisions, lets the user change the judge prompt, and gives the judge a new version
@@ -1907,7 +1925,7 @@ case and confirm the new case has the same fields and expected errors.
   Inconclusive), with the thresholds, the minimum sample and the reason it was based on.
 - **Metric Definition**: A loadable file that describes one kind of judge evaluation: a complete
   starter judge set, the matching parameters and the measures computed from the counts. Thresholds
-  are kept in a separate check configuration.
+  are kept with the test project and the evaluation (FR-020, FR-069).
 
 ## Success Criteria *(mandatory)*
 
@@ -2082,7 +2100,7 @@ case and confirm the new case has the same fields and expected errors.
 - The 95% confidence level is the default for confidence intervals, which are shown only in the
   "Details" section; the method may be refined in planning.
 - Thresholds for the measures ship with defaults (FR-068) and remain the user's choice: they are
-  changed in the "Details" section of the Results step or via check configuration. The minimum
+  changed in the "Details" section of the Results step. The minimum
   test size (30 injected errors, 10 clean cases) is fixed in the tool.
 - A result describes one judge prompt run on one model. The tool measures only the kinds of errors
   present in the test data: a high detection rate says nothing about kinds of errors that were

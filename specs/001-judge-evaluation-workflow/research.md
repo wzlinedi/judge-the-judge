@@ -550,8 +550,8 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
   mapping; the only control that changes data there is the thresholds in "Details" (FR-065,
   FR-069). "Open" in the Test case list opens the read-only case view (section 20). There is no
   "closed" state: the exports are available at any time and, while any case is not run or awaits
-  verification, the result, the HTML report and the JSON file are marked provisional with the
-  number of undecided cases (FR-072).
+  verification, the result and the HTML report say how many cases are not decided yet (FR-072;
+  since 2026-11-15 without the word "provisional", section 31).
 - **Rationale**: In the review of v10 the owner asked that the result be read without the risk of
   changing it by accident. A closing step was then specified and dropped the same day: the owner
   judged it changes little in practice, since the provisional mark already tells a reader when a
@@ -614,3 +614,23 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
   sections was not.
 - **Alternatives considered**: Red for errors only and a neutral accent (less distinctive; the
   owner asked for black and red); a dark scheme only (against Principle VII, which asks for both).
+
+## 31. Owner feedback of 2026-11-15, fifth look (T263–T268)
+
+- **Decision**: (1) The Run table shows four counts per case: expected errors, additional findings
+  of the judge, findings added by hand and items to decide (FR-054). (2) The case window of Run
+  lists the expected errors before the reply, with no marks (FR-055). (3) "Details" moves to the
+  top of the Summary, closed (FR-069). (4) "Load check settings" goes; the two thresholds stay
+  editable with their defaults (FR-069). (5) There is no "provisional" or "final" result and no
+  card "Report and next version"; Export HTML report is always the main action of Results, and the
+  number of cases not decided is still said (FR-065, FR-072). (6) Error analysis shows the
+  detection rate of every group; "Details" says how much data a rate needs (FR-069, FR-070).
+- **Rationale**: On the demo the owner found the hand-added findings hidden among the judge's,
+  the expected errors invisible until a reply, the thresholds file unneeded for two numbers, and
+  "final" misleading, since the test cases can change at any time. The jump from "counts only" to
+  100% (a group of 15 found 15) read as a fault, though it followed FR-070.
+- **Alternatives considered**: one column for all additional findings (hides what was added by
+  hand); thresholds read-only (the owner keeps them editable); "counts only" kept with clearer
+  words, or no rate column (the owner wants the rate always); exporting only when every case is
+  decided (there is no final state). The check configuration format is removed with the Help
+  (T225), because the Help names it until then.

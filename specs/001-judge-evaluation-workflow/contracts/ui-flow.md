@@ -54,7 +54,8 @@ Chrome and Microsoft Edge (FR-003).
   the first step with unfinished work: Judge with no prompt, Test cases when not finalized, Run
   when any case is not run or awaits verification, otherwise Results. The "what next" line says
   how far the work is ("12 of 20 cases decided") and offers **Continue**, which on Run opens the
-  first case awaiting verification, else the first case without a reply (FR-073).
+  first case awaiting verification, else the first case without a reply (FR-073); on Results there
+  is no **Continue** (FR-065, T267).
 - **No menus in rows or windows** (FR-008): a table row shows its actions as visible buttons, and
   no window holds a "More actions" section.
 - After finalizing, the "what next" line of Judge and Test cases says what is fixed and what can
@@ -66,7 +67,7 @@ Chrome and Microsoft Edge (FR-003).
 | 1 Judge | Always | **Next: Test cases** once the judge is complete; **Continue** after finalizing |
 | 2 Test cases | Always (useful once the prompt has variables) | **Finalize test cases** (disabled while there are no cases, with a sentence pointing to **Add test case** above the list); **Continue** after finalizing |
 | 3 Run | Test cases finalized | **Continue** (opens the next case to work on); **Next: Results** when all are decided |
-| 4 Results | Finalized | **Continue** while cases are undecided; **Export HTML report** when all are decided |
+| 4 Results | Finalized | **Export HTML report** always, with **Run again with a new judge…** beside it (no **Continue**, T267) |
 
 The user can always go back to an earlier step to look. A step that is not yet available shows one
 sentence saying what is needed first and a button that leads there. There is no Verify step, no
@@ -123,7 +124,7 @@ Compare step and no result shelf.
      **Cancel**); an empty or a taken name is refused in the row (FR-015).
   2. **Test project card**: name, test cases version; counts (cases, with injected errors, clean,
      with a reply); the **test-size summary** with the sentence that at least 30 injected errors
-     and 10 clean cases are needed for a final answer; warnings (one kind of case only,
+     and 10 clean cases are needed for a reliable answer; warnings (one kind of case only,
      duplicates, replies not readable automatically, no subtle errors).
   3. **One table of all test cases**, with **Add test case** above it: identifier, name, kind
      ("Clean" or "Injected errors", with "added after first reply" or "corrected after first
@@ -211,8 +212,10 @@ which asks first when something was pasted or typed.
     to decide; "N replies not saved to a file".
   - **One list of all cases**, with **Add test case** above it (disabled at the limit of cases; the
     "what next" line has no such button): identifier, name, kind (with "added after first reply" when it
-    applies), number of expected errors, status (Not run, Awaiting verification, Pass, Fail, each
-    with a word and a sign, never color alone), items to decide, and **Open**; a choice "all
+    applies), four counts side by side (T263): **Expected errors**, **Additional findings** (the judge's
+    findings that point at no expected error), **Added by hand** (with **Add finding** or an
+    applied opinion) and **Items to decide**, each 0 before the reply; status (Not run, Awaiting
+    verification, Pass, Fail, each with a word and a sign, never color alone), and **Open**; a choice "all
     cases" / "awaiting verification first" / "only awaiting verification".
 - **Reminder**: after every 25 replies saved since the last "Save evaluation", a message asks the
   user to save, with **Save evaluation** in it.
@@ -233,7 +236,7 @@ Opened by **Open** (FR-055, FR-060).
 |---|---|
 | **1. Case** | Kind and base; every field of the case, over the full width, with no highlight until **Show the issue** (T257), which highlights the passages of that error for a moment with its number (and, after a reply, found, missed, undecided or ignored); then **Show prompt** (a dialog with the whole prompt and only **Close**) and **Copy prompt** (primary until pressed). |
 | **2. Marking** | One row: **Add finding** (text, optional category, optional difficulty), **Second opinion…**, the meter "Marked N of M" and the status of the case (Awaiting verification, Pass, Fail). **Without a reply** only the status is shown. There is no **Approve**. |
-| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column, and **Paste reply** below it (primary once **Copy prompt** was pressed). A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. **Right, "Errors"**: without a reply "The errors appear here when the judge’s reply is saved."; with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; two groups (T252), each item shown by the shared error component (below): **Expected errors**, each with the words of the judge that match it ("Judge: “…” (matches)" or "(partly matches)", T258) and its marks (**Found**, **Not found**, **Ignored**), the reason for anything undecided and the source of every mark; **Additional errors**, each with its marks (**Genuine error**, **False positive**, **Ignored**; a finding with no text has no passage and no **Show the issue**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**. There is no list "Findings in the reply" (T258). |
+| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column, and **Paste reply** below it (primary once **Copy prompt** was pressed). A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. **Right, "Errors"**: without a reply the expected errors of the case at once, each by the shared error component with **Show the issue** but with no marks and no "Judge: …" line, and the line "The judge’s findings and the marks appear when its reply is saved." ("No expected errors." for a clean case; T264); with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; two groups (T252), each item shown by the shared error component (below): **Expected errors**, each with the words of the judge that match it ("Judge: “…” (matches)" or "(partly matches)", T258) and its marks (**Found**, **Not found**, **Ignored**), the reason for anything undecided and the source of every mark; **Additional errors**, each with its marks (**Genuine error**, **False positive**, **Ignored**; a finding with no text has no passage and no **Show the issue**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**. There is no list "Findings in the reply" (T258). |
 
 - **The shared error component** (T251) shows an error the same way in Test cases (Open and the
   windows for adding a case), in Run and in Results: its number (E1 …) for an expected error, what is
@@ -298,36 +301,39 @@ leads to the case window.
 
 - **Purpose**: answer "does this judge work?" with numbers anyone can read, and let the user
   review everything without changing it by accident.
-- The "what next" line says whether the result is final or provisional and how many cases are
-  decided; **Export HTML report** is its primary action once everything is decided.
+- The "what next" line says how many cases are decided ("27 of 30 cases decided", and "· 3 not
+  decided yet" when some are not); there is no "final" or "provisional" result, because the test
+  cases can change at any time (T267). Its primary action is always **Export HTML report**, with
+  **Run again with a new judge…** beside it; there is no **Continue** here.
 - **Read-only**: nothing on this step changes a reply, decision, expected error, rule or mapping.
   The only exception is the thresholds in **Details** (FR-065, FR-069). There is no closing step.
-- **Notices** above the views: "provisional" while cases are not run or await verification; rules
+- **Notices** above the views: rules
   or mapping corrected after replies; the cases added or corrected after the first reply (FR-053).
 - **Three views**, as tabs in this order:
-  1. **Summary**: three groups of counts first (expected errors: total, found, missed; additional
+  1. **Summary**: a collapsed **Details** section at the top (T265: the thresholds with
+     one-sentence explanations and one sentence on how much data a rate needs (T268), the 95%
+     intervals, the borderline notes, further measures of a loaded metric; there is no **Load
+     check settings**, T266); then, when cases are not decided, "3 cases are not decided yet (1 not
+     run, 2 awaiting verification)."; then three groups of counts (expected errors: total, found, missed; additional
      findings: total, genuine errors, false positives; subtle errors: total, found, missed), and the
      ignored count when not zero; then the two rates with their counts; then one line of overall
-     result with its reasons; then the test size against the minimum; then a collapsed
-     **Details** section (the thresholds with one-sentence explanations and **Load check
-     settings**, the 95% intervals, the borderline notes, further measures of a loaded metric).
+     result with its reasons; then the test size against the minimum.
      **For a judge evaluated per case** (FR-061, FR-066, FR-067): one sentence says so; the counts
      are cases; the two rates are the case detection rate and the clean-case false-positive rate,
      and **Details** shows their two thresholds. When a correction of the rules switched the way
      of counting, a notice says which way was used before and after (FR-075).
-  2. **Error analysis**: per category and per difficulty (expected, found, missed, rate or "counts
-     only"); additional findings per category and per difficulty (genuine errors, false positives;
+  2. **Error analysis**: per category and per difficulty (expected, found, missed and the detection rate of every group, whatever its size, T268); additional findings per category and per difficulty (genuine errors, false positives;
      counts only, with "(no category)" and "(not set)"); additional findings per error rule. For a
      judge evaluated per case, cases are counted once in each category and difficulty their errors
      have, as flagged or not flagged, with counts only and one sentence saying why (FR-070).
   3. **Test case list**: every case with expected errors, what the judge reported (with the
      category and difficulty of added findings), status and sources of decisions, and **Open** to
      see it in the read-only case view.
-- **Actions** (in the "Report and next version" card; the primary one is in the "what next"
-  line): **Export HTML report**, available at any time; while cases are not run or await
-  verification the report is marked provisional and the card says so. The card also says that the
-  result as JSON is the evaluation file of **Save evaluation**. **Run again with a new judge…**
-  (asks first as in "Replacing work", forgets both remembered files, FR-074).
+- **Actions** (both in the "what next" line; there is no card "Report and next version", T267):
+  **Export HTML report**, available at any time; while cases are not run or await verification
+  the report says how many are not decided yet. **Run again with a new judge…** (asks first as in
+  "Replacing work", forgets both remembered files, FR-074). The Help says that the result as JSON
+  is the evaluation file of **Save evaluation**.
 - **States**: nothing run yet; partial results; no findings at all (false-positive rate not
   available); sample below the minimum; loaded evaluation whose recomputed numbers differ from the
   stored ones.
@@ -345,8 +351,8 @@ leads to the case window.
   every run; the evaluation, the progress of one run), the indicator of unsaved changes, "… as",
   loading back and **Continue**; judges that give only a verdict and are evaluated per case, with
   a worked example; each count and rate with a worked example and its limitations; the overall
-  result and thresholds; exporting, and what "provisional" means; files and their formats, with
-  examples; examples and demo data; metrics and check settings; the supported browsers (Chrome and
+  result and thresholds; exporting, and what the cases not decided yet mean for the numbers; files and their formats, with
+  examples; examples and demo data; metrics and thresholds; the supported browsers (Chrome and
   Edge); privacy (nothing is stored or sent; exported files contain your data).
 - Examples are the files in `examples/`, the same ones the contract tests validate.
 - Each section is written together with the feature it describes (Principle VIII); the Help is

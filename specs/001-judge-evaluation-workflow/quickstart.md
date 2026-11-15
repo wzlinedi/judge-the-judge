@@ -47,11 +47,15 @@ evaluation with 20 cases and 20 replies, the "what next" line says "15 of 20 cas
 "Continue" opens the first case awaiting verification. The Summary shows the counts of expected
 errors (found, not found), additional findings (genuine errors, false positives) and subtle errors
 before anything else, then the two rates and one line of overall result with its reason. While
-cases await verification the results are marked provisional and the overall result is
+cases await verification the Summary says how many are not decided yet and the overall result is
 Inconclusive; afterwards the numbers match the expected results file: 27 of 30 expected errors found
 (90%), 2 false positives and 1 genuine error (case 19), which Summary lists under "Genuine errors the test cases missed"
-with Open. The test size shows 30 of 30 errors and 10 of 10 clean cases. The first report is marked provisional and names the 5 undecided
-cases; the second has no such mark. (The times of SC-001 and SC-010 are checked by hand with a
+with Open. The test size shows 30 of 30 errors and 10 of 10 clean cases. The first report says that 5 cases are not decided yet;
+the second has no such line, and neither is called provisional. The Results bar offers **Export
+HTML report** as its main action both times. **Details** is at the top of the Summary, closed;
+Error analysis shows a rate in every group (`misattribution` 4 of 4, 100%). On Run the table
+shows Expected errors, Additional findings, Added by hand and Items to decide, and a case without
+a reply already lists its expected errors with no marks. (The times of SC-001 and SC-010 are checked by hand with a
 first-time user, not by the automated test.)
 
 ### V2. Judge from scratch (SC-011 to SC-014, SC-037, SC-038, User Story 2)
@@ -259,7 +263,7 @@ unchanged every time.
 2. On Test cases expand "Error categories"; type a new category name for an error to prepare in a
    case with injected errors and save the case; open **Example** of a used category and move with Next case; rename a used category (the window says what changes); try to remove it; remove an
    unused one.
-3. "Load check settings" with `examples/metrics/checks-example.json`.
+3. In Results › Details change the detection-rate threshold.
 4. Load a test project that carries the metric of `examples/metrics/bias-verdict-example.json`,
    add cases with expected errors, finalize, and paste replies
    `{"biased": true}` and `{"biased": false}` for cases with errors and for clean cases. Then change
@@ -269,8 +273,8 @@ unchanged every time.
 the "Error categories" section starts collapsed with "N categories" in its heading once the
 project has cases; the new category is in it with "Used by 1 test case"; the rename applies to
 every expected error; "Remove" of the used category is disabled with the reason beside it, and
-the unused one is removed at once; the thresholds change, the overall result updates, and a
-`minimum_sample` in the file is reported as fixed. With the verdict example, the Judge step says
+the unused one is removed at once; the threshold changes and the overall result updates; there is
+no **Load check settings**. With the verdict example, the Judge step says
 the judge is evaluated per case; a flagged case with errors passes with every expected error found
 (also one without a fragment), an unflagged one fails; a flagged clean case awaits the user's
 decision; the Summary counts cases and shows the case detection rate and the clean-case

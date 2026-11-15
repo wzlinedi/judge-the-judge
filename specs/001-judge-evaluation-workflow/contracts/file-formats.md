@@ -432,8 +432,8 @@ clipboard") is treated exactly like text pasted into a box.
 
 - One self-contained file: inline styles, no scripts, no external resources.
 - Order: title, test project name and test cases version, judge version, model details (all
-  lines, as written), tool version and date, the "provisional" mark with the number of cases not
-  run or awaiting verification when there are any, the "rules corrected after replies" note when
+  lines, as written), tool version and date, the number of cases not decided yet (not run,
+  awaiting verification) when there are any, with no "provisional" mark (T267), the "rules corrected after replies" note when
   it applies, and the list of cases added or corrected after the first reply when there are any;
   then **1. Summary** (expected errors with found and missed; additional findings with real errors
   and false positives; subtle errors with found and missed; ignored items; the two rates, or for a

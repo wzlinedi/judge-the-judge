@@ -135,7 +135,9 @@ repeated runs) cannot be expressed in this version; the guide states this.
 4. A test project file and an evaluation file record the active metric's `id` and its parameters,
    and the check rules in use (file-formats.md, sections 1 and 5).
 
-## 2. Check configuration file
+## 2. Check rules (thresholds)
+
+Since T266 and constitution 2.0.0 there is no file for the thresholds on their own: the rules below are saved in the `checks` of the test project and evaluation files (file-formats.md, sections 1 and 5). The JSON shows the shape of `checks`; its `format` and `schema_version` are the ones of the bundled default.
 
 ```json
 {
@@ -165,14 +167,13 @@ repeated runs) cannot be expressed in this version; the guide states this.
 "minimum_sample": { "expected_errors": 30, "clean_cases": 10 }
 ```
 
-- The minimum test size is fixed by the spec. A loaded check configuration that contains
-  `minimum_sample` is accepted, but that key is ignored and the user is told that the value is
-  fixed.
+- The minimum test size is fixed by the spec; the tool uses the bundled value for the result it shows. An evaluation file may store `minimum_sample` only so that its stored result can be recomputed on load (SC-003).
 - The two rules that apply are shown and editable in the collapsed "Details" section of the Summary
-  view, the only thing that can be changed on the Results step; "Load check settings" replaces
-  them from a file (FR-069). The rules in use are stored in every test project file and every evaluation file.
-- An invalid configuration (unknown measure, value out of range, unknown comparison) is rejected
-  with a plain message and the rules in use stay unchanged.
+  view, the only thing that can be changed on the Results step (FR-069). There is no "Load check
+  settings" (T266): the two defaults are edited there, and the separate checks file format, its
+  schema and `examples/metrics/checks-example.json` are removed together with the Help rows that
+  name them (T225). The rules in use are stored in every test project file and every evaluation file.
+- Invalid rules in a loaded test project or evaluation file (unknown measure, value out of range, unknown comparison) are rejected with a plain message and the rules in use stay unchanged.
 
 ## 3. Registry
 
@@ -188,8 +189,7 @@ repeated runs) cannot be expressed in this version; the guide states this.
   produce a definition with AI help.
 - `examples/metrics/bias-example.json`: an example metric for a judge that reads a single text (one
   variable) and lists the biased sentences; `examples/metrics/bias-verdict-example.json`: the same
-  judge giving only a verdict for the whole text, evaluated per case; and
-  `examples/metrics/checks-example.json`.
+  judge giving only a verdict for the whole text, evaluated per case.
 - A shared contract test suite runs against `accuracy`, `completeness` and the two example files:
   schema-valid, validation rules pass, every measure computes on a fixed set of counters, the
   starter prompt composes with each of its clean base cases, and the starter rules give the

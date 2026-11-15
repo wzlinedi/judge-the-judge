@@ -71,8 +71,8 @@ returns text.
 | `exampleCsv(variables)` | The file of "Download example file", built from the current variables (FR-030). |
 | `readOpinion(text, caseId)` | Section 7: the verification opinion for one case; refuses a list of several opinions and an opinion for another case, and a JSON that cannot be read (line and column), with the reason. |
 | `writeEvaluation(evaluation, results, now, toolVersion)` / `readEvaluation(text)` | Section 5, including the active metric, its parameters, the check rules, the way of counting and the added findings with category, difficulty and `from_opinion`. Ignores an old `proposals` key with a note. Refuses a test project file with a message that names "Load test project". |
-| `readMetricDefinition(text)` / `readCheckConfiguration(text)` | metric-and-checks.md. |
-| `buildHtmlReport(evaluation, results, now, toolVersion)` | Section 8: one self-contained HTML document as text, every value escaped; marked provisional with the number of undecided cases when that applies. |
+| `readMetricDefinition(text)` / `readCheckConfiguration(text)` | metric-and-checks.md. The tool no longer reads a check configuration from the Results step (T266); the reader goes with its format in T225. |
+| `buildHtmlReport(evaluation, results, now, toolVersion)` | Section 8: one self-contained HTML document as text, every value escaped; says at the top how many cases are not decided yet (not run, awaiting verification) when there are any; no "provisional" mark (T267). |
 
 ## Prompts for the user's LLM (`core/generation`)
 
@@ -99,7 +99,7 @@ their inputs change.
 | `addFinding(decisions, text, category, difficulty)` / `removeFinding(decisions, index)` | Add or remove a finding of `added_findings`; only those can be removed (FR-062). |
 | `countAll(evaluation, mode)` | All counters, overall and per category, difficulty and rule, and additional findings per category and difficulty (FR-070). In `per_case` mode also `defective_cases_decided` and `defective_cases_flagged`, and the category and difficulty groups count cases (a case once in each category and difficulty its errors have) with counts only (FR-066, FR-070). |
 | `wilson(successes, total)` | Lower and upper bound of the 95% interval, or none when total is 0. |
-| `computeMeasures(counters, metric)` | Every measure of the active metric, with intervals and the "provisional" flag. |
+| `computeMeasures(counters, metric)` | Every measure of the active metric, with intervals; `provisional` in the results only means that some cases are not decided (`undecided > 0`) and is never shown as a word (T267). |
 | `overallResult(counters, measures, checks, minimumSample, mode)` | Works, Does not work or Inconclusive, with reasons and borderline notes (FR-068). In `per_case` mode the check rules apply to the two case-level rates and the minimum counts cases with errors; the first reason says the judge was evaluated per case. |
 | `computeResults(evaluation, metric)` | Everything the Results step and the files show, in one value, including the way of counting and, when a correction of the rules changed it after replies, the way used before (FR-075). |
 | `recompute(storedFile)` | The results recalculated from a loaded evaluation file, and any differences from the stored results. |
