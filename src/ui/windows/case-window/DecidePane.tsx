@@ -40,18 +40,33 @@ export interface ErrorsPaneProps {
   /** The judged text field, which the search for a fragment starts with. */
   judged: string | undefined;
   onRemove: (item: EffectiveAdditional) => void;
+  /** The finding that was pressed (in the reply or here), marked for a moment (T293). */
+  pointed?: string | null;
+  /** A finding was pressed here: its block in the saved reply is marked and brought into view. Not offered while the reply is being changed. */
+  onPoint?: ((key: string) => void) | undefined;
 }
 
-function ExpectedItem({ error, index, testCase, judged, judgeSays, onMark, onShow }: { error: EffectiveExpected; index: number; testCase: TestCase; judged: string | undefined; judgeSays: readonly FindingMark[]; onMark: (s: ExpectedState) => void; onShow: (target: ShowTarget) => void }) {
+function ExpectedItem({ error, index, testCase, judged, judgeSays, onMark, onShow, pointed, onPoint }: { error: EffectiveExpected; index: number; testCase: TestCase; judged: string | undefined; judgeSays: readonly FindingMark[]; onMark: (s: ExpectedState) => void; onShow: (target: ShowTarget) => void; pointed: string | null; onPoint: ((key: string) => void) | undefined }) {
   const meta = testCase.expected_errors.find((e) => e.id === error.id);
   const sides = errorSides(testCase, judged, meta ?? {});
   const name = `E${index + 1}`;
   return (
     <li data-expected={error.id} class="decide-item">
       <ErrorCard name={name} title={meta?.description ?? ''} facts={[meta?.category, meta?.difficulty].filter((x): x is NonNullable<typeof x> => !!x)} sides={sides} onShow={() => onShow(showTargetOf(sides, error.id))}>
-        {judgeSays.map((m) => (
-          <p key={m.key} class="judge-says">{`Judge: ${m.text === '' ? 'the whole reply' : `“${m.text}”`} (${m.kind === 'clear' ? 'matches' : 'partly matches'})`}</p>
-        ))}
+        {judgeSays.map((m) => {
+          const said = `F${m.number} · Judge: ${m.text === '' ? 'the whole reply' : `“${m.text}”`} (${m.kind === 'clear' ? 'matches' : 'partly matches'})`;
+          return (
+            <p key={m.key} class="judge-says">
+              {onPoint ? (
+                <button type="button" class={`link-button${pointed === m.key ? ' pointed' : ''}`} data-finding-line={m.key} onClick={() => onPoint(m.key)}>
+                  {said}
+                </button>
+              ) : (
+                said
+              )}
+            </p>
+          );
+        })}
         <div role="group" aria-label={`Mark for ${name}`} class="marks">
           {EXPECTED_MARKS.map((m) => (
             <button key={m.state} type="button" aria-pressed={error.state === m.state} class={error.state === m.state ? 'pressed' : ''} onClick={() => onMark(m.state)}>
@@ -65,13 +80,13 @@ function ExpectedItem({ error, index, testCase, judged, judgeSays, onMark, onSho
   );
 }
 
-function AdditionalItem({ item, testCase, judged, onMark, onShow, onRemove }: { item: EffectiveAdditional; testCase: TestCase; judged: string | undefined; onMark: (s: AdditionalState) => void; onShow: (target: ShowTarget) => void; onRemove: () => void }) {
+function AdditionalItem({ item, number, testCase, judged, onMark, onShow, onRemove, pointed, onPoint }: { item: EffectiveAdditional; number: number | undefined; testCase: TestCase; judged: string | undefined; onMark: (s: AdditionalState) => void; onShow: (target: ShowTarget) => void; onRemove: () => void; pointed: string | null; onPoint: ((key: string) => void) | undefined }) {
   const sides = item.text === '' ? [] : errorSides(testCase, judged, { fragment: item.text });
   const facts = [item.rules.length > 0 ? `Rule: ${item.rules.join(', ')}` : undefined, item.category, item.difficulty].filter((x): x is string => !!x);
   return (
     <li data-additional={item.key} class="decide-item">
       <ErrorCard
-        title={item.text === '' ? 'A finding about the whole reply' : 'Found by the judge'}
+        title={`${number !== undefined ? `F${number} · ` : ''}${item.text === '' ? 'A finding about the whole reply' : 'Found by the judge'}`}
         facts={facts}
         sides={sides}
         onShow={() => onShow(showTargetOf(sides))}
@@ -83,6 +98,13 @@ function AdditionalItem({ item, testCase, judged, onMark, onShow, onRemove }: { 
           ) : null
         }
       >
+        {number !== undefined && onPoint ? (
+          <p class="judge-says">
+            <button type="button" class={`link-button${pointed === item.key ? ' pointed' : ''}`} data-finding-line={item.key} onClick={() => onPoint(item.key)}>
+              {`Show F${number} in the reply`}
+            </button>
+          </p>
+        ) : null}
         <div role="group" aria-label={`Mark for ${item.text || item.key}`} class="marks">
           {ADDITIONAL_MARKS.map((m) => (
             <button key={m.state} type="button" aria-pressed={item.state === m.state} class={item.state === m.state ? 'pressed' : ''} onClick={() => onMark(m.state)}>
@@ -129,16 +151,17 @@ export function DecideBar({ reviewed, effective, onAddFinding, onSecondOpinion }
   const progress = effective ? markProgress(effective) : null;
   return (
     <div class="decide-bar">
-      {effective ? (
-        <>
-          <button type="button" onClick={onAddFinding}>
-            {labels.addFinding}
-          </button>
-          <button type="button" onClick={onSecondOpinion}>
-            {labels.secondOpinion}
-          </button>
-        </>
-      ) : null}
+      <button type="button" disabled={!effective} aria-describedby={effective ? undefined : 'decide-why'} onClick={onAddFinding}>
+        {labels.addFinding}
+      </button>
+      <button type="button" disabled={!effective} aria-describedby={effective ? undefined : 'decide-why'} onClick={onSecondOpinion}>
+        {labels.secondOpinion}
+      </button>
+      {effective ? null : (
+        <span id="decide-why" class="why-disabled">
+          Paste the judge’s reply first
+        </span>
+      )}
       {progress ? <span class="mark-meter">{`Marked ${progress.marked} of ${progress.total}`}</span> : null}
       <StatusMark status={reviewed.status} />
     </div>
@@ -146,7 +169,7 @@ export function DecideBar({ reviewed, effective, onAddFinding, onSecondOpinion }
 }
 
 /** The right column of part 3: the errors of the case in two groups, expected and additional, each with its marks (T252). */
-export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onApprove, onShowInText, judged, onRemove }: ErrorsPaneProps) {
+export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onApprove, onShowInText, judged, onRemove, pointed = null, onPoint }: ErrorsPaneProps) {
   const unreadable = reviewed.review !== null && !reviewed.review.readable;
   const awaiting = reviewed.status === 'awaiting';
   // the words of the judge that match each expected error (FR-077, T258): the list "Findings in the reply" is gone
@@ -174,7 +197,7 @@ export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onAp
           <h5>Expected errors</h5>
           <ul class="decide-list" aria-label="Expected errors">
             {effective.expected.map((e, i) => (
-              <ExpectedItem key={e.id} error={e} index={i} testCase={reviewed.testCase} judged={judged} judgeSays={marks.filter((m) => m.kind !== 'none' && m.errorNumbers.includes(i + 1))} onMark={(s) => onExpected(e.id, s)} onShow={onShowInText} />
+              <ExpectedItem key={e.id} error={e} index={i} testCase={reviewed.testCase} judged={judged} judgeSays={marks.filter((m) => m.kind !== 'none' && m.errorNumbers.includes(i + 1))} onMark={(s) => onExpected(e.id, s)} onShow={onShowInText} pointed={pointed} onPoint={onPoint} />
             ))}
           </ul>
         </>
@@ -185,7 +208,7 @@ export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onAp
           <h5>Additional errors</h5>
           <ul class="decide-list" aria-label="Additional errors">
             {effective.additional.map((a) => (
-              <AdditionalItem key={a.key} item={a} testCase={reviewed.testCase} judged={judged} onMark={(s) => onAdditional(a, s)} onShow={onShowInText} onRemove={() => onRemove(a)} />
+              <AdditionalItem key={a.key} item={a} number={marks.find((m) => m.key === a.key)?.number} testCase={reviewed.testCase} judged={judged} onMark={(s) => onAdditional(a, s)} onShow={onShowInText} onRemove={() => onRemove(a)} pointed={pointed} onPoint={onPoint} />
             ))}
           </ul>
         </>

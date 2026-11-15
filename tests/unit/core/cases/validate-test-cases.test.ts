@@ -45,15 +45,14 @@ describe('planImport', () => {
     expect(plan.missingCategories).toEqual(['tone-shift']);
   });
 
-  it('puts a case with a field that is too long, empty or identical to its base among the invalid, with position and reason', () => {
+  it('puts a case with a field that is too long or empty among the invalid, with position and reason; a case identical to its base is imported (T286)', () => {
     const plan = planImport(
       rows(draft({ name: 'Long', fields: { source_text: 'x'.repeat(100_001), summary: 'T' } }), draft({ name: 'Empty', fields: { source_text: 'S', summary: '' } }), draft({ id: '8', name: 'Twin', base: '1', fields: e.dataset.cases[0]!.fields, expected_errors: [{ description: 'd' }] }), draft({ name: 'Fine' })),
       [{ position: 9, label: 'Broken', reason: 'The case has no fields.' }],
       context({ existing: e.dataset.cases }),
     );
-    expect(plan.cases.map((c) => c.name)).toEqual(['Fine']);
-    expect(plan.invalid.map((i) => i.position)).toEqual([9, 1, 2, 3]);
-    expect(plan.invalid.find((i) => i.position === 3)!.reason).toMatch(/identical to its base/);
+    expect(plan.cases.map((c) => c.name)).toEqual(['Twin', 'Fine']);
+    expect(plan.invalid.map((i) => i.position)).toEqual([9, 1, 2]);
   });
 
   it('reports fields that match no variable and variables that have no field', () => {

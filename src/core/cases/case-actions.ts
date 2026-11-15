@@ -4,13 +4,8 @@ import type { ChangedAfterFirstReply, Reply, TestCase } from '../model';
 export type CaseAction = 'rename' | 'remove' | 'correct';
 export type CaseChange = { allowed: true } | { allowed: false; reason: string };
 
-export function canChangeCase(cases: readonly TestCase[], _replies: Readonly<Record<string, Reply>>, _finalized: boolean, id: string, action: CaseAction): CaseChange {
-  if (action === 'remove') {
-    const dependants = cases.filter((c) => c.base === id);
-    if (dependants.length > 0) {
-      return { allowed: false, reason: `This case is the base of ${dependants.map((c) => `"${c.name}"`).join(', ')}. Remove those cases first.` };
-    }
-  }
+/** Every case may be changed at any time: a case is independent once it is made, so a base in use may be removed too (T283). */
+export function canChangeCase(_cases: readonly TestCase[], _replies: Readonly<Record<string, Reply>>, _finalized: boolean, _id: string, _action: CaseAction): CaseChange {
   return { allowed: true };
 }
 

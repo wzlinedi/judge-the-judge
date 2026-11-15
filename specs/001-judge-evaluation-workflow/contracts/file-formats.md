@@ -203,7 +203,7 @@ edits (FR-089).
 - `base`: with "From JSON" it is used when it names a clean case of the test project (by
   identifier or exact name), otherwise the case has none and a note says so. In a case with
   injected errors the base picked in the window wins and a different `base` is named in a note.
-  A case with expected errors identical to its base is refused (FR-080).
+  A case identical to its base is read like any other (T286).
 - "Export test cases" writes `name`, `base` (only when there is one), `fields` and `expected_errors`
   (without `id`), so that the JSON pasted into a new case gives the same fields and expected
   errors (SC-036).

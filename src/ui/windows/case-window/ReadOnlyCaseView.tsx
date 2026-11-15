@@ -59,7 +59,7 @@ export function ReadOnlyCaseView({ evaluation, reviewed, caseId, onNavigate, onC
           <strong>{testCase.expected_errors.length === 0 ? 'Clean' : 'Injected errors'}</strong>
           {testCase.base ? <span class="muted">{` · Base: ${testCase.base}${baseCase?.name ? ` (${baseCase.name})` : ''}`}</span> : null}
         </p>
-        <MarkedFields testCase={testCase} judged={judged} effective={effective} uncovered={[]} strong={strong} shown={shown} rootRef={textRef} />
+        <MarkedFields testCase={testCase} judged={judged} effective={effective} strong={strong} shown={shown} rootRef={textRef} />
         <label class="field-label" for="read-only-prompt">
           Complete judge prompt
         </label>

@@ -22,7 +22,7 @@ async function enterFirstReply(page: Page) {
   await next(page).getByRole('button', { name: 'Continue' }).click();
   await page.evaluate((t) => navigator.clipboard.writeText(t), firstReply);
   await caseWindow(page).getByRole('button', { name: 'Paste reply' }).click();
-  await expect(caseWindow(page).getByRole('textbox', { name: 'Judge reply' })).toHaveValue(firstReply);
+  await expect(caseWindow(page).locator('.reply-read')).toBeVisible(); // the saved reply is read-only (T293)
   await caseWindow(page).getByRole('button', { name: 'Close' }).click();
 }
 async function exportReport(page: Page, testInfo: { outputPath: (name: string) => string }, name: string): Promise<string> {

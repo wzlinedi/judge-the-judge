@@ -96,14 +96,15 @@ describe('Open, Rename and Remove', () => {
     expect(dialog.textContent).toMatch(/Its judge reply and its \d+ decisions? are removed with it, and the results change/);
   });
 
-  it('Remove of a base case in use is refused with the list of cases made from it', () => {
+  it('Remove of a base case in use asks as for any case and does not refuse (T283)', () => {
     const s = stateOf();
     const cases = s.evaluation.dataset.cases.map((c) => (c.id === '2' ? { ...c, base: '1' } : c));
     show({ ...s, evaluation: { ...s.evaluation, dataset: { ...s.evaluation.dataset, cases } } });
     fireEvent.click(within(rowOf('Anna')).getAllByRole('button', { name: 'Remove' })[0]!);
-    expect(screen.queryByRole('dialog', { name: 'Remove test case' })).toBeNull();
-    expect(screen.getByRole('status', { name: 'Message' }).textContent).toMatch(/Anna \+ 2 errors/);
-    expect(screen.getAllByRole('row')).toHaveLength(3);
+    const dialog = screen.getByRole('dialog', { name: 'Remove test case' });
+    expect(screen.getByRole('status', { name: 'Message' }).textContent).toBe('');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Remove' }));
+    expect(screen.getAllByRole('row')).toHaveLength(2);
   });
 });
 

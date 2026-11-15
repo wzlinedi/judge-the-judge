@@ -25,8 +25,10 @@ describe('the reply box', () => {
     expect(box().closest('details')).toBeNull();
     view.unmount();
     open(sampleEvaluation(), '2');
-    expect(box().value).toContain('Anna is a doctor.');
-    expect(box().closest('details')).toBeNull();
+    // a saved reply is read-only (T293), never behind a collapsed section
+    expect(within(win()).queryByRole('textbox', { name: 'Judge reply' })).toBeNull();
+    expect(win().querySelector('.reply-read')?.textContent).toContain('Anna is a doctor.');
+    expect(win().querySelector('.reply-read')?.closest('details')).toBeNull();
   });
 
   it('is checked as the text changes: no message when it reads, or the line and column of the problem', () => {
@@ -52,7 +54,9 @@ describe('the reply box', () => {
     expect(saveAnyway()).toBeNull();
     type(json);
     await waitFor(() => expect(within(win()).getByText('1 not saved')).toBeTruthy());
-    expect(box().value).toBe(json);
+    // the saved reply is shown read-only and formatted (T292, T293)
+    expect(within(win()).queryByRole('textbox', { name: 'Judge reply' })).toBeNull();
+    expect(win().querySelector('.reply-read')?.textContent).toBe(JSON.stringify(JSON.parse(json), null, 2));
     expect(saveAnyway()).toBeNull();
   });
 
@@ -72,7 +76,8 @@ describe('the reply box', () => {
     expect(within(win()).getByText('0 not saved')).toBeTruthy();
     fireEvent.click(saveAnyway() as HTMLElement);
     await waitFor(() => expect(within(win()).getByText('1 not saved')).toBeTruthy());
-    expect(box().value).toBe('It seems fine to me.');
+    expect(win().querySelector('.reply-read')?.textContent).toBe('It seems fine to me.');
+    expect(win().querySelectorAll('[data-finding-block]')).toHaveLength(0);
     expect(saveAnyway()).toBeNull();
   });
 

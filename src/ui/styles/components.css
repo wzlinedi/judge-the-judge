@@ -192,7 +192,6 @@ button.fold { background: transparent; border: 0; padding: 0; font: inherit; fon
 /* Test case window: case with injected errors, case view, highlights (FR-077, FR-080, FR-085) */
 .fragment-ignored { background: var(--surface-2, var(--surface)); border-bottom-color: var(--text-muted); }
 .fragment-strong { outline: 3px solid var(--accent); outline-offset: 1px; font-weight: 600; }
-mark.fragment-uncovered { background: var(--warning-bg); border-bottom: 4px dashed var(--warning); }
 .check-line { margin: 0 0 var(--space-2); font-weight: 600; }
 .check-line.agree { color: var(--success); }
 .not-in-text { font-size: var(--text-sm); font-weight: 600; }
@@ -254,3 +253,6 @@ mark.fragment-uncovered { background: var(--warning-bg); border-bottom: 4px dash
 .errors-to-prepare td input[type="text"] { min-width: 16rem; }
 .errors-to-prepare td:first-child { min-width: 16rem; }
 .categories-table .button-row { flex-wrap: nowrap; }
+.reply-read { margin: 0 0 var(--space-2); padding: var(--space-3); max-height: 24rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-mono); font-size: 0.9rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; }
+.reply-block { cursor: pointer; }
+.pointed { outline: 3px solid var(--accent); outline-offset: 2px; }

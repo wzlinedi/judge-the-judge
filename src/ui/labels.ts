@@ -64,6 +64,7 @@ export const labels = {
   // Run
   pasteReplyFromClipboard: 'Paste reply',
   saveReply: 'Save reply',
+  changeReply: 'Change reply',
   saveAsTextAnyway: 'Keep as text',
   found: 'Found',
   issueMissed: 'Not found',

@@ -19,8 +19,6 @@ export interface CaseValidation {
 
 export const normalizeName = (name: string): string => name.trim().toLowerCase();
 
-const occurs = (text: string, fragment: string): boolean => text.includes(fragment) || text.toLowerCase().includes(fragment.toLowerCase());
-
 export function validateCase(testCase: Omit<TestCase, 'id'> & { id?: string }, context: CaseContext): CaseValidation {
   const problems: Problem[] = [];
   const warnings: Problem[] = [];
@@ -54,14 +52,9 @@ export function validateCase(testCase: Omit<TestCase, 'id'> & { id?: string }, c
     if (same) problems.push({ message: `The name "${testCase.name.trim()}" is already used by case ${same.id}.`, path: 'name' });
   }
 
-  const judged = context.judgedText !== undefined ? (fields[context.judgedText] ?? '') : '';
-  const everything = Object.values(fields);
   testCase.expected_errors.forEach((error, i) => {
     const at = `expected_errors[${i}]`;
     if (error.description.trim() === '') problems.push({ message: 'The expected error has no description.', path: `${at}.description` });
-    if (error.fragment !== undefined && error.fragment !== '' && !occurs(judged, error.fragment) && !everything.some((t) => occurs(t, error.fragment as string))) {
-      warnings.push({ message: `The fragment is not in the text.`, path: `${at}.fragment` });
-    }
     if (error.category !== undefined && error.category !== '' && !context.catalog.some((c) => c.name === error.category)) {
       warnings.push({ message: `The category "${error.category}" is not in the catalog yet.`, path: `${at}.category` });
     }
@@ -71,8 +64,6 @@ export function validateCase(testCase: Omit<TestCase, 'id'> & { id?: string }, c
     const base = context.others.find((c) => c.id === testCase.base);
     if (!base) {
       warnings.push({ message: `The base "${testCase.base}" is not a test case of this project.`, path: 'base' });
-    } else if (Object.keys(base.fields).length === Object.keys(fields).length && Object.entries(fields).every(([k, v]) => base.fields[k] === v)) {
-      problems.push({ message: `The case is identical to its base case ${base.id}. Change the text where the errors are.`, path: 'base' });
     }
   }
   return { problems, warnings };

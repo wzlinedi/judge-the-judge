@@ -188,7 +188,7 @@ describe('part 5: the expected errors', () => {
     paste(json);
   };
 
-  it('is a read-only list in the order of the JSON with the check line and the name; the fields have no highlights', () => {
+  it('is a read-only list in the order of the JSON with the name; no check line, and the fields have no highlights', () => {
     toList();
     const list = within(win()).getByRole('list', { name: 'Expected errors' });
     const items = within(list).getAllByRole('listitem');
@@ -197,13 +197,13 @@ describe('part 5: the expected errors', () => {
     expect(items[0]!.textContent).toContain('Anna is a doctor');
     expect(items[1]!.textContent).toContain('E2');
     expect(win().querySelectorAll('mark')).toHaveLength(0);
-    expect(within(win()).getByText('Text and list agree')).toBeTruthy();
+    expect(within(win()).queryByText('Text and list agree')).toBeNull();
     expect(within(win()).getByText('Anna with errors')).toBeTruthy();
   });
 
   it('has none of the removed controls, and the only editable controls are the ones of parts 1 to 4', () => {
     toList();
-    for (const name of ['Modify', 'Edit by hand', 'Use selected text as fragment', 'Describe errors again', 'Compare with base', 'Save evaluation', 'Save test project', 'Show the issue']) {
+    for (const name of ['Modify', 'Edit by hand', 'Use selected text as fragment', 'Describe errors again', 'Compare with base', 'Save evaluation', 'Save test project']) {
       expect(within(win()).queryByRole('button', { name })).toBeNull();
     }
     expect(within(within(win()).getByRole('list', { name: 'Expected errors' })).queryAllByRole('textbox')).toHaveLength(0);

@@ -12,6 +12,10 @@ const ids = demo.dataset.cases.map((c) => c.id);
 const next = (page: Page) => page.getByRole('region', { name: 'What next' });
 const caseWindow = (page: Page) => page.getByRole('dialog', { name: /^Case \d+ / });
 const box = (page: Page) => caseWindow(page).getByRole('textbox', { name: 'Judge reply' });
+/** A saved reply is read-only, formatted and marked (T293); "Change reply" opens the box. */
+const shown = (page: Page) => caseWindow(page).locator('.reply-read');
+const changeReply = (page: Page) => caseWindow(page).locator('.reply-pane').getByRole('button', { name: 'Change reply' }).click();
+const saveReply = (page: Page) => caseWindow(page).locator('.reply-pane').getByRole('button', { name: 'Save reply' }).click();
 const clip = (page: Page, text: string) => page.evaluate((t) => navigator.clipboard.writeText(t), text);
 
 async function openRunWithoutReplies(page: Page) {
@@ -31,7 +35,7 @@ async function runCase(page: Page, id: string, move: 'click' | 'key' | 'stay') {
   await win.getByRole('button', { name: 'Copy prompt' }).click();
   await clip(page, replyOf(id));
   await win.getByRole('button', { name: 'Paste reply' }).click();
-  await expect(box(page)).toHaveValue(replyOf(id));
+  await expect(shown(page)).toBeVisible();
   if (move === 'key') await page.keyboard.press('Alt+ArrowRight');
   else if (move === 'click') await win.getByRole('button', { name: 'Next case' }).click();
 }
@@ -91,7 +95,8 @@ test('the Run step shows the judge on one line, the model details and the evalua
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('SUMMARY');
   await clip(page, replyOf('1'));
   await win.getByRole('button', { name: 'Paste reply' }).click();
-  await expect(box(page)).toHaveValue(replyOf('1'));
+  await expect(shown(page)).toBeVisible();
+  await expect(box(page)).toHaveCount(0);
   await expect(win).toContainText('1 not saved');
   await expect(win).toContainText('Pass');
   await win.getByRole('button', { name: 'Next case' }).click();
@@ -120,31 +125,54 @@ test('changing a saved reply asks first and names the marks set by hand (T261), 
   await win.getByRole('button', { name: 'Previous case' }).click();
   await expect(win).toContainText('1 of 20');
 
-  // changing a saved reply asks first, with no marks to name here; Cancel keeps the saved reply
+  // changing a saved reply: "Change reply" opens the box, "Save reply" asks first, with no marks to name here; Cancel keeps the saved reply
+  await changeReply(page);
   const saved = await box(page).inputValue();
   await box(page).fill(replyOf('3'));
+  await expect(page.getByRole('dialog', { name: 'Change the judge’s reply?' })).toHaveCount(0); // typing saves nothing
+  await saveReply(page);
   const question = page.getByRole('dialog', { name: 'Change the judge’s reply?' });
   await expect(question).toContainText('the results are counted from it');
   await expect(question).not.toContainText('you set');
   await question.getByRole('button', { name: 'Cancel' }).click();
-  await expect(box(page)).toHaveValue(saved);
   await expect(win).toContainText('2 not saved');
+  await win.locator('.reply-pane').getByRole('button', { name: 'Cancel' }).click();
+  await expect(box(page)).toHaveCount(0);
+  await changeReply(page);
+  await expect(box(page)).toHaveValue(saved);
+  await win.locator('.reply-pane').getByRole('button', { name: 'Cancel' }).click();
 
-  // after Change reply the case is marked again from the changed text, and this case no longer asks
+  // after Change reply the case is marked again from the changed text, and the read-only view returns
+  await changeReply(page);
   await box(page).fill(replyOf('3'));
+  await saveReply(page);
   await question.getByRole('button', { name: 'Change reply' }).click();
   await expect(win).toContainText('3 not saved');
+  await expect(shown(page)).toBeVisible();
 
-  // on the next visit it asks again, and names the mark set by hand; Change reply removes it
+  // it asks again for the next change, and names the mark set by hand; Change reply removes it
   await win.getByRole('button', { name: 'Next case' }).click();
   await win.getByRole('button', { name: 'Previous case' }).click();
   await expect(win).toContainText('1 of 20');
   await page.locator('[data-expected], [data-additional]').first().getByRole('button', { name: 'False positive' }).click();
+  await changeReply(page);
   await box(page).fill(replyOf('1'));
+  await saveReply(page);
   await expect(question).toContainText('The 1 mark you set');
   await question.getByRole('button', { name: 'Change reply' }).click();
   await expect(win).toContainText('4 not saved');
   await expect(win.locator('[aria-pressed="true"]')).toHaveCount(0);
+
+  // an emptied box removes the reply after asking (T291)
+  await changeReply(page);
+  await box(page).fill('');
+  await saveReply(page);
+  const removal = page.getByRole('dialog', { name: 'Remove the judge’s reply?' });
+  await expect(removal).toContainText('Not run again');
+  await removal.getByRole('button', { name: 'Remove reply' }).click();
+  await expect(win).toContainText('Not run');
+  await expect(box(page)).toHaveValue('');
+  await expect(win).toContainText('4 not saved'); // the count of unsaved replies does not go down
 
   // an empty clipboard is explained and changes nothing
   await clip(page, '');
@@ -159,7 +187,10 @@ test('changing a saved reply asks first and names the marks set by hand (T261), 
   await win.getByRole('button', { name: 'Paste reply' }).click();
   await expect(win).toContainText('Paste the reply into the box with Ctrl+V');
 
-  // a reply that is not JSON, pasted into the box with Ctrl + V
+  // a reply that is not JSON, pasted into the box of a case without a reply with Ctrl + V
+  await win.getByRole('button', { name: 'Next case' }).click();
+  await win.getByRole('button', { name: 'Next case' }).click();
+  await expect(win).toContainText('3 of 20');
   await box(page).fill('{"claims": [');
   await expect(win).toContainText(/Line 1, column/);
   await expect(win.getByRole('button', { name: 'Save reply' })).toHaveCount(0);
@@ -171,6 +202,7 @@ test('changing a saved reply asks first and names the marks set by hand (T261), 
   await expect(win).toContainText(/This is not JSON/);
   await win.getByRole('button', { name: 'Keep as text' }).click();
   await expect(win).toContainText('5 not saved');
+  await expect(shown(page)).toHaveText('I looked at it and it seems fine to me.');
   await expect(win).toContainText('Awaiting verification');
   await expect(win.getByRole('button', { name: 'No more findings' })).toHaveClass(/primary/);
   await expect(win.locator('[aria-pressed="true"]')).toHaveCount(0);
@@ -194,7 +226,9 @@ test('a reply that was typed and not saved is not lost by moving; and the remind
   await expect(win).toContainText('20 not saved');
   for (let i = 0; i < 5; i++) {
     await win.getByRole('button', { name: 'Previous case' }).click();
+    await changeReply(page);
     await box(page).fill(`{"claims": [], "changed": ${i}}`);
+    await saveReply(page);
     await page.getByRole('dialog', { name: 'Change the judge’s reply?' }).getByRole('button', { name: 'Change reply' }).click(); // T261
     if (i < 4) await expect(win.getByRole('alert')).toHaveCount(0);
   }
@@ -217,7 +251,7 @@ test('the case window of Run is one page: the fields, the actions row, then the 
   await win.getByRole('button', { name: 'Copy prompt' }).click();
   await clip(page, replyOf('1'));
   await win.getByRole('button', { name: 'Paste reply' }).click();
-  await expect(box(page)).toHaveValue(replyOf('1'));
+  await expect(shown(page)).toBeVisible();
 
   const heading = (n: number) => win.locator('.case-part > h3').nth(n - 1);
   await expect(heading(1)).toHaveText('1. Case');
@@ -238,7 +272,7 @@ test('the case window of Run is one page: the fields, the actions row, then the 
   await prompt.getByRole('button', { name: 'Close' }).click();
   await expect(prompt).toHaveCount(0);
   await expect(win.getByRole('button', { name: 'Copy prompt' })).toHaveCount(1);
-  await expect(win.locator('.reply-pane').getByRole('button')).toHaveCount(1);
+  await expect(win.locator('.reply-pane > .button-row').getByRole('button')).toHaveCount(2); // Change reply and Paste reply (T293)
 
   // 1280 px: the two columns of part 3 share the row, about half each
   const [left, right] = await Promise.all([win.locator('.case-half > section').nth(0).boundingBox(), win.locator('.case-half > section').nth(1).boundingBox()]);

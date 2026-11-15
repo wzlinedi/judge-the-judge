@@ -41,10 +41,10 @@ describe('the read-only view', () => {
     expect(view().querySelector('[data-field="source_text"] mark[data-shown]')?.textContent).toBe('Anna is a baker');
   });
 
-  it('shows the check line for a case with a base', () => {
+  it('shows no check line of text against list (T286)', () => {
     show();
     open('Anna + 2 errors');
-    expect(within(view()).getByText('Text and list agree')).toBeTruthy();
+    expect(within(view()).queryByText(/Text and list agree|changed place/)).toBeNull();
   });
 
   it('has no control that edits the case: only read-only boxes', () => {

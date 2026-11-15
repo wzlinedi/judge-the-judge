@@ -112,12 +112,13 @@ describe('the case window of Run: three parts from top to bottom', () => {
     expect(within(right).getAllByRole('button', { name: 'Ignored' }).length).toBeGreaterThan(0);
   });
 
-  it('before a reply is saved, marking is not offered, the case says so, and its expected errors are already listed with no marks (T264)', () => {
+  it('before a reply is saved, marking is disabled with the reason (T290), the case says so, and its expected errors are already listed with no marks (T264)', () => {
     const e = structuredClone(demo);
     delete e.replies['11'];
     delete e.decisions['11'];
     open('11', e);
-    expect(within(part(2)).queryByRole('button', { name: 'Add finding…' })).toBeNull();
+    expect((within(part(2)).getByRole('button', { name: 'Add finding…' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(within(part(2)).getByText('Paste the judge’s reply first')).toBeTruthy();
     expect(within(part(2)).getByText(/Not run/)).toBeTruthy();
     const right = part(3).querySelectorAll<HTMLElement>('.case-half > section')[1] as HTMLElement;
     const list = within(right).getByRole('list', { name: 'Expected errors' });

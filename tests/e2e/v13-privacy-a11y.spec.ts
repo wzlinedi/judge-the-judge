@@ -243,12 +243,11 @@ test('Escape does not lose a reply that was typed and not saved: the window asks
   await loadDemo(page);
   await next(page).getByRole('button', { name: 'Continue' }).click();
   const caseWindow = page.getByRole('dialog', { name: /^Case \d+ / });
+  // the case has a saved reply, so it is changed with "Change reply" (T293); typing saves nothing
+  await caseWindow.locator('.reply-pane').getByRole('button', { name: 'Change reply' }).click();
   await caseWindow.getByRole('textbox', { name: 'Judge reply' }).fill('half a reply, typed by hand');
-  // the case has a saved reply, so the first change asks first (T261)
-  await page.getByRole('dialog', { name: 'Change the judge’s reply?' }).getByRole('button', { name: 'Change reply' }).click();
-  await expect(caseWindow.getByRole('textbox', { name: 'Judge reply' })).toHaveValue('half a reply, typed by hand');
   await page.keyboard.press('Escape');
-  const ask = page.getByRole('dialog', { name: 'The reply in the box is not saved' });
+  const ask = page.getByRole('dialog', { name: 'The changes to the reply are not saved' });
   await expect(ask).toBeVisible();
   await expect(caseWindow).toBeVisible();
   await ask.getByRole('button', { name: 'Cancel' }).click();

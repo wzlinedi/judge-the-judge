@@ -50,7 +50,7 @@ test('a clean case is made from a prompt and an answer, and checked as it is pas
   await expect(opened.getByRole('button', { name: /Recreate/ })).toHaveCount(0);
 });
 
-test('Rename and Remove work from the row buttons, a copy is made with From JSON, and a base in use cannot be removed', async ({ page }) => {
+test('Rename and Remove work from the row buttons, a copy is made with From JSON, and a base in use is removed with the ordinary question', async ({ page }) => {
   await start(page);
   const first = page.getByRole('row').nth(1);
   const firstName = (await first.getByRole('cell').nth(1).textContent()) ?? '';
@@ -92,10 +92,11 @@ test('Rename and Remove work from the row buttons, a copy is made with From JSON
   }));
   await testWindow(page).getByRole('button', { name: 'Save case' }).click();
   await expect(row(page, 'Anna with a wrong year')).toContainText('Injected errors');
+  // T283: a base in use is removed like any case: it asks first, and the case made from it stays, with no base
   await first.getByRole('button', { name: 'Remove' }).click();
-  await expect(page.getByRole('status', { name: 'Message' })).toContainText('Anna with a wrong year');
-  await expect(page.getByRole('dialog', { name: 'Remove test case' })).toHaveCount(0);
-  await expect(row(page, firstName).first()).toBeVisible();
+  await page.getByRole('dialog', { name: 'Remove test case' }).getByRole('button', { name: 'Remove' }).click();
+  await expect(row(page, 'Anna with a wrong year')).toBeVisible();
+  await expect(row(page, firstName)).toHaveCount(0);
 });
 
 test('Open shows a case read-only with Previous and Next, and the Test cases pages have no accessibility violations', async ({ page }) => {

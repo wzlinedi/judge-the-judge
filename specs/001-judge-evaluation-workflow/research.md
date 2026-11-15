@@ -80,6 +80,7 @@ has started; the step "Run" is named "Test run".
 
 ## 5. Clean-versus-injected differences
 
+- **Removed (T286, 2026-11-15)**: the text is no longer checked against the list of expected errors (FR-080), so jsdiff is no longer a dependency. The decision below is kept as history.
 - **Decision**: jsdiff, comparing word by word, for the side-by-side view in the test case
   window, and for the check that every changed place is covered by an
   expected error (FR-042).

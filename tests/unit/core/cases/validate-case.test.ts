@@ -58,10 +58,10 @@ describe('validateCase problems', () => {
     expect(validateCase(good({ id: '1', name: 'Anna' }), context({ others: e.dataset.cases.filter((c) => c.id !== '1') })).problems).toEqual([]);
   });
 
-  it('refuses a case identical to its base', () => {
+  it('accepts a case identical to its base (T286)', () => {
     const base = e.dataset.cases[0]!;
     const r = validateCase(good({ base: base.id, fields: { ...base.fields } }), context());
-    expect(texts(r.problems)).toMatch(/identical to its base/i);
+    expect(r.problems).toEqual([]);
   });
 });
 
@@ -77,11 +77,9 @@ describe('validateCase warnings', () => {
     expect(texts(r.warnings)).toMatch(/extra/);
   });
 
-  it('warns about a fragment that is in no text; accepts one in another field (an omission)', () => {
+  it('does not warn about a fragment that is in no text: the text is not checked against the list (T286)', () => {
     const missing = validateCase(good({ expected_errors: [{ id: 'e1', description: 'd', fragment: 'not anywhere' }] }), context());
-    expect(texts(missing.warnings)).toMatch(/not in the text/i);
-    const omission = validateCase(good({ expected_errors: [{ id: 'e1', description: 'd', fragment: 'Anna is a baker' }] }), context());
-    expect(omission.warnings.filter((w) => /not in the text/i.test(w.message))).toEqual([]);
+    expect(missing.warnings.filter((w) => /fragment/i.test(w.message))).toEqual([]);
   });
 
   it('warns about an unknown category and an unknown base', () => {

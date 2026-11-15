@@ -46,11 +46,9 @@ describe('canChangeCase', () => {
     expect(canChangeCase(cases, noReplies, true, '2', 'correct').allowed).toBe(true);
   });
 
-  it('refuses to remove a base still in use, listing the cases made from it', () => {
-    const r = canChangeCase(cases, {}, false, '1', 'remove');
-    expect(r.allowed).toBe(false);
-    expect(r.allowed === false && r.reason).toMatch(/Anna \+ 2 errors/);
-    expect(canChangeCase(cases, {}, false, '1', 'rename').allowed).toBe(true);
+  it('allows removing a base that other cases were made from (T283)', () => {
+    expect(canChangeCase(cases, {}, false, '1', 'remove')).toEqual({ allowed: true });
+    expect(canChangeCase(cases, {}, false, '1', 'rename')).toEqual({ allowed: true });
   });
 });
 

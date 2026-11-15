@@ -73,9 +73,10 @@ describe('Run list', () => {
 });
 
 describe('case window of Run, with a reply', () => {
-  it('shows the reply in its box', () => {
+  it('shows the reply read-only, not in a box (T293)', () => {
     render(<Window caseId="3" />);
-    expect((screen.getByLabelText('Judge reply') as HTMLTextAreaElement).value).toContain('"claims"');
+    expect(screen.queryByRole('textbox', { name: 'Judge reply' })).toBeNull();
+    expect(document.querySelector('.reply-read')?.textContent).toContain('"claims"');
   });
 
   it('shows each additional finding with its rule and the marks False positive, Real error and Ignore', () => {

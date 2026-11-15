@@ -54,25 +54,23 @@ test('a case with injected errors on one page: base, errors, prompt, JSON, expec
   await expect(win(page).getByRole('button', { name: 'Save case' })).toBeDisabled();
   await box.fill(withErrors(['Zorro,', 'Quartz.']));
 
-  // part 5: the check line and the list of expected errors, read-only
-  await expect(win(page).getByText('Text and list agree')).toBeVisible();
+  // part 5: the list of expected errors, read-only, with no check line of text against list (T286)
+  await expect(win(page).getByText('Text and list agree')).toHaveCount(0);
   await expect(win(page).getByRole('list', { name: 'Expected errors' }).getByRole('listitem')).toHaveCount(2);
   await expect(win(page).locator('mark')).toHaveCount(0);
   expect(await axe(page)).toEqual([]);
 
-  // a fragment that no longer occurs turns the line into "not in the text" at once, and the error says "not found in the case"
+  // a fragment that no longer occurs is not an obstacle: the error says "not found in the case" and has no Show the issue
   const text = await box.inputValue();
   await box.fill(text.replace(/"fragment":\s*"Quartz\."/, '"fragment": "Quartzzz"'));
-  await expect(win(page).getByText(/1 expected error not in the text/)).toBeVisible();
+  await expect(win(page).getByText(/not in the text/)).toHaveCount(0);
   await expect(win(page).getByText('not found in the case', { exact: true })).toBeVisible();
-  await win(page).getByRole('button', { name: 'Save case' }).click();
-  const ask = page.getByRole('dialog', { name: 'Save with a mismatch?' });
-  await expect(ask).toContainText('Quartzzz');
-  await ask.getByRole('button', { name: 'Go back' }).click();
+  await expect(win(page).getByRole('button', { name: 'Show the issue' })).toHaveCount(1);
 
-  // fix it and save
+  // the right text: "Show the issue" marks the passage, and "Save case" saves at once, with no question
   await box.fill(text);
-  await expect(win(page).getByText('Text and list agree')).toBeVisible();
+  await win(page).getByRole('button', { name: 'Show the issue' }).first().click();
+  await expect(win(page).locator('.marked-fields .fragment-strong').first()).toBeVisible();
   await win(page).getByRole('button', { name: 'Save case' }).click();
   await expect(win(page)).toHaveCount(0);
   const row = page.getByRole('row').filter({ hasText: 'Anna, two errors' });
@@ -99,13 +97,15 @@ test('a case with injected errors on one page: base, errors, prompt, JSON, expec
   await expect(again).toHaveValue(/The last word was changed/);
 });
 
-test('From JSON: a case identical to its base is refused with the reason', async ({ page }) => {
+test('From JSON: a case identical to its base is saved without a question (T286)', async ({ page }) => {
   await start(page);
   await page.getByRole('button', { name: 'Add test case…' }).click();
   await win(page).getByRole('button', { name: 'From JSON' }).click();
   await win(page).getByLabel('Case JSON').fill(json({ name: 'Same', base: '1', expected_errors: [{ description: 'x', fragment: firstWord }] }));
-  await expect(win(page).getByText(/identical to its base case 1/)).toBeVisible();
-  await expect(win(page).getByRole('button', { name: 'Save case' })).toBeDisabled();
+  await expect(win(page).getByText(/identical to its base/)).toHaveCount(0);
+  await win(page).getByRole('button', { name: 'Save case' }).click();
+  await expect(win(page)).toHaveCount(0);
+  await expect(page.getByRole('row').filter({ hasText: 'Same' })).toContainText('Injected errors');
 });
 
 test('five expected errors are visible without scrolling, and From JSON adds a case (Show JSON and Copy JSON are gone, T238)', async ({ page }) => {

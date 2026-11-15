@@ -27,27 +27,28 @@ const open = (state: AppState = draftState(), base: string | null = '1') => {
 const toCaseView = (text: string) => fireEvent.input(box(), { target: { value: text } });
 
 describe('parts 4 and 5: live checks', () => {
-  it('every change in the JSON shows at once in the list and the check line', () => {
+  it('every change in the JSON shows at once in the list; there is no check line of text against list (T286)', () => {
     open();
     toCaseView(json('Anna is a doctor. She bought a second oven in 1998.', [doctor]));
-    expect(within(win()).getByText('Text and list agree')).toBeTruthy();
+    expect(within(win()).getByRole('list', { name: 'Expected errors' })).toBeTruthy();
+    expect(within(win()).queryByText('Text and list agree')).toBeNull();
     fireEvent.input(box(), { target: { value: json('Anna is a lawyer. She bought a second oven in 1998.', [doctor]) } });
-    expect(within(win()).getByText(/1 expected error not in the text/)).toBeTruthy();
+    expect(within(win()).queryByText(/not in the text/)).toBeNull();
     expect(within(win()).getByText('not found in the case', { selector: '.error-side.not-found dt' })).toBeTruthy();
   });
 
-  it('a changed place that no expected error covers is a warning under the box: "A changed place is not in the list"', () => {
+  it('a changed place that no expected error covers is not named and not marked (T286)', () => {
     open();
     toCaseView(json('Anna is a doctor. She bought a third oven in 1998.', [doctor]));
-    expect(within(win()).getByText(/1 changed place not in the list/)).toBeTruthy();
-    expect(within(win()).getByText(/A changed place is not in the list: “third” in summary/)).toBeTruthy();
-    expect(win().querySelectorAll('mark')).toHaveLength(0);
+    expect(within(win()).queryByText(/changed place/)).toBeNull();
+    expect(within(win()).queryByRole('list', { name: 'Changed places not in the list' })).toBeNull();
+    expect(win().querySelectorAll('mark, .fragment-uncovered')).toHaveLength(0);
   });
 
-  it('for an omission the list agrees with the base and says nothing more', () => {
+  it('for an omission nothing more is said (T286)', () => {
     open();
     toCaseView(json('Anna is a baker.', [{ category: 'omission', fragment: 'She bought a second oven in 1998', description: 'The oven is left out' }]));
-    expect(within(win()).getByText('Text and list agree')).toBeTruthy();
+    expect(within(win()).queryByText('Text and list agree')).toBeNull();
     expect(within(win()).queryByRole('list', { name: 'Changed places not in the list' })).toBeNull();
   });
 
@@ -79,34 +80,31 @@ describe('saving', () => {
     expect(screen.getByText('Anna case')).toBeTruthy();
   });
 
-  it('a changed place not in the list, or a fragment not in the text, asks first and names what does not agree', () => {
+  it('"Save case" asks nothing about the list: a changed place no error covers and a fragment not in the text are saved at once (T286)', () => {
     open();
     toCaseView(json('Anna is a doctor. She bought a third oven in 1998.', [doctor, { ...doctor, fragment: 'she sold it' }]));
     fireEvent.click(button('Save case'));
-    const ask = screen.getByRole('dialog', { name: 'Save with a mismatch?' });
-    expect(within(ask).getByText(/third/)).toBeTruthy();
-    expect(within(ask).getByText(/she sold it/)).toBeTruthy();
-    fireEvent.click(within(ask).getByRole('button', { name: 'Go back' }));
-    expect(screen.getByRole('dialog', { name: 'Test case' })).toBeTruthy();
-    expect(Array.from(document.querySelectorAll('tr')).some((r) => r.textContent?.includes('Anna case'))).toBe(false);
-    fireEvent.click(button('Save case'));
-    fireEvent.click(within(screen.getByRole('dialog', { name: 'Save with a mismatch?' })).getByRole('button', { name: 'Save anyway' }));
+    expect(screen.queryByRole('dialog', { name: 'Save with a mismatch?' })).toBeNull();
     expect(screen.queryByRole('dialog', { name: 'Test case' })).toBeNull();
     expect(screen.getByText('Anna case')).toBeTruthy();
   });
 
-  it('a case identical to its base is refused with the reason', () => {
+  it('a case identical to its base is saved without a problem (T286)', () => {
     open();
     fireEvent.input(box(), { target: { value: json(source, [doctor]) } });
-    expect(within(win()).getByText(/identical to its base case 1/)).toBeTruthy();
-    expect(button('Save case').disabled).toBe(true);
+    expect(within(win()).queryByText(/identical to its base/)).toBeNull();
+    expect(button('Save case').disabled).toBe(false);
+    fireEvent.click(button('Save case'));
+    expect(screen.queryByRole('dialog', { name: 'Test case' })).toBeNull();
+    expect(screen.getByText('Anna case')).toBeTruthy();
   });
 
-  it('an expected error with no fragment or no category is only a note', () => {
+  it('an expected error with no fragment shows "No fragment" and nothing else; no note about it or a missing category (T286)', () => {
     open();
     toCaseView(json('Anna is a doctor. She bought a second oven in 1998.', [doctor, { description: 'Tone of the whole text' }]));
-    expect(within(win()).getByText('Text and list agree')).toBeTruthy();
-    expect(within(win()).getByText(/E2: no fragment/)).toBeTruthy();
+    expect(within(win()).getByText('No fragment')).toBeTruthy();
+    expect(within(win()).queryByText(/E2: no fragment/)).toBeNull();
+    expect(within(win()).queryByText(/E2: no category/)).toBeNull();
     fireEvent.click(button('Save case'));
     expect(screen.queryByRole('dialog', { name: 'Save with a mismatch?' })).toBeNull();
   });

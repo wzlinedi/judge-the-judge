@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { addFinding, applyOpinionTo, removeFinding } from '../../../app/actions/decide';
 import { approveCase, setAddedMark, setAdditionalMark, setExpectedMark } from '../../../app/actions/decisions';
-import { reminderDue, replaceNeedsQuestion, type ReplyOutcome } from '../../../app/actions/replies';
+import { reminderDue, removeReply, replaceNeedsQuestion, type ReplyOutcome } from '../../../app/actions/replies';
 import type { ReviewedCase } from '../../../core/evaluation/results';
 import { composePrompt } from '../../../core/judge/compose';
 import { extractJson } from '../../../core/judge/extract-json';
@@ -43,15 +43,26 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState<Record<string, boolean>>({});
   const [message, setMessage] = useState('');
-  /** The case whose saved reply may be changed: the first change asks (T261), then the case can be edited freely until the window moves. */
-  const [unlocked, setUnlocked] = useState<string | null>(null);
+  /** The case whose saved reply is being changed in the box: "Change reply" opens it, "Save reply" asks (T261) and saves, "Cancel" drops the edits (T293). */
+  const [editing, setEditing] = useState<string | null>(null);
+  /** The finding that was pressed, in the reply or on the right: both places mark it for a moment (T293). */
+  const [pointed, setPointed] = useState<string | null>(null);
+  const partRef = useRef<HTMLDivElement>(null);
   /** The change that waits for the answer to "Change the judge’s reply?": a text typed into the box, or a paste. */
-  const [pending, setPending] = useState<{ kind: 'type'; value: string } | { kind: 'paste' } | null>(null);
+  const [pending, setPending] = useState<{ kind: 'type'; value: string } | { kind: 'paste' } | { kind: 'remove' } | null>(null);
   const [leaving, setLeaving] = useState<(() => void) | null>(null);
   const [adding, setAdding] = useState(false);
   const [opinionOpen, setOpinionOpen] = useState(false);
   const { strong, shown, show: showInText } = useShowIssue(textRef);
-  useEffect(() => setUnlocked(null), [caseId]);
+  useEffect(() => {
+    setEditing(null);
+    setPointed(null);
+  }, [caseId]);
+  useEffect(() => {
+    if (pointed === null) return;
+    const timer = setTimeout(() => setPointed(null), 2500);
+    return () => clearTimeout(timer);
+  }, [pointed]);
   const position = reviewed.findIndex((r) => r.testCase.id === caseId);
   const current = reviewed[position];
   if (!current) return null;
@@ -84,36 +95,70 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
     setMessage(outcome.message ?? '');
     if (outcome.status === 'saved' || outcome.status === 'unchanged') clearDraft(sent);
   };
+  const isEditing = editing === caseId && reply !== undefined;
   // a change of a saved reply was asked about already (T261), so the replies action does not ask again
-  const isOpen = reply === undefined || unlocked === caseId;
-  const saveText = async (value: string) => settle(await replyActions.save(caseId, value, reply !== undefined), value);
-  /** A reply that is readable JSON is saved as soon as it is in the box, typed or pasted (FR-056). */
+  const saveText = async (value: string) => {
+    const outcome = await replyActions.save(caseId, value, reply !== undefined);
+    settle(outcome, value);
+    return outcome;
+  };
+  /** A case without a reply: a readable JSON is saved as soon as it is in the box, typed or pasted (FR-056). */
   const typed = (value: string) => {
     setText(value);
-    if (value.trim() !== '' && value !== (reply?.reply ?? '') && extractJson(value).ok) void saveText(value);
+    if (reply === undefined && value.trim() !== '' && extractJson(value).ok) void saveText(value);
   };
-  const pasted = async () => settle(await replyActions.paste(caseId, reply !== undefined));
-  /** The reply is what the judge returned: the first change of a saved reply asks first (T261). */
-  const onText = (value: string) => {
-    if (!isOpen && value !== reply?.reply) setPending({ kind: 'type', value });
-    else typed(value);
+  const pasted = async () => {
+    const outcome = await replyActions.paste(caseId, reply !== undefined);
+    settle(outcome);
+    return outcome;
+  };
+  /** While a saved reply is changed, typing only changes the draft; "Save reply" saves it (T293). */
+  const onText = (value: string) => (isEditing ? setText(value) : typed(value));
+  /** The reply is what the judge returned: changing it asks first (T261), and an emptied box removes it (T291). */
+  const saveReplyPressed = () => {
+    if (text.trim() === '') setPending({ kind: 'remove' });
+    else if (!changed) {
+      clearDraft();
+      setEditing(null);
+    } else setPending({ kind: 'type', value: text });
+  };
+  const cancelEditing = () => {
+    clearDraft();
+    setMessage('');
+    setEditing(null);
   };
   const pasteReply = () => {
-    if (!isOpen) setPending({ kind: 'paste' });
+    if (reply !== undefined) setPending({ kind: 'paste' });
     else void pasted();
   };
-  const confirmChange = () => {
+  const confirmChange = async () => {
     const change = pending;
     setPending(null);
-    setUnlocked(caseId);
-    if (change?.kind === 'type') typed(change.value);
-    else if (change?.kind === 'paste') void pasted();
+    if (change?.kind === 'remove') {
+      clearDraft();
+      setMessage('');
+      setEditing(null);
+      onChange(removeReply(evaluation, caseId));
+    } else if (change?.kind === 'type') {
+      const outcome = await saveText(change.value);
+      if (outcome.status === 'saved' || outcome.status === 'unchanged') setEditing(null);
+    } else if (change?.kind === 'paste') {
+      await pasted();
+    }
+  };
+  /** A finding was pressed in the reply or on the right: mark it in both places and bring the other place into view (T293). */
+  const point = (key: string, from: 'reply' | 'errors') => {
+    setPointed(key);
+    setTimeout(() => {
+      const target = partRef.current?.querySelector<HTMLElement>(from === 'reply' ? `[data-finding-line="${key}"]` : `[data-finding-block="${key}"]`);
+      target?.scrollIntoView?.({ block: 'center' });
+    }, 0);
   };
   const handMarks = replaceNeedsQuestion(evaluation, caseId).count;
 
   /** Moving or closing with a reply that was typed and not saved asks first (FR-055). */
   const leave = (go: () => void) => {
-    if (changed && text.trim() !== '') setLeaving(() => go);
+    if (changed && text.trim() !== '' && (isEditing || !extractJson(text).ok)) setLeaving(() => go);
     else {
       clearDraft();
       setMessage('');
@@ -138,7 +183,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
           <strong>{testCase.expected_errors.length === 0 ? 'Clean' : 'Injected errors'}</strong>
           {testCase.base ? <span class="muted">{` · Base: ${testCase.base}${base ? ` (${base.name})` : ''}`}</span> : null}
         </p>
-        <MarkedFields testCase={testCase} judged={judged} effective={effective} uncovered={[]} strong={strong} shown={shown} rootRef={textRef} />
+        <MarkedFields testCase={testCase} judged={judged} effective={effective} strong={strong} shown={shown} rootRef={textRef} />
         <PromptButtons prompt={prompt} primary={!reply && !notJsonDraft && copied[caseId] !== true} onCopied={() => setCopied((c) => ({ ...c, [caseId]: true }))} />
       </Part>
 
@@ -147,7 +192,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
       </Part>
 
       <Part number={3} title="Judge reply and errors">
-        <div class="case-half">
+        <div class="case-half" ref={partRef}>
           <ReplyPane
             saved={reply?.reply}
             text={text}
@@ -156,6 +201,13 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
             onSaveAsText={() => void saveText(text)}
             onPaste={pasteReply}
             message={message}
+            editing={isEditing}
+            onChangeReply={() => setEditing(caseId)}
+            onSaveReply={saveReplyPressed}
+            onCancel={cancelEditing}
+            findings={current.findings}
+            pointed={pointed}
+            onPoint={(key) => point(key, 'reply')}
           />
           {reply && effective ? (
             <ErrorsPane
@@ -167,6 +219,8 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
               onShowInText={showInText}
               judged={judged}
               onRemove={(item) => item.added !== undefined && onChange(removeFinding(evaluation, caseId, item.added))}
+              pointed={pointed}
+              onPoint={isEditing ? undefined : (key) => point(key, 'errors')}
             />
           ) : (
             <ExpectedPreview testCase={testCase} judged={judged} onShowInText={showInText} />
@@ -226,7 +280,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
           ) : null}
           <Dialog
             open={pending !== null}
-            title="Change the judge’s reply?"
+            title={pending?.kind === 'remove' ? 'Remove the judge’s reply?' : 'Change the judge’s reply?'}
             onClose={() => setPending(null)}
             actions={
               <>
@@ -234,17 +288,26 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
                   {labels.cancel}
                 </button>
                 <button type="button" onClick={confirmChange}>
-                  Change reply
+                  {pending?.kind === 'remove' ? 'Remove reply' : 'Change reply'}
                 </button>
               </>
             }
           >
-            <p>The reply is what the judge returned, and the results are counted from it. Change it only to put right a mistake in copying it.</p>
-            <p>{`The case is marked again from the changed text${handMarks > 0 ? `. The ${handMarks} ${handMarks === 1 ? 'mark you set (by hand or from an opinion) is' : 'marks you set (by hand or from an opinion) are'} removed` : ''}. You can then edit the reply of this case freely until you move to another case.`}</p>
+            {pending?.kind === 'remove' ? (
+              <>
+                <p>The reply is what the judge returned, and the results are counted from it. Removing it takes the case out of the results.</p>
+                <p>{`The case is Not run again, with no reply and no added findings${handMarks > 0 ? `. The ${handMarks} ${handMarks === 1 ? 'mark you set (by hand or from an opinion) is' : 'marks you set (by hand or from an opinion) are'} removed` : ''}.`}</p>
+              </>
+            ) : (
+              <>
+                <p>The reply is what the judge returned, and the results are counted from it. Change it only to put right a mistake in copying it.</p>
+                <p>{`The case is marked again from the changed text${handMarks > 0 ? `. The ${handMarks} ${handMarks === 1 ? 'mark you set (by hand or from an opinion) is' : 'marks you set (by hand or from an opinion) are'} removed` : ''}.`}</p>
+              </>
+            )}
           </Dialog>
           <Dialog
             open={leaving !== null}
-            title="The reply in the box is not saved"
+            title={isEditing ? 'The changes to the reply are not saved' : 'The reply in the box is not saved'}
             onClose={() => setLeaving(null)}
             actions={
               <>
@@ -257,7 +320,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
               </>
             }
           >
-            <p>The text in the box is not JSON and was not saved. Press Keep as text to keep it, or go on and the text is lost.</p>
+            {isEditing ? <p>The changes to the reply are not saved. Press Save reply to keep them, or go on and they are lost.</p> : <p>The text in the box is not JSON and was not saved. Press Keep as text to keep it, or go on and the text is lost.</p>}
           </Dialog>
         </>
       }

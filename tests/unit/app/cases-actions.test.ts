@@ -92,8 +92,21 @@ describe('rename and remove', () => {
     expect(removalImpact(finalized(false), '2')).toEqual({ hasReply: false, decisions: 0 });
   });
 
-  it('refuses to remove a base in use, naming its cases; removes a free case', () => {
-    expect(removeCase(open(), '1').note).toMatch(/Anna \+ 2 errors/);
+  it('removes a base that other cases use: they lose `base`, are not marked corrected, and the version is dropped (T283)', () => {
+    const base = finalized(true);
+    const cases = base.evaluation.dataset.cases.map((c) => (c.id === '2' ? { ...c, base: '1' } : c));
+    const state: AppState = { ...base, evaluation: { ...base.evaluation, dataset: { ...base.evaluation.dataset, cases, version: 'v1' } } };
+    const removed = removeCase(state, '1');
+    expect(removed.note).toBeUndefined();
+    const left = removed.state.evaluation.dataset.cases;
+    expect(left.map((c) => c.id)).toEqual(['2']);
+    expect(left[0]).not.toHaveProperty('base');
+    expect(left[0]?.changed_after_first_reply).toBe(state.evaluation.dataset.cases.find((c) => c.id === '2')?.changed_after_first_reply);
+    expect(removed.state.evaluation.dataset.version).toBeUndefined();
+    expect(removed.state.unsaved).toBe(true);
+  });
+
+  it('removes a free case', () => {
     const removed = removeCase(open(), '2');
     expect(removed.state.evaluation.dataset.cases.map((c) => c.id)).toEqual(['1']);
     expect(removed.state.unsaved).toBe(true);

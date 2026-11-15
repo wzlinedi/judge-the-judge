@@ -178,7 +178,7 @@ describe('the case window of Run, without a reply', () => {
     ports.clipboard = createFakeClipboard(reply);
     open(ports);
     fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste reply' }));
-    await waitFor(() => expect(replyBox().value).toBe(reply));
+    await waitFor(() => expect((windowOf().querySelector('.reply-read') as HTMLElement).textContent).toBe(JSON.stringify(JSON.parse(reply), null, 2)));
     expect(within(windowOf()).getByText('1 not saved')).toBeTruthy();
     expect(within(windowOf()).getByText(/Pass/)).toBeTruthy();
     expect(within(windowOf()).queryByRole('button', { name: 'Approve' })).toBeNull();
@@ -207,42 +207,55 @@ describe('the case window of Run, without a reply', () => {
   });
 });
 
-describe('changing a saved reply (T261)', () => {
+describe('changing a saved reply (T261, T293)', () => {
   const open = (caseId: string, ports = createFakePorts()) => renderApp(ports, stateOn(sampleEvaluation(), { openCase: caseId }));
   const question = () => screen.findByRole('dialog', { name: 'Change the judge’s reply?' });
+  const readOnly = () => windowOf().querySelector('.reply-read') as HTMLElement;
+  const change = () => fireEvent.click(within(windowOf().querySelector('.reply-pane') as HTMLElement).getByRole('button', { name: 'Change reply' }));
+  const save = () => fireEvent.click(within(windowOf().querySelector('.reply-pane') as HTMLElement).getByRole('button', { name: 'Save reply' }));
 
-  it('asks first, even when the case has only automatic decisions, and changes nothing on Cancel', async () => {
+  it('asks first when Save reply is pressed, even when the case has only automatic decisions, and changes nothing on Cancel', async () => {
     open('1');
-    const saved = replyBox().value;
+    const saved = readOnly().textContent;
+    change();
     fireEvent.input(replyBox(), { target: { value: '{"claims": []}' } });
+    expect(screen.queryByRole('dialog', { name: 'Change the judge’s reply?' })).toBeNull();
+    save();
     const dialog = await question();
     expect(dialog.textContent).toMatch(/the results are counted from it/);
     expect(dialog.textContent).toMatch(/marked again from the changed text/);
     expect(dialog.textContent).not.toMatch(/you set/);
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('dialog', { name: 'Change the judge’s reply?' })).toBeNull();
-    expect(replyBox().value).toBe(saved);
+    expect(replyBox().value).toBe('{"claims": []}');
     expect(within(windowOf()).getByText('0 not saved')).toBeTruthy();
+    fireEvent.click(within(windowOf().querySelector('.reply-pane') as HTMLElement).getByRole('button', { name: 'Cancel' }));
+    expect(readOnly().textContent).toBe(saved);
   });
 
   it('names the marks that are removed when the case has decisions by hand', async () => {
     open('2');
+    change();
     fireEvent.input(replyBox(), { target: { value: '{"claims": []}' } });
+    save();
     expect((await question()).textContent).toMatch(/The 2 marks you set .* are removed/);
   });
 
-  it('after Change reply the change is saved, the case is marked again, and later changes of this case do not ask again', async () => {
+  it('after Change reply the change is saved and the read-only view returns; the next change asks again', async () => {
     open('2');
+    change();
     fireEvent.input(replyBox(), { target: { value: '{"claims": []}' } });
+    save();
     fireEvent.click(within(await question()).getByRole('button', { name: 'Change reply' }));
     await waitFor(() => expect(within(windowOf()).getByText('1 not saved')).toBeTruthy());
-    expect(replyBox().value).toBe('{"claims": []}');
+    expect(readOnly().textContent).toBe('{\n  "claims": []\n}');
     expect(screen.queryByText('The oven was never bought')).toBeNull();
     // the new reply holds no findings, so the automatic marks put every expected error as missed
     expect(within(windowOf()).getAllByText(/Fail/).length).toBeGreaterThan(0);
+    change();
     fireEvent.input(replyBox(), { target: { value: '{"claims": [{"claim": "x"}]}' } });
-    expect(screen.queryByRole('dialog', { name: 'Change the judge’s reply?' })).toBeNull();
-    await waitFor(() => expect(replyBox().value).toBe('{"claims": [{"claim": "x"}]}'));
+    save();
+    expect(await question()).toBeTruthy();
   });
 
   it('asks the same question for Paste reply over a saved reply', async () => {
@@ -251,14 +264,18 @@ describe('changing a saved reply (T261)', () => {
     open('2', ports);
     fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste reply' }));
     fireEvent.click(within(await question()).getByRole('button', { name: 'Change reply' }));
-    await waitFor(() => expect(replyBox().value).toBe('{"claims": []}'));
+    await waitFor(() => expect(readOnly().textContent).toBe('{\n  "claims": []\n}'));
   });
 
-  it('changes nothing and does not ask when the box gets the reply that is already saved', async () => {
+  it('changes nothing and does not ask when Save reply is pressed with the reply that is already saved', () => {
     open('1');
-    fireEvent.input(replyBox(), { target: { value: sampleEvaluation().replies['1']!.reply } });
+    const saved = readOnly().textContent;
+    change();
+    expect(replyBox().value).toBe(saved);
+    save();
     expect(screen.queryByRole('dialog', { name: 'Change the judge’s reply?' })).toBeNull();
     expect(within(windowOf()).getByText('0 not saved')).toBeTruthy();
+    expect(readOnly().textContent).toBe(saved);
   });
 });
 

@@ -189,6 +189,13 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner trial 2026-11-15, T288) Is "Finalize test cases…" still needed, now that most of the test cases can change after it? → A: Yes, as **"Start test run"**, a button at the top of the Test cases step. Before the start, the Test run step shows its actions disabled with the reason. After the start, the judge prompt and the judged text are fixed and there is no way back; the rules, the reply mapping and the categories stay editable, because they say how a reply is read, not what the judge received. "Reopen test cases" goes. Replaces the answers about finalizing of Sessions 2026-11-08 and 2026-11-12.
 - Q: (Owner trial 2026-11-15, T289) How many files does the work need? → A: One, the **test project**. It holds the judge set, the test cases, the metric and the thresholds and, once it has started, the **test run** (replies, decisions, model details). "Save test project" saves everything. "Load test project…" asks, for a file with a test run, "Load with the test run" or "Load the test project only"; the second is how a changed judge is tested on the same cases, so "Run again with a new judge…" goes. The evaluation file, "Load evaluation…", "Save evaluation" and "Save evaluation as…" go; "New evaluation" becomes "New test project"; the step "Run" is named "Test run". The tool is not released, so old evaluation files are not read. Replaces the two files of FR-076.
 - Q: (Clarify 2026-11-15) After "Load the test project only", where does the next "Save test project" go? → A: To a new file: the loaded file is not remembered, so the first save asks for a file name and the loaded test run is never overwritten.
+- Q: (Owner trial 2026-11-15, T283) May the user remove a clean case that other cases use as their base? → A: Yes. A case is independent once it is made, so "Remove" asks as for any case, with no refusal and no extra warning. The cases made from it keep their content and lose `base`, and are not marked "corrected"; the test cases version changes as with any removal.
+- Q: (Owner trial 2026-11-15, T284) Does the list of expected errors under the JSON box of the test case window offer "Show the issue"? → A: Yes, as "Open" and Test run do (FR-085). Part 5 shows the fields of the case, and pressing "Show the issue" on an error marks and scrolls to its passages in them; an error whose passage is not in the case has no button.
+- Q: (Owner trial 2026-11-15, T286) Is the text of a case still checked against its list of expected errors? → A: No, not at all (option B). FR-080 is removed: no check line, no "not on the list" mark, no "not in the text" mark, no confirmation on "Save case", no refusal of a case identical to its base, no note for a missing fragment or category. "Show the issue" of an error whose passage is not in the case is missing and its side line says "not found in the case". A mistake in a fragment is seen on Test run.
+- Q: (Owner trial 2026-11-15, T290) Are "Add finding" and "Second opinion…" hidden before the judge’s reply is saved? → A: No. They are shown disabled, with the reason "Paste the judge’s reply first" beside them, and become enabled when a reply is saved (FR-055).
+- Q: (Owner trial 2026-11-15, T291) What does emptying the reply box of a saved reply do? → A: It removes the reply, after asking: "Remove the judge’s reply?", naming the marks by hand that are lost. The case is then "Not run" again, with no reply, no decisions and no added findings. Before this, an emptied box saved nothing and the old reply stayed (FR-056).
+- Q: (Owner trial 2026-11-15, T292) Should a pasted JSON be formatted? → A: Yes, everywhere the tool reads JSON (the sample reply on the Judge step, the case JSON, the reply box of Test run, the second opinion, "Edit expected errors"): when the whole text of the box is valid JSON after a paste, it is shown with new lines and an indent of 2 spaces. Invalid text, fenced JSON and JSON with other text around it stay as pasted. The judge’s reply is stored formatted (FR-084).
+- Q: (Owner trial 2026-11-15, T293) How is a saved judge reply shown on Test run? → A: Read-only and formatted, not in a text box. Each part that an error rule turned into a finding is highlighted, labelled with the rule and its number ("F1") in the right column; pressing a finding on the right scrolls to and marks its block, and pressing a block marks its finding. "Change reply" turns the view into the box with "Save reply" (asks first, as FR-056; an emptied box removes the reply, T291) and "Cancel". "Paste reply" still saves at once, so a case takes no more than three actions (SC-002). A reply kept as text has no highlights (FR-055, FR-056).
 
 ## Glossary
 
@@ -391,18 +398,19 @@ fragments and its base case.
    `expected_errors[2].description` for a missing or wrong field), the text is kept, and "Save case"
    is disabled, with the reason beside it, until it is valid.
 7. **Given** a valid JSON, **When** the user looks under the box, **Then** the case's expected
-   errors are listed read-only (number, category, difficulty, fragment, description) with the line
-   of FR-080, on the same page, without a "Next" and without the fields highlighted.
+   errors are listed read-only (number, category, difficulty, fragment, description), on the same
+   page, without a "Next" and with the fields shown without highlights until "Show the issue" (T284).
 8. **Given** that list, **When** the user changes the JSON, **Then** the list shows the change at
    once; while the JSON is invalid no list is shown, the problems are under the box, and "Save case"
    is disabled.
-9. **Given** an expected error whose fragment is not found in the text, **When** the list is shown,
-   **Then** the error is marked "not in the text"; a changed place that no expected error covers
-   is a warning under the JSON box ("A changed place is not in the list: …").
+9. **Given** an expected error whose passage is not in the case, **When** the list is shown,
+   **Then** the error has no "Show the issue" and its side line says, small, "not found in the case";
+   nothing else is said about it (the text is not checked against the list, T286).
 10. **Given** a base case was picked and the injected version is identical to it, **When** the user
-   tries to save, **Then** the tool refuses and explains that no error was introduced.
+   saves, **Then** the case is saved like any other (T286).
 11. **Given** a changed place that no expected error covers, or a fragment that does not occur in the
-   text, **When** the user saves, **Then** the tool names it and asks for confirmation.
+   text, **When** the user saves, **Then** the case is saved at once, with no question and no warning
+   about the list (T286). A mistake in a fragment is seen on Test run, where the error is decided by hand.
 12. **Given** the window, **When** the user presses "Close without saving", **Then** the
    window closes and nothing is added; when there is pasted or typed content, the tool asks first.
 13. **Given** a pasted JSON with no expected errors, **When** the user saves it in this window,
@@ -528,20 +536,23 @@ reply.
    fills the screen as one page of three parts (see the Clarifications, Owner review 2026-11-14,
    Case window of Test run): the fields of the case with highlighted fragments; a row with "Add
    finding", "Second opinion…", "Marked N of M" and the status; then, in two equal columns, "Judge
-   reply" (the box for the reply, saved as soon as it is readable JSON, with "Paste reply" below it) and the errors.
+   reply" (the box for the reply, saved as soon as it is readable JSON, with "Paste reply" below it; once a reply is saved, the reply read-only with its findings marked, T293) and the errors.
 3. **Given** the window of a case, **When** the user presses "Next case" or "Previous case" (or the matching keys), **Then** the window shows that case at once, with its position
    ("case 7 of 20"), without going back to the list.
 4. **Given** the judge's answer copied in the user's LLM, **When** the user presses "Paste reply", **Then** the reply is read from the clipboard and saved in one action, kept
    with the case together with the prompt that produced it, the progress count increases, and the
    differences appear below it.
-5. **Given** a case that already has a reply, **When** the user changes it (types in the box, or
-   "Paste reply"), **Then** the tool asks first, "Change the judge’s reply?", with "Cancel" as the
+5. **Given** a case that already has a reply, which is shown read-only, **When** the user changes it ("Change reply",
+   edits the box and presses "Save reply", or presses "Paste reply"), **Then** the tool asks first, "Change the judge’s reply?", with "Cancel" as the
    primary button (T261); after "Change reply" the case is marked again from the new text.
 6. **Given** a case with decisions set by hand or approved from an LLM opinion, **When** the user
    confirms the change, **Then** those decisions are removed, and the question says how many.
+   **When** the user empties the box of a saved reply and presses "Save reply", **Then** the tool asks first, "Remove the
+   judge’s reply?", naming the marks that are lost; after "Remove reply" the case is "Not run" again,
+   with no reply, no decisions and no added findings, and "Cancel" keeps the reply (T291).
 7. **Given** the browser refuses to let the tool read the clipboard, **When** the user presses
    "Paste reply", **Then** the tool says so and the user pastes with Ctrl+V into the
-   box, which is always shown, with the same effect: a reply that is readable JSON is saved at once, any other text with "Keep as text".
+   box of a case without a reply, with the same effect: a reply that is readable JSON is saved at once, any other text with "Keep as text".
 8. **Given** a test project whose test run has not started, **When** the user opens the Test run
    step, **Then** its actions are disabled, each with the reason "Start the test run first".
 9. **Given** replies saved since the last "Save test project", **When** the user looks at the Test
@@ -905,24 +916,23 @@ case and confirm the new case has the same fields and expected errors.
   path; the pasted text is kept (FR-084). A field the judge prompt does not use, an `id` or a
   different `base` is not a problem: it is handled as FR-031 says and named
   where it matters.
-- A pasted case identical to the base case picked for it: refused on "Save case" with the reason (FR-044).
-- Injection that changes so much that the base case is not recognizable: allowed, with the
-  changed places that no expected error covers named before saving (FR-080).
+- A pasted case identical to the base case picked for it: saved like any other (FR-044, T286).
+- Injection that changes so much that the base case is not recognizable: allowed, with nothing said
+  about the changed places (T286).
 - Several expected errors in one case: allowed; each has its own category and fragment.
-- A pasted case whose fragment is not in the text: the error is marked "not in the text" and saving
-  asks for confirmation (FR-080).
+- A pasted case whose fragment is not in the text: saved at once; the error has no "Show the issue" and
+  says "not found in the case" (T286).
 - A JSON that becomes invalid while the user edits it: the list of expected errors is replaced by
   a line saying the JSON is not valid yet, and "Save case" is disabled, with the reason, until it is
   valid again (FR-085).
 - A clean case picked in "Like case" is removed or renamed while the clean case view is open: the
   pick is cleared or shows the new name, and the prompt is rebuilt (FR-083).
 - No clean case exists yet: "Case with errors" still works; the case is made without a
-  base, and the checks against the base (identical text, changed places not in the list) do not
-  apply (FR-040, FR-080).
+  base, and nothing is compared with a base (FR-040).
 - A JSON with no expected errors pasted while making a case with injected errors: saved as a clean
   case, and the window says so before saving (FR-041).
 - Removing a category that is in use: "Remove" asks first, and the expected errors keep their text and lose the category (FR-015). Removing a
-  clean base case that other cases were made from: refused, naming those cases (FR-017).
+  clean base case that other cases were made from: allowed, with the ordinary confirmation. Those cases keep their content and lose `base`; they are not marked "corrected" (FR-017, FR-025).
 - Test project with only cases with injected errors or only clean cases: some measures cannot be
   computed, and the tool says so clearly.
 - Starting the test run of an empty test project or of one with only one kind of case.
@@ -1158,9 +1168,9 @@ case and confirm the new case has the same fields and expected errors.
   appends an editable row to the table (name, description and examples, "Add" and "Cancel"); the name
   is normalized to lower case with dashes, and an empty name or a name already in the catalog is
   refused in the row. A new name can also be typed where the category of an error to prepare is
-  given (FR-024). "Rename" asks first and says that the test cases using the category are renamed
-  too, that the test cases version changes and that the error analysis of Results uses the new
-  name; a new name already in the catalog is refused. "Remove" MUST be enabled for every category:
+  given (FR-024). "Rename" asks first and says, in plain text above the buttons (not small grey text), how many expected
+  errors in how many test cases get the new name ("N expected errors in M test cases get the new name.", T294), that the
+  test cases version changes and that the error analysis of Results uses the new name ("No test case uses this category." when unused); a new name already in the catalog is refused. "Remove" MUST be enabled for every category:
   a category that no test case uses is removed at once; for a category in use it asks first ("N
   test cases use it. Their expected errors stay and lose the category. The test cases version
   changes."), and after the user confirms, those expected errors (and the findings added by hand
@@ -1177,8 +1187,8 @@ case and confirm the new case has the same fields and expected errors.
   cases, with the kind "Clean" (FR-025); the Judge step does not list them. A clean base case has a name and a value
   for every variable of the judge prompt and no expected errors. Users MUST be able to add any number of them in the test case window
   ("Add test case", "Clean case", FR-083), and to open, rename and remove each one
-  (FR-025). The system MUST refuse to remove a clean base case that cases with injected errors
-  were made from, naming those cases. Clean base cases show what correct data looks like; they
+  (FR-025). Every test case is independent once it is made, so the system MUST NOT refuse to remove a clean base case that cases with injected errors
+  were made from: those cases keep their content and lose their `base`, and are not marked "corrected" (T283). Clean base cases show what correct data looks like; they
   MUST NOT be used in place of the error rules.
 - **FR-018**: Removed (prototype v15 review): the prompt that asked the user's LLM for many clean
   base cases at once, with its count, topic and review of every proposed case, is not offered. A
@@ -1239,8 +1249,7 @@ case and confirm the new case has the same fields and expected errors.
   number of expected errors, categories and any warnings. "Add test case" is above the table (and, after the start of the test run, above the table of cases on Test run), never in the "what next" line, and the
   user can search, sort and filter it, including by kind. Each row MUST show three buttons: "Open" (the read-only
   view, FR-086; a click on the row does the same), "Rename" (asks for the new
-  name; a name another case has is refused, FR-079) and "Remove" (asks for confirmation; refused
-  for a base case in use, FR-017). There is no details panel and no menu in a row. All three buttons
+  name; a name another case has is refused, FR-079) and "Remove" (asks for confirmation, also for a base case in use, FR-017). There is no details panel and no menu in a row. All three buttons
   stay enabled at all times, also after the start of the test run and for a case with a reply; "Remove" of a case
   with a reply asks first, saying that its reply and its N decisions are removed with it and the results
   change. The fields of a saved case are never edited. The expected errors of any case can be
@@ -1341,13 +1350,13 @@ case and confirm the new case has the same fields and expected errors.
   complete JSON block, also inside other text or a code fence), hold exactly one case, have a value
   for every variable of the judge prompt, and give every expected error a description; the other
   keys are treated as FR-031 says. An expected error without a fragment
-  (for example bias of the whole text) or without a category is allowed and named as a warning:
+  (for example bias of the whole text) or without a category is allowed; its card says "No fragment":
   it cannot be matched automatically and is decided by hand on Test run (FR-061). Every problem and
   warning MUST be shown under the box with where it is. A JSON with no expected errors is valid
   here too: it is saved as a clean case, and the window says so before saving.
   "Save case" MUST be enabled only while the JSON is valid, and the expected errors it holds are
-  listed read-only under the box (FR-085). Changed places that no expected error covers are listed
-  as warnings under the box ("A changed place is not in the list: …", FR-080). An
+  listed read-only under the box (FR-085). The text of the case is not checked against its list of
+  expected errors (T286). An
   answer whose number of expected errors differs from the list of errors to prepare is accepted
   with a note naming the difference. The tool MUST NOT have built-in rules that change text by
   themselves, and MUST make clear that what the LLM returns is a proposal to review, not a
@@ -1356,8 +1365,8 @@ case and confirm the new case has the same fields and expected errors.
   source, that the error contradicts. The prompt for the LLM asks for it, and tells the LLM to leave
   it out when no passage of another field corresponds. It is shown beside the fragment and is never
   used for matching; a `source_fragment` that is in no field of the case is a warning, not a problem.
-- **FR-042**: Merged into FR-085 and FR-080: the review of a case before saving happens in the list of
-  expected errors under its JSON and the warnings of FR-080 (FR-085);
+- **FR-042**: Merged into FR-085: the review of a case before saving happens in the list of
+  expected errors under its JSON (FR-085);
   "Compare with base", "Use selected text as fragment" and editing single expected errors are not
   offered.
 - **FR-043**: The prompt that prepares errors MUST explain the two difficulty levels and ask the
@@ -1365,7 +1374,7 @@ case and confirm the new case has the same fields and expected errors.
   LLM. A difficulty is changed by changing it in the JSON.
 - **FR-044**: When saving a case with injected errors, the system MUST record its base case when one
   was picked, and for each expected error the category and a description of what was changed, and
-  MUST reject a case identical to its base case. The system MUST also record the exact fragment each error is at,
+  MUST NOT reject a case identical to its base case (T286). The system MUST also record the exact fragment each error is at,
   when the JSON gives one, because automatic matching of the judge's findings uses it: for an error present in the text, the
   changed fragment of the judged text; for an omission, the fragment of another field that the
   judged text no longer covers. A new category in the JSON joins the catalog on saving (FR-024).
@@ -1455,10 +1464,16 @@ case and confirm the new case has the same fields and expected errors.
   the case, as the read-only view of FR-086 does: the kind, the fields, over the full width,
   with no highlight until "Show the issue" points at an error (T257), then "Show prompt" (a dialog with
   the whole prompt and only "Close") and "Copy prompt". Each part is in a frame. Part 2 is one row: "Add finding", "Second
-  opinion…", the meter "Marked N of M" and the status of the case. Part 3 has two columns of the
-  same width (stacked below 760 px). The left column, "Judge reply", holds the box for the JSON reply, always shown, with "Paste reply" below it, checked as the text changes (FR-084) with only the problems said ("This is
-  not JSON" and its place, an empty or refused clipboard); a reply that is readable JSON is saved as soon as it is in the box, and once
-  a reply is saved the box holds it. The right column, "Errors", lists
+  opinion…", the meter "Marked N of M" and the status of the case. Before the reply is saved the two buttons are
+  shown disabled, with "Paste the judge’s reply first" beside them (Principle VII, T290). Part 3 has two columns of the
+  same width (stacked below 760 px). The left column, "Judge reply", holds, for a case without a reply, the box for the JSON reply with "Paste reply" below it, checked as the text changes (FR-084) with only the problems said ("This is
+  not JSON" and its place, an empty or refused clipboard); a reply that is readable JSON is saved as soon as it is in the box. Once
+  a reply is saved, the column shows it **read-only**, as it is kept (formatted when it is JSON, FR-084), not in a box (T293): each
+  part that an error rule turned into a finding is highlighted, labelled with the rule and the number of the finding in the right
+  column ("F1"); pressing a finding on the right scrolls to and marks its block in the reply, and pressing a highlighted block marks
+  its finding; a reply kept as text is shown without highlights. "Change reply" turns the view into the box with "Save reply" and
+  "Cancel": "Save reply" saves the edited text (asking first as FR-056 says, and an emptied box removes the reply) and returns to the
+  read-only view; "Cancel" drops the edits. "Paste reply" saves at once and shows the read-only view, so a case still takes no more than three actions (SC-002). The right column, "Errors", lists
   the expected errors from the start, before any reply, with their description, fragment, category,
   difficulty and "Show the issue" but no marks (T264); once a reply is saved it lists
   the expected errors and the additional findings with their marks
@@ -1477,13 +1492,16 @@ case and confirm the new case has the same fields and expected errors.
   that has a problem, the problem and where it is (line and column, or the field path) are shown under the box (FR-084),
   nothing is marked automatically, and the user marks the items by hand. An empty clipboard or box
   is explained and changes nothing. Every new reply MUST reset the case: its decisions, the
-  findings added by hand included, are removed and the automatic marks are computed again from the new reply. The
-  box of a saved reply stays editable, but the first change of it (typed, or "Paste reply") MUST ask
+  findings added by hand included, are removed and the automatic marks are computed again from the new reply. A
+  saved reply is changed with "Change reply", which opens the box with "Save reply" and "Cancel" (T293); typing saves
+  nothing. A change of a saved reply (the edited text with "Save reply", or "Paste reply") MUST ask
   first (T261), "Change the judge’s reply?": the reply is what the judge returned and the results are
   counted from it; the case is marked again from the changed text, and the marks set by hand or from
   an opinion, named with their number, are removed. "Cancel" (the primary button) keeps the saved
-  reply; after "Change reply" the reply of that case can be edited freely until the window moves to
-  another case.
+  reply; "Change reply" in the question applies the change and returns to the read-only view. An emptied box
+  with "Save reply" removes the reply (T291): it always asks first,
+  "Remove the judge’s reply?", naming the marks that are lost; after "Remove reply" the case is "Not
+  run" again, with no reply, no decisions and no added findings, and "Cancel" keeps the reply.
 - **FR-057**: The system MUST keep, with every test case, the judge prompt that was composed for it
   and the reply that was received, and MUST include both in the saved test project file and in every
   exported result.
@@ -1731,12 +1749,10 @@ case and confirm the new case has the same fields and expected errors.
     the text is listed with the note "fragment not found". A reply that is not JSON, or a judge
     evaluated per case (FR-061), is shown without finding highlights and says so in one line.
   - In the read-only view (FR-086): "Show the issue" at an
-    expected error highlights its passages and scrolls them into view (T257); a changed
-    place covered by no expected error, an expected error whose fragment is not found and a case
-    identical to its base are marked in the warning color with their words (FR-080). In the window
-    that adds a case (FR-085) the fields are not shown with highlights: an expected error whose
-    fragment is not found is marked "not in the text" in the list, and a changed place covered by no
-    expected error and a case identical to its base are named in the warning color under the JSON box.
+    expected error highlights its passages and scrolls them into view (T257); an
+    expected error whose passage is not in the case has no "Show the issue", and its side line says "not
+    found in the case"; nothing else is marked (T286). In the window that adds a case (FR-085) the
+    fields are shown with no highlight until "Show the issue" (T284).
   - A field with a problem in the import summary or in a case (a missing variable, a field too
     long, a case identical to another) is marked in the warning color with the word "missing",
     "too long" or "duplicate".
@@ -1757,16 +1773,12 @@ case and confirm the new case has the same fields and expected errors.
   by the filter "With warnings"; the user resolves it with "Rename". Names do not replace
   identifiers: files refer to cases by identifier.
 
-- **FR-080**: Before a case with injected errors is saved, the window (FR-085) MUST show, above the list of expected errors, one
-  line that says whether its text and its list of expected errors agree, recomputed whenever the
-  JSON changes: "Text and list agree", or the count of each mismatch. A mismatch is (a) a changed
-  place, against the base case, that no expected error covers: it is named under the JSON box in the
-  warning color ("A changed place is not in the list: …"; only when a base case was picked); (b) an expected error whose fragment does not
-  occur in the judged text (nor, for an omission, in another field): it is marked "not in the text"
-  in the list; (c) a case identical to its base case (only with a base); (d) an expected error with no fragment or no
-  category: it is named, as it cannot be matched automatically or grouped. "Save case" with (a) or
-  (b) MUST ask for confirmation and say what does not agree; (c) is refused (FR-044); (d) is only
-  a note. A mismatch is resolved by changing the JSON.
+- **FR-080**: Removed (T286, owner decision 2026-11-15): the text of a case is not checked against its list
+  of expected errors. There is no check line ("Text and list agree"), no warning about a changed place that no
+  expected error covers, no mark "not in the text", no refusal of a case identical to its base, and no
+  question on "Save case" about the list. What stays: the JSON check (FR-084), the card's "No fragment", and the
+  side line "not found in the case" of an error whose passage is not in the case (T251). A mistake in a
+  fragment is seen on Test run.
 
 - **FR-081**: Making and changing cases is reduced to these routes: "From JSON" (FR-090); "Clean
   case" (FR-083); "Case with errors", prepared with the user's LLM (FR-040, FR-041,
@@ -1806,6 +1818,12 @@ case and confirm the new case has the same fields and expected errors.
   readable JSON (the judge's reply says "This is not JSON" first), and the path of the field (for example `fields.summary`, `expected_errors[2].description`)
   for a missing, unknown, empty or too long field. The pasted text MUST be kept, and nothing that
   was already saved is changed by a wrong paste.
+  When the whole text of the box is valid JSON after a paste, the box MUST show it at once with new
+  lines and an indent of 2 spaces (T292); text that is not valid JSON, and JSON inside a code fence or
+  with other text around it, stays as pasted, so that the line and column of a problem point at the
+  user's text. Typing is never reformatted. A judge's reply that is valid JSON is stored formatted (the
+  same data, other spaces), whether it comes from the box or from "Paste reply"; the same data in other
+  spaces counts as the reply already saved.
 
 - **FR-085**: The test case window MUST be **one vertical page** for every way of adding a case (a
   clean case, "From JSON", "Edit expected errors" and a case with injected errors): the parts
@@ -1816,14 +1834,14 @@ case and confirm the new case has the same fields and expected errors.
   of your LLM to save.", "Fix the problems listed under the JSON to save."). For a case with
   injected errors the parts are: (1) the base, (2) the errors to prepare, (3) the prompt, (4) the
   box for the LLM's JSON, (5) the **list of expected errors**. Part 5 shows the name, the kind and the
-  base of the case ("Base: 4 (name)"), the line of FR-080, and the expected errors read-only (number,
-  category, difficulty, fragment, description), each marked "not in the text" when its fragment is
-  not found; it does not show the fields of the case with highlights. The list MUST NOT be editable:
+  base of the case ("Base: 4 (name)"), and the expected errors read-only (number,
+  category, difficulty, fragment, description); there is no check of the text against the list (FR-080). Under the name, kind and base part 5 shows the fields of the case, with no highlight until the user presses
+  **Show the issue** on an error (the shared error component, as in "Open" and on Test run, FR-086): the
+  passages of that error are then marked and brought into view; an error whose passage is not in the case has no "Show the issue" (T284). The list MUST NOT be editable:
   the user changes the JSON, and every change MUST show at once in the list. While the JSON is
   invalid there is no list, only a line saying so, the problems are under the box (FR-084), and
   "Save case" is disabled. A JSON with no expected errors says "No expected errors: this will be
-  saved as a clean case." "Save case" (enabled only while the JSON is valid; it asks for
-  confirmation as FR-080 says) and "Close without saving" MUST be available at all times.
+  saved as a clean case." "Save case" (enabled only while the JSON is valid; it asks nothing about the list) and "Close without saving" MUST be available at all times.
 
 - **FR-086**: "Open" MUST show a saved case **read-only**, in its own layout (it is not part of
   the page of FR-085): name, fields with highlighted fragments, the list of expected errors with
@@ -1852,10 +1870,10 @@ case and confirm the new case has the same fields and expected errors.
 - **FR-089**: The read-only view of every case, whether or not the test run has started and
   whether or not the case has a reply, MUST offer "Edit expected errors" (T254). It opens the standard large dialog with the JSON of the
   list of the expected errors of that case only, each with its `id`; the name, the base and the fields cannot change there (they are not in the JSON). The JSON is checked as
-  it changes (FR-041, FR-080, FR-084): the check line and the changed places that no error covers are shown under the box, and a mismatch is asked about before saving, as for any case; "Save expected errors" is disabled with the reason beside it while there is a problem or nothing changed. An error that keeps its
+   it changes (FR-041, FR-084); there is no check of the text against the list (FR-080); "Save expected errors" is disabled with the reason beside it while there is a problem or nothing changed. An error that keeps its
   `id` and its words keeps its mark; an error without `id` is a new one and gets the next free identifier. Saving gives a new test cases version; after the first reply the
   case is marked "corrected". For a case with a reply "Save" asks first: the marks set by hand or by an opinion for the changed and removed errors are dropped, the case is marked again from
-  the reply.
+  the reply. The question names the dropped marks only when there are some ("2 marks you set … are dropped"); with none it says only that the case is marked again from the reply (T287).
 
 - **FR-090**: "From JSON" MUST open the page of FR-085 with only the JSON box of FR-041 and the list of expected errors under it, for a case JSON the user
   already has (prepared elsewhere, or exported). The checks of FR-041 and
@@ -1991,9 +2009,9 @@ case and confirm the new case has the same fields and expected errors.
   re-typing of the LLM's answer.
 - **SC-023**: 100% of cases with injected errors carry a description of every expected error and,
   when a base case was picked, a reference to it, and in 100% of them every expected error without a
-  category or a fragment was named before saving.
+  category or a fragment says so on its card.
 - **SC-024**: 100% of attempts to save an invalid case (empty text, an expected error without a
-  description, a version identical to its base) are refused with a message the user can act on.
+  description) are refused with a message the user can act on.
 - **SC-025**: A user building a one-sided test project (only clean or only with injected errors) is warned in
   100% of cases before the start of the test run.
 - **SC-026**: At least 90% of first-time users complete a small test project (5 cases, mixed) using
@@ -2027,8 +2045,7 @@ case and confirm the new case has the same fields and expected errors.
 
 - **SC-035**: Apart from choosing the wanted errors, a user makes a case with injected errors from a
   clean base case in at most three presses (the base, if any, "Copy prompt", "Save case")
-  plus one paste, and in 100% of saved cases the line of FR-080 was shown
-  before saving.
+  plus one paste.
 
 - **SC-036**: In 100% of cases, the JSON that "Export test cases" writes, pasted into a new case of the same
   kind, gives a case with the same fields and expected errors, and with the same base when the

@@ -31,7 +31,7 @@ export function JsonCaseView({ state, initialText, onApply, onClose }: JsonCaseV
         <div class="form-grid">
           <NameField state={state} check={check} typed={typed} onTyped={setTyped} />
         </div>
-        <AnswerBox label="Case JSON" value={text} onChange={setText} check={check} rows={16} state={state} hideCleanKind />
+        <AnswerBox label="Case JSON" value={text} onChange={setText} check={check} rows={16} hideCleanKind />
       </Part>
       <Part number={2} title="Expected errors">
         <ExpectedErrorsPart state={state} text={text} check={check} />

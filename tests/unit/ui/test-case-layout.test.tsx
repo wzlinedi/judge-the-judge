@@ -91,22 +91,21 @@ describe('case with injected errors: five parts from top to bottom', () => {
     expect(within(win()).queryByLabelText('Your own instructions (optional)')).toBeNull();
   });
 
-  it('a changed place that no expected error covers is a warning under the JSON box', () => {
+  it('a changed place that no expected error covers is not named anywhere (T286)', () => {
     start('Case with errors');
     fireEvent.change(within(win()).getByLabelText('Base case (optional)'), { target: { value: '1' } });
     fireEvent.input(box(), { target: { value: json('Anna is a doctor. She bought a third oven in 1998.', [doctor]) } });
-    const warnings = within(win()).getByRole('list', { name: 'Changed places not in the list' });
-    expect(within(warnings).getByText(/A changed place is not in the list: “third” in summary/)).toBeTruthy();
-    expect(warnings.compareDocumentPosition(box()) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+    expect(within(win()).queryByRole('list', { name: 'Changed places not in the list' })).toBeNull();
+    expect(within(win()).queryByText(/changed place/i)).toBeNull();
   });
 
-  it('part 5 is a read-only list: no fields with highlights, no Show the issue, "not found in the case" for a fragment that is not found', () => {
+  it('part 5 is a read-only list: nothing highlighted until Show the issue (T284), none for a fragment that is not found, which says "not found in the case"', () => {
     start('Case with errors');
     fireEvent.input(box(), { target: { value: json('Anna is a doctor.', [doctor, { ...doctor, fragment: 'Anna is a lawyer' }]) } });
     const list = within(win()).getByRole('list', { name: 'Expected errors' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(2);
-    expect(win().querySelectorAll('mark')).toHaveLength(0);
-    expect(within(win()).queryByRole('button', { name: 'Show the issue' })).toBeNull();
+    expect(win().querySelectorAll('mark, .fragment-strong')).toHaveLength(0);
+    expect(within(win()).getAllByRole('button', { name: 'Show the issue' })).toHaveLength(1);
     expect(within(list).getAllByText('not found in the case')).toHaveLength(1);
     expect(within(list).getAllByText('summary', { selector: 'dt' })).toHaveLength(1);
     expect(within(list).queryAllByRole('textbox')).toHaveLength(0);

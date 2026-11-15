@@ -13,6 +13,7 @@ shows these flows.
 - Current Google Chrome or Microsoft Edge (the only supported browsers, FR-003). For `npm run e2e`:
   `npx playwright install chromium msedge`.
 - For scenarios that use a real judge: any LLM chat tool. The demo data needs none.
+- To look at the app by hand, use `npm run build` and then `npm run preview` (http://localhost:4173). Do not use `npm run dev`: the page sets `style-src 'self'` (Principle II), which blocks the styles the dev server adds, so the layout is missing.
 
 ## Commands
 
@@ -20,7 +21,7 @@ shows these flows.
 |---|---|
 | `npm install` | Installs dependencies (first time only). |
 | `npm test` | Runs unit, contract and integration tests. No browser needed. |
-| `npm run dev` | Starts the tool locally with live reload. |
+| `npm run dev` | Starts the dev server with live reload. Its styles are blocked by the page policy, so the layout is missing; to look at the app, use `build` and `preview`. |
 | `npm run build` | Produces the static site in `dist/`. |
 | `npm run preview` | Serves `dist/` locally, as a static host would. |
 | `npm run e2e` | Runs the end-to-end and accessibility checks against the built site, in Chromium and Edge. |
@@ -84,14 +85,14 @@ version, and the tool opens the Test cases step (the first step with unfinished 
 3. Make a copy of a case by hand ("Export test cases", then "From JSON" in a new case with a new name; a similar case
    with "Case with errors" started from a case with errors, T262), "Save case"; "Rename" the copy to a name another case has, then to a free name;
    "Remove" the copy. There is no "Clone" button.
-4. Try to remove a clean case that another case uses as its base.
+4. Remove a clean case that another case uses as its base.
 
 **Expected**: the prompt contains the judge prompt, its variables and judged text, the catalog,
 the fields of the picked case; the answer is checked as it is pasted, its fields
 are shown read-only and the case is saved under the typed name; the answer with expected errors is
 a problem that points to "From JSON"; the table shows Kind "Clean" and the buttons Open,
-Rename and Remove on every row; the copy is a new case with no link to the original, the taken name is refused; the removal of the base is refused with the list of cases
-made from it.
+Rename and Remove on every row; the copy is a new case with no link to the original, the taken name is refused; the removal of the base asks as for any case and then succeeds; the cases made from it stay and
+have an empty Base column.
 
 ### V4. A case with injected errors (SC-022 to SC-024, SC-031, SC-033, SC-035, SC-036, User Story 4)
 
@@ -99,8 +100,8 @@ made from it.
    two errors to prepare (one with a new category name typed in); "Copy prompt".
 2. Run it, paste the answer into the box on the same page (there is no "Next").
 3. Read the list of expected errors under the box; change a fragment in the JSON so it
-   no longer occurs; fix it; "Save case" (in the header of the window).
-4. "Add test case", "From JSON", paste a JSON identical to its base but with one expected error.
+   no longer occurs; fix it; press "Show the issue" on E1; "Save case" (in the header of the window).
+4. "Add test case", "From JSON", paste a JSON identical to its base but with one expected error; "Save case".
 5. "Open" a case with five expected errors at 1280 x 720; there is no "Show JSON"; use
    "Next case".
 6. "Start test run"; "Open" a case, with or without a reply, "Edit expected errors", change one difficulty and
@@ -109,10 +110,9 @@ made from it.
 **Expected**: the prompt contains the judge prompt, the base case, the judged text and each error
 with its category's description; the JSON box shows problems with their line and
 column or field path and "Save case" is enabled only when valid, with the reason beside it; the list
-under the box shows E1 and E2 and the check line "Text and list agree"; the broken fragment turns
-the line into "not in the text" at once; the new
+under the box shows E1 and E2 and no check line of text against list; the broken fragment says only "not found in the case" and has no "Show the issue"; "Show the issue" on E1 marks its passage in the fields shown above the list (an error whose passage is not in the case has no button); the new
 category is added to "Error categories"; the saved case records its base; the unchanged version is
-refused with the reason; the five expected errors are visible without scrolling; the pasted JSON
+saved like any other case, with no question; the five expected errors are visible without scrolling; the pasted JSON
 gives the same fields and expected errors; after the start only the expected errors change, the
 field change is a problem, and the test cases version changes.
 
@@ -146,24 +146,24 @@ other cases are kept.
    "Open" at the first case.
 2. "Copy prompt", copy a reply into the clipboard, "Paste reply", "Next case".
    Repeat with Alt + Right.
-3. Change the text of a saved reply in its box (a readable JSON is saved at once) for a case that
-   has only automatic decisions, then for a case with a decision set by hand.
+3. Paste a reply written on one line into the box of a case without a reply: it is saved at once and shown read-only, with new lines, an indent of 2 spaces and the findings highlighted ("F1 · rule name"); press a finding on the right, then a highlighted block. "Change reply", edit the text, "Save reply" (asks first) for a case that
+   has only automatic decisions, then for a case with a decision set by hand; "Cancel" drops the edits.
 4. With an empty clipboard press "Paste reply"; then deny clipboard permission and
-   press it again; paste a reply that is not JSON into the box with Ctrl+V: it says "This is not JSON", and "Save as
-   text anyway" keeps it.
-5. Save 25 replies without "Save test project".
+   press it again; paste a reply that is not JSON into the box with Ctrl+V: it says "This is not JSON", and "Keep as
+   text" keeps it.
+5. Empty the box of a saved reply: it asks "Remove the judge’s reply?"; Cancel keeps it, "Remove reply" makes the case Not run again.
+6. Save 25 replies without "Save test project".
 
 **Expected**: the Test run step shows one summary line (judge version, test project name, test cases
 version, judged text) with no prompt or rules, a multi-line "Model details" box whose lines are
 kept, and no save button of its own: "Save test project" is in the page header, with its file name under it. The window fills the screen at 1280 x 720 as one page of three parts (the case with its
 highlights; a row with "Add finding", "Second opinion…", "Marked N of M" and the status; then "Judge
-reply" with only "Paste reply" above the box on the left and the errors on the right), which scrolls as a whole; "Copy prompt" (part 1) is the primary
-button until it is pressed, then "Paste reply"; the reply box is always visible and
-never behind a collapsed section, and the complete prompt opens from "Show prompt" in a dialog with only "Close";
+reply" with the box (or, once a reply is saved, the reply read-only with its findings marked) and "Paste reply" below it on the left and the errors on the right), which scrolls as a whole; "Copy prompt" (part 1) is the primary
+button until it is pressed, then "Paste reply"; the reply box of a case without a reply is always visible and
+never behind a collapsed section, a saved reply is read-only and "Change reply" opens the box with "Save reply" and "Cancel", and the complete prompt opens from "Show prompt" in a dialog with only "Close";
 the reply is saved by the paste itself and the marks appear on the right, with no "Approve" and
 "Add finding" and "Second opinion…" as visible buttons; the position ("case 2 of 20") is always visible; one case takes no more than three
-actions; the first replacement happens without a question and the second asks, naming one
-decision; both reset the case and recompute the automatic marks; an empty clipboard is explained
+actions; every change of a saved reply asks, naming the marks set by hand; an emptied box asks and removes the reply; both reset the case and recompute the automatic marks; an empty clipboard is explained
 and changes nothing; a refused clipboard points to the box; the non-JSON reply is kept, its line
 and column are shown and nothing is marked automatically; each reply is stored with the prompt that
 produced it; the number of unsaved replies is shown and a reminder to save appears at 25.
@@ -282,8 +282,8 @@ note that it was upgraded.
 **Expected**: a new example appears without any other change and its cases have a single field;
 the "Error categories" section starts collapsed with "N categories" in its heading once the
 project has cases; the new category is in it with "Used by 1 test case"; the rename applies to
-every expected error; "Remove" of the used category is disabled with the reason beside it, and
-the unused one is removed at once; the threshold changes and the overall result updates; there is
+every expected error; "Remove" of the used category asks first (the expected errors keep their text and lose the
+category), and the unused one is removed at once; the threshold changes and the overall result updates; there is
 no **Load check settings**. With the verdict example, the Judge step says
 the judge is evaluated per case; a flagged case with errors passes with every expected error found
 (also one without a fragment), an unflagged one fails; a flagged clean case awaits the user's

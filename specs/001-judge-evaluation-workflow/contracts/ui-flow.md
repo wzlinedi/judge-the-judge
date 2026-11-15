@@ -121,8 +121,8 @@ Compare step and no result shelf.
      the user chooses is kept for the page session. A table, one row per category: **Name**,
      **Description & examples** (one multi-line text edited in the cell; it takes the room that is
      left), **Used by** (the number of test cases, computed from the cases), then **Rename** (asks
-     first: the N test cases using it are renamed too, the test cases version changes and the error
-     analysis of Results uses the new name; also after the start) and **Remove** (always enabled,
+     first, in plain text above the buttons: "N expected errors in M test cases get the new name", the test cases version changes and the error
+     analysis of Results uses the new name (T294); also after the start) and **Remove** (always enabled,
      T248: at once when unused; for a category in use a small dialog "Remove category" says "N test
      cases use it. Their expected errors stay and lose the category. The test cases version
      changes." with **Cancel** and **Remove**). There is no **Example** button. Below the table:
@@ -184,27 +184,25 @@ which asks first when something was pasted or typed.
      (what should be wrong), and **Remove** in each row; below it **Add error**. There is no box for
      own instructions.
   3. **Ask your LLM**: the prompt, editable (T262), with **Copy prompt** and, once it is edited, **Rebuild prompt** (asks "Rebuild the prompt?" first); an edited prompt is no longer rebuilt when parts 1 and 2 change.
-  4. **Paste its answer**: the box for the JSON, checked as it changes; changed places that no
-     expected error covers are warnings under it ("A changed place is not in the list: …").
-  5. **Expected errors**: the name, kind and base ("Base: 4 (name)"), the line of FR-080 ("Text and
-     list agree", or what does not), and the expected errors read-only (number, category,
-     difficulty, fragment, description), each marked "not in the text" when its fragment is not
-     found. No fields with highlights and no **Show the issue** here; while the JSON is invalid the
-     list is replaced by a line saying so.
-  **Save case** is in the header, enabled only while the JSON is valid; with a mismatch of FR-080
-  it asks for confirmation; a case identical to its base is refused.
-- **Open** (FR-086): the case read-only (its own layout; the fields show no highlight until **Show the issue**, T257, except the warnings of FR-080), with **Previous test
+  4. **Paste its answer**: the box for the JSON, checked as it changes (problems with line and column or field path).
+  5. **Expected errors**: the name, kind and base ("Base: 4 (name)"), the fields of the case with no highlight, and the
+     expected errors read-only (number, category, difficulty, fragment, description). **Show the issue** on an
+     error marks its passages in the fields and brings them into view (T284); it is missing for an error whose passage
+     is not in the case, whose side line says "not found in the case". There is no check of the text against the list (FR-080
+     is removed, T286). While the JSON is invalid the list is replaced by a line saying so.
+  **Save case** is in the header, enabled only while the JSON is valid; it asks nothing about the list.
+- **Open** (FR-086): the case read-only (its own layout; the fields show no highlight until **Show the issue**, T257), with **Previous test
   case**, **Next case** and the position ("case 7 of 20") in the header (Alt + Left/Right do
   the same), no **Recreate the test case** (T262), no **Show JSON** or **Copy JSON**, and, on every case, **Edit expected errors**; also **Show prompt** (a dialog of about 90% of the screen with
   the whole composed prompt and only **Close**) with **Copy prompt**. No reply is shown (a reply belongs to Test run).
   Sections are in frames. A saved case is never edited.
 - **Edit expected errors** (FR-089, T254): the standard large dialog with the JSON of the list of the expected errors of the case
-  only (with their `id`), checked as it changes, with **Cancel** and **Save expected errors** at the bottom, the check line of FR-080 and the uncovered places under the box; **Save expected errors** is disabled with the reason beside it
-  ("Fix the problems listed under the JSON to save." or "Change the JSON to save."). A mismatch, and a case with a reply, ask first
-  ("Save the expected errors?": the lines that do not agree, then the marks of the changed and removed errors are dropped, the case is marked again from the reply, the
-  test cases version changes). Saving closes the dialog.
+  only (with their `id`), checked as it changes, with **Cancel** and **Save expected errors** at the bottom; **Save expected errors** is disabled with the reason beside it
+  ("Fix the problems listed under the JSON to save." or "Change the JSON to save."). A case with a reply asks first
+  ("Save the expected errors?": the marks of the changed and removed errors are dropped, the case is marked again from the reply, the
+  test cases version changes); a case without a reply saves at once. Saving closes the dialog.
 - **States**: malformed JSON (line and column, text kept); missing variable, empty field, missing
-  description (field path); nothing pasted yet; name taken; identical to base (refused); test
+  description (field path); nothing pasted yet; name taken; test
   project full; JSON with no expected errors in a case with injected errors (saved as clean, the
   window says so); unsaved paste when closing (asks first). The window has no save action for
   the file: the test project is saved after it is closed.
@@ -246,8 +244,8 @@ Opened by **Open** (FR-055, FR-060).
 | Part | Content |
 |---|---|
 | **1. Case** | Kind and base; every field of the case, over the full width, with no highlight until **Show the issue** (T257), which highlights the passages of that error for a moment with its number (and, after a reply, found, missed, undecided or ignored); then **Show prompt** (a dialog with the whole prompt and only **Close**) and **Copy prompt** (primary until pressed). |
-| **2. Marking** | One row: **Add finding** (text, optional category, optional difficulty), **Second opinion…**, the meter "Marked N of M" and the status of the case (Awaiting verification, Pass, Fail). **Without a reply** only the status is shown. There is no **Approve**. |
-| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column, and **Paste reply** below it (primary once **Copy prompt** was pressed). A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. **Right, "Errors"**: without a reply the expected errors of the case at once, each by the shared error component with **Show the issue** but with no marks and no "Judge: …" line, and the line "The judge’s findings and the marks appear when its reply is saved." ("No expected errors." for a clean case; T264); with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; two groups (T252), each item shown by the shared error component (below): **Expected errors**, each with the words of the judge that match it ("Judge: “…” (matches)" or "(partly matches)", T258) and its marks (**Found**, **Not found**, **Ignored**), the reason for anything undecided and the source of every mark; **Additional errors**, each with its marks (**Genuine error**, **False positive**, **Ignored**; a finding with no text has no passage and no **Show the issue**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**. There is no list "Findings in the reply" (T258). |
+| **2. Marking** | One row: **Add finding** (text, optional category, optional difficulty), **Second opinion…**, the meter "Marked N of M" and the status of the case (Awaiting verification, Pass, Fail). **Without a reply** the two buttons are disabled with the reason "Paste the judge’s reply first" beside them (T290); the meter is not shown. There is no **Approve**. |
+| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: for a case without a reply the box, checked as it changes with line and column, and **Paste reply** below it (primary once **Copy prompt** was pressed); a reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. For a case with a saved reply (T293) the reply is shown **read-only**, as it is kept (formatted when it is JSON, T292), not in a box: each part that an error rule turned into a finding is highlighted, labelled with the rule and the number of the finding on the right ("F1 · Rule name"), by `locateFinding` (`src/core/judge/locate-finding.ts`); a reply kept as text has no highlight. Pressing a highlighted block marks its finding on the right, and pressing a finding on the right ("F1 · Judge: …", "Show F3 in the reply") scrolls to and marks its block. Under the view: **Change reply** and **Paste reply**. **Change reply** turns the view into the box with **Save reply** (primary) and **Cancel**: typing saves nothing; **Save reply** asks "Change the judge’s reply?" when the text changed (an emptied box asks "Remove the judge’s reply?", T291) and then returns to the read-only view; **Cancel** drops the edits. **Paste reply** over a saved reply asks the same question and then saves at once. **Right, "Errors"**: without a reply the expected errors of the case at once, each by the shared error component with **Show the issue** but with no marks and no "Judge: …" line, and the line "The judge’s findings and the marks appear when its reply is saved." ("No expected errors." for a clean case; T264); with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; two groups (T252), each item shown by the shared error component (below): **Expected errors**, each with the words of the judge that match it ("F1 · Judge: “…” (matches)" or "(partly matches)", T258, T293) and its marks (**Found**, **Not found**, **Ignored**), the reason for anything undecided and the source of every mark; **Additional errors**, each with its marks (**Genuine error**, **False positive**, **Ignored**; a finding with no text has no passage and no **Show the issue**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**. There is no list "Findings in the reply" (T258). |
 
 - **The shared error component** (T251) shows an error the same way in Test cases (Open and the
   windows for adding a case), in Test run and in Results: its number (E1 …) for an expected error, what is
@@ -266,9 +264,9 @@ Opened by **Open** (FR-055, FR-060).
   **Next case**, **Copy prompt**, **Paste reply** (SC-002).
 - **States**: first or last case (the matching button is disabled); changed but unsaved reply in
   the box when moving or closing (asks first); empty clipboard (says so, nothing changes);
-  clipboard not readable (says so and points to the box); the first change of a saved reply, typed
-  or pasted (asks "Change the judge’s reply?", naming the marks set by hand or from an opinion that are removed; **Cancel** keeps the reply,
-  **Change reply** applies the change and lets the reply of that case be edited until the window moves, T261);
+  clipboard not readable (says so and points to the box); a change of a saved reply
+  (**Save reply** after **Change reply**, or **Paste reply**) asks "Change the judge’s reply?", naming the marks set by hand or from an opinion that are removed; **Cancel** keeps the reply,
+  **Change reply** applies the change and returns to the read-only view (T261, T293); an emptied box asks "Remove the judge’s reply?" and, on **Remove reply**, makes the case Not run again (T291);
   reply that cannot be read (kept, line and column shown, nothing marked automatically, the case
   needs **No more findings** after the findings are added by hand).
 

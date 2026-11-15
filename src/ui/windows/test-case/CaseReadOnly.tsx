@@ -1,5 +1,4 @@
 import { useRef, useState } from 'preact/hooks';
-import { listCheckOf } from '../../../app/actions/test-case-window';
 import type { AppState } from '../../../app/store';
 import { composePrompt } from '../../../core/judge/compose';
 import { CaseWindowFrame } from '../../components/CaseWindowFrame';
@@ -8,7 +7,7 @@ import { labels } from '../../labels';
 import { useShowIssue } from '../case-window/useShowIssue';
 import type { CaseEdit } from '../../../app/actions/cases';
 import { ExpectedErrorsDialog } from './ExpectedErrorsDialog';
-import { baseNameOf, CaseData, CheckLine, ErrorList } from './CaseData';
+import { baseNameOf, CaseData, ErrorList } from './CaseData';
 
 export interface CaseReadOnlyProps {
   state: AppState;
@@ -30,7 +29,6 @@ export function CaseReadOnly({ state, caseId, onNavigate, onApply, onClose }: Ca
   if (!testCase) return null;
   const reply = replies[caseId];
   const prompt = reply?.prompt ?? composePrompt(judge_set.prompt, testCase).text;
-  const list = testCase.expected_errors.length > 0 ? listCheckOf(state, testCase) : undefined;
   const previous = dataset.cases[index - 1];
   const next = dataset.cases[index + 1];
 
@@ -52,7 +50,7 @@ export function CaseReadOnly({ state, caseId, onNavigate, onApply, onClose }: Ca
       left={
         <>
           <section class="frame" aria-label="Case data">
-            <CaseData testCase={testCase} judged={judge_set.judged_text} uncovered={list?.uncovered ?? []} strong={strong} shown={shown} rootRef={textRef} baseName={baseNameOf(state, testCase.base)} />
+            <CaseData testCase={testCase} judged={judge_set.judged_text} strong={strong} shown={shown} rootRef={textRef} baseName={baseNameOf(state, testCase.base)} />
           </section>
           <section class="frame" aria-label="Prompt">
             <h3>Prompt</h3>
@@ -64,7 +62,6 @@ export function CaseReadOnly({ state, caseId, onNavigate, onApply, onClose }: Ca
         <>
           <section class="frame" aria-label="Expected errors">
             <h3>Expected errors</h3>
-            {list ? <CheckLine list={list} testCase={testCase} /> : null}
             <ErrorList testCase={testCase} judged={judge_set.judged_text} onShow={showInText} />
           </section>
         </>

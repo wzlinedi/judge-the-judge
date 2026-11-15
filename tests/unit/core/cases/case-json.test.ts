@@ -138,9 +138,10 @@ describe('modes', () => {
     expect(r.notes.join(' ')).toMatch(/base/i);
   });
 
-  it('refuses a case identical to its base', () => {
+  it('accepts a case identical to its base (T286)', () => {
     const r = check(one({ fields: { ...clean.fields } }), { mode: 'inject', base: '1' });
-    expect(messages(r)).toMatch(/identical to its base/i);
+    expect(r.problems).toEqual([]);
+    expect(r.case?.base).toBe('1');
   });
 
   it('inject: notes the difference from the number of errors to prepare', () => {

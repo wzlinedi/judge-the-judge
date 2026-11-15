@@ -86,13 +86,30 @@ describe('each category', () => {
     expect(screen.getByText('Unsaved changes')).toBeTruthy();
   });
 
-  it('Rename says first what it changes: the cases using the category, the version and the error analysis', () => {
+  it('Rename says first, in plain text above the buttons, how many expected errors in how many cases get the new name, and that the version changes (T294)', () => {
     open();
     fireEvent.click(within(rowOf('factual-error')).getByRole('button', { name: 'Rename' }));
-    const text = screen.getByRole('dialog', { name: 'Rename category' }).textContent ?? '';
-    expect(text).toContain('The 1 test case using it is renamed too.');
-    expect(text).toContain('The test cases version changes');
+    const dialog = screen.getByRole('dialog', { name: 'Rename category' });
+    const text = dialog.textContent ?? '';
+    expect(text).toContain('1 expected error in 1 test case gets the new name. The test cases version changes.');
     expect(text).toContain('error analysis of Results uses the new name');
+    const sentence = within(dialog).getByText(/gets the new name/);
+    expect(sentence.closest('.muted')).toBeNull();
+    // above the buttons of the dialog
+    const buttons = within(dialog).getByRole('button', { name: 'Cancel' });
+    expect(sentence.compareDocumentPosition(buttons) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('Rename counts the expected errors and the cases separately, and says so when no case uses the category (T294)', () => {
+    const s = stateWith();
+    const cases = s.evaluation.dataset.cases.map((c) => (c.id === '2' ? { ...c, expected_errors: c.expected_errors.map((e) => ({ ...e, category: 'factual-error' })) } : c));
+    show({ ...s, evaluation: { ...s.evaluation, dataset: { ...s.evaluation.dataset, cases } } });
+    fireEvent.click(heading());
+    fireEvent.click(within(rowOf('factual-error')).getByRole('button', { name: 'Rename' }));
+    expect(screen.getByRole('dialog', { name: 'Rename category' }).textContent).toContain('2 expected errors in 1 test case get the new name.');
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Rename category' })).getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(within(rowOf('misattribution')).getByRole('button', { name: 'Rename' }));
+    expect(screen.getByRole('dialog', { name: 'Rename category' }).textContent).toContain('No test case uses this category.');
   });
 
   it('Remove is enabled for every category: an unused one is removed at once, a used one asks first and then leaves its errors without the category (T248)', () => {

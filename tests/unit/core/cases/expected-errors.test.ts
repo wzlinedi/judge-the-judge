@@ -55,11 +55,11 @@ describe('checkExpectedErrorsJson', () => {
     expect(no.problems.map((p) => p.path)).toContain('expected_errors[0].description');
   });
 
-  it('keeps source_fragment and warns about a fragment that is in no field', () => {
+  it('keeps source_fragment and does not warn about a fragment that is in no field (T286)', () => {
     const r = check([{ description: 'd', fragment: 'Anna is a doctor', source_fragment: 'Anna is a baker' }, { description: 'd2', fragment: 'nothing like it' }]);
     expect(r.problems).toEqual([]);
     expect(r.errors![0]).toMatchObject({ source_fragment: 'Anna is a baker' });
-    expect(r.warnings.join(' ')).toMatch(/fragment/);
+    expect(r.warnings.join(' ')).not.toMatch(/fragment/);
   });
 
   it('an empty list is fine: the case becomes a clean case', () => {

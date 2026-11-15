@@ -78,7 +78,12 @@ export function renameCase(state: AppState, id: string, name: string): CaseEdit 
 export function removeCase(state: AppState, id: string): CaseEdit {
   const allowed = canChangeCase(state.evaluation.dataset.cases, state.evaluation.replies, state.evaluation.dataset.finalized, id, 'remove');
   if (!allowed.allowed) return { state, note: allowed.reason };
-  const kept = withCases(state, state.evaluation.dataset.cases.filter((c) => c.id !== id));
+  // A case made from the removed one keeps its content and loses `base`, so that no identifier points at nothing (T283).
+  const kept = withCases(state, state.evaluation.dataset.cases.filter((c) => c.id !== id).map((c) => {
+    if (c.base !== id) return c;
+    const { base: _base, ...rest } = c;
+    return rest;
+  }));
   // The reply and the decisions of the case go with it (T234); with no reply left the run starts again from nothing.
   return {
     state: edit(kept, (e) => {

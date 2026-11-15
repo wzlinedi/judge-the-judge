@@ -53,6 +53,11 @@ export function addCategories(catalog: readonly Category[], entries: readonly Ca
 }
 
 /** The number of test cases that use a category; a case counts once however many of its errors have it. */
+/** How many expected errors, in all test cases, carry the category. */
+export function categoryErrorCount(cases: readonly TestCase[], name: string): number {
+  return cases.reduce((total, c) => total + c.expected_errors.filter((e) => e.category === name).length, 0);
+}
+
 export function categoryUses(cases: readonly TestCase[], name: string): number {
   return cases.filter((c) => c.expected_errors.some((e) => e.category === name)).length;
 }

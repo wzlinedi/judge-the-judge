@@ -39,7 +39,7 @@ Names below describe behavior; exact TypeScript signatures are written with thei
 
 | Function | Behavior |
 |---|---|
-| `validateCase(testCase, context)` | Problems and warnings for one case: no non-empty field, missing description, field too long, fragment not in the judged text (or, for an omission, in another field), unknown category, unknown base, no field for a variable, field that matches no variable, identical to its base. |
+| `validateCase(testCase, context)` | Problems and warnings for one case: no non-empty field, missing description, field too long, unknown category, unknown base, no field for a variable, field that matches no variable. A fragment that is in no field and a case identical to its base are not reported (T286). |
 | `validateTestCases(cases, context)` | All case problems plus duplicate identifiers, mixed identifiers, size limit. |
 | `assignIdentifiers(cases, existing)` | Identifiers for cases that have none, never colliding with existing ones; identifiers for expected errors inside each case. |
 | `normalizeCategory(text)` | Lower case with dashes. |
@@ -47,9 +47,8 @@ Names below describe behavior; exact TypeScript signatures are written with thei
 | `categoryUses(catalog, cases)` | Per category the number of test cases that use it (a case counts once) (FR-015). |
 | `canRemoveCategory(catalog, cases, replies, started, name)` | Allowed, or refused with the one-sentence reason of FR-015 ("Used by N test cases. Remove those test cases first, or rename the category." or, after the start of the test run when every such case has a reply, "… It can be renamed."). `started` is true when the test run has started (T288). |
 | `renameCategory(catalog, cases, from, to)` | Catalog and cases with the new name in every expected error; refused when the new name exists. |
-| `canChangeCase(cases, replies, started, id, action)` | For **Rename**, **Remove** and **Edit expected errors**: allowed, or refused with the reason (a base still in use, FR-017) (FR-025, FR-039, FR-089); a case with a reply may be edited. `checkExpectedErrorsJson`, `expectedErrorsToJson`, `planExpectedErrors` (core) and `saveExpectedErrors` (app) are "Edit expected errors", T254. |
+| `canChangeCase(cases, replies, started, id, action)` | For **Rename**, **Remove** and **Edit expected errors**: always allowed today (FR-025, FR-039, FR-089): a base in use may be removed, the cases made from it lose `base` (T283), and a case with a reply may be edited. `checkExpectedErrorsJson`, `expectedErrorsToJson`, `planExpectedErrors` (core) and `saveExpectedErrors` (app) are "Edit expected errors", T254. |
 | `checkCaseJson(text, context)` | file-formats.md, section 2. `context` = mode (`paste`, `clean`, `inject`, `correct`), variables, judged text, catalog, existing cases, picked base, number of errors to prepare, and the original case for `correct`. Returns problems (with line and column or field path), warnings, notes, the kind the case will have, and the case when valid (FR-031, FR-041, FR-083, FR-084, FR-089, FR-090). |
-| `textListCheck(testCase, base, judgedText)` | The line of FR-080: changed places not in the list (with their text, to highlight), expected errors not in the text, identical to base, errors with no fragment or category. |
 | `caseToJson(testCase)` | The case JSON of "Export test cases" and "Edit expected errors" (no `id`; `base` only when set; `source_fragment` after `fragment` when the error has one, T250); `checkCaseJson` of its output gives the same fields and expected errors (SC-036). |
 | `markLate(case, hasReplies, change)` | Sets `changed_after_first_reply` to `added` or `corrected` when replies exist (FR-053). |
 | `testCasesFeedback(cases)` | Clean and injected-errors counts, missing kinds, duplicate texts, remaining capacity. |

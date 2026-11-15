@@ -117,7 +117,7 @@ test('Reopen test cases stands in the "what next" line of Run and Add test case 
   const first = demo.dataset.cases[0]!.id;
   await page.evaluate((t) => navigator.clipboard.writeText(t), demo.replies[first]!.reply);
   await caseWindow.getByRole('button', { name: 'Paste reply' }).click();
-  await expect(caseWindow.getByRole('textbox', { name: 'Judge reply' })).toHaveValue(demo.replies[first]!.reply);
+  await expect(caseWindow.locator('.reply-read')).toBeVisible(); // the saved reply is read-only (T293)
   await caseWindow.getByRole('button', { name: 'Close' }).click();
 
   expect(await buttons(page)).not.toContain('Reopen test cases');

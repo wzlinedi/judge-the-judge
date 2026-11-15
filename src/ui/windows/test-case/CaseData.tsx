@@ -1,5 +1,4 @@
 import type { RefObject } from 'preact';
-import type { ChangedPlace, ListCheck } from '../../../core/cases/text-list-check';
 import type { AppState } from '../../../app/store';
 import type { TestCase } from '../../../core/model';
 import { ErrorCard } from '../case-window/ErrorCard';
@@ -19,7 +18,6 @@ type Shown = Omit<TestCase, 'id'> & { id?: string };
 export interface CaseDataProps {
   testCase: Shown;
   judged: string | undefined;
-  uncovered?: readonly ChangedPlace[];
   strong?: string | null;
   shown?: readonly ShownSpot[];
   rootRef?: RefObject<HTMLDivElement | null>;
@@ -47,39 +45,11 @@ export function CaseSummary({ testCase, baseName }: { testCase: Shown; baseName?
 }
 
 /** A case read-only: its fields, with the fragments of the expected errors highlighted and numbered. */
-export function CaseData({ testCase, judged, uncovered = [], strong, shown = [], rootRef, baseName }: CaseDataProps) {
+export function CaseData({ testCase, judged, strong, shown = [], rootRef, baseName }: CaseDataProps) {
   return (
     <div class="case-data">
       <CaseSummary testCase={testCase} baseName={baseName} />
-      <MarkedFields testCase={testCase} judged={judged} effective={null} uncovered={uncovered} strong={strong} shown={shown} rootRef={rootRef} />
-    </div>
-  );
-}
-
-/** The line of FR-080 and the notes under it. */
-export function CheckLine({ list, testCase }: { list: ListCheck; testCase: Shown }) {
-  const notes = list.notes.map((n) => `E${n.index + 1}: ${n.kind === 'no_fragment' ? 'no fragment, so it cannot be matched automatically and is decided by hand on Run.' : 'no category, so it is not grouped in the error analysis.'}`);
-  const removed = list.uncovered.filter((p) => p.end <= p.start);
-  return (
-    <div class="check-line-block">
-      <p class={list.agrees ? 'check-line agree' : 'check-line warning-text'} role="status">
-        <span aria-hidden="true">{list.agrees ? '✓ ' : '⚠ '}</span>
-        {list.line}
-      </p>
-      {removed.length > 0 ? (
-        <ul class="plain-list" aria-label="Removed text not in the list">
-          {removed.map((p, i) => (
-            <li key={i} class="warning-text">{`Text of the base is gone from ${p.field} and no expected error covers it: “${(p.removed ?? '').slice(0, 120)}”`}</li>
-          ))}
-        </ul>
-      ) : null}
-      {notes.length > 0 && testCase.expected_errors.length > 0 ? (
-        <ul class="plain-list muted" aria-label="Notes about the list">
-          {notes.map((n) => (
-            <li key={n}>{n}</li>
-          ))}
-        </ul>
-      ) : null}
+      <MarkedFields testCase={testCase} judged={judged} effective={null} strong={strong} shown={shown} rootRef={rootRef} />
     </div>
   );
 }

@@ -77,7 +77,7 @@ export function planImport(rows: readonly DraftRow[], preInvalid: readonly Inval
     if (wanted !== undefined && wanted !== '') idOf.set(wanted, id);
   }
 
-  // 3. Bases follow the new identifiers; a case identical to its base is invalid.
+  // 3. Bases follow the new identifiers; a case identical to its base is imported like any other (T286).
   const cleanExisting = new Set(context.existing.filter((c) => c.expected_errors.length === 0).map((c) => c.id));
   const cases: TestCase[] = [];
   const byId = new Map<string, TestCase>();
@@ -92,11 +92,6 @@ export function planImport(rows: readonly DraftRow[], preInvalid: readonly Inval
       if (target && target.expected_errors.length === 0) base = target.id;
       else if (inFile === undefined && cleanExisting.has(wanted)) base = wanted;
       else notes.push(`The base "${wanted}" of "${row.draft.name || `case ${row.position}`}" is not a clean case here, so the case has no base.`);
-    }
-    const baseCase = base !== undefined ? (byId.get(base) ?? context.existing.find((c) => c.id === base)) : undefined;
-    if (baseCase && rest.expected_errors.length > 0 && Object.keys(baseCase.fields).length === Object.keys(rest.fields).length && Object.entries(rest.fields).every(([k, v]) => baseCase.fields[k] === v)) {
-      invalid.push({ position: row.position, label: row.draft.name || `Case ${row.position}`, reason: `The case is identical to its base case ${baseCase.id}. Change the text where the errors are.` });
-      continue;
     }
     cases.push({ ...rest, id, ...(base !== undefined ? { base } : {}), expected_errors: (byId.get(id) as TestCase).expected_errors });
   }

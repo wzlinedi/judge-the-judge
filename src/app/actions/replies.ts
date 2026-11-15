@@ -1,4 +1,5 @@
 // Entering the judge's replies one case at a time (FR-053, FR-056, FR-057, FR-059).
+import { formatIfWholeJson } from '../../core/io/format-json';
 import { composePrompt } from '../../core/judge/compose';
 import { countingModeOf } from '../../core/judge/counting-mode';
 import { judgeVersion } from '../../core/judge/version';
@@ -54,7 +55,10 @@ export function attachReplies(evaluation: Evaluation, batch: ReplyBatch, options
       result.problems.push({ message: `There is no test case ${item.case_id}.` });
       continue;
     }
-    if (replies[item.case_id]?.reply === item.reply) {
+    // a reply that is valid JSON is kept formatted (T292): the same data, other spaces
+    const text = formatIfWholeJson(item.reply);
+    const had = replies[item.case_id]?.reply;
+    if (had !== undefined && formatIfWholeJson(had) === text) {
       result.unchanged.push(item.case_id);
       continue;
     }
@@ -63,7 +67,7 @@ export function attachReplies(evaluation: Evaluation, batch: ReplyBatch, options
       result.needsConfirmation.push({ caseId: item.case_id, count: question.count });
       continue;
     }
-    replies[item.case_id] = { prompt: composePrompt(evaluation.judge_set.prompt, testCase).text, reply: item.reply };
+    replies[item.case_id] = { prompt: composePrompt(evaluation.judge_set.prompt, testCase).text, reply: text };
     delete decisions[item.case_id];
     result.saved.push(item.case_id);
   }
@@ -77,6 +81,19 @@ export function attachReplies(evaluation: Evaluation, batch: ReplyBatch, options
     ...(evaluation.reply_counted_per !== undefined || options.countedPer !== undefined ? { reply_counted_per: evaluation.reply_counted_per ?? (options.countedPer as 'expected_error' | 'case') } : {}),
   };
   return result;
+}
+
+/**
+ * Emptying the reply box of a saved reply removes the reply (T291): the case is "Not run" again, with no decisions and no added
+ * findings. When the last reply goes, the run starts again from nothing, as when the last case with a reply is removed.
+ */
+export function removeReply(evaluation: Evaluation, caseId: string): Evaluation {
+  if (evaluation.replies[caseId] === undefined) return evaluation;
+  const { [caseId]: _reply, ...replies } = evaluation.replies;
+  const { [caseId]: _decisions, ...decisions } = evaluation.decisions;
+  if (Object.keys(replies).length > 0) return { ...evaluation, replies, decisions };
+  const { reply_judge_version: _version, reply_counted_per: _counted, rules_corrected_after_replies: _rules, ...rest } = evaluation;
+  return { ...rest, replies, decisions };
 }
 
 export type ReplyStatus = 'saved' | 'unchanged' | 'empty' | 'refused' | 'clipboard_blocked' | 'needs_confirmation';

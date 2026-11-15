@@ -1,5 +1,4 @@
 import type { RefObject } from 'preact';
-import type { ChangedPlace } from '../../../core/cases/text-list-check';
 import type { Effective } from '../../../core/evaluation/decisions';
 import type { TestCase } from '../../../core/model';
 import { fieldMarks, type ShownSpot } from './marks';
@@ -11,8 +10,6 @@ export interface MarkedFieldsProps {
   judged: string | undefined;
   /** The decisions, once there is a reply: the marks then say found, missed, undecided or ignored. */
   effective: Effective | null;
-  /** Changed places that no expected error covers (FR-080). */
-  uncovered: readonly ChangedPlace[];
   /** The expected error that "Show in text" points at. */
   strong?: string | readonly string[] | null;
   /** Other places that "Show the issue" points at: the words of the source, or the text of a finding of the judge (T251). */
@@ -21,11 +18,10 @@ export interface MarkedFieldsProps {
 }
 
 /**
- * The fields of a case (FR-077). Nothing is highlighted until "Show the issue" points at an error (T257); the changed places that no
- * expected error covers are always marked (FR-080). Every highlight carries its number (E1 …) or a word, so a colour is never the
+ * The fields of a case (FR-077). Nothing is highlighted until "Show the issue" points at an error (T257). Every highlight carries its number (E1 …) or a word, so a colour is never the
  * only sign; the text itself is never changed.
  */
-export function MarkedFields({ testCase, judged, effective, uncovered, strong, shown = [], rootRef }: MarkedFieldsProps) {
+export function MarkedFields({ testCase, judged, effective, strong, shown = [], rootRef }: MarkedFieldsProps) {
   return (
     <div ref={rootRef} class="marked-fields">
       {Object.keys(testCase.fields).map((name) => (
@@ -35,7 +31,7 @@ export function MarkedFields({ testCase, judged, effective, uncovered, strong, s
             {name === judged ? ' (judged text)' : ''}
           </h3>
           <p class="field-text">
-            {fieldMarks(testCase, name, judged, effective, uncovered, shown).map((segment, i) => {
+            {fieldMarks(testCase, name, judged, effective, shown).map((segment, i) => {
               if (segment.error) {
                 // the fragment of an expected error is highlighted only while "Show the issue" points at it (T257); the element stays, so the focus does
                 const { id, label, state } = segment.error;
@@ -58,14 +54,6 @@ export function MarkedFields({ testCase, judged, effective, uncovered, strong, s
               if (segment.shown) {
                 return (
                   <mark key={i} class="fragment fragment-strong" data-shown="true" tabIndex={-1}>
-                    {segment.text}
-                  </mark>
-                );
-              }
-              if (segment.warning) {
-                return (
-                  <mark key={i} class="fragment fragment-uncovered" tabIndex={-1}>
-                    <sup>{segment.warning}</sup>
                     {segment.text}
                   </mark>
                 );

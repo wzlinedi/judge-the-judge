@@ -40,7 +40,7 @@ const item = (page: Page, kind: 'expected' | 'additional', id: string) => page.l
 async function pasteReply(page: Page, reply: string) {
   await clip(page, reply);
   await caseWindow(page).getByRole('button', { name: 'Paste reply' }).click();
-  await expect(caseWindow(page).getByRole('textbox', { name: 'Judge reply' })).toHaveValue(reply);
+  await expect(caseWindow(page).locator('.reply-read')).toContainText('"biased"'); // the saved reply is read-only and formatted (T292, T293)
 }
 
 test('a verdict judge: the Judge step says so, replies decide whole cases, the Summary counts cases, and a correction that switches the way is named', async ({ page }) => {

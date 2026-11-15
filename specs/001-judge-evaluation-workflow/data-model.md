@@ -175,15 +175,11 @@ any ──"Load test project…" › "Load the test project only"──> Open (n
 | `expected_errors` | list of ExpectedError | Empty list means a clean case. |
 | kind | "Clean" or "Injected errors", derived | From whether `expected_errors` is empty. |
 | final prompt | text, derived | The judge prompt with each variable replaced by the field of that name; nothing else added. |
-| warnings | list, derived | No field for a variable; a field that matches no variable (kept, not used); fragment not found word for word in the judged text (or, for an omission, in another field); unknown category; unknown base; a changed place covered by no expected error; no change compared with the base; very long field. |
+| warnings | list, derived | No field for a variable; a field that matches no variable (kept, not used); unknown category; unknown base; very long field. The text is not checked against the list of expected errors (T286). |
 
-- A clean case cannot be removed while other cases name it as their base; the refusal lists them
-  (FR-017).
+- A clean case may be removed while other cases name it as their base: they lose `base` and are not marked "corrected" (FR-017, T283).
 - Two cases whose fields are all identical are flagged as duplicates (FR-045).
-- A case with injected errors must differ from its base in at least one field (FR-044).
-- Before a case with injected errors is saved, the check line of FR-080 compares text and list:
-  changed places not covered, expected errors not in the text, identical to base (refused), no
-  fragment or category (note).
+- A case with injected errors may be identical to its base (FR-044, T286); the text is never checked against its list of expected errors (FR-080 is removed).
 - A case is made only from a case JSON (contracts/file-formats.md, section 2), checked as it
   changes; its fields are never edited after saving (FR-081).
 

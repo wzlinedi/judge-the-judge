@@ -1,6 +1,5 @@
 import type { Effective } from '../../../core/evaluation/decisions';
 import { findFragment } from '../../../core/cases/fragments';
-import type { ChangedPlace } from '../../../core/cases/text-list-check';
 import type { TestCase } from '../../../core/model';
 
 export interface Segment {
@@ -8,7 +7,6 @@ export interface Segment {
   /** Set for a highlighted fragment of an expected error. */
   error?: { id: string; label: string; state: string };
   /** Set for a changed place that no expected error covers: the words beside its colour. */
-  warning?: string;
   /** Set for a text that "Show the issue" points at and that is not the fragment of an expected error: the words of the source, or the text of a finding. */
   shown?: boolean;
 }
@@ -17,7 +15,6 @@ interface Spot {
   start: number;
   end: number;
   error?: NonNullable<Segment['error']>;
-  warning?: string;
   shown?: boolean;
 }
 
@@ -93,7 +90,7 @@ export function locateFragments(testCase: Shown, judgedField: string | undefined
 }
 
 /** The text of one field cut into plain pieces and highlighted ones (non-overlapping). */
-export function fieldMarks(testCase: Shown, field: string, judgedField: string | undefined, effective: Effective | null, uncovered: readonly ChangedPlace[] = [], shown: readonly ShownSpot[] = []): Segment[] {
+export function fieldMarks(testCase: Shown, field: string, judgedField: string | undefined, effective: Effective | null, shown: readonly ShownSpot[] = []): Segment[] {
   const text = testCase.fields[field] ?? '';
   const spots: Spot[] = [];
   const free = (start: number, end: number) => !spots.some((s) => start < s.end && end > s.start);
@@ -101,10 +98,6 @@ export function fieldMarks(testCase: Shown, field: string, judgedField: string |
     if (at.field !== field || !free(at.start, at.end)) continue;
     const state = effective ? (effective.expected.find((e) => e.id === at.id)?.state ?? 'undecided') : 'undecided';
     spots.push({ start: at.start, end: at.end, error: { id: at.id, label: `E${at.index + 1}`, state } });
-  }
-  for (const place of uncovered) {
-    if (place.field !== field || place.end <= place.start || !free(place.start, place.end)) continue;
-    spots.push({ start: place.start, end: place.end, warning: 'not in the list' });
   }
   for (const place of shown) {
     if (place.field === field && free(place.start, place.end)) spots.push({ start: place.start, end: place.end, shown: true });
@@ -114,7 +107,7 @@ export function fieldMarks(testCase: Shown, field: string, judgedField: string |
   let at = 0;
   for (const spot of spots) {
     if (spot.start > at) segments.push({ text: text.slice(at, spot.start) });
-    segments.push({ text: text.slice(spot.start, spot.end), ...(spot.error ? { error: spot.error } : {}), ...(spot.warning ? { warning: spot.warning } : {}), ...(spot.shown ? { shown: true } : {}) });
+    segments.push({ text: text.slice(spot.start, spot.end), ...(spot.error ? { error: spot.error } : {}), ...(spot.shown ? { shown: true } : {}) });
     at = spot.end;
   }
   if (at < text.length) segments.push({ text: text.slice(at) });

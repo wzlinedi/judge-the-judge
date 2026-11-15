@@ -76,6 +76,34 @@ describe('Edit expected errors', () => {
     expect(screen.getByText('Unsaved changes')).toBeTruthy();
   });
 
+  const withReplyAndMarks = (marks: string[]): AppState => {
+    const e = sampleEvaluation();
+    const expected = Object.fromEntries(marks.map((id) => [id, { state: 'found', source: 'manual' }]));
+    return { ...createState(), step: 'cases', evaluation: { ...e, decisions: { '2': { expected, additional: {}, added_findings: [], approved: false, note: '' } } } } as AppState;
+  };
+  const flipDifficulties = (count: number) => {
+    const items = JSON.parse(box().value);
+    for (let i = 0; i < count; i++) items[i].difficulty = items[i].difficulty === 'subtle' ? 'obvious' : 'subtle';
+    fireEvent.input(box(), { target: { value: JSON.stringify(items) } });
+    fireEvent.click(save());
+    return screen.getByRole('dialog', { name: 'Save the expected errors?' });
+  };
+
+  it('leaves out the clause about dropped marks when none is dropped (T287)', () => {
+    show(withReplyAndMarks([]));
+    open('Anna + 2 errors');
+    edit();
+    expect(flipDifficulties(1).textContent).toContain('This case has a reply. The case is marked again from the reply, and the test cases version changes.');
+    expect(screen.getByRole('dialog', { name: 'Save the expected errors?' }).textContent).not.toMatch(/\b0 marks|dropped/);
+  });
+
+  it('says how many marks are dropped when there are two (T287)', () => {
+    show(withReplyAndMarks(['e1', 'e2']));
+    open('Anna + 2 errors');
+    edit();
+    expect(flipDifficulties(2).textContent).toContain('This case has a reply. 2 marks you set for changed or removed errors are dropped, the case is marked again from the reply, and the test cases version changes.');
+  });
+
   it('for a case with a reply Save asks first: the marks of changed and removed errors are dropped, and Cancel keeps everything', () => {
     const e = sampleEvaluation();
     const withReply: AppState = { ...createState(), step: 'cases', evaluation: { ...e, decisions: { '2': { expected: { e1: { state: 'found', source: 'manual' } }, additional: {}, added_findings: [], approved: false, note: '' } } } };
@@ -96,24 +124,17 @@ describe('Edit expected errors', () => {
     expect(screen.queryByRole('dialog', { name: 'Edit expected errors' })).toBeNull();
   });
 
-  it('a list that leaves a changed place of the text uncovered is reported under the box and asked about before saving, even without a reply (FR-080)', () => {
+  it('a list that leaves a changed place of the text uncovered is saved at once for a case without a reply: no check line, no question (T286)', () => {
     show();
     open('Anna + 2 errors');
     edit();
     const items = JSON.parse(box().value);
     fireEvent.input(box(), { target: { value: JSON.stringify(items.slice(0, 1)) } });
-    expect(within(dialog()).getByRole('list', { name: 'Changed places not in the list' }).textContent).toMatch(/A changed place is not in the list/);
-    expect(within(dialog()).getByRole('status').textContent).toMatch(/changed place not in the list/);
+    expect(within(dialog()).queryByRole('list', { name: 'Changed places not in the list' })).toBeNull();
+    expect(within(dialog()).queryByText(/Text and list agree|changed place/)).toBeNull();
     expect(save().disabled).toBe(false);
     fireEvent.click(save());
-    const ask = screen.getByRole('dialog', { name: 'Save the expected errors?' });
-    expect(ask.textContent).toContain('The text and the list of expected errors do not agree:');
-    expect(ask.textContent).toMatch(/A changed place is not in the list/);
-    expect(ask.textContent).not.toContain('This case has a reply');
-    fireEvent.click(within(ask).getByRole('button', { name: 'Cancel' }));
-    expect(screen.getByRole('dialog', { name: 'Edit expected errors' })).toBeTruthy();
-    fireEvent.click(save());
-    fireEvent.click(within(screen.getByRole('dialog', { name: 'Save the expected errors?' })).getByRole('button', { name: 'Save expected errors' }));
+    expect(screen.queryByRole('dialog', { name: 'Save the expected errors?' })).toBeNull();
     expect(screen.queryByRole('dialog', { name: 'Edit expected errors' })).toBeNull();
   });
 

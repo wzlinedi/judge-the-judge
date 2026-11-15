@@ -51,12 +51,8 @@ export function CasesTable({ state, onOpen, onEdit }: CasesTableProps) {
     );
   };
 
-  /** A case that cannot be removed (a base in use) is refused at once, with the reason; others ask first. */
-  const askRemove = (c: TestCase) => {
-    const result = removeCase(state, c.id);
-    if (result.state === state) onEdit(result);
-    else setRemoving(c);
-  };
+  /** Every removal asks first (FR-025). */
+  const askRemove = (c: TestCase) => setRemoving(c);
 
   const submitRename = () => {
     if (!renaming) return;

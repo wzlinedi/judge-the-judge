@@ -1,6 +1,6 @@
 // Storing replies (FR-053, FR-056, FR-057, FR-059; contracts/core-api.md, attachReplies).
 import { describe, expect, it } from 'vitest';
-import { attachReplies, modelDetailsEdit, pasteReplyFromClipboard, reminderDue, replaceNeedsQuestion, saveReply } from '../../../src/app/actions/replies';
+import { attachReplies, modelDetailsEdit, pasteReplyFromClipboard, reminderDue, removeReply, replaceNeedsQuestion, saveReply } from '../../../src/app/actions/replies';
 import { createFakeClipboard } from '../../../src/app/ports/fakes';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
@@ -12,6 +12,8 @@ import { sampleEvaluation } from '../../helpers/fixtures';
 const withoutReplies = (): Evaluation => ({ ...sampleEvaluation(), replies: {}, decisions: {}, reply_judge_version: undefined });
 const stateOf = (evaluation: Evaluation, extra: Partial<AppState> = {}): AppState => ({ ...createState(), step: 'run', evaluation, ...extra });
 const reply = '{"claims":[{"text":"Anna is a baker.","verdict":"supported","reason":"x"}]}';
+/** A reply that is valid JSON is stored formatted (T292). */
+const pretty = (text: string) => JSON.stringify(JSON.parse(text), null, 2);
 
 describe('attachReplies', () => {
   it('stores the reply with the prompt composed for its case', () => {
@@ -19,7 +21,7 @@ describe('attachReplies', () => {
     const result = attachReplies(e, { items: [{ case_id: '1', reply }], problems: [] }, { judgeVersion: 'v1' });
     expect(result.problems).toEqual([]);
     expect(result.saved).toEqual(['1']);
-    expect(result.evaluation.replies['1']).toEqual({ prompt: composePrompt(e.judge_set.prompt, e.dataset.cases[0]!).text, reply });
+    expect(result.evaluation.replies['1']).toEqual({ prompt: composePrompt(e.judge_set.prompt, e.dataset.cases[0]!).text, reply: pretty(reply) });
   });
 
   it('records the judge version on the first reply and keeps it afterwards', () => {
@@ -125,7 +127,7 @@ describe('saveReply', () => {
     const state = stateOf(withoutReplies());
     const outcome = await saveReply(state, '1', reply);
     expect(outcome.status).toBe('saved');
-    expect(outcome.state.evaluation.replies['1']?.reply).toBe(reply);
+    expect(outcome.state.evaluation.replies['1']?.reply).toBe(pretty(reply));
     expect(outcome.state.evaluation.reply_judge_version).toBe(await judgeVersion(state.evaluation.judge_set));
     expect(outcome.state.repliesSinceSave).toBe(1);
     expect(outcome.state.unsaved).toBe(true);
@@ -186,7 +188,7 @@ describe('pasteReplyFromClipboard', () => {
     ports.clipboard = createFakeClipboard(reply);
     const outcome = await pasteReplyFromClipboard(stateOf(withoutReplies()), '1', ports);
     expect(outcome.status).toBe('saved');
-    expect(outcome.state.evaluation.replies['1']?.reply).toBe(reply);
+    expect(outcome.state.evaluation.replies['1']?.reply).toBe(pretty(reply));
   });
 
   it('explains an empty clipboard and changes nothing', async () => {
@@ -230,5 +232,57 @@ describe('modelDetailsEdit', () => {
     expect(next.evaluation.model_note).toBe('model X\ntemperature 0\n');
     expect(next.unsaved).toBe(true);
     expect(state.evaluation.model_note).toBe('model X\ntemperature 0');
+  });
+});
+
+describe('removeReply (T291)', () => {
+  it('removes the reply, the decisions and the added findings of the case; the other cases keep theirs', () => {
+    const e = sampleEvaluation();
+    const removed = removeReply(e, '2');
+    expect(removed.replies['2']).toBeUndefined();
+    expect(removed.decisions['2']).toBeUndefined();
+    expect(Object.keys(removed.replies)).toEqual(Object.keys(e.replies).filter((id) => id !== '2'));
+    expect(removed.dataset).toBe(e.dataset);
+  });
+
+  it('puts the run back to the start when the last reply goes', () => {
+    const e = sampleEvaluation();
+    const only: Evaluation = { ...e, replies: { '2': e.replies['2']! }, decisions: { '2': e.decisions['2']! }, reply_judge_version: 'v1', rules_corrected_after_replies: true };
+    const removed = removeReply(only, '2');
+    expect(removed.replies).toEqual({});
+    expect(removed.reply_judge_version).toBeUndefined();
+    expect(removed.rules_corrected_after_replies).toBeUndefined();
+  });
+
+  it('changes nothing for a case without a reply', () => {
+    const e = withoutReplies();
+    expect(removeReply(e, '2')).toBe(e);
+  });
+});
+
+describe('a reply that is valid JSON is stored formatted (T292)', () => {
+  it('stores the same data with new lines and an indent of 2 spaces, from the box and from the clipboard alike', async () => {
+    const state = stateOf({ ...withoutReplies(), dataset: { ...withoutReplies().dataset, finalized: true } });
+    const saved = await saveReply(state, '1', '{"claims":[{"text":"x"}]}');
+    expect(saved.status).toBe('saved');
+    expect(saved.state.evaluation.replies['1']?.reply).toBe('{\n  "claims": [\n    {\n      "text": "x"\n    }\n  ]\n}');
+    const ports = createFakePorts();
+    ports.clipboard = createFakeClipboard('{"claims":[]}');
+    const pasted = await pasteReplyFromClipboard(state, '1', ports);
+    expect(pasted.state.evaluation.replies['1']?.reply).toBe('{\n  "claims": []\n}');
+  });
+
+  it('keeps a text that is not valid JSON, or has JSON in a fence, as it is', async () => {
+    const state = stateOf({ ...withoutReplies(), dataset: { ...withoutReplies().dataset, finalized: true } });
+    const fenced = '```json\n{"claims":[]}\n```';
+    const saved = await saveReply(state, '1', fenced);
+    expect(saved.state.evaluation.replies['1']?.reply).toBe(fenced);
+  });
+
+  it('counts the same data in other spaces as the reply already saved: nothing changes', async () => {
+    const state = stateOf({ ...withoutReplies(), dataset: { ...withoutReplies().dataset, finalized: true } });
+    const first = await saveReply(state, '1', '{"claims":[]}');
+    const again = await saveReply(first.state, '1', '{ "claims": [] }');
+    expect(again.status).toBe('unchanged');
   });
 });

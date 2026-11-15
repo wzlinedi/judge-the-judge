@@ -1,16 +1,16 @@
 import { useId, useState } from 'preact/hooks';
 import { addCategory, removeCategory, renameCategoryAction, setCategoryDetails, type CatalogEdit } from '../../../app/actions/catalog';
 import type { AppState } from '../../../app/store';
-import { categoryUses, normalizeCategoryName } from '../../../core/cases/catalog';
+import { categoryErrorCount, categoryUses, normalizeCategoryName } from '../../../core/cases/catalog';
 import { Dialog } from '../../components/Dialog';
 import { labels } from '../../labels';
 
 const usedBy = (uses: number) => `${uses} test ${uses === 1 ? 'case' : 'cases'}`;
 
-/** What a rename changes, said before it is done (T237). */
-function renameEffect(uses: number): string {
-  const cases = uses === 0 ? 'No test case uses this category.' : `The ${usedBy(uses)} using it ${uses === 1 ? 'is' : 'are'} renamed too.`;
-  return `${cases} The test cases version changes, and the error analysis of Results uses the new name.`;
+/** What a rename changes, said before it is done (T237, T294): how many expected errors in how many test cases get the new name. */
+function renameEffect(uses: number, errors: number): string {
+  if (uses === 0) return 'No test case uses this category. The test cases version changes, and the error analysis of Results uses the new name.';
+  return `${errors} expected ${errors === 1 ? 'error' : 'errors'} in ${usedBy(uses)} ${errors === 1 ? 'gets' : 'get'} the new name. The test cases version changes. The error analysis of Results uses the new name.`;
 }
 
 export interface ErrorCategoriesSectionProps {
@@ -170,7 +170,7 @@ export function ErrorCategoriesSection({ state, open, onToggle, onEdit }: ErrorC
           New name
         </label>
         <input id={`${id}-rename`} type="text" value={newName} onInput={(event) => setNewName((event.currentTarget as HTMLInputElement).value)} />
-        <p class="muted">{renameEffect(renaming === null ? 0 : categoryUses(dataset.cases, renaming))}</p>
+        <p>{renameEffect(renaming === null ? 0 : categoryUses(dataset.cases, renaming), renaming === null ? 0 : categoryErrorCount(dataset.cases, renaming))}</p>
       </Dialog>
       <Dialog
         open={removing !== null}

@@ -43,7 +43,7 @@ export function InjectWindow({ state, onApply, onClose }: InjectWindowProps) {
       />
       <Part number={4} title="Paste its answer">
         <p class="muted">Paste what your LLM returned into the box. It is checked as you paste it. To change anything, change the JSON in the box.</p>
-        <AnswerBox label="Case JSON" value={text} onChange={setText} check={check} rows={14} state={state} hideCleanKind />
+        <AnswerBox label="Case JSON" value={text} onChange={setText} check={check} rows={14} hideCleanKind />
       </Part>
       <Part number={5} title="Expected errors">
         <ExpectedErrorsPart state={state} text={text} check={check} />

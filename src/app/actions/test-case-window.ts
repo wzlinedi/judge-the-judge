@@ -1,7 +1,6 @@
 // The state and the checks behind the test case window for a case with injected errors (FR-040, FR-041, FR-080, FR-085).
 // The pasted JSON is not part of the state until the case is saved.
 import { normalizeCategoryName } from '../../core/cases/catalog';
-import { textListCheck, type ListCheck } from '../../core/cases/text-list-check';
 import { injectErrorsPrompt, type ErrorToPrepare, type PreparedDifficulty } from '../../core/generation/inject-errors-prompt';
 import type { TestCase } from '../../core/model';
 import type { AppState } from '../store';
@@ -75,24 +74,3 @@ export function injectPrompt(state: AppState, draft: InjectDraft): string {
 
 /** The prompt in the box: the user's edit while there is one, otherwise the prompt built from the parts (T262). */
 export const promptOf = (state: AppState, draft: InjectDraft): string => draft.prompt ?? injectPrompt(state, draft);
-
-/** Whether the text and the list of a case agree, against the base case it names (FR-080). */
-export function listCheckOf(state: AppState, testCase: Omit<TestCase, 'id'> & { id?: string }): ListCheck {
-  const base = testCase.base !== undefined ? state.evaluation.dataset.cases.find((c) => c.id === testCase.base) : undefined;
-  return textListCheck(testCase, base, state.evaluation.judge_set.judged_text);
-}
-
-/** The changed places that no expected error covers, one plain line each; shown under the JSON box (T229). */
-export function uncoveredLines(list: ListCheck): string[] {
-  return list.uncovered.filter((place) => place.end > place.start).map((place) => `A changed place is not in the list: “${place.text}” in ${place.field}.`);
-}
-
-/** What does not agree, one plain line each, for the question before saving (FR-080: only (a) and (b) ask). */
-export function mismatchLines(list: ListCheck): string[] {
-  const lines: string[] = uncoveredLines(list);
-  for (const place of list.uncovered) {
-    if (place.end <= place.start) lines.push(`Text of the base is gone from ${place.field} and no expected error covers it: “${(place.removed ?? '').slice(0, 80)}”.`);
-  }
-  for (const missing of list.notInText) lines.push(`E${missing.index + 1}: the fragment “${missing.fragment}” is not in the text.`);
-  return lines;
-}

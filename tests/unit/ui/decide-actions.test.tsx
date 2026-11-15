@@ -39,6 +39,22 @@ describe('the buttons under the list', () => {
     expect(win().textContent).not.toMatch(/More actions/);
   });
 
+  it('shows Add finding and Second opinion disabled, with the reason beside them, while the case has no reply; enabled once there is one (T290)', () => {
+    open('3', { ...demo, replies: {}, decisions: {} });
+    for (const name of ['Add finding…', 'Second opinion…']) {
+      const button = within(win()).getByRole('button', { name }) as HTMLButtonElement;
+      expect(button.disabled).toBe(true);
+      expect(button.getAttribute('aria-describedby')).toBeTruthy();
+    }
+    expect(within(win()).getByText('Paste the judge’s reply first')).toBeTruthy();
+  });
+
+  it('enables both buttons and drops the reason once a reply is saved (T290)', () => {
+    open('3');
+    for (const name of ['Add finding…', 'Second opinion…']) expect((within(win()).getByRole('button', { name }) as HTMLButtonElement).disabled).toBe(false);
+    expect(within(win()).queryByText('Paste the judge’s reply first')).toBeNull();
+  });
+
   it('shows Ignore on every item, expected errors and additional findings alike', () => {
     open('17');
     for (const el of document.querySelectorAll<HTMLElement>('[data-expected], [data-additional]')) {
