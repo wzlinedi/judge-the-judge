@@ -14,60 +14,62 @@ Chrome and Microsoft Edge (FR-003).
   scrolling inside it, its buttons in a bar at the bottom. Every "Show prompt",
   "Second opinion…" and "Edit expected errors" use it. A short question keeps the small dialog.
 
-- A header with the tool name and, on the same line, **Save test project**, **Save evaluation**, the
+- A header with the tool name and, on the same line, **Save test project**, the
   **More** menu and **Help** (T246); under it the four numbered steps as a progress bar. The **More**
   menu always opens inside the screen (it is aligned to the right edge of its button and scrolls when
   it is taller than the screen).
   The current step and how far the user has got are always visible.
-- **The header holds the two save buttons** (FR-076, T242). It shows the one indicator of unsaved changes
-  ("Unsaved changes", or "All changes saved" with the file name; FR-051), **Save test project** and
-  **Save evaluation**, each with the name of its file (or "no file yet") under it, and a **More** menu
-  holding **Load evaluation…**, **Load test project…**, **Save test project as…**, **Save evaluation
-  as…**, **Import test cases…**, **Export test cases…**, **Load demo…** and **New evaluation**.
-  No other screen has a save button.
-- **Load demo…** loads the demo (a finished run of book summaries) at once, with no window, and
-  opens the Judge step. There is no list of examples and no **Load metric definition…**: a metric
+- **The header holds the one save button** (FR-076, T242, T289). It shows the one indicator of
+  unsaved changes ("Unsaved changes", or "All changes saved" with the file name; FR-051), **Save
+  test project** with the name of its file (or "no file yet") under it, and a **More** menu holding
+  **Load test project…**, **Save test project as…**, **Import test cases…**, **Export test
+  cases…**, **Load demo…** and **New test project**. No other screen has a save button.
+- **Load demo…** loads the demo (a test project of book summaries with a test run in progress) at
+  once, with its test run, with no window and no load question, and opens the Judge step (FR-019). There is no list of examples and no **Load metric definition…**: a metric
   that is not built in travels in `metric.definition` of the test project file
   (FR-008, FR-019, FR-026).
-- **Saving the two files** (FR-076): **Save test project** and **Save evaluation** behave alike.
-  The first save asks for a file name and folder; later ones overwrite that file without asking;
-  **Save test project as** and **Save evaluation as** pick a new file; after a load through the
-  picker saving goes to the loaded file (the browser may ask once for permission to write); a
-  file dropped onto the page is not remembered. **Load test project** forgets the evaluation file
-  and **Load evaluation** forgets the test project file. **New evaluation**, **Load
-  example…** and **Run again with a new judge…** forget both. The evaluation file alone is enough
-  to show Results and generate the report.
-- **The indicator** clears after **Save evaluation**; while no reply exists it also clears after
-  **Save test project**. Once replies exist, **Save test project** leaves it on and says that
-  replies are kept only by **Save evaluation** (FR-051).
-- **Replacing work** (FR-051): before a load, **New evaluation**, **Load demo…** and
-  **Run again with a new judge…**, when there are unsaved changes, one warning offers **Save
-  evaluation first**, **Discard** and **Cancel**. This offer is the only way to save the
-  evaluation outside the Run step. Leaving or reloading the page with unsaved changes triggers the
-  browser's own warning.
+- **Saving the one file** (FR-076): the first **Save test project** asks for a file name and
+  folder; later ones overwrite that file without asking; **Save test project as…** picks a new
+  file. After **Load with the test run** through the picker, saving goes to the loaded file (the
+  browser may ask once for permission to write). After **Load the test project only** the loaded
+  file is not remembered, so the first save asks for a new file and the loaded test run is never
+  overwritten. A file dropped onto the page is not remembered. **New test project** and **Load
+  demo…** forget the file. The test project file alone is enough to show Results and generate the
+  report.
+- **The indicator** clears after **Save test project** and **Save test project as…** (FR-051).
+- **Replacing work** (FR-051): before a load, **New test project** and **Load demo…**, when there
+  are unsaved changes, one warning offers **Save test project first**, **Discard** and **Cancel**.
+  Leaving or reloading the page with unsaved changes triggers the browser's own warning.
+- **The load question** (FR-020, T289): after the file is picked and validated, a file with a
+  test run asks, in a small dialog "Load test project", **Load with the test run** (the work comes
+  back as saved), **Load the test project only** (no replies, decisions or model details; the
+  test run has not started, so the prompt can be changed; the file is not remembered) and
+  **Cancel** (nothing changes). A file without a test run loads at once. A dropped file gets the
+  same question.
 - **The "what next" line** (FR-001) sits under the steps on every step: one sentence saying what
   is still missing or what to do next, an optional second line with counts, and the one primary
   action of the step. There is no welcome section. Explanations longer than one sentence are not
   on step screens; each section has a small **Explain** control that opens its explanation on
   demand.
-- **After a load** (**Load evaluation**, **Load test project**, **Load demo…**) the tool opens
-  the first step with unfinished work: Judge with no prompt, Test cases when not finalized, Run
-  when any case is not run or awaits verification, otherwise Results. The "what next" line says
-  how far the work is ("12 of 20 cases decided") and offers **Continue**, which on Run opens the
+- **After a load** (**Load test project…**, but not **Load demo…**, which opens Judge) the tool
+  opens the first step with unfinished work: Judge with no prompt, Test cases when the test run has
+  not started, Test run when any case is not run or awaits verification, otherwise Results. The
+  "what next" line says how far the work is ("12 of 20 cases decided") and offers **Continue**,
+  which on Test run opens the
   first case awaiting verification, else the first case without a reply (FR-073); on Results there
   is no **Continue** (FR-065, T267).
 - **No menus in rows or windows** (FR-008): a table row shows its actions as visible buttons, and
   no window holds a "More actions" section.
-- After finalizing, the "what next" line of Judge and Test cases says what is fixed and what can
-  still be changed; while no reply exists it offers **Reopen test cases** (FR-053).
+- After **Start test run**, the "what next" line of Judge and Test cases says what is fixed and
+  what can still be changed. There is no way back to before the start (FR-053, T288).
 - A footer with the tool version and the statement that data stays on this device.
 
 | Step | Available when | Primary action in the "what next" line |
 |---|---|---|
-| 1 Judge | Always | **Next: Test cases** once the judge is complete; **Continue** after finalizing |
-| 2 Test cases | Always (useful once the prompt has variables) | **Finalize test cases** (disabled while there are no cases, with a sentence pointing to **Add test case** above the list); **Continue** after finalizing |
-| 3 Run | Test cases finalized | **Continue** (opens the next case to work on); **Next: Results** when all are decided |
-| 4 Results | Finalized | **Export HTML report** always, with **Run again with a new judge…** beside it (no **Continue**, T267) |
+| 1 Judge | Always | **Next: Test cases** once the judge is complete; **Continue** after the start |
+| 2 Test cases | Always (useful once the prompt has variables) | **Start test run** before the start (T288: the "what next" line sits at the top of the step; disabled while there are no cases, with a sentence pointing to **Add test case** above the list); **Continue** after it |
+| 3 Test run | Always; before the start its actions are disabled with the reason "Start the test run first" | **Continue** (opens the next case to work on); **Next: Results** when all are decided |
+| 4 Results | Always; before the first reply it says that nothing is run yet | **Export HTML report** (no **Continue**, T267; no other action, T289) |
 
 The user can always go back to an earlier step to look. A step that is not yet available shows one
 sentence saying what is needed first and a button that leads there. There is no Verify step, no
@@ -78,7 +80,8 @@ Compare step and no result shelf.
 - **Purpose**: say what is being tested and how its replies are read. Everything here is the
   judge set, saved inside the test project file.
 - **Buttons of the step** (FR-088, SC-038): **Add rule** (with **Add condition** and **Remove**
-  inside each rule) and the one action of the "what next" line. Nothing else.
+  inside each rule) and the one action of the "what next" line. After the start of the test run,
+  also **Load test project…** in the lock notice of the prompt (FR-053). Nothing else.
 - **Sections, in order**:
   1. **Judge prompt**: the editor; under it the detected variables, a choice of the variable that
      is the **judged text** (the last one proposed, FR-010), and the judge version.
@@ -103,11 +106,14 @@ Compare step and no result shelf.
   unchanged); broken rule (marked, with the missing field named; a condition without a value yet is
   "unfinished", not broken); replies not readable
   automatically (warning naming what is missing); invalid file (message, nothing replaced); after
-  finalizing (prompt and judged text read-only; sample, finding text and rules still editable).
+  the start of the test run (prompt and judged text locked, with the reason "The test run has
+  started, so the prompt is fixed. To test another prompt, load the test project with "Load the
+  test project only"." and **Load test project…** beside it; sample, finding text and rules still
+  editable; FR-053, T288).
 
 ## Step 2: Test cases
 
-- **Purpose**: build the test data and finalize it.
+- **Purpose**: build the test data and start the test run.
 - **Sections, in order** (FR-087):
   1. **Error categories**, collapsible by a click on its heading (also from the keyboard). Open
      while the test project has no test cases; collapsed when a test project with cases is loaded
@@ -116,7 +122,7 @@ Compare step and no result shelf.
      **Description & examples** (one multi-line text edited in the cell; it takes the room that is
      left), **Used by** (the number of test cases, computed from the cases), then **Rename** (asks
      first: the N test cases using it are renamed too, the test cases version changes and the error
-     analysis of Results uses the new name; also after finalizing) and **Remove** (always enabled,
+     analysis of Results uses the new name; also after the start) and **Remove** (always enabled,
      T248: at once when unused; for a category in use a small dialog "Remove category" says "N test
      cases use it. Their expected errors stay and lose the category. The test cases version
      changes." with **Cancel** and **Remove**). There is no **Example** button. Below the table:
@@ -136,14 +142,16 @@ Compare step and no result shelf.
   in its panel): found, clean, with injected errors, invalid rows with position and reason, fields
   that match no variable, variables with no field, categories missing from the catalog with a
   choice to add them; then **Import test cases** (adds the cases to those already here, also after
-  finalizing) or **Cancel** (FR-027 to FR-030, FR-053).
-- **Finalize**: a summary dialog (counts, balance, test size, all warnings) and a confirmation.
+  the start) or **Cancel** (FR-027 to FR-030, FR-053).
+- **Start test run** (FR-052, T288): a summary dialog (counts, balance, test size, all warnings)
+  and a confirmation that says the judge prompt and the judged text are then fixed, with no way
+  back.
 - **States**: no cases yet (points to **Add test case**, the More menu and the Judge step); 500-case
   limit reached; text too long; identifier collision on import (new identifiers, said in the
-  summary); name used twice (both cases show the warning); finalized (**Add test case**
+  summary); name used twice (both cases show the warning); test run started (**Add test case**
   above the list and **Import test cases** stay available and new cases start as Not run; **Rename** and
-  **Remove** stay enabled for every case (**Remove** of a case with a reply asks first and says its reply and decisions go with it); while no reply
-  exists, **Reopen test cases** opens the test project again).
+  **Remove** stay enabled for every case (**Remove** of a case with a reply asks first and says its
+  reply and decisions go with it); there is no way back to before the start).
 
 ### Window: the test case window
 
@@ -188,7 +196,7 @@ which asks first when something was pasted or typed.
 - **Open** (FR-086): the case read-only (its own layout; the fields show no highlight until **Show the issue**, T257, except the warnings of FR-080), with **Previous test
   case**, **Next case** and the position ("case 7 of 20") in the header (Alt + Left/Right do
   the same), no **Recreate the test case** (T262), no **Show JSON** or **Copy JSON**, and, on every case, **Edit expected errors**; also **Show prompt** (a dialog of about 90% of the screen with
-  the whole composed prompt and only **Close**) with **Copy prompt**. No reply is shown (a reply belongs to Run).
+  the whole composed prompt and only **Close**) with **Copy prompt**. No reply is shown (a reply belongs to Test run).
   Sections are in frames. A saved case is never edited.
 - **Edit expected errors** (FR-089, T254): the standard large dialog with the JSON of the list of the expected errors of the case
   only (with their `id`), checked as it changes, with **Cancel** and **Save expected errors** at the bottom, the check line of FR-080 and the uncovered places under the box; **Save expected errors** is disabled with the reason beside it
@@ -199,11 +207,12 @@ which asks first when something was pasted or typed.
   description (field path); nothing pasted yet; name taken; identical to base (refused); test
   project full; JSON with no expected errors in a case with injected errors (saved as clean, the
   window says so); unsaved paste when closing (asks first). The window has no save action for
-  the files: the test project and the evaluation are saved after it is closed.
+  the file: the test project is saved after it is closed.
 
-## Step 3: Run
+## Step 3: Test run
 
-- **Purpose**: get the judge's reply for every case and settle what it found.
+- **Purpose**: get the judge's reply for every case and settle what it found. The step was named
+  "Run" before T289.
 - **Content, in order**:
   - **The judge being run**: one short summary line (judge version, test project name, test cases
     version, judged text), with no prompt or rules text; the **Model details** box (multi-line
@@ -217,17 +226,19 @@ which asks first when something was pasted or typed.
     applied opinion) and **Items to decide**, each 0 before the reply; status (Not run, Awaiting
     verification, Pass, Fail, each with a word and a sign, never color alone), and **Open**; a choice "all
     cases" / "awaiting verification first" / "only awaiting verification".
-- **Reminder**: after every 25 replies saved since the last "Save evaluation", a message asks the
-  user to save, with **Save evaluation** in it.
-- **States**: not finalized (asks to finalize first); all cases decided (points to Results).
+- **Reminder**: after every 25 replies saved since the last "Save test project", a message asks
+  the user to save, with **Save test project** in it.
+- **States**: test run not started (the step shows its content with every action disabled, each
+  with the reason "Start the test run first" beside it, FR-053); all cases decided (points to
+  Results).
 
-### Window: the case window of Run
+### Window: the case window of Test run
 
 Opened by **Open** (FR-055, FR-060).
 
 - **Fills the screen.** A header that never scrolls: **Previous case**, **Next case**,
   the position, the checkbox "only cases awaiting verification", the case name with its
-  identifier, "N not saved" (with the reminder from 25: "Close the window and press Save evaluation at the top"), **Close**.
+  identifier, "N not saved" (with the reminder from 25: "Close the window and press Save test project at the top"), **Close**.
   Alt + Left and Alt + Right do the same as the two buttons. The status is in part 2.
 - **One vertical page of three numbered parts** (the same page layout as the test case window;
   Owner review 2026-11-14, Case window of Run). The page scrolls as a whole.
@@ -239,7 +250,7 @@ Opened by **Open** (FR-055, FR-060).
 | **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column, and **Paste reply** below it (primary once **Copy prompt** was pressed). A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. **Right, "Errors"**: without a reply the expected errors of the case at once, each by the shared error component with **Show the issue** but with no marks and no "Judge: …" line, and the line "The judge’s findings and the marks appear when its reply is saved." ("No expected errors." for a clean case; T264); with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; two groups (T252), each item shown by the shared error component (below): **Expected errors**, each with the words of the judge that match it ("Judge: “…” (matches)" or "(partly matches)", T258) and its marks (**Found**, **Not found**, **Ignored**), the reason for anything undecided and the source of every mark; **Additional errors**, each with its marks (**Genuine error**, **False positive**, **Ignored**; a finding with no text has no passage and no **Show the issue**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**. There is no list "Findings in the reply" (T258). |
 
 - **The shared error component** (T251) shows an error the same way in Test cases (Open and the
-  windows for adding a case), in Run and in Results: its number (E1 …) for an expected error, what is
+  windows for adding a case), in Test run and in Results: its number (E1 …) for an expected error, what is
   wrong, a quiet line with the category, the difficulty and the rule, then one line per side with
   the name of the field before the passage: the words of the source first (`source_fragment`, looked
   for in the fields other than the judged text), then the words of the judged text (`fragment`, or
@@ -287,14 +298,14 @@ collapsed section, for that case only.
 
 ### Window: read-only case view of Results
 
-Opened by **Open** in the Test case list (FR-071). The same frame as the case window of Run
-(header with **Previous case**, **Next case**, position, name, **Close**, **Open on Run**), and
+Opened by **Open** in the Test case list (FR-071). The same frame as the case window of Test run
+(header with **Previous case**, **Next case**, position, name, **Close**, **Open on Test run**), and
 the same page: three numbered parts, one below the other, each in a frame, nothing editable (T256):
 1. Case (the fields, highlighted only by **Show the issue** (T257), and, below them, the complete judge prompt in a read-only box; no buttons),
 2. Judge reply (read-only, with the note when the file has one), 3. Errors: first one summary line ("3 expected: 2 found, 1 not found ·
 Additional: 2 false positive"), then the two groups **Expected errors** and **Additional errors**, each item shown by the shared error
 component (both passages, the state in words, the source of the mark) with **Show the issue**. The status of the case is in the header, and the
-part "Result" with "Marked N of M" is gone. It offers no action that changes the case (marks are changed on Run), and **Open on Run**
+part "Result" with "Marked N of M" is gone. It offers no action that changes the case (marks are changed on Test run), and **Open on Test run**
 leads to the case window.
 
 ## Step 4: Results
@@ -303,8 +314,8 @@ leads to the case window.
   review everything without changing it by accident.
 - The "what next" line says how many cases are decided ("27 of 30 cases decided", and "· 3 not
   decided yet" when some are not); there is no "final" or "provisional" result, because the test
-  cases can change at any time (T267). Its primary action is always **Export HTML report**, with
-  **Run again with a new judge…** beside it; there is no **Continue** here.
+  cases can change at any time (T267). Its primary action is always **Export HTML report**; there
+  is no **Continue** here and no **Run again with a new judge…** (T289).
 - **Read-only**: nothing on this step changes a reply, decision, expected error, rule or mapping.
   The only exception is the thresholds in **Details** (FR-065, FR-069). There is no closing step.
 - **Notices** above the views: rules
@@ -331,12 +342,12 @@ leads to the case window.
      see it in the read-only case view.
 - **Actions** (both in the "what next" line; there is no card "Report and next version", T267):
   **Export HTML report**, available at any time; while cases are not run or await verification
-  the report says how many are not decided yet. **Run again with a new judge…** (asks first as in
-  "Replacing work", forgets both remembered files, FR-074). The Help says that the result as JSON
-  is the evaluation file of **Save evaluation**.
+  the report says how many are not decided yet. A changed judge is tested on the same test cases
+  by **Load test project…** with **Load the test project only** (FR-074). The Help says that the
+  result as JSON is the test project file of **Save test project**.
 - **States**: nothing run yet; partial results; no findings at all (false-positive rate not
-  available); sample below the minimum; loaded evaluation whose recomputed numbers differ from the
-  stored ones.
+  available); sample below the minimum; a test project loaded with its test run whose recomputed
+  numbers differ from the stored ones.
 
 ## Help
 
@@ -347,9 +358,10 @@ leads to the case window.
   categories; adding test cases (From JSON, Clean case, Case with errors, the case JSON
   layout, Open, Edit expected errors); importing test cases from a file;
   pasting replies and what happens when a reply is replaced; marking after each reply, Add finding
-  and Remove, the second opinion window and "Ignored"; the two files (the test project, reused for
-  every run; the evaluation, the progress of one run), the indicator of unsaved changes, "… as",
-  loading back and **Continue**; judges that give only a verdict and are evaluated per case, with
+  and Remove, the second opinion window and "Ignored"; **Start test run** and what it fixes; the
+  one file (the test project, with its test run once started), the indicator of unsaved changes,
+  "… as", the load question (**Load with the test run**, **Load the test project only** to test a
+  changed judge on the same cases) and **Continue**; judges that give only a verdict and are evaluated per case, with
   a worked example; each count and rate with a worked example and its limitations; the overall
   result and thresholds; exporting, and what the cases not decided yet mean for the numbers; files and their formats, with
   examples; examples and demo data; metrics and thresholds; the supported browsers (Chrome and

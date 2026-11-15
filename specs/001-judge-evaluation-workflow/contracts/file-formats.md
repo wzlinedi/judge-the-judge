@@ -26,29 +26,31 @@ open the files the Help names (T220).
 
 | `format` | Purpose | Read | Written |
 |---|---|---|---|
-| `judge-the-judge-test-project` | The judge set, the error catalog, all test cases, the active metric and the thresholds: one test, used for every run | yes | yes |
+| `judge-the-judge-test-project` | The whole work: the judge set, the error catalog, all test cases, the active metric, the thresholds and, once it has started, the test run with its results | yes | yes |
 | `judge-the-judge-test-cases` | Test cases alone: "Import test cases" and "Export test cases" | yes | yes |
 | (CSV, no `format`) | Clean cases as a spreadsheet ("Import test cases") | yes | example only |
-| `judge-the-judge-evaluation` | The whole work of one run and its results | yes | yes |
 | `judge-the-judge-metric` | Metric definition | yes | example only |
 | `judge-the-judge-checks` | Check configuration | yes | example only |
 | (HTML) | Report for people | no | yes |
 
-The user works with two files of their own: the test project (section 1) and the evaluation
-(section 5). There is no separate judge set file, no error catalog file (the catalog lives in the
-test project since the review of prototype v14), no prompt batch, no answer batch and no separate
-result file in this version.
+The user works with one file of their own: the test project (section 1). There is no separate
+judge set file, no error catalog file (the catalog lives in the test project since the review of
+prototype v14), no prompt batch, no answer batch and no separate result file in this version.
+The evaluation file (`judge-the-judge-evaluation`) of earlier builds is gone (T289). The tool is
+not released, so such a file is not read: it gets the message for an unknown `format`.
 
 ## 1. Test project file
 
-One format for "Save test project", "Save test project as" and "Load test project" (FR-020). It
-is the same test for every run: the judge set, the error catalog, the test cases, the active
-metric and the thresholds, with no replies, decisions, results or model details.
+One format for "Save test project", "Save test project as…", "Load test project…" and the demo of
+"Load demo…" (FR-020, FR-073, FR-076). It holds the whole work: the judge set, the error catalog,
+the test cases, the active metric, the thresholds and, once the test run has started, the
+`test_run` section (section 5). It is also the result as JSON; there is no separate "Export JSON"
+(FR-072).
 
 ```json
 {
   "format": "judge-the-judge-test-project",
-  "schema_version": 1,
+  "schema_version": 2,
   "tool_version": "1.0.0",
   "judge_set": {
     "prompt": "You are a strict fact-checker...\n\nSOURCE:\n{{source_text}}\n\nSUMMARY:\n{{summary}}",
@@ -75,7 +77,6 @@ metric and the thresholds, with no replies, decisions, results or model details.
   "dataset": {
     "name": "Book summaries, set A",
     "version": "3fa9c2d41b07",
-    "finalized": true,
     "cases": [
       { "id": "1", "name": "Lalka", "fields": { "source_text": "…", "summary": "…" }, "expected_errors": [] }
     ]
@@ -85,31 +86,54 @@ metric and the thresholds, with no replies, decisions, results or model details.
     { "measure": "detection_rate", "comparison": "at_least", "value": 0.8 },
     { "measure": "false_positive_rate", "comparison": "at_most", "value": 0.1 },
     { "measure": "case_detection_rate", "comparison": "at_least", "value": 0.8 },
-    { "measure": "clean_case_false_positive_rate", "comparison": "at_most", "value": 0.1 } ] }
+    { "measure": "clean_case_false_positive_rate", "comparison": "at_most", "value": 0.1 } ] },
+  "test_run": { "saved": "2026-11-13T10:15:00Z", "replies": { }, "decisions": { }, "results": { } }
 }
 ```
 
 - The key `dataset` is the block of **test cases** of the test project (its name, the test cases
-  version, whether they are finalized, and the cases). The word "dataset" is not used in the
-  interface or the Help; the key keeps its name so that files stay stable.
-- `judge_set` is the **judge set** layout, used in this file, in the evaluation file (section 5) and
-  in a metric definition (metric-and-checks.md). The error catalog belongs to the test project; it
-  is stored as `judge_set.error_catalog` so that a metric definition can carry a starter catalog in
-  the same layout.
-- `dataset.cases` has the case layout of section 3. `dataset.finalized` is restored as saved: a
-  finalized test project comes back finalized and the Run step opens; "Reopen test cases" opens it
-  again while no reply exists (FR-053).
-- `metric` and `checks` are restored on load, so every run of one test project counts the same
-  way. `metric.definition` is optional: for a metric that is not built in it holds `name`,
+  version and the cases). The word "dataset" is not used in the interface or the Help; the key
+  keeps its name so that files stay stable.
+- `judge_set` is the **judge set** layout, used in this file and in a metric definition
+  (metric-and-checks.md). The error catalog belongs to the test project; it is stored as
+  `judge_set.error_catalog` so that a metric definition can carry a starter catalog in the same
+  layout.
+- `dataset.cases` has the case layout of section 3.
+- `test_run` is present once "Start test run" was pressed, also before the first reply; its
+  layout is section 5. Its presence is the only record that the test run has started: there is no
+  `finalized` key. A file without it loads with the test run not started (FR-053).
+- `metric` and `checks` are restored on load, so every test run of one test project counts the
+  same way. `metric.definition` is optional: for a metric that is not built in it holds `name`,
   `description`, `limitations`, `output_format`, `parameters` and `measures` (the layout of the
   metric file without `judge_set`), is checked like a metric file (a problem names its path, for
   example `metric.definition.measures[0].operation`), and loading the file registers the metric for
-  the session (T243); a definition of the built-in Accuracy is ignored. The evaluation file never holds it: its `metric` is the id and the parameters, and a metric is found in the session from the test project loaded before (or is not registered, and the stored parameters are used). When the metric is neither
-  built in nor carried by the file, its stored parameters are still used and the user is told. `checks` has the layout of the check configuration (metric-and-checks.md, section 2)
-  without `format`; the fixed minimum test size is never stored here.
-- Loading starts a new evaluation with no replies after the unsaved-work question (FR-020, FR-051),
-  and an evaluation file given to "Load test project" is refused with a message that names "Load
-  evaluation".
+  the session (T243); it replaces a loaded metric with the same id, the default Accuracy file
+  included (T274). A file that names a
+  metric which is not loaded and carries no definition of it is refused with a plain message
+  (T274). `checks` has the layout of the check configuration (metric-and-checks.md, section 2)
+  without `format`; the fixed minimum test size is not stored at the top level (see
+  `test_run.minimum_sample`).
+- **Loading** (FR-020, FR-051, FR-073, FR-076), in this order:
+  1. When there are unsaved changes, the unsaved-work question ("Save test project first",
+     "Discard", "Cancel").
+  2. The file picker (or a file dropped onto the page).
+  3. The whole file is validated, the `test_run` section included. An invalid file is explained
+     and changes nothing.
+  4. When the file has a `test_run` section, a question with "Load with the test run", "Load the
+     test project only" and "Cancel". Cancel changes nothing. A file without it loads at once.
+  5. The file is applied, and the tool opens the first step with unfinished work.
+- **"Load with the test run"** restores everything exactly as saved. A file opened through the
+  picker becomes the remembered file, so the next save overwrites it.
+- **"Load the test project only"** restores the judge set, the error catalog, the test cases, the
+  metric and the thresholds, and drops the whole `test_run` section: replies, decisions (the
+  "Ignored" marks and added findings included), model details and results. It also drops
+  `changed_after_first_reply` from every case, because the run it refers to is gone. The test run
+  has not started, so the prompt can be changed. The loaded file is not remembered: the first save
+  asks for a new file, and the loaded test run is never overwritten (FR-074, FR-076).
+- **"Load demo…"** loads the demo with its test run and does not ask.
+- **Version 1** (written before T289) is upgraded on load: its `dataset.finalized` is dropped and
+  the file loads with the test run not started, with a note. A version 1 file never holds a test
+  run.
 
 Rules for `judge_set`:
 
@@ -168,7 +192,7 @@ edits (FR-089).
   sent to the judge.
 - `expected_errors` is a list and may be empty. Each item requires `description`; `fragment`,
   `source_fragment`, `category` and `difficulty` (`obvious` or `subtle`) are optional. A missing
-  fragment or category is a warning (decided by hand on Run, not grouped). `source_fragment`
+  fragment or category is a warning (decided by hand on Test run, not grouped). `source_fragment`
   (T250) is the exact words of another field, the source, that the error contradicts (for example
   `"fragment": "the whale that took his arm"` with `"source_fragment": "lost his leg to a white
   whale"`); the tool shows the two side by side and never matches with it; when it is in no field
@@ -188,10 +212,10 @@ edits (FR-089).
 
 ## 3. Test-case file (JSON) and the stored case layout
 
-The layout of the cases inside the test project (section 1), the evaluation (section 5) and the
-file of "Export test cases". "Import test cases" reads it and **adds** its cases to the test
-project, also after finalizing (FR-027, FR-053). A test project file given to "Import test cases"
-is read the same way, using its `dataset.cases`.
+The layout of the cases inside the test project (section 1) and the file of "Export test cases".
+"Import test cases" reads it and **adds** its cases to the test project, also after the start of
+the test run (FR-027, FR-053). A test project file given to "Import test cases" is read the same
+way, using its `dataset.cases`; its `test_run` section is not read.
 
 ```json
 {
@@ -240,15 +264,16 @@ Rules (see data-model.md for the full list):
   from "Clean case" or "Case with errors" (the prompt in the box, as the user may have edited it, T262). It is not part of
   the test cases version, and a case pasted as JSON, imported or from the demo has none (T238).
 - `changed_after_first_reply` is `added` or `corrected` for a case added, or whose expected errors
-  were corrected, after the first reply of the run was entered (FR-053); it is absent otherwise.
-  The Results step and the report list these cases.
+  were corrected, after the first reply of the test run was entered (FR-053); it is absent
+  otherwise. The Results step and the report list these cases. "Load the test project only" drops
+  it.
 - There is no `cloned_from`: a copy made by hand keeps no link to its original (FR-078).
 - At most 500 cases in the test project after the import; each field at most 100,000 characters.
 - The file contains all cases, clean ones included, and carries no error catalog: categories are
   referred to by name. Categories that are not in the catalog are named in the import summary and
   added only if the user agrees (FR-029).
-- "Export test cases" writes this file (FR-050). It never records whether the test cases were
-  finalized.
+- "Export test cases" writes this file (FR-050). It never records whether the test run has
+  started.
 
 ## 4. Test-case file (CSV)
 
@@ -281,29 +306,19 @@ name,field:source_text,field:summary
   cancels.
 - When the judge prompt has no variables yet, the example file uses `field:field_1` and says so.
 
-## 5. Evaluation file
+## 5. The test run section of the test project file
 
-One format for "Save evaluation", "Save evaluation as" (both only on the Run step, FR-076), "Load
-evaluation", and the demo of "Load demo…"; it is also the result as JSON (there is no separate
-"Export JSON") (research.md, section 19).
+The key `test_run` of the test project file (section 1). It replaces the evaluation file of
+earlier builds (T289; research.md, section 32). "Start test run" creates it empty; "Save test
+project" writes it whole. It is never written to a file of its own.
 
 ```json
-{
-  "format": "judge-the-judge-evaluation",
-  "schema_version": 1,
-  "tool_version": "1.0.0",
+"test_run": {
   "saved": "2026-11-13T10:15:00Z",
-  "judge_set": {
-    "prompt": "…", "judged_text": "summary", "sample_reply": "…",
-    "reply_mapping": { "finding_text": { "claims[]": "claims[].text" } },
-    "error_rules": [ ], "error_catalog": [ ]
-  },
   "judge_version": "9b1e77a0c4d2",
   "reply_judge_version": "9b1e77a0c4d2",
   "rules_corrected_after_replies": false,
   "model_note": "model X\ntemperature 0\nmax tokens 4000",
-  "metric": { "id": "accuracy", "parameters": { "match_clear_share": 0.6, "match_partial_share": 0.3, "match_min_word_length": 4 } },
-  "dataset": { "name": "…", "version": "3fa9c2d41b07", "finalized": true, "cases": [ ] },
   "replies": {
     "11": { "prompt": "…complete composed prompt…", "reply": "…received reply…" }
   },
@@ -319,7 +334,6 @@ evaluation", and the demo of "Load demo…"; it is also the result as JSON (ther
       "note": ""
     }
   },
-  "checks": { "rules": [ ] },
   "minimum_sample": { "expected_errors": 30, "clean_cases": 10 },
   "results": {
     "evaluated_per": "expected_error",
@@ -342,9 +356,11 @@ evaluation", and the demo of "Load demo…"; it is also the result as JSON (ther
 }
 ```
 
-- Always complete: the judge set, every case, every composed prompt and reply, every decision with
-  its source, ignored items, thresholds and versions; there is no option to leave anything out
-  (FR-072).
+- Together with the rest of the file it is always complete: the judge set, every case, every
+  composed prompt and reply, every decision with its source, ignored items, thresholds and
+  versions; there is no option to leave anything out (FR-072).
+- `replies`, `decisions` and `results` are empty objects until the first reply; the section is
+  still written, so a started test run stays started after save and load.
 - `state` is one of `found`, `missed` ("Not found"), `ignored`, `real_error`,
   `false_positive` ("False positive"); `source` is `automatic`, `manual` (set by hand) or
   `llm-approved` (an LLM opinion applied by the user with "Apply opinion", FR-063).
@@ -363,11 +379,12 @@ evaluation", and the demo of "Load demo…"; it is also the result as JSON (ther
   findings without them (FR-070).
 - `rules_corrected_after_replies` is true when `judge_version` differs from `reply_judge_version`
   (FR-075).
-- `metric` records the active metric and its matching parameters; on load they are used for
-  recomputing, so the same file always gives the same numbers (Principle V). When the metric is not
-  registered, the stored parameters are still used and the user is told.
-- `checks` and `metric` are taken from the test project when the run starts and saved again here,
-  so an evaluation file alone is enough to see the result (FR-073).
+- The `metric` and `checks` at the top level of the file are the ones the results were computed
+  with; on load they are used for recomputing, so the same file always gives the same numbers
+  (Principle V). One file is enough to see the result and generate the report (FR-073).
+- `minimum_sample` records the fixed minimum test size the stored result was computed with, so
+  that it can be recomputed on load (SC-003). The tool always uses the bundled value for the
+  result it shows.
 - `results.evaluated_per` is `expected_error` or `case` (FR-061, FR-067).
   `counted_per_before_correction` names the earlier way when a correction of the rules after
   replies changed it, and is `null` otherwise (FR-075). In `case` mode the counters include
@@ -375,11 +392,9 @@ evaluation", and the demo of "Load demo…"; it is also the result as JSON (ther
   `clean_cases_with_false_positive`, and `measures` holds `case_detection_rate` and
   `clean_case_false_positive_rate` in place of the two per-error rates.
 - `model_note` is free text of any length and any number of lines; the tool never reads it.
-- Loading replaces the whole current work after the unsaved-work question, and restores it exactly,
-  finalized or not (FR-073). "Save evaluation" writes this format to one chosen file and
-  overwrites it on later saves (research.md, section 25; FR-076). The test project file (section
-  1) is saved the same way, to its own file. A test project file given to "Load evaluation" is
-  refused with a message that names "Load test project".
+- "Load with the test run" restores this section exactly (FR-073); "Load the test project only"
+  drops it (section 1). "Save test project" writes the whole file to one chosen file and
+  overwrites it on later saves (research.md, sections 25 and 32; FR-076).
 
 ## 6. Metric definition and check configuration
 
@@ -396,7 +411,7 @@ clipboard") is treated exactly like text pasted into a box.
   An answer with expected errors is a problem that points to "From JSON".
 - **Case with errors** (part 2 of the test case window, FR-041): one case JSON (section 2)
   with one expected error per error to prepare; a different number is accepted with a note.
-- **Judge reply** (case window of Run, FR-056): any text is kept; when it is not readable JSON the
+- **Judge reply** (case window of Test run, FR-056): any text is kept; when it is not readable JSON the
   line and column are shown under the box and nothing is marked automatically.
 
 **Verification opinion for one case** (the second-opinion window, "Second opinion…", FR-063):

@@ -18,7 +18,11 @@ Clean case, Case with errors in three parts), never edited after saving, with a
 read-only **Open** and **Edit expected errors**; adding and importing
 after finalizing; "Save evaluation" only on Run; on Run an always-visible reply box,
 **Add finding** with optional category and difficulty and **Remove**, and the second opinion as its
-own window with a preview and **Apply opinion**. Prototype v17 is now the reference.
+own window with a preview and **Apply opinion**. Prototype v17 is now the reference. Updated on
+2026-11-15 for the owner trial (T288, T289): one file, the test project, which holds the test run
+once it has started; **Start test run** in place of finalizing, with no way back; the load question
+**Load with the test run** or **Load the test project only** in place of "Run again with a new
+judge…"; the step "Run" is named "Test run".
 
 ## Summary
 
@@ -37,10 +41,11 @@ Technical approach: a TypeScript application built with Vite into plain static f
 evaluation logic lives in a pure core library with no browser dependency (variables and prompt
 composition, recognizing the fields of a reply, error rules, matching findings to expected errors,
 decisions, measures, overall result, file formats). A thin Preact interface presents the four steps
-(Judge, Test cases, Run, Results) and Help. Nothing is stored between sessions and nothing
-leaves the device: work is saved and restored only through two files with versioned schemas, the
-test project (the same test for every run, for example with another LLM) and the evaluation (the
-progress of one run), each written to one file the user chose.
+(Judge, Test cases, Test run, Results) and Help. Nothing is stored between sessions and nothing
+leaves the device: work is saved and restored only through one file with a versioned schema, the
+test project, written to one file the user chose. It holds the test run once it has started; the
+same test cases are run with a changed judge or another LLM by loading the file without its test
+run (research.md, section 32).
 
 ## Technical Context
 
@@ -53,8 +58,8 @@ are pinned in the lockfile when the project is set up. See [research.md](./resea
 one is needed.
 
 **Storage**: None. State lives in memory for the page session; users save and load JSON and CSV
-files on their own device. "Save test project" and "Save evaluation" each write to one file the user
-chose (File System Access API), remembered in memory only and overwritten by later saves; the HTML report and "Export test cases" are downloads. There is no results file. No `localStorage`, IndexedDB,
+files on their own device. "Save test project" writes to one file the user chose (File System
+Access API), remembered in memory only and overwritten by later saves; the HTML report and "Export test cases" are downloads. There is no results file. No `localStorage`, IndexedDB,
 cookies, or server (research.md, section 25).
 
 **Testing**: Vitest for core logic, contract tests and component tests; Playwright with axe-core
@@ -79,12 +84,14 @@ characters per field; WCAG AA contrast, full keyboard operation, light and dark 
 English; the tool never calls an LLM (FR-002). Clipboard reading and the save file need a secure
 context (HTTPS or `localhost`) and a click by the user.
 
-**Scale/Scope**: One user, one judge and one test project per evaluation; 90 numbered functional
-requirements, of which 86 are active (FR-018 and FR-082 removed, FR-035 and FR-042 merged), 15
+**Scale/Scope**: One user, one judge and one test project at a time; 90 numbered functional
+requirements, of which 85 are active (FR-018, FR-074 and FR-082 removed, FR-035 and FR-042 merged), 15
 user stories, 39 success criteria; five screens (four steps and Help), three windows on one frame
-(the test case window; the case window of Run; the read-only case view of Results) and two small
-dialogs (Load demo…; Second opinion); six JSON, CSV or HTML file formats and the pasted
-layouts of contracts/file-formats.md.
+(the test case window; the case window of Test run; the read-only case view of Results) and two
+small dialogs (Second opinion; the load question of a test project with a test run); six JSON,
+CSV or HTML file formats (test project, test cases as JSON and as CSV, metric, check configuration,
+report; the check configuration leaves with T225) and the pasted layouts of
+contracts/file-formats.md.
 
 ## Constitution Check
 
@@ -95,11 +102,11 @@ layouts of contracts/file-formats.md.
 | I. Test-First | Every production module is preceded by failing tests; nothing is imported from `prototypes/`; prototype logic is re-derived from tests | PASS: core is a pure library tested with Vitest; tasks will pair each implementation task with a preceding test task; every phase starts with its end-to-end scenario and its tests; the save file and the clipboard are reached only through two ports with fakes, so the actions that use them are tested first like any other; prototype v17 is reference only. The first prototype and v6 to v16 have answered their questions and are removed in the setup tasks; v17 is removed when the production tool reaches parity |
 | II. Static-First, Hosting-Ready | Builds to plain files; deployable from the first release; no secrets; manual stage 1 | PASS: Vite static build with relative paths, GitHub Pages workflow (HTTPS, as the clipboard and the save file need), no keys, every prompt is copied and every reply pasted by hand, now in one click from the clipboard (FR-002, FR-056, FR-059) |
 | III. Separated Core and Pluggable Judge Source | Core independent of the interface; one interface for the source of judge replies | PASS: `src/core` has no DOM access; `JudgeReplySource` has one adapter in this version (a reply pasted for one case). A batch-file adapter and a live LLM adapter can be added later without touching evaluation code |
-| IV. Portable File-Based Data | Open formats with documented, versioned schemas and validating loaders; no hidden state; mock data | PASS: five JSON, CSV or HTML formats (test project, test cases, evaluation, metric, report; constitution 2.0.0: the thresholds are saved in and loaded with the test project and evaluation files, with no file of their own) plus the one case JSON layout, each JSON format with `format` and `schema_version`, defined once as schemas and published as JSON Schema; the whole state is rebuilt from one evaluation file, and a test project file rebuilds the same test (judge, catalog, cases, metric, thresholds) for a new run; a fixed demo set doubles as test fixtures; the chosen save file is a file on the user's device, not browser storage |
-| V. Transparent and Reproducible | Same inputs give the same results; each result records what produced it | PASS: evaluation functions are pure and deterministic; the counting mode follows from the rules and is recorded, and a change of it is named; an evaluation file stores the judge set and its version, the judge version in force when replies were received, the model note, the test cases version, the cases added or corrected after the first reply, the tool version and the thresholds; on load the results are recomputed and any difference is reported; a report made while cases are undecided says how many are not decided yet (T267) |
-| VI. Extensible Metrics and Configurable Checks | One metric contract and registry; declarative definition files; checks in configuration; guide, example, contract tests | PASS: see [contracts/metric-and-checks.md](./contracts/metric-and-checks.md). No metric is built in (constitution 3.0.0): Accuracy is the default metric file that a new test project starts with, registered like any loaded file and replaceable by one with the same id; every other metric loads from a file at run time, and a file that names a metric which is not loaded is refused (T274). Thresholds are bundled defaults, read from `checks.default.json` (T273), editable in Results › Details, and travel in the test project and the evaluation file (constitution 2.0.0; since T266 there is no file of their own). Judges evaluated per case use two built-in case-level measures from two added counters, with no change to the contract's operations. The minimum test size (30 errors, 10 clean cases) is data in the bundled default configuration, but the spec fixes it, so a loaded configuration cannot change it |
+| IV. Portable File-Based Data | Open formats with documented, versioned schemas and validating loaders; no hidden state; mock data | PASS: six JSON, CSV or HTML formats (test project, test cases as JSON and as CSV, metric, check configuration until T225, report; the thresholds are saved in and loaded with the test project file, with no file of their own) plus the one case JSON layout, each JSON format with `format` and `schema_version`, defined once as schemas and published as JSON Schema; the whole state is rebuilt from one test project file, and the same file loaded with "Load the test project only" rebuilds the same test (judge, catalog, cases, metric, thresholds) for a new test run (T289); the schema version of the test project becomes 2 and version 1 is upgraded on load; a fixed demo set doubles as test fixtures; the chosen save file is a file on the user's device, not browser storage. **Note**: the constitution (3.1.0, Principle IV) still says the thresholds are saved in "the test project and evaluation files". The rule itself holds; only the name of a file that no longer exists is stale. A PATCH amendment (3.1.1) that drops "and evaluation" is proposed to the owner; it is not a violation |
+| V. Transparent and Reproducible | Same inputs give the same results; each result records what produced it | PASS: evaluation functions are pure and deterministic; the counting mode follows from the rules and is recorded, and a change of it is named; the test run section of the test project file stores the judge version (the judge set is in the same file), the judge version in force when replies were received, the model note, the test cases version, the cases added or corrected after the first reply, the tool version and the thresholds; on load the results are recomputed and any difference is reported; a report made while cases are undecided says how many are not decided yet (T267) |
+| VI. Extensible Metrics and Configurable Checks | One metric contract and registry; declarative definition files; checks in configuration; guide, example, contract tests | PASS: see [contracts/metric-and-checks.md](./contracts/metric-and-checks.md). No metric is built in (constitution 3.0.0): Accuracy is the default metric file that a new test project starts with, registered like any loaded file and replaceable by one with the same id; every other metric loads from a file at run time, and a file that names a metric which is not loaded is refused (T274). Thresholds are bundled defaults, read from `checks.default.json` (T273), editable in Results › Details, and travel in the test project file (constitution 2.0.0; since T266 there is no file of their own; since T289 there is no evaluation file). Judges evaluated per case use two built-in case-level measures from two added counters, with no change to the contract's operations. The minimum test size (30 errors, 10 clean cases) is data in the bundled default configuration, but the spec fixes it, so a loaded configuration cannot change it |
 | VII. Modern, Clear UI | One purpose and one next action per screen; shared design tokens; responsive, accessible, light and dark; designed empty and error states | PASS: four-step flow with one "what next" line and one primary action each (FR-001); a fixed list of action names, every row and window action a visible button with no "More actions" menu (FR-008); a single token stylesheet with the black-and-red scheme in light and dark, red never the only sign of an error (FR-007, research.md section 30); axe-core and contrast checks in end-to-end tests; designed states for an empty or refused clipboard, an unwritable save file and an empty start |
-| VIII. Living Help | Help inside the application, plain language, examples valid against the schemas | PASS: Help is a screen of the application; its examples are the same files that the contract tests validate, so they cannot drift. Each phase writes the Help section of the feature it builds (including pasting from the clipboard, the second opinion per case, the two files, "Continue", judges evaluated per case and the supported browsers), and nothing is published before the Help is complete (constitution 3.0.0: the Help may be updated in one pass after an owner trial, T225, and must be complete before the next public release) |
+| VIII. Living Help | Help inside the application, plain language, examples valid against the schemas | PASS: Help is a screen of the application; its examples are the same files that the contract tests validate, so they cannot drift. Each phase writes the Help section of the feature it builds (including pasting from the clipboard, the second opinion per case, the one file with its load question and **Start test run** (T225, T289), "Continue", judges evaluated per case and the supported browsers), and nothing is published before the Help is complete (constitution 3.0.0: the Help may be updated in one pass after an owner trial, T225, and must be complete before the next public release) |
 | Constraints | English everywhere; simplest solution; no data to third parties | PASS: four runtime dependencies (Preact, Zod, Papa Parse, jsdiff) plus Vite as the build tool, each justified in research.md; the clipboard and the save file use built-in browser features, with no new dependency; a Content Security Policy blocks all outgoing connections. This revision removes more than it adds: no Compare, no result shelf, no batch files, no combined score |
 
 **Result**: no violations. Complexity Tracking stays empty.
@@ -119,7 +126,13 @@ difficulty, and an applied LLM opinion are all stored in the evaluation file and
 (Principles IV and V); an LLM opinion still changes nothing until the user applies it after a
 preview of every change (Principle V, SC-028); the second opinion and **Load demo…** are two
 small dialogs, and every action of a row or window is a visible button (Principle VII); prototypes
-v13 to v16 answered their questions and join the setup removal (Principle I).
+v13 to v16 answered their questions and join the setup removal (Principle I). Re-checked on
+2026-11-15 after the owner trial (T288, T289): one file instead of two reduces the state to
+explain again, and the whole state is still rebuilt from one file (Principle IV); the test run
+section keeps every reply, decision and version, and is recomputed on load (Principle V); the lock
+after **Start test run** is visible, with its reason and the way to test another prompt (Principle
+VII); the Help is updated in the one pass of T225, before any release (Principle VIII). The only
+finding is the stale file name in Principle IV, for a PATCH amendment.
 
 ## Project Structure
 
@@ -132,7 +145,7 @@ specs/001-judge-evaluation-workflow/
 ├── data-model.md        # Phase 1: entities, rules, state transitions
 ├── quickstart.md        # Phase 1: how to run and validate the tool
 ├── contracts/
-│   ├── file-formats.md        # The file formats (test project, evaluation, ...), the case JSON and the paste formats
+│   ├── file-formats.md        # The file formats (test project with its test run, ...), the case JSON and the paste formats
 │   ├── metric-and-checks.md   # Metric definition contract and check configuration
 │   ├── core-api.md            # Public functions of the core library and the judge reply source
 │   └── ui-flow.md             # Screens, windows, action names, gating, states
@@ -147,10 +160,10 @@ specs/001-judge-evaluation-workflow/
 src/
 ├── core/                    # Pure TypeScript, no DOM, no network
 │   ├── hash.ts              # Content versions (SHA-256 through Web Crypto)
-│   ├── model/               # Types: judge set, rule, case, expected error, decision, evaluation
+│   ├── model/               # Types: judge set, rule, case, expected error, decision, test project, test run
 │   ├── schemas/             # Zod schemas, plain-language error messages, schema versions
 │   ├── io/                  # JSON and CSV reading and writing, one-line convention,
-│   │                        # test project, test cases (import, export), evaluation file, HTML report
+│   │                        # test project (with its test run), test cases (import, export), HTML report
 │   ├── judge/               # Variables, prompt composition, reading JSON out of a reply,
 │   │                        # recognizing fields and paths, error rules, findings
 │   ├── cases/               # Case JSON check, validation, identifiers, names, content version,
@@ -163,13 +176,13 @@ src/
 │       └── builtin/         # accuracy.json (the default metric file), checks.default.json
 ├── sources/                 # JudgeReplySource adapters: pasted reply (others later)
 ├── app/                     # Session state, actions, unsaved-work guard
-│   └── ports/               # SaveTarget (test project, evaluation) and ClipboardReader:
+│   └── ports/               # SaveTarget (the test project file) and ClipboardReader:
 │                            # browser adapters and test fakes
 ├── ui/
 │   ├── labels.ts            # The action names of FR-008, used by every component
-│   ├── steps/               # judge/, cases/, run/, results/
+│   ├── steps/               # judge/, cases/, run/ (the Test run step), results/
 │   ├── windows/             # test-case/ (From JSON, Clean case, Case with errors,
-│   │                        # Open, Edit expected errors), case-window/ (Run, and the read-only
+│   │                        # Open, Edit expected errors), case-window/ (Test run, and the read-only
 │   │                        # case view of Results on the same frame), second-opinion/, import/
 │   ├── help/
 │   ├── components/          # Shared controls, tables, dialogs, the "what next" line, the
@@ -178,7 +191,7 @@ src/
 └── main.tsx
 
 examples/                    # Shipped with the site and used as test fixtures
-├── demo/                    # evaluation.json (the demo of "Load demo…"), test-project.json,
+├── demo/                    # test-project.json (the demo of "Load demo…", with its test run),
 │                            # expected-results.json
 ├── files/                   # test-cases-example.csv, test-cases-example.json, case-example.json
 └── metrics/                 # bias-example.json, bias-verdict-example.json (evaluated per
@@ -209,7 +222,8 @@ demo data offered in the tool and the fixture set for tests (Principle IV).
 
 A suggested order for `/speckit-tasks`; each slice is usable on its own. The first working slice
 runs on the demo data, so the core value (reading replies and judging the judge) is proven before
-any editing screen exists.
+any editing screen exists. Slices 1 to 8 are built and keep the names of their time (the
+evaluation file, finalizing, Run); slice 9 replaces them (research.md, section 32).
 
 1. **Foundation**: project setup, design tokens (black and red, light and dark), application
    shell with the four steps, the header with the unsaved-changes indicator, the More menu and
@@ -248,6 +262,20 @@ any editing screen exists.
    the mode, the verdict example metric and its Help section.
 8. **Finish**: Help review, accessibility and contrast pass, deployment workflow (only once Help is
    complete), removal of prototype v17 once the production tool covers its flows.
+9. **One file and the start of the test run (T288, T289; User Stories 6, 11, 12)**, test first:
+   - the test project schema version 2 with the optional `test_run` section, the upgrade of
+     version 1, and the removal of the evaluation format, its reader, writer, schema, JSON Schema
+     file and save target;
+   - `withoutTestRun`, the load question and the remembered file of each answer;
+   - **Start test run** with its summary, the disabled actions of Test run before it, and the lock
+     notice of the Judge step with **Load test project…**;
+   - one **Save test project** in the header, the trimmed More menu, **New test project**, one
+     indicator rule and the reminder text;
+   - the labels and the step name "Test run", **Open on Test run**, no **Run again with a new
+     judge…** and no **Reopen test cases**;
+   - the demo regenerated as one test project with its test run, and the end-to-end scenarios
+     rewritten (quickstart V5, V9, V10, V11).
+   The Help follows in the one pass of T225.
 
 ## Complexity Tracking
 

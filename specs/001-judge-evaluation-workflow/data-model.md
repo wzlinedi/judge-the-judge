@@ -9,16 +9,19 @@ from other data and never stored as a source of truth.
 ## Overview
 
 ```text
-TestProject ──────────────────────┐
- ├─ JudgeSet                       │
- │   ├─ prompt ──> Variables       │
+TestProject (the one file, and the page session)
+ ├─ JudgeSet
+ │   ├─ prompt ──> Variables
  │   ├─ sample reply ──> ReplyMapping (recognized fields, default finding text per list)
- │   └─ ErrorRule ── Condition     ├──> Evaluation (one page session)
- ├─ ErrorCatalog ── Category       │      ├─ replies     (case id → judge prompt + received reply)
- ├─ TestCases ── TestCase ─────────┘      ├─ decisions   (case id → what the user settled,
- │                └─ ExpectedError        │                incl. added findings)
- └─ metric, checks                        ├─ checks      (thresholds in use)
-                                          └─ model note
+ │   └─ ErrorRule ── Condition
+ ├─ ErrorCatalog ── Category
+ ├─ TestCases ── TestCase
+ │                └─ ExpectedError
+ ├─ metric, checks (thresholds in use)
+ └─ TestRun (optional: present once "Start test run" was pressed)
+     ├─ replies     (case id → judge prompt + received reply)
+     ├─ decisions   (case id → what the user settled, incl. added findings)
+     └─ model note, versions, results
 
 reply ──rules──> Findings ──matching──> CaseReview ──+ decisions──> CaseStatus ──> Results
 case JSON (pasted, LLM answer, Export test cases) ──check──> TestCase (new, or corrected expected errors)
@@ -28,10 +31,10 @@ MetricDefinition ──registered in──> MetricRegistry <──registered by�
 A clean base case is simply a clean test case (no expected errors): any clean case can be the
 optional base of a case with injected errors (research.md, section 15; FR-082).
 
-**Two files** (FR-076): the **test project** file holds the JudgeSet, the error catalog, the test
-cases, the active metric and the checks (one test, used for every run); the **evaluation** file
-holds all of that plus the replies, decisions, model note and results of one run. The word
-"dataset" survives only as the key of the test cases block inside both files
+**One file** (FR-076, T289): the **test project** file holds the JudgeSet, the error catalog, the
+test cases, the active metric, the checks and, once it has started, the **test run** (replies,
+decisions, model note and results). There is no evaluation file and no Evaluation entity. The
+word "dataset" survives only as the key of the test cases block inside the file
 (contracts/file-formats.md, section 1).
 
 ## JudgeSet
@@ -41,7 +44,7 @@ test cases (FR-009, FR-020); there is no separate judge set file.
 
 | Field | Type | Rules |
 |---|---|---|
-| `prompt` | text | The judge prompt, used exactly as written (FR-047). May be empty while editing; needed before finalizing. |
+| `prompt` | text | The judge prompt, used exactly as written (FR-047). May be empty while editing; needed before "Start test run". |
 | `sample_reply` | text | One reply of the judge, as pasted. Optional. |
 | `reply_mapping` | ReplyMapping | Derived from the sample reply, plus the user's finding-text choices. |
 | `error_rules` | list of ErrorRule | Written only by the user (FR-013). May be empty. |
@@ -52,12 +55,13 @@ test cases (FR-009, FR-020); there is no separate judge set file.
 | counting mode | `per_expected_error` or `per_case`, derived | `per_case` when at least one usable rule exists and every rule uses only fields outside any list: the judge gives one verdict for the whole text (FR-061; research.md, section 29). Changes when the rules change. |
 
 - A prompt with no variable is allowed but triggers a warning: nothing from the cases reaches it.
-- Editable until the test cases are finalized. After that the prompt is fixed; the reply mapping and
-  the error rules may still be corrected (FR-053), which changes the version. "Edit the judge and
-  run again" (FR-074) reopens the prompt and clears replies and decisions.
+- Editable until the test run starts (T288). After that the prompt and the judged text are fixed,
+  with no way back; the sample reply, the reply mapping and the error rules may still be corrected
+  (FR-053), which changes the version. A changed prompt is tested by loading the test project with
+  "Load the test project only" (FR-074, T289).
 - "Can replies be read automatically?" is derived: yes when a sample reply is set, at least one
   rule exists, no rule is broken, and every list used by a rule has a finding-text field. When
-  not, a warning is shown on the Judge step and before finalizing (FR-021).
+  not, a warning is shown on the Judge step and in the summary of "Start test run" (FR-021).
 
 ## ReplyMapping
 
@@ -91,7 +95,7 @@ empty), up to eight distinct values seen in the sample, and the list it belongs 
   (FR-014).
 - A rule is **broken** when a condition names a field that the current sample reply does not
   contain, or when it uses two lists. A broken rule is shown as such, is not applied, and is
-  reported before finalizing.
+  reported in the summary of "Start test run".
 - Evaluation is three-valued (holds, does not hold, unknown); see research.md, section 9.
 
 ## Category (entry of the error catalog)
@@ -109,7 +113,7 @@ empty), up to eight distinct values seen in the sample, and the list it belongs 
   uses unknown categories (FR-029). There is no catalog file of its own.
 - Uses (derived): the number of test cases that have at least one expected error with the
   category; a case counts once (FR-015).
-- Rename applies to every expected error that uses the category, also after finalizing, and
+- Rename applies to every expected error that uses the category, also after the start, and
   changes the test cases version. Remove works for every category (T248): at once when no test case
   uses it; otherwise after a question, and then the expected errors that used it stay without a
   category (the test cases version changes; after the first reply the changed cases are marked
@@ -124,38 +128,38 @@ The named collection of test cases of a test project.
 | `name` | text | Required; default "Untitled test cases". Not part of the version. |
 | `cases` | list of TestCase | At most 500 (FR-032). Identifiers unique. Clean cases are listed first. |
 | version | text, derived | Content hash of the cases; changes with any edit (FR-034, FR-039). |
-| finalized | yes/no | Kept in the test project file and the evaluation file and restored as saved (FR-020). "Import test cases" adds cases before and after finalizing (FR-053). |
+| started | yes/no, derived | Whether the test project has a TestRun (T288). Not stored as its own key: the `test_run` section of the file is the record (contracts/file-formats.md, section 1). "Import test cases" adds cases before and after the start (FR-053). |
 
 **State transitions**
 
 ```text
-(empty) ──add / import──> Open ──finalize (after summary + confirm)──> Finalized
-   ^                                ^                                           │
-   └──── New evaluation ──────┴──── "Reopen test cases" (no reply yet) ─────┘
-Finalized ──add / import──> Finalized (new cases start Not run; "added after first reply"
-                                    when replies exist; new test cases version)
-Finalized ──rename / remove a case without a reply, or correct its expected errors──> Finalized
-                                    (new test cases version; "corrected after first reply" when
-                                    replies exist)
-Finalized ──"Run again with a new judge…"──> Finalized (same cases, replies and decisions cleared,
-                                              prompt editable until the first reply is saved)
-any ──"Load test project"──> the saved state (open or finalized), with no replies (after warning)
-any ──"Load evaluation" / "Load demo…"──> exactly the saved state (open or finalized)
+(empty) ──add / import──> Open ──"Start test run" (after summary + confirm)──> Started
+   ^                                                                               (no way back)
+   └──── "New test project" (after warning)
+Started ──add / import──> Started (new cases start Not run; "added after first reply"
+                                   when replies exist; new test cases version)
+Started ──rename / remove a case, or correct its expected errors──> Started
+                                   (new test cases version; "corrected after first reply" when
+                                   replies exist; a case with a reply asks first)
+any ──"Load test project…", file without a test run──> Open, as saved (after warning)
+any ──"Load test project…" › "Load with the test run" / "Load demo…"──> exactly the saved state
+any ──"Load test project…" › "Load the test project only"──> Open (no test run, no
+                                   "changed after first reply" marks, file not remembered)
 ```
 
 - **Open**: cases can be added, renamed and removed; the catalog and judge set can be
   edited; composed prompts can be viewed and copied; replies cannot be entered (FR-053). A saved
   case is never edited: it is changed by copying its JSON into a new case, changing it and removing the
   original (FR-025, FR-086); there is no "Clone" (FR-078).
-- **Finalized**: the judge prompt and the fields and identifiers of every case are fixed. While no
-  reply exists, "Reopen test cases" returns to Open without losing anything (FR-053). Cases may still
-  be added and imported; a case without a reply may be renamed, removed or have its
-  expected errors corrected through its JSON (FR-089); a case with a reply is not changed (an
-  expected error that should not count is marked "Ignored" on Run). The reply mapping and the error
-  rules may still be corrected; automatic results are recomputed and decisions made by hand are
-  kept.
-- Finalizing is refused for empty test cases or an empty judge prompt. Everything else (one kind of
-  case only, replies not readable automatically, a broken rule, a case with no field for a
+- **Started** (T288): the judge prompt, the judged text and the fields and identifiers of every
+  case are fixed, with no way back. Before the start the actions of the Test run step are disabled
+  with the reason "Start the test run first" (FR-053). After it, cases may still be added and
+  imported; a case may be renamed, removed or have its expected errors corrected through its JSON
+  (FR-089); removing a case with a reply, or correcting its expected errors, asks first (an
+  expected error that should not count can also be marked "Ignored" on Test run). The reply mapping, the error rules and the categories
+  may still be corrected; automatic results are recomputed and decisions made by hand are kept.
+- "Start test run" is refused for empty test cases or an empty judge prompt. Everything else (one
+  kind of case only, replies not readable automatically, a broken rule, a case with no field for a
   variable, no subtle error, test size below the minimum) is a warning in the summary (FR-052).
 
 ## TestCase
@@ -197,24 +201,35 @@ any ──"Load evaluation" / "Load demo…"──> exactly the saved state (ope
 An expected error has no field of its own: it always concerns the judged text (FR-022). A `field`
 key found in a file is ignored and reported once.
 
-## Evaluation (the working session)
+## TestProject (the working session)
 
-Holds one test project and everything received and decided for it. Exists in memory;
-written whole to the evaluation file (FR-073).
+Holds the judge set, the test cases and, once it has started, the test run. Exists in memory;
+written whole to the test project file by "Save test project" (FR-020, FR-073). In the code the
+type that was called `Evaluation` is renamed to match (T289).
 
 | Field | Type | Rules |
 |---|---|---|
 | `judge_set`, test cases (`dataset`), error catalog | as above | One of each. |
-| `replies` | case id → Reply | Only after finalizing. |
-| `decisions` | case id → CaseDecisions | Only for cases with a reply. |
-| `checks` | CheckConfiguration | Thresholds in use; defaults from the bundled configuration, or restored from a loaded test project or evaluation. |
-| `model_note` | text | Optional multi-line free text, shown as "Model details": the model and the settings that ran the judge, in any form; never read or checked (FR-058). |
-| save files | two file handles, not stored | One for the test project and one for the evaluation (FR-076): chosen by the first "Save …" or by "Save … as", or the file opened by the matching load through the picker (not a dropped file). Held in memory only (research.md, section 25). "Load test project" forgets the evaluation file; "Load evaluation" forgets the test project file; "New evaluation", "Load demo…" and "Run again with a new judge…" forget both; "Reopen test cases" keeps both. |
-| unsaved changes | yes/no, not stored | One flag (FR-051): set by any change; cleared by "Save evaluation", and by "Save test project" while no reply exists. |
-| `metric` | id, parameters and, for a metric that is not built in, its definition | The active metric and the matching parameters in use; written (with `definition`) to the test project file and the evaluation file so a result can be reproduced (Principle V). |
+| `checks` | CheckConfiguration | Thresholds in use; defaults from the bundled configuration, or restored from a loaded test project. |
+| `metric` | id, parameters and, for a metric that is not the default file, its definition | The active metric and the matching parameters in use; written (with `definition`) to the test project file so a result can be reproduced (Principle V). |
+| `test_run` | TestRun or none | None until "Start test run" (T288); there is no way back to none on the page. "Load the test project only" and "New test project" start without one. |
+| save file | one file handle, not stored | The remembered file (FR-076): chosen by the first "Save test project" or by "Save test project as…", or the file opened through the picker with "Load with the test run" (or a file without a test run). Held in memory only (research.md, sections 25 and 32). "Load the test project only", a dropped file, "New test project" and "Load demo…" forget it. |
+| unsaved changes | yes/no, not stored | One flag (FR-051): set by any change; cleared by "Save test project" and "Save test project as…". Clear after a load. |
 | reply draft | case id → text, not stored | Text changed in the always-visible reply box and not yet saved; moving or closing asks first (FR-055). |
-| replies since save | number, derived, not stored | Replies saved since the last "Save evaluation"; shown on Run and in the case window, with a reminder every 25 (FR-059). |
-| `reply_judge_version` | text | The judge version when the first reply was saved; cleared when replies are cleared (research.md, section 14). |
+| replies since save | number, derived, not stored | Replies saved since the last "Save test project"; shown on Test run and in the case window, with a reminder every 25 (FR-059). |
+
+## TestRun (optional part of the TestProject)
+
+The replies of one judge version to the test cases, with every decision, the model details and the
+results (spec glossary, T289). Created empty by "Start test run"; saved as the `test_run` section
+of the test project file (contracts/file-formats.md, section 5).
+
+| Field | Type | Rules |
+|---|---|---|
+| `replies` | case id → Reply | Empty right after the start. |
+| `decisions` | case id → CaseDecisions | Only for cases with a reply. |
+| `model_note` | text | Optional multi-line free text, shown as "Model details": the model and the settings that ran the judge, in any form; never read or checked (FR-058). |
+| `reply_judge_version` | text | The judge version when the first reply was saved (research.md, section 14). |
 
 **Reply**: `prompt` (the composed judge prompt at the moment the reply was saved) and `reply` (text
 of any format, never rejected for its format, not empty) (FR-056, FR-057). It arrives from
@@ -226,7 +241,8 @@ decisions with source `manual` or `llm-approved`; with automatic results only it
 reply without asking.
 
 The Results step changes nothing but the thresholds (`checks`); there is no closed state (research.md,
-section 27).
+section 27). There is no action that clears the replies of a test run: a new test run of the same
+test cases starts from "Load the test project only" (FR-074).
 
 ## Findings (derived, per case with a reply)
 
@@ -360,31 +376,36 @@ Results step from decided, not ignored items (FR-068).
 A "borderline" note, shown in "Details", is added for each rate whose interval contains its
 threshold.
 
-## Evaluation file content (saved snapshot)
+## Test project file content (saved snapshot)
 
-Everything needed to continue, reproduce and audit one evaluation (FR-072, FR-073, FR-075).
+Everything needed to continue, reproduce and audit the work (FR-020, FR-072, FR-073, FR-075).
 
 | Field | Content |
 |---|---|
-| `tool_version`, `saved` | Version of the tool; date and time. |
-| `judge_set` | Prompt, sample reply, reply mapping, error rules, error catalog. |
+| `tool_version` | Version of the tool. |
+| `judge_set` | Prompt, judged text, sample reply, reply mapping, error rules, error catalog. |
+| `dataset` | The test cases: name, version, all cases. |
+| `metric` | The active metric's `id`, the matching parameters used and, for a metric that is not the default file, its definition. |
+| `checks` | The thresholds in use. |
+| `test_run` | Only once the test run has started; its content is below. |
+
+| `test_run` field | Content |
+|---|---|
+| `saved` | Date and time. |
 | `judge_version`, `reply_judge_version`, `rules_corrected_after_replies` | See research.md, section 14. |
-| `dataset` | The test cases: name, version, finalized, all cases. |
-| `model_note` | As entered on the Run step ("Model details"). |
-| `metric` | The active metric's `id` and the matching parameters used. |
-| `replies`, `decisions` | Complete, the added findings included. |
-| `checks`, `minimum_sample` | The values the overall result is based on. |
+| `model_note` | As entered on the Test run step ("Model details"). |
+| `replies`, `decisions` | Complete, the added findings included. Empty right after the start. |
+| `minimum_sample` | The minimum test size the stored result is based on. |
 | `results` | The way of counting (`evaluated_per`, and the earlier way when a correction changed it, FR-075), counters, measures, the overall result with reasons, and per case its status and effective states with sources. Empty until something is decided. |
 
-- On load the results are recomputed from the stored data; if they differ from the stored results
-  (for example a newer tool version changed a rule), the tool says so and shows both (Principle V).
-
-## Test project file content (saved snapshot)
-
-The same test for every run (FR-020): `judge_set` (with the error catalog), `dataset` (the test
-cases: name, version, finalized, all cases), `metric` (id and parameters) and `checks`. No replies,
-decisions, results or model note. Loading it starts a new Evaluation with these and no
-replies, and opens the first step with unfinished work.
+- "Load with the test run" restores everything. The results are recomputed from the stored data;
+  if they differ from the stored results (for example a newer tool version changed a rule), the
+  tool says so and shows both (Principle V).
+- "Load the test project only" restores everything but `test_run`, and drops
+  `changed_after_first_reply` from every case (T289). The "Ignored" marks and the added findings
+  are decisions, so they go with the test run.
+- A file without `test_run` loads at once, with the test run not started.
+- After any load the tool opens the first step with unfinished work (FR-073).
 
 ## MetricDefinition and CheckConfiguration
 
@@ -400,4 +421,4 @@ and the definitions carried by loaded test projects during the session (T243).
 | ImportSummary | For a test-case file: total, clean and injected-errors counts, invalid rows with position and reason, fields that match no variable, variables with no field, categories missing from the catalog, and the user's choice (import the valid rows, or cancel; add the categories, or cancel). Imported cases are added to those already here. A cancelled or failed import changes nothing (FR-027 to FR-029). |
 | CaseJsonCheck | For a pasted case JSON (From JSON, Clean case, Case with errors, Edit expected errors): problems with line and column or field path, warnings, notes, the kind the case will have, and its last valid state (FR-041, FR-084). |
 | OpinionPreview | For a pasted verification opinion: every change with the current and the new mark, new findings, unanswered items, and whether it can be applied (FR-063). |
-| FinalizeSummary | Counts, balance, test-size forecast and all warnings, and whether finalizing is allowed (FR-052). |
+| StartSummary | Counts, balance, test-size forecast and all warnings, and whether "Start test run" is allowed (FR-052, T288). Was FinalizeSummary. |

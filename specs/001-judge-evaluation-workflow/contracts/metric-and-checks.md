@@ -134,12 +134,12 @@ repeated runs) cannot be expressed in this version; the guide states this.
    measures appear in the Summary; any further measures appear only in "Details". When the user
    writes their own judge without an example, the default parameters and the two standard measures
    are used.
-4. A test project file and an evaluation file record the active metric's `id` and its parameters,
-   and the check rules in use (file-formats.md, sections 1 and 5).
+4. The test project file records the active metric's `id`, its parameters and, for a metric that
+   is not the default file, its definition, and the check rules in use (file-formats.md, section 1).
 
 ## 2. Check rules (thresholds)
 
-Since T266 and constitution 2.0.0 there is no file for the thresholds on their own: the rules below are saved in the `checks` of the test project and evaluation files (file-formats.md, sections 1 and 5). The JSON shows the shape of `checks`; its `format` and `schema_version` are the ones of the bundled default.
+Since T266 and constitution 2.0.0 there is no file for the thresholds on their own: the rules below are saved in the `checks` of the test project file (file-formats.md, section 1). The JSON shows the shape of `checks`; its `format` and `schema_version` are the ones of the bundled default.
 
 ```json
 {
@@ -170,13 +170,13 @@ Since T266 and constitution 2.0.0 there is no file for the thresholds on their o
 "minimum_sample": { "expected_errors": 30, "clean_cases": 10 }
 ```
 
-- The minimum test size is fixed by the spec; the tool uses the bundled value for the result it shows. An evaluation file may store `minimum_sample` only so that its stored result can be recomputed on load (SC-003).
+- The minimum test size is fixed by the spec; the tool uses the bundled value for the result it shows. The test run section of a test project file stores `minimum_sample` only so that its stored result can be recomputed on load (SC-003; file-formats.md, section 5).
 - The two rules that apply are shown and editable in the collapsed "Details" section of the Summary
   view, the only thing that can be changed on the Results step (FR-069). There is no "Load check
   settings" (T266): the two defaults are edited there, and the separate checks file format, its
   schema and `examples/metrics/checks-example.json` are removed together with the Help rows that
-  name them (T225). The rules in use are stored in every test project file and every evaluation file.
-- Invalid rules in a loaded test project or evaluation file (unknown measure, value out of range, unknown comparison) are rejected with a plain message and the rules in use stay unchanged.
+  name them (T225). The rules in use are stored in every test project file.
+- Invalid rules in a loaded test project file (unknown measure, value out of range, unknown comparison) are rejected with a plain message and the rules in use stay unchanged.
 
 ## 3. Registry
 

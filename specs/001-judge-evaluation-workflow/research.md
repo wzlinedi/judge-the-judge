@@ -23,6 +23,11 @@ no Compare, no batch files). The review of prototype v10 (2026-11-12) changed se
 20, 22 and 24 and added sections 25 to 28: saving to one chosen file and the clipboard, Chrome and
 Edge only, a read-only Results step with no closing step, and the Run step summary.
 
+**Note (2026-11-15)**: section 32 (T288, T289) supersedes the two files of sections 12, 19 and 25,
+the evaluation file as the demo of section 23, finalizing and "Reopen test cases", and "Run
+again with a new judge…". There is one file, the test project, which holds the test run once it
+has started; the step "Run" is named "Test run".
+
 ## 1. Language and build
 
 - **Decision**: TypeScript in strict mode, built with Vite into static files, with relative asset
@@ -634,3 +639,39 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
   words, or no rate column (the owner wants the rate always); exporting only when every case is
   decided (there is no final state). The check configuration format is removed with the Help
   (T225), because the Help names it until then.
+
+## 32. One file and the start of the test run (T288, T289)
+
+- **Decision**: (1) The tool works with one file, the **test project**. It holds the judge set,
+  the error catalog, the test cases, the metric and the thresholds and, once the test run has
+  started, a `test_run` section with the replies, decisions, model details, versions and results
+  (file-formats.md, sections 1 and 5). The evaluation file, "Load evaluation…", "Save evaluation"
+  and "Save evaluation as…" go; "New evaluation" becomes "New test project"; the step "Run" is
+  named "Test run". (2) "Finalize test cases…" becomes **Start test run**, the primary action at
+  the top of the Test cases step. Before the start the Test run step shows its actions disabled
+  with the reason "Start the test run first". After the start the judge prompt and the judged text
+  are fixed with no way back; the reply mapping, the error rules and the categories stay
+  editable. "Reopen test cases" goes. (3) "Load test project…" asks, for a file with a test run,
+  **Load with the test run** or **Load the test project only**. The second drops the test run
+  (decisions, "Ignored" marks and added findings included) and the `changed_after_first_reply`
+  marks, and does not remember the file, so the first save asks for a new one. This is how a
+  changed judge is tested on the same cases; "Run again with a new judge…" goes. (4) The schema
+  version of the test project file becomes 2. A version 1 file is upgraded on load (its
+  `dataset.finalized` is dropped). An evaluation file is not read: it gets the message for an
+  unknown `format`. (5) In the code, `Evaluation` and the evaluation file reader, writer and save
+  target are removed or renamed; the folder `core/evaluation/` keeps its name, because it holds
+  the scoring logic, not a file.
+- **Rationale**: In the owner trial of 2026-11-15 the owner found that saving the test run apart
+  from the test project caused problems: "Save test project" left the indicator on once replies
+  existed, and two save buttons kept two remembered files. One file needs one save button, one
+  remembered file and one indicator rule. The start is kept because it is what makes the replies comparable: every reply
+  was produced by the same prompt and judged text. A lock that is visible, with its reason and the
+  way to test another prompt beside it, is clearer than a state that can be reopened. Loading the
+  test project without its test run gives a clean start for a changed judge and never overwrites
+  the earlier run. The tool is not released, so no user holds evaluation files.
+- **Alternatives considered**: Keeping two files (rejected by the owner); keeping "Run again with a
+  new judge…" next to the load question (rejected by the owner: loading the test project only does
+  the same); removing "Finalize test cases…" altogether (the owner kept it as "Start test run" with
+  a visible lock); reading old evaluation files (not needed: the tool is not released); refusing
+  version 1 test project files (added here: the upgrade is one dropped key, and the owner's trial
+  files keep working).

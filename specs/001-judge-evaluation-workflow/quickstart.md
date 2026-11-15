@@ -32,18 +32,18 @@ Opening `dist/` from any static file server, in any subfolder, must work without
 Each scenario is also an end-to-end test. Expected numbers for the demo data are stored in
 `examples/demo/expected-results.json` and asserted by the tests. In the tests, "copy the answer"
 means writing it to the clipboard of the browser context (clipboard permission is granted), and
-the save dialogs of "Save evaluation" and "Save test project" are replaced by an in-memory file
+the save dialog of "Save test project" is replaced by an in-memory file
 installed with an init script (research.md, sections 6 and 25). By hand, both are the real browser
 features.
 
 ### V1. First run with demo data (SC-001, SC-009, SC-010, User Stories 1 and 9)
 
-1. Open the tool; in the More menu choose "Load demo…". The demo is loaded at once and the Judge step opens; go on to Run.
+1. Open the tool; in the More menu choose "Load demo…". The demo is loaded at once, with its test run and no load question, and the Judge step opens; go on to Test run.
 2. On Results choose "Export HTML report". Then press "Continue" in the "what next" line and
    decide each case it opens. Open Results and export again.
 
-**Expected**: the Judge step shows no welcome section; the demo opens on Run as a finalized
-evaluation with 20 cases and 20 replies, the "what next" line says "15 of 20 cases decided" and
+**Expected**: the Judge step shows no welcome section, and its prompt is locked with the reason
+and "Load test project…" beside it; Test run shows the demo's started test run with 20 cases and 20 replies, the "what next" line says "15 of 20 cases decided" and
 "Continue" opens the first case awaiting verification. The Summary shows the counts of expected
 errors (found, not found), additional findings (genuine errors, false positives) and subtle errors
 before anything else, then the two rates and one line of overall result with its reason. While
@@ -53,7 +53,7 @@ Inconclusive; afterwards the numbers match the expected results file: 27 of 30 e
 with Open. The test size shows 30 of 30 errors and 10 of 10 clean cases. The first report says that 5 cases are not decided yet;
 the second has no such line, and neither is called provisional. The Results bar offers **Export
 HTML report** as its main action both times. **Details** is at the top of the Summary, closed;
-Error analysis shows a rate in every group (`misattribution` 4 of 4, 100%). On Run the table
+Error analysis shows a rate in every group (`misattribution` 4 of 4, 100%). On Test run the table
 shows Expected errors, Additional findings, Added by hand and Items to decide, and a case without
 a reply already lists its expected errors with no marks. (The times of SC-001 and SC-010 are checked by hand with a
 first-time user, not by the automated test.)
@@ -103,7 +103,7 @@ made from it.
 4. "Add test case", "From JSON", paste a JSON identical to its base but with one expected error.
 5. "Open" a case with five expected errors at 1280 x 720; there is no "Show JSON"; use
    "Next case".
-6. Finalize; "Open" a case, with or without a reply, "Edit expected errors", change one difficulty and
+6. "Start test run"; "Open" a case, with or without a reply, "Edit expected errors", change one difficulty and
    save (a case with a reply asks first); break the JSON and see the place.
 
 **Expected**: the prompt contains the judge prompt, the base case, the judged text and each error
@@ -113,7 +113,7 @@ under the box shows E1 and E2 and the check line "Text and list agree"; the brok
 the line into "not in the text" at once; the new
 category is added to "Error categories"; the saved case records its base; the unchanged version is
 refused with the reason; the five expected errors are visible without scrolling; the pasted JSON
-gives the same fields and expected errors; after finalizing only the expected errors change, the
+gives the same fields and expected errors; after the start only the expected errors change, the
 field change is a problem, and the test cases version changes.
 
 ### V5. Import and export test cases (SC-015 to SC-020, User Story 5)
@@ -122,10 +122,10 @@ field change is a problem, and the test cases version changes.
    one invalid row and Polish characters.
 2. Choose the file and read the summary; import the valid rows. Then import a JSON file of cases
    with a category that is not in the catalog and an identifier already used.
-3. "Export test cases"; start a new evaluation and import the exported file.
-4. "Save test project", reload the page, "Load test project".
-5. Finalize, change a threshold in "Details" on Results, "Save test project", reload, "Load test
-   project"; then "Reopen test cases" in the "what next" line.
+3. "Export test cases"; "New test project" and import the exported file.
+4. "Save test project", reload the page, "Load test project…".
+5. "Start test run", change a threshold in "Details" on Results, "Save test project", reload,
+   "Load test project…".
 6. After entering one reply, import one more case.
 
 **Expected**: the example has `name` and one `field:` column per variable of the current prompt,
@@ -133,15 +133,17 @@ and every CSV row becomes a clean case; the invalid row is listed with its posit
 the imported cases are added to those already there; the unknown category is named and added only
 after consent; the used identifier gets a new one and the summary says so; the export holds every
 case and imports back with identical content and version; the reloaded cases are identical and
-open. The finalized test project comes back finalized on the Run step, with the changed threshold
-and the same metric; "Reopen test cases" opens it again and nothing is lost. The case imported after
+open, and the file without a test run loads with no question. The started test project asks the
+load question; "Load with the test run" brings it back started on the Test run step, with the
+changed threshold and the same metric, and the prompt locked. The case imported after
 the first reply starts as Not run, is marked "added after first reply", and the replies of the
 other cases are kept.
 
 ### V6. Run by hand (SC-002, SC-030, SC-032, SC-037, User Story 7)
 
-1. Finalize the test cases. On Run write two lines of model details. Choose "Open" at the first
-   case.
+1. Open Test run before the start: every action is disabled with "Start the test run first".
+   On Test cases press "Start test run". On Test run write two lines of model details. Choose
+   "Open" at the first case.
 2. "Copy prompt", copy a reply into the clipboard, "Paste reply", "Next case".
    Repeat with Alt + Right.
 3. Change the text of a saved reply in its box (a readable JSON is saved at once) for a case that
@@ -149,11 +151,11 @@ other cases are kept.
 4. With an empty clipboard press "Paste reply"; then deny clipboard permission and
    press it again; paste a reply that is not JSON into the box with Ctrl+V: it says "This is not JSON", and "Save as
    text anyway" keeps it.
-5. Save 25 replies without "Save evaluation".
+5. Save 25 replies without "Save test project".
 
-**Expected**: the Run step shows one summary line (judge version, test project name, test cases
+**Expected**: the Test run step shows one summary line (judge version, test project name, test cases
 version, judged text) with no prompt or rules, a multi-line "Model details" box whose lines are
-kept, and no save button of its own: "Save test project" and "Save evaluation" are in the page header, each with its file name under it. The window fills the screen at 1280 x 720 as one page of three parts (the case with its
+kept, and no save button of its own: "Save test project" is in the page header, with its file name under it. The window fills the screen at 1280 x 720 as one page of three parts (the case with its
 highlights; a row with "Add finding", "Second opinion…", "Marked N of M" and the status; then "Judge
 reply" with only "Paste reply" above the box on the left and the errors on the right), which scrolls as a whole; "Copy prompt" (part 1) is the primary
 button until it is pressed, then "Paste reply"; the reply box is always visible and
@@ -178,7 +180,7 @@ produced it; the number of unsaved replies is shown and a reminder to save appea
    remove another added finding; "Second opinion…" with an opinion that adds a new finding;
    "No more findings".
 
-**Expected**: the Run step has no second-opinion card; clear items are already marked, with
+**Expected**: the Test run step has no second-opinion card; clear items are already marked, with
 source "automatic"; every expected error has a mark or a reason; the verification prompt covers
 only this case; the preview shows each change ("E1 undecided → Found") with its reason and
 fragment and names changes that replace a mark set by hand; nothing changes before "Apply
@@ -194,67 +196,75 @@ unreadable case stays awaiting until approved.
 1. With replies entered, change a rule on the Judge step.
 
 **Expected**: automatic decisions are recomputed, decisions made by hand are kept, the judge
-version changes, and the Results step, the evaluation file and the report note that the rules
+version changes, and the Results step, the test project file and the report note that the rules
 were corrected after the replies were received.
 
 ### V9. Save, continue, reproduce (SC-003, SC-008, SC-029, User Stories 6, 9 and 13)
 
-1. Part-way through Run, "Save evaluation" (choose a file), enter two more replies, "Save
-   evaluation" again, then "Save evaluation as" to a second file. Reload the page. "Load
-   evaluation" with the first file, enter a reply, "Save evaluation".
+1. Part-way through Test run, "Save test project" (choose a file), enter two more replies, "Save
+   test project" again, then "Save test project as…" to a second file. Reload the page. "Load
+   test project…" with the first file, choose "Load with the test run", enter a reply, "Save test
+   project".
 2. Finish; on Results "Open" a case from the Test case list and use "Next case"; change a
-   threshold in "Details". "Export HTML report" and "Save evaluation" on Run. Reload, load the
-   evaluation file only (no test project).
+   threshold in "Details". "Export HTML report" and "Save test project". Reload and load the file
+   with "Load with the test run".
 3. Open the HTML report in a browser without the tool and print it to PDF.
-4. Remove the saved file on disk and press "Save evaluation".
-5. "Save test project" twice; then "Run again with a new judge…", "Save test project" and "Save
-   evaluation".
-6. With replies entered and the indicator showing unsaved changes, "Save test project"; then
-   "Load demo…" and choose "Save evaluation first".
+4. Remove the saved file on disk and press "Save test project".
+5. With replies entered and the indicator showing unsaved changes, choose "Load demo…" and then
+   "Save test project first".
+6. Drop the saved file onto the page and choose "Load with the test run"; press "Save test project".
 7. In the test case window paste a case JSON and press "Close without saving".
 
-**Expected**: the second "Save evaluation" overwrites the chosen file without asking for a file;
-"Save evaluation as" asks for a file; after loading through the picker, saving goes to the loaded
-file (by hand the browser asks once for permission to write; the automated test's in-memory file
-does not); a file dropped onto the page does not become the save file; after the load the tool
-opens Run and "Continue" opens the first undecided case, so the work resumes exactly where it
-stopped. The header indicator says "All changes saved" with the file name after each "Save
-evaluation". On Results the case opens read-only with Previous and Next, and only the threshold
-can be changed. The loaded JSON shows identical numbers, judge version and test cases version, and
-the report can be generated from it. There is no "Export JSON". The test project asks for a file
-once and then overwrites it, its name shown in the More menu; after "Run again with a new judge…"
-the next "Save test project" and "Save evaluation" each ask for a new file, so the earlier run's
-files are untouched. "Save test project" with replies entered leaves the indicator on and says that
-replies are kept only by "Save evaluation"; the warning before "Load demo…" offers "Save
-evaluation first", "Discard" and "Cancel", and the first saves before continuing. "Close without
-saving" asks first; no file save action is reachable while the window is open. The report follows
-the three views, contains every prompt, expected error, reply and decision with its source, the
-added findings with category and difficulty, and prints cleanly. With the file removed, the tool
-says it cannot write and asks for a file; nothing on the page is lost.
+**Expected**: the second "Save test project" overwrites the chosen file without asking for a file;
+"Save test project as…" asks for a file; after "Load with the test run" through the picker, saving
+goes to the loaded file (by hand the browser asks once for permission to write; the automated
+test's in-memory file does not). After the load the tool opens Test run and "Continue" opens the
+first undecided case, so the work resumes exactly where it stopped. The header shows one save
+button and one indicator, which says "All changes saved" with the file name after each "Save test
+project", also while replies exist. There is no "Save evaluation", "Load evaluation…" or "Export
+JSON". On Results the case opens read-only with Previous and Next, and only the threshold can be
+changed. The loaded file shows identical numbers, judge version and test cases version, and the
+report can be generated from it. The warning before "Load demo…" offers "Save test project first",
+"Discard" and "Cancel", and the first saves before continuing. The dropped file loads but does not
+become the save file: "Save test project" asks for a file. "Close without saving" asks first; no
+file save action is reachable while the window is open. The report follows the three views,
+contains every prompt, expected error, reply and decision with its source, the added findings
+with category and difficulty, and prints cleanly. With the file removed, the tool says it cannot
+write and asks for a file; nothing on the page is lost.
 
-### V10. Another version of the judge (User Story 12)
+### V10. Another version of the judge (User Stories 11 and 12, FR-053, FR-074)
 
-1. On Results choose "Run again with a new judge…", change the prompt, run and verify again,
-   export.
-2. Load the first run's test project again, write other model details, enter the replies of
-   another LLM, "Save evaluation" to a new file, export.
+1. With the test run started, open the Judge step and try to change the prompt.
+2. Save the test project. "Load test project…" with that file and choose "Load the test project
+   only". Change the prompt, "Start test run", run and verify again, "Save test project", export.
+3. Load the first file again with "Load the test project only", write other model details, enter
+   the replies of another LLM, "Save test project" to a new file, export.
+4. Load the first file with "Load with the test run".
 
-**Expected**: the tool asks first when there are unsaved changes, keeps the test cases, clears
-replies and decisions; the two exported reports name the same test cases version and different
-judge versions. The third report (another LLM) names the same judge version, test cases version,
-metric and thresholds as the first and differs only in the model details, replies, decisions and
-results.
+**Expected**: the prompt and the judged text are locked, with the reason and "Load test project…"
+beside them; the rules, the reply mapping and the categories stay editable. "Load the test project
+only" asks first when there are unsaved changes, keeps the test cases, rules, categories, metric and
+thresholds, has no replies, decisions, model details or "added after first reply" marks, and opens
+Test cases with the test run not started. The header says "no file yet", and the first "Save test
+project" asks for a new file, so the first file is never overwritten. The two exported reports name
+the same test cases version and different judge versions. The third report (another LLM) names the
+same judge version, test cases version, metric and thresholds as the first and differs only in the
+model details, replies, decisions and results. The first file still holds its own test run. There
+is no "Run again with a new judge…" and no "Reopen test cases".
 
 ### V11. Invalid and unsupported files (SC-004, SC-016, SC-017)
 
 Load in turn: a broken JSON file, a test-case file that would make 501 cases, a file with a newer
 `schema_version`, a case with a 100,001-character field, a test project without a prompt, a
-metric definition with an unknown operation, an evaluation file of another `format`, a retired
-error catalog file, a test project given to "Load evaluation", and an evaluation given to "Load
-test project".
+metric definition with an unknown operation, a file of an unknown `format`, an evaluation file of
+an earlier build (`judge-the-judge-evaluation`), a retired error catalog file, a test project whose
+`test_run` section is invalid, and a version 1 test project file with `dataset.finalized`.
 
-**Expected**: each is rejected with a message that says what to fix; the data already loaded is
-unchanged every time.
+**Expected**: each invalid or unsupported file is rejected with a message that says what to fix,
+and the data already loaded is unchanged every time. The evaluation file gets the message for an
+unknown `format`, which names the supported ones. The test project with an invalid `test_run` is
+refused before the load question. The version 1 file loads, with the test run not started and a
+note that it was upgraded.
 
 ### V12. Another metric and my own catalog (SC-005, User Story 14)
 
@@ -265,7 +275,7 @@ unchanged every time.
    unused one.
 3. In Results › Details change the detection-rate threshold.
 4. Load a test project that carries the metric of `examples/metrics/bias-verdict-example.json`,
-   add cases with expected errors, finalize, and paste replies
+   add cases with expected errors, "Start test run", and paste replies
    `{"biased": true}` and `{"biased": false}` for cases with errors and for clean cases. Then change
    a rule so that it uses a list field.
 
@@ -278,8 +288,8 @@ no **Load check settings**. With the verdict example, the Judge step says
 the judge is evaluated per case; a flagged case with errors passes with every expected error found
 (also one without a fragment), an unflagged one fails; a flagged clean case awaits the user's
 decision; the Summary counts cases and shows the case detection rate and the clean-case
-false-positive rate; Error analysis counts cases with counts only; the report and the evaluation
-file say the judge was evaluated per case. After the rule change the result, Results and the report
+false-positive rate; Error analysis counts cases with counts only; the report and the test
+project file say the judge was evaluated per case. After the rule change the result, Results and the report
 say which way was counted before and after.
 
 ### V13. Privacy, accessibility, layout (SC-006, Principle VII)

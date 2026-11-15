@@ -45,16 +45,16 @@ Names below describe behavior; exact TypeScript signatures are written with thei
 | `normalizeCategory(text)` | Lower case with dashes. |
 | `addCategoriesFromText(catalog, pastedList)` | Catalog with pasted categories added; reports those skipped as already present. Accepts `name`, `name - description`, `name: description`, `name | description`. |
 | `categoryUses(catalog, cases)` | Per category the number of test cases that use it (a case counts once) (FR-015). |
-| `canRemoveCategory(catalog, cases, replies, finalized, name)` | Allowed, or refused with the one-sentence reason of FR-015 ("Used by N test cases. Remove those test cases first, or rename the category." or, after finalizing when every such case has a reply, "… It can be renamed."). |
+| `canRemoveCategory(catalog, cases, replies, started, name)` | Allowed, or refused with the one-sentence reason of FR-015 ("Used by N test cases. Remove those test cases first, or rename the category." or, after the start of the test run when every such case has a reply, "… It can be renamed."). `started` is true when the test run has started (T288). |
 | `renameCategory(catalog, cases, from, to)` | Catalog and cases with the new name in every expected error; refused when the new name exists. |
-| `canChangeCase(cases, replies, finalized, id, action)` | For **Rename**, **Remove** and **Edit expected errors**: allowed, or refused with the reason (a base still in use, FR-017) (FR-025, FR-039, FR-089); a case with a reply may be edited. `checkExpectedErrorsJson`, `expectedErrorsToJson`, `planExpectedErrors` (core) and `saveExpectedErrors` (app) are "Edit expected errors", T254. |
+| `canChangeCase(cases, replies, started, id, action)` | For **Rename**, **Remove** and **Edit expected errors**: allowed, or refused with the reason (a base still in use, FR-017) (FR-025, FR-039, FR-089); a case with a reply may be edited. `checkExpectedErrorsJson`, `expectedErrorsToJson`, `planExpectedErrors` (core) and `saveExpectedErrors` (app) are "Edit expected errors", T254. |
 | `checkCaseJson(text, context)` | file-formats.md, section 2. `context` = mode (`paste`, `clean`, `inject`, `correct`), variables, judged text, catalog, existing cases, picked base, number of errors to prepare, and the original case for `correct`. Returns problems (with line and column or field path), warnings, notes, the kind the case will have, and the case when valid (FR-031, FR-041, FR-083, FR-084, FR-089, FR-090). |
 | `textListCheck(testCase, base, judgedText)` | The line of FR-080: changed places not in the list (with their text, to highlight), expected errors not in the text, identical to base, errors with no fragment or category. |
 | `caseToJson(testCase)` | The case JSON of "Export test cases" and "Edit expected errors" (no `id`; `base` only when set; `source_fragment` after `fragment` when the error has one, T250); `checkCaseJson` of its output gives the same fields and expected errors (SC-036). |
 | `markLate(case, hasReplies, change)` | Sets `changed_after_first_reply` to `added` or `corrected` when replies exist (FR-053). |
 | `testCasesFeedback(cases)` | Clean and injected-errors counts, missing kinds, duplicate texts, remaining capacity. |
 | `testSizeForecast(cases, minimumSample)` | Totals, grouping by number of expected errors, and met or missing for each minimum. |
-| `finalizeSummary(cases, judgeSet)` | Everything shown before finalizing, with all warnings, and whether finalizing is allowed. |
+| `startSummary(cases, judgeSet)` | Everything shown before "Start test run" (T288, FR-052), with all warnings, and whether the start is allowed (refused for no test cases or an empty judge prompt). Was `finalizeSummary`. |
 | `testCasesVersion(cases)` | Asynchronous. Content version. |
 
 ## Files and pasted text (`core/io`)
@@ -64,15 +64,15 @@ returns text.
 
 | Function | Behavior |
 |---|---|
-| `readTestProject(text)` / `writeTestProject(judgeSet, testCases, metric, checks, toolVersion)` | file-formats.md, section 1: the judge set with the error catalog, the test cases (key `dataset`) with their finalized state, the active metric and the check rules; no replies. Refuses an evaluation file with a message that names "Load evaluation". |
+| `readTestProject(text, isMetricLoaded)` / `writeTestProject(project, results, now, toolVersion)` | file-formats.md, sections 1 and 5 (T289): the judge set with the error catalog, the test cases (key `dataset`), the active metric, the check rules and, when the test run has started, the `test_run` section (replies, decisions with sources, added findings with category, difficulty and `from_opinion`, model details, versions, `minimum_sample` and results). Upgrades a version 1 file (drops `dataset.finalized`, with a note). Ignores an old `proposals` key with a note. The reader says whether the file holds a test run, so the load can ask its question. |
+| `withoutTestRun(project)` | "Load the test project only" (T289): the same test project with no test run and no `changed_after_first_reply` on any case. |
 | `readTestCasesJson(text, variables, catalog, existingCases)` / `writeTestCases(cases, name)` | Section 3, for "Import test cases" (adds; new identifiers for taken ones, `base` remapped; taken names kept with a warning) and "Export test cases"; also reads the cases of a test project file. Returns an import summary. |
 | `readTestCasesCsv(text, variables, catalog)` | Section 4: every row a clean case. Returns an import summary with valid cases and invalid rows. |
 | `decodeBytes(bytes)` | Text and the encoding used (UTF-8, or Windows-1250 as fallback). |
 | `exampleCsv(variables)` | The file of "Download example file", built from the current variables (FR-030). |
 | `readOpinion(text, caseId)` | Section 7: the verification opinion for one case; refuses a list of several opinions and an opinion for another case, and a JSON that cannot be read (line and column), with the reason. |
-| `writeEvaluation(evaluation, results, now, toolVersion)` / `readEvaluation(text)` | Section 5, including the active metric, its parameters, the check rules, the way of counting and the added findings with category, difficulty and `from_opinion`. Ignores an old `proposals` key with a note. Refuses a test project file with a message that names "Load test project". |
 | `readMetricDefinition(text)` / `readCheckConfiguration(text)` | metric-and-checks.md. The tool no longer reads a check configuration from the Results step (T266); the reader goes with its format in T225. |
-| `buildHtmlReport(evaluation, results, now, toolVersion)` | Section 8: one self-contained HTML document as text, every value escaped; says at the top how many cases are not decided yet (not run, awaiting verification) when there are any; no "provisional" mark (T267). |
+| `buildHtmlReport(project, results, now, toolVersion)` | Section 8: one self-contained HTML document as text, every value escaped; says at the top how many cases are not decided yet (not run, awaiting verification) when there are any; no "provisional" mark (T267). |
 
 ## Prompts for the user's LLM (`core/generation`)
 
@@ -80,7 +80,7 @@ returns text.
 |---|---|
 | `cleanCasePrompt(judgeSet, likeCase)` | Asks for ONE clean case in the case JSON layout with `"expected_errors": []`: the judge prompt with its variables and judged text, the catalog (so the case contains none of its errors), and the fields of the **Like case** as a model when one is picked (FR-083). |
 | `injectErrorsPrompt({ judgeSet, base, errors })` | Asks for ONE case in the case JSON layout: with a base, its fields with the errors written into the judged text; without one, the whole case. One expected error per row (category with its description, difficulty or left to the LLM, what should be wrong), exact fragments (FR-040, FR-043). |
-| `verificationPrompt(evaluation, caseId)` | For one case with a reply: its identifier, fields, numbered expected errors, numbered additional findings, the received reply, and the fixed JSON opinion to return, including `new` for findings not in the list with optional category and difficulty (FR-063). |
+| `verificationPrompt(project, caseId)` | For one case with a reply: its identifier, fields, numbered expected errors, numbered additional findings, the received reply, and the fixed JSON opinion to return, including `new` for findings not in the list with optional category and difficulty (FR-063). |
 
 All three state the reply format of file-formats.md (sections 2 and 7) and are rebuilt whenever
 their inputs change.
@@ -97,13 +97,13 @@ their inputs change.
 | `opinionPlan(testCase, review, decisions, opinion)` | The preview of FR-063: per answered item its current mark and source and the new mark, with reason and fragment, flagged when it replaces a mark set by hand; new findings; unanswered items with the reason; notes; and whether it can be applied ("classifies none" when no item is answered and no finding added). |
 | `applyOpinion(decisions, plan)` | Decisions with source `llm-approved` for every answered item (marks set by hand included), new findings added to `added_findings` with `from_opinion`, unanswered undecided items marked "no answer", and `approved` set. |
 | `addFinding(decisions, text, category, difficulty)` / `removeFinding(decisions, index)` | Add or remove a finding of `added_findings`; only those can be removed (FR-062). |
-| `countAll(evaluation, mode)` | All counters, overall and per category, difficulty and rule, and additional findings per category and difficulty (FR-070). In `per_case` mode also `defective_cases_decided` and `defective_cases_flagged`, and the category and difficulty groups count cases (a case once in each category and difficulty its errors have) with counts only (FR-066, FR-070). |
+| `countAll(project, mode)` | All counters, overall and per category, difficulty and rule, and additional findings per category and difficulty (FR-070). In `per_case` mode also `defective_cases_decided` and `defective_cases_flagged`, and the category and difficulty groups count cases (a case once in each category and difficulty its errors have) with counts only (FR-066, FR-070). |
 | `wilson(successes, total)` | Lower and upper bound of the 95% interval, or none when total is 0. |
 | `computeMeasures(counters, metric)` | Every measure of the active metric, with intervals; `provisional` in the results only means that some cases are not decided (`undecided > 0`) and is never shown as a word (T267). |
 | `overallResult(counters, measures, checks, minimumSample, mode)` | Works, Does not work or Inconclusive, with reasons and borderline notes (FR-068). In `per_case` mode the check rules apply to the two case-level rates and the minimum counts cases with errors; the first reason says the judge was evaluated per case. |
-| `computeResults(evaluation, metric)` | Everything the Results step and the files show, in one value, including the way of counting and, when a correction of the rules changed it after replies, the way used before (FR-075). |
-| `recompute(storedFile)` | The results recalculated from a loaded evaluation file, and any differences from the stored results. |
-| `resumePoint(evaluation)` | The first step with unfinished work (Judge, Test cases, Run, Results) and, on Run, the case **Continue** opens: the first awaiting verification, else the first not run (FR-073). |
+| `computeResults(project, metric)` | Everything the Results step and the files show, in one value, including the way of counting and, when a correction of the rules changed it after replies, the way used before (FR-075). |
+| `recompute(storedFile)` | The results recalculated from a test project file loaded with its test run, and any differences from the stored results. |
+| `resumePoint(project)` | The first step with unfinished work (Judge, Test cases, Test run, Results) and, on Test run, the case **Continue** opens: the first awaiting verification, else the first not run (FR-073). Test cases while the test run has not started. |
 
 ## Metrics (`core/metrics`)
 
@@ -117,7 +117,7 @@ their inputs change.
 
 ## Judge reply source (`src/sources`)
 
-The one interface through which judge replies reach an evaluation (Principle III).
+The one interface through which judge replies reach the test run (Principle III).
 
 ```text
 JudgeReplySource
@@ -131,13 +131,13 @@ ReplyBatch
 
 | Adapter | `request` | Used by |
 |---|---|---|
-| Pasted reply | one case identifier and the text read from the clipboard or typed into the always-visible box | The case window of Run ("Paste reply", the box, "Keep as text") |
+| Pasted reply | one case identifier and the text read from the clipboard or typed into the always-visible box | The case window of Test run ("Paste reply", the box, "Keep as text") |
 
-- The application passes every `ReplyBatch` to one function, `attachReplies(evaluation, batch,
+- The application passes every `ReplyBatch` to one function, `attachReplies(project, batch,
   replaceChoice)`, which matches by identifier, stores each reply together with the prompt composed
   for its case, resets a case whose reply is replaced (its decisions, the added findings included, are removed),
   records the judge version when the first reply arrives, and reruns reading and matching for the
-  affected cases. `replaceNeedsQuestion(evaluation, caseId)` says whether replacing must ask first:
+  affected cases. `replaceNeedsQuestion(project, caseId)` says whether replacing must ask first:
   only when the case has decisions with source `manual` or `llm-approved`, and how many (FR-056).
 - This version ships one adapter. A later adapter that reads many replies from a file, or one that
   calls an LLM, implements the same interface and returns the same `ReplyBatch`; nothing in
@@ -148,33 +148,36 @@ ReplyBatch
 Not part of the core, but its contract with the interface is fixed here so the two can be built in
 parallel.
 
-- One state object (see data-model.md, Evaluation, plus the metric registry, the current step, the
+- One state object (see data-model.md, TestProject, plus the metric registry, the current step, the
   open window with its case, the reply drafts, the open state of the "Error categories" section,
   and the "unsaved changes" flag) and a set of named actions. Actions
   call core functions and return the next state; components never change data directly.
 - Derived values (variables, judged text, recognized fields, findings, case reviews, statuses,
   counters, measures, overall result, feedback, versions) are recomputed from state and never
   stored in it.
-- The state counts the replies saved since the last "Save evaluation"; the interface shows the
+- The state counts the replies saved since the last "Save test project"; the interface shows the
   number and reminds the user after every 25 (FR-059). Nothing is written to browser storage.
-- One "unsaved changes" flag (FR-051): set by any change; cleared by a successful "Save
-  evaluation"; also cleared by a successful "Save test project" while no reply exists. A case JSON being
+- One "unsaved changes" flag (FR-051): set by any change; cleared by a successful "Save test
+  project" or "Save test project as…" (T289). A case JSON being
   pasted in the test case window is not part of the state until "Save case" or "Approve and
   close"; the window has no file save action, and **Close without saving** asks first when
   something was typed. An opinion in the second-opinion window changes nothing until "Apply
   opinion".
-- "Reopen test cases" (FR-053) is an action that is allowed only while the test cases are finalized
-  and no reply exists; it opens them and the prompt again and keeps both remembered files.
+- "Start test run" (FR-052, T288) is an action allowed while the test run has not started, there
+  is at least one test case and the judge prompt is not empty. It creates an empty test run; there
+  is no action that undoes it. Before it, the actions of the Test run step are refused with the
+  reason "Start the test run first" (FR-053).
 - The unsaved-work guard asks before any action that would discard unsaved work, with **Save
-  evaluation first**, **Discard** and **Cancel**: loading a test project or an evaluation over
-  existing work, "Load demo…", "New evaluation" and "Run again with a new judge…"
-  (FR-051). Replacing a reply whose case has decisions set by hand or from an applied opinion asks
+  test project first**, **Discard** and **Cancel**: "Load test project…" over existing work,
+  "Load demo…" and "New test project" (FR-051). The load question of a file with a test run
+  ("Load with the test run", "Load the test project only", "Cancel") comes after it and after
+  the file is validated (file-formats.md, section 1). Replacing a reply whose case has decisions set by hand or from an applied opinion asks
   separately, saying how many will be removed (FR-056).
-- **Ports** (`src/app/ports/`, research.md section 25): `SaveTarget`, one per file kind (test
-  project, evaluation), (`save`, `saveAs`, `useLoaded`, `forget`, with the results "saved",
-  "cancelled" and "file no longer writable"); "Load test project" forgets the evaluation target and
-  "Load evaluation" the test project target; "New evaluation", "Load demo…" and "Edit the
-  judge and run again" forget both (FR-076); and
+- **Ports** (`src/app/ports/`, research.md sections 25 and 32): one `SaveTarget`, for the test
+  project file (`save`, `saveAs`, `useLoaded`, `forget`, with the results "saved", "cancelled"
+  and "file no longer writable"); "Load with the test run" through the picker calls `useLoaded`;
+  "Load the test project only", a dropped file, "New test project" and "Load demo…" call
+  `forget` (FR-076); and
   `ClipboardReader` (`readText`, with the results text, "empty", "refused" and "not available").
   Each has a browser adapter and a fake used by unit, component and integration tests; actions
   receive them as arguments and never call browser APIs themselves.

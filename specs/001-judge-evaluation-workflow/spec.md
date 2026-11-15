@@ -186,22 +186,25 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-15, convergence, T277) What happens to an imported file where some cases have no identifier, or two cases have the same one? → A: The import works and gives new identifiers to those cases, and says how many (FR-033); the file is not refused.
 - Q: (Owner review 2026-11-15, convergence, T276, T278) Should the spec follow what the tool does? → A: Yes. The statements that named older behavior (Remove and Rename of a case with a reply, "Edit expected errors", where "Save evaluation" is, the question on a new reply, the comment of a clean case, Remove of a category in use, "Show JSON", the check configuration file) and the old names of buttons were corrected, and a glossary was added.
 - Q: (Owner review 2026-11-15, fifth look, T270) The Test project card still says "A final answer needs…", though there is no final result (T267); what should it say? → A: "A reliable answer needs at least 30 injected errors and 10 clean cases; until then the result is Inconclusive.", the same words as the test size of the Summary. The minimum sample of FR-068 is unchanged; only the word changes (the sentence of the card, FR-045, FR-052, FR-068, and the same on Results).
+- Q: (Owner trial 2026-11-15, T288) Is "Finalize test cases…" still needed, now that most of the test cases can change after it? → A: Yes, as **"Start test run"**, a button at the top of the Test cases step. Before the start, the Test run step shows its actions disabled with the reason. After the start, the judge prompt and the judged text are fixed and there is no way back; the rules, the reply mapping and the categories stay editable, because they say how a reply is read, not what the judge received. "Reopen test cases" goes. Replaces the answers about finalizing of Sessions 2026-11-08 and 2026-11-12.
+- Q: (Owner trial 2026-11-15, T289) How many files does the work need? → A: One, the **test project**. It holds the judge set, the test cases, the metric and the thresholds and, once it has started, the **test run** (replies, decisions, model details). "Save test project" saves everything. "Load test project…" asks, for a file with a test run, "Load with the test run" or "Load the test project only"; the second is how a changed judge is tested on the same cases, so "Run again with a new judge…" goes. The evaluation file, "Load evaluation…", "Save evaluation" and "Save evaluation as…" go; "New evaluation" becomes "New test project"; the step "Run" is named "Test run". The tool is not released, so old evaluation files are not read. Replaces the two files of FR-076.
+- Q: (Clarify 2026-11-15) After "Load the test project only", where does the next "Save test project" go? → A: To a new file: the loaded file is not remembered, so the first save asks for a file name and the loaded test run is never overwritten.
 
 ## Glossary
 
 One term for each concept (Constitution, Writing style). Names of buttons and marks are the ones in
 `src/ui/labels.ts`; this list gives the meaning.
 
-- **Test project**: the file with the judge set, the error categories, the test cases, the metric with its parameters and the thresholds. It holds no replies.
-- **Evaluation**: the file with one whole run: the test project, every reply, every decision and the results.
+- **Test project**: the one file of the work. It holds the judge set, the error categories, the test cases, the metric with its parameters and the thresholds and, once the test run has started, the test run.
+- **Test run**: the replies of one judge version to the test cases, with every decision, the model details and the results. It begins with "Start test run"; after that the judge prompt and the judged text are fixed. It is saved inside the test project file. (The word "evaluation" is not used for it.)
 - **Test case**: one input for the judge, with a value for each variable of the judge prompt. A **clean case** has no expected errors; a **case with errors** has one or more.
 - **Expected error**: an error that was put into a case on purpose, with a description and, optionally, a category, a fragment and a difficulty.
 - **Judge reply**: the text the judge returned for one case. A reply that is readable JSON is saved at once.
-- **Finding**: one thing the judge reported in its reply. A finding that matches an expected error is a match. A finding that matches none is an **additional error** (the list on Run) and is counted as an **additional finding** (the column of the table).
+- **Finding**: one thing the judge reported in its reply. A finding that matches an expected error is a match. A finding that matches none is an **additional error** (the list on Test run) and is counted as an **additional finding** (the column of the table).
 - **Marks of an expected error**: Found, Not found, Ignored. **Marks of an additional error**: Genuine error, False positive, Ignored.
-- **Case window**: the page of Run where one case is read, its reply pasted and its errors marked. The **read-only view** is the page that "Open" shows on Test cases and Results.
+- **Case window**: the page of Test run where one case is read, its reply pasted and its errors marked. The **read-only view** is the page that "Open" shows on Test cases and Results.
 - **Metric**: the definition of how a judge is tested: prompt, reply mapping, error rules, categories and measures. No metric is built in; the **default metric file** (Accuracy) is what a new test project starts with.
-- **Thresholds** (check settings): the pass or fail limits for the two rates. They are saved in the test project and changed in "Details" on Results.
+- **Thresholds** (check settings): the pass or fail limits for the two rates. They are saved in the test project file and changed in "Details" on Results.
 - **Overall result**: Works, Does not work or Inconclusive. The result is Inconclusive while cases are not decided or the test is below the **minimum test size** (30 expected errors and 10 clean cases, fixed in the bundled checks file); a **reliable answer** needs at least that size.
 - **Cases not decided**: cases that are not run, or that await verification.
 
@@ -286,7 +289,7 @@ the findings shown for the sample are correct.
    one instead.
 8. **Given** the Judge step, **When** the user looks for its buttons, **Then** apart from the header
    ("More" menu and Help) there are only "Add rule" (with "Add condition" and "Remove" inside each
-   rule) and the one action of the "what next" line; there is no "Save evaluation", no "Read
+   rule) and the one action of the "what next" line; there is no "Save test project" of its own, no "Read
    sample reply" and no "Add test case".
 9. **Given** a sample reply that holds only some of the values the judge can return, **When** the
    user looks at the "Values seen" and writes a condition, **Then** the column says the values are
@@ -295,10 +298,9 @@ the findings shown for the sample are correct.
     the user presses "Add condition", **Then** the two typed values are kept, the new condition says
     "Condition 3: type a value" next to it, the rule is not shown as "Broken rule" and is marked as
     not used until every condition has a value, and the preview says so.
-11. **Given** finalized test cases, **When** the user looks at the Judge, Test cases and Run steps,
-    **Then** "Add test case" is not in the "what next" line of any of them; it is a button above the
-    table of cases on Test cases and on Run (disabled at the limit of cases), and "Reopen test cases"
-    stays in the line while no reply exists.
+11. **Given** a started test run, **When** the user looks at the Judge, Test cases and Test run
+    steps, **Then** "Add test case" is not in the "what next" line of any of them; it is a button
+    above the table of cases on Test cases and on Test run (disabled at the limit of cases).
 
 ---
 
@@ -434,7 +436,7 @@ import the exported file into a new project.
 
 1. **Given** a valid file, **When** the user imports it, **Then** a summary shows the number of
    cases and the split between cases with injected errors and clean cases, and the cases are added
-   to the test project. It stays open until the user finalizes it (see User Story 11).
+   to the test project. It stays open until the user starts the test run (see User Story 11).
 2. **Given** a file where some rows are invalid, **When** the user imports it, **Then** the summary
    lists each invalid row with its position and reason, and the user chooses to import only the
    valid rows or to cancel.
@@ -455,58 +457,53 @@ import the exported file into a new project.
 ### User Story 6 - Save the work and continue later (Priority: P1)
 
 Nothing is remembered between sessions and nothing is kept on a server, so the user saves to a
-file on their own device and carries on later. There are two files: the test project (the judge
-set together with the test cases), saved from the More menu at any time and loaded again to run
-the same test with another LLM or other model settings, and the evaluation (the whole progress of
-one run: the test project, every prompt, reply and decision made so far, and the results). Both are saved
-with buttons of the page header, on every step. The tool shows clearly whether there are
-changes not yet saved.
+file on their own device and carries on later. There is one file, the test project. It holds the
+judge set and the test cases and, once the test run has started, the test run: every prompt, reply
+and decision made so far. "Save test project" is a button of the page header on every step. The
+tool shows clearly whether there are changes not yet saved.
 
 **Why this priority**: Building test cases and running dozens of prompts by hand takes time;
 without a simple save the work would be lost when the page is closed.
 
-**Independent Test**: Add 5 cases, finalize, enter replies for 3 of them, save the evaluation,
-close and reopen the tool, load the file, and confirm the cases, the 3 replies and their
-decisions are back and the remaining 2 cases can be run.
+**Independent Test**: Add 5 cases, start the test run, enter replies for 3 of them, save the test
+project, close and reopen the tool, load the file with its test run, and confirm the cases, the 3
+replies and their decisions are back and the remaining 2 cases can be run.
 
 **Acceptance Scenarios**:
 
 1. **Given** a judge set and at least one test case, **When** the user presses "Save test project",
    **Then** one file is produced containing the judge set, the test project name, all cases with
-   their expected errors and base references, the active metric and the thresholds.
-2. **Given** a saved test project file, **When** the user loads it later, **Then** the judge set and
-   the test cases return with identical content and no replies; test cases that were finalized when
-   saved come back finalized and the Run step opens, ready for the replies of another LLM, and
-   "Reopen test cases" opens it for editing while no reply has been entered.
-3. **Given** an evaluation in progress, **When** the user saves it and loads the file in a new
-   session, **Then** the judge set, the test cases, every reply and every decision are restored
-   and the tool opens the Run step with "Continue", which opens the first case that is not
-   decided.
+   their expected errors and base references, the active metric with its definition, the
+   thresholds and, once it has started, the test run.
+2. **Given** a saved test project file with no test run, **When** the user loads it later,
+   **Then** the judge set and the test cases return with identical content, the test run has not
+   started, and everything can be edited.
+3. **Given** a test project file that holds a test run, **When** the user loads it, **Then** the
+   tool asks "Load with the test run" or "Load the test project only". With the test run, the judge
+   set, the test cases, every reply and every decision are restored, and the tool opens the Test
+   run step with "Continue", which opens the first case that is not decided. With the test project
+   only, no reply is loaded, the test run has not started and everything can be edited.
 4. **Given** there are changes since the last save, **When** the user looks at the screen,
    **Then** the tool shows that there are unsaved changes, and the indicator clears after saving.
 5. **Given** the user has unsaved work, **When** they load a file that would replace it, **Then**
    the tool warns that the current work will be replaced and offers to save it first.
 6. **Given** a saved file that was damaged or edited by hand, **When** the user loads it,
    **Then** the tool reports every problem and does not replace the current work.
-7. **Given** an evaluation saved once to a chosen file, **When** the user presses "Save evaluation"
-   in the page header again, **Then** the same file is overwritten without a question; "Save evaluation
-   as" (in the More menu) asks for a new file, and after "Load evaluation" saving goes to the
-   loaded file.
-8. **Given** a test project saved once, **When** the user presses "Save test project" again, **Then** its
-   file is overwritten without a question; the name of each remembered file is shown under its
-   button in the page header.
-9. **Given** only an evaluation file, **When** the user opens the tool and loads it, **Then** the
-   result is shown on Results and the report can be generated, without loading a test project first.
-10. **Given** any step, **When** the user looks for "Save test project" and "Save evaluation",
-   **Then** both are buttons of the page header, with the indicator of unsaved changes, the "More" menu
-   and Help; no other screen has a save button, and the warnings before work would be lost still offer
-   to save the evaluation first.
+7. **Given** a test project saved once to a chosen file, **When** the user presses "Save test
+   project" again, **Then** the same file is overwritten without a question; "Save test project
+   as…" (in the More menu) asks for a new file. After "Load with the test run" saving goes to the
+   loaded file. After "Load the test project only" the first save asks for a new file, so the loaded
+   test run is never overwritten.
+8. **Given** any step, **When** the user looks for "Save test project", **Then** it is a button of
+   the page header with the name of its file under it, beside the indicator of unsaved changes, the
+   "More" menu and Help; no other screen has a save button, and the warnings before work would be
+   lost offer "Save test project first".
 
 ---
 
 ### User Story 7 - Run every test case by hand (Priority: P1)
 
-After the test cases are finalized, the Run step shows all test cases in one list, with a short summary
+After the test run has started, the Test run step shows all test cases in one list, with a short summary
 of the judge being run (its version, the test project and the judged text) and a free-text box for the
 model details. A button
 at each case opens a window that shows the case as it was shown when it was made, without its JSON
@@ -518,18 +515,18 @@ and moves to the next case. Every prompt and reply is kept with its case.
 **Why this priority**: This is the working loop the user repeats for every case; it has to be quick,
 impossible to mix up and safe against losing work.
 
-**Independent Test**: With finalized test cases of 5 cases, open each case's window, copy the prompt,
+**Independent Test**: With a started test run of 5 cases, open each case's window, copy the prompt,
 paste a reply, and confirm the list shows 5 of 5 replies and each case keeps its own prompt and
 reply.
 
 **Acceptance Scenarios**:
 
-1. **Given** finalized test cases, **When** the user opens the Run step, **Then** all cases are in
+1. **Given** a started test run, **When** the user opens the Test run step, **Then** all cases are in
    one list with their name, kind, number of expected errors and status, and a short summary shows
    the judge version, the test project name and version and the judged text.
 2. **Given** the list, **When** the user presses the button at a case, **Then** a window opens that
    fills the screen as one page of three parts (see the Clarifications, Owner review 2026-11-14,
-   Case window of Run): the fields of the case with highlighted fragments; a row with "Add
+   Case window of Test run): the fields of the case with highlighted fragments; a row with "Add
    finding", "Second opinion…", "Marked N of M" and the status; then, in two equal columns, "Judge
    reply" (the box for the reply, saved as soon as it is readable JSON, with "Paste reply" below it) and the errors.
 3. **Given** the window of a case, **When** the user presses "Next case" or "Previous case" (or the matching keys), **Then** the window shows that case at once, with its position
@@ -545,12 +542,12 @@ reply.
 7. **Given** the browser refuses to let the tool read the clipboard, **When** the user presses
    "Paste reply", **Then** the tool says so and the user pastes with Ctrl+V into the
    box, which is always shown, with the same effect: a reply that is readable JSON is saved at once, any other text with "Keep as text".
-8. **Given** a test project that is not finalized, **When** the user opens the Run step, **Then** the
-   tool asks them to finalize the test cases first.
-9. **Given** replies saved since the last "Save evaluation", **When** the user looks at the Run step
-   or the case window, **Then** their number is shown, "Save evaluation" is in the page header, and
+8. **Given** a test project whose test run has not started, **When** the user opens the Test run
+   step, **Then** its actions are disabled, each with the reason "Start the test run first".
+9. **Given** replies saved since the last "Save test project", **When** the user looks at the Test
+   run step or the case window, **Then** their number is shown, "Save test project" is in the page header, and
    after every 25 such replies the tool reminds the user to save.
-10. **Given** the Run step, **When** the user writes the model details (for example the model name
+10. **Given** the Test run step, **When** the user writes the model details (for example the model name
    and its settings, over several lines), **Then** the text is kept with the result and shown in
    the report.
 
@@ -576,7 +573,7 @@ one item, add a finding by hand and remove it, and confirm the statuses and the 
 
 **Acceptance Scenarios**:
 
-1. **Given** received replies, **When** the user looks at the Run list, **Then** every case shows
+1. **Given** received replies, **When** the user looks at the Test run list, **Then** every case shows
    its status (Not run, Awaiting verification, Pass, Fail), the number still to decide is shown, and
    the user can show the cases that await verification first or only those.
 2. **Given** a saved reply, **When** the case window shows it, **Then** the right column shows the
@@ -623,14 +620,14 @@ the judge found and missed; how many additional findings it reported, and how ma
 confirmed as real errors and how many were false positives; and the same for subtle errors. One
 line gives the overall result. Two more views give the analysis per category and difficulty and
 the list of all test cases. Everything on the Results step is read-only, except the thresholds in
-"Details". The result can be exported as an HTML report at any time; the evaluation file saved
-with "Save evaluation" on the Run step holds the same result as JSON.
+"Details". The result can be exported as an HTML report at any time; the test project file saved
+with "Save test project" holds the same result as JSON.
 
 **Why this priority**: The result is the reason the tool exists; a first-time reader must
 understand it without reading documentation.
 
-**Independent Test**: With a fully verified demo evaluation, open the three views, check the
-counts against the cases by hand, export the HTML report and save the evaluation; confirm the HTML
+**Independent Test**: With a fully verified demo test run, open the three views, check the
+counts against the cases by hand, export the HTML report and save the test project; confirm the HTML
 report can be read without the tool.
 
 **Acceptance Scenarios**:
@@ -653,8 +650,8 @@ report can be read without the tool.
    **Then** the report says how many cases are not decided yet, and it is not called provisional;
    the main action of the Results bar is "Export HTML report" whether or not every case is decided (T267).
 8. **Given** the Results step, **When** the user looks for an export of the result as JSON, **Then**
-   there is no separate "Export JSON" and no save action; the Help says that "Save evaluation" on
-   the Run step (or "Save evaluation as" for a copy) writes the result as JSON (the step no longer
+   there is no separate "Export JSON" and no save action; the Help says that "Save test project"
+   (or "Save test project as…" for a copy) writes the result as JSON (the step no longer
    has the card that said it, T267).
 
 ---
@@ -688,29 +685,35 @@ are needed; add a duplicate text and see it flagged.
 
 ---
 
-### User Story 11 - Mix hand-made and loaded cases, then finalize (Priority: P2)
+### User Story 11 - Mix hand-made and loaded cases, then start the test run (Priority: P2)
 
-A user can combine cases loaded from a file with cases prepared in the tool in one test project. When
-satisfied, they finalize the test cases: they see a summary, confirm, and from that moment the judge
-prompt and the cases are fixed for the evaluation. To change them afterwards they start a new
-evaluation.
+A user can combine cases loaded from a file with cases prepared in the tool in one test project.
+When satisfied, they press "Start test run": they see a summary, confirm, and from that moment the
+judge prompt and the judged text are fixed. There is no way back. To test a changed prompt, they
+load the test project file with "Load the test project only" (User Story 12).
 
-**Why this priority**: Real work mixes both routes, and the finalize step keeps results
-trustworthy.
+**Why this priority**: Real work mixes both routes, and the start keeps every reply tied to the
+prompt that produced it.
 
-**Independent Test**: Load a 10-case file, prepare 2 more cases in the tool, finalize, and confirm
-the test project holds 12 cases whose input data can no longer be edited.
+**Independent Test**: Load a 10-case file, prepare 2 more cases in the tool, start the test run,
+and confirm the test project holds 12 cases and the judge prompt can no longer be edited.
 
 **Acceptance Scenarios**:
 
-1. **Given** a test project loaded from a file that is not yet finalized, **When** the user prepares
-   more cases in the tool, **Then** they join the same test project.
-2. **Given** a test project ready to use, **When** the user chooses to finalize, **Then** a summary
-   (counts, balance, warnings) is shown and the test cases become fixed only after confirmation.
-3. **Given** finalized test cases, **When** the user looks for ways to edit the judge prompt or
-   the input data of a case, **Then** none are offered and a "New evaluation" action is
-   offered instead.
-4. **Given** the user has unsaved cases, **When** they try to leave the page, **Then** the tool
+1. **Given** a test project loaded from a file whose test run has not started, **When** the user
+   prepares more cases in the tool, **Then** they join the same test project.
+2. **Given** a test project ready to use, **When** the user presses "Start test run" at the top of
+   the Test cases step, **Then** a summary (counts, balance, warnings) is shown and the test run
+   starts only after confirmation.
+3. **Given** the test run has not started, **When** the user opens the Test run step, **Then** its
+   actions are shown disabled, each with the reason "Start the test run first" beside it.
+4. **Given** the test run has started, **When** the user looks at the judge prompt or the judged
+   text, **Then** both are locked, the reason is shown beside them, and "Load test project…" is
+   offered as the way to test another prompt (with "Load the test project only").
+5. **Given** the test run has started, **When** the user corrects an error rule, the reply mapping
+   or a category, **Then** the change is made, automatic decisions are recomputed, decisions made by
+   hand are kept, and the judge gets a new version (FR-075).
+6. **Given** the user has unsaved cases, **When** they try to leave the page, **Then** the tool
    warns them.
 
 ---
@@ -718,18 +721,19 @@ the test project holds 12 cases whose input data can no longer be edited.
 ### User Story 12 - Test another version of the judge on the same test cases (Priority: P2)
 
 A user keeps test cases as a file with a name and a version, and uses the same cases to test a
-changed judge prompt. From the Results step they choose "Run again with a new judge…": the tool
-offers to save and export the current result first, keeps the finalized test cases, clears the
-replies
-and lets the user change the prompt. Each exported result names the judge version and the test project
-version it was made with, so two reports can be read against each other.
+changed judge prompt. They load the test project file with "Load the test project only": the test
+cases, the rules and the categories come back without replies, and the test run has not started,
+so the prompt can be changed. The first save asks for a new file, so the earlier test run is kept.
+Each exported result names the judge version and the test cases version it was made with, so two
+reports can be read against each other.
 
 **Why this priority**: Improving a judge means changing its prompt and testing again on identical
 cases. Showing two results side by side inside the tool (Compare) is deferred.
 
-**Independent Test**: Evaluate a judge, export the result, choose "Run again with a new judge…",
-change the prompt, evaluate again and export; confirm both reports name the same test cases version
-and different judge versions.
+**Independent Test**: Test a judge, save and export the result, load the file with "Load the test
+project only", change the prompt, start the test run, test again and export; confirm both reports
+name the same test cases version and different judge versions, and the first file still holds its
+test run.
 
 **Acceptance Scenarios**:
 
@@ -737,18 +741,18 @@ and different judge versions.
    and split between clean cases and cases with injected errors are visible.
 2. **Given** a test project is saved and loaded again, **When** the two are compared, **Then** they are
    recognized as identical (same version).
-3. **Given** an evaluation with replies, **When** the user chooses "Run again with a new judge…",
-   **Then** the tool offers to save and export the current result first,
-   keeps the test cases, clears the
-   replies and decisions, and lets the user edit the judge prompt, which gets a new version
-   identity.
-4. **Given** the user loads a test project file, **When** it is loaded, **Then** a new evaluation is
-   started with its judge set and test cases and no replies, and the first "Save evaluation" asks
-   for a file, so an earlier run is never overwritten.
-5. **Given** a finalized test project used for one run, **When** the user loads it again, writes
-   other model details and enters the replies of another LLM, **Then** the two evaluation files
-   name the same judge version, test cases version, metric and thresholds, and differ only in the
-   model details, the replies, the decisions and the results.
+3. **Given** a test project file that holds a test run, **When** the user loads it with "Load the
+   test project only", **Then** the test cases, the rules, the reply mapping, the categories, the
+   metric and the thresholds come back, no reply or decision is loaded, and the judge prompt can be
+   edited; a changed prompt gets a new judge version.
+4. **Given** a test project loaded with "Load the test project only", **When** the user saves,
+   **Then** the first "Save test project" asks for a file, so the loaded file and its test run are
+   never overwritten.
+5. **Given** a test project used for one test run, **When** the user loads it with "Load the test
+   project only", starts a new test run without changing the prompt, writes other model details and
+   enters the replies of another LLM, **Then** the two files name the same judge version, test cases
+   version, metric and thresholds, and differ only in the model details, the replies, the decisions
+   and the results.
 
 ---
 
@@ -759,14 +763,15 @@ error rules) and which test cases produced it, together with every prompt, reply
 
 **Why this priority**: Traceability underpins trust in the results.
 
-**Independent Test**: Save an evaluation with results, reload the page, load the file, and confirm the
+**Independent Test**: Save a test project with a test run and its results, reload the page, load the file with the test run, and confirm the
 same numbers, judge version and test cases are shown.
 
 **Acceptance Scenarios**:
 
-1. **Given** a completed evaluation, **When** the user saves it, **Then** the file contains the
-   results together with the judge set and the cases used.
-2. **Given** a saved evaluation file, **When** it is loaded in a fresh session, **Then** the
+1. **Given** a completed test run, **When** the user saves the test project, **Then** the file
+   contains the results together with the judge set and the cases used.
+2. **Given** a saved test project file with a test run, **When** it is loaded with the test run in
+   a fresh session, **Then** the
    identical results, judge version and cases are displayed.
 3. **Given** the same judge set, cases, replies and decisions, **When** results are recalculated,
    **Then** the numbers are identical.
@@ -779,7 +784,7 @@ A user adds their own categories, each with a name and a short description, or p
 list for another kind of judge, and
 uses those categories when preparing test cases. The catalog is managed in the "Error categories"
 section of the Test cases step, which shows how many test cases use each category and can be
-collapsed, and is saved inside the test project file only. One evaluation tests one judge.
+collapsed, and is saved inside the test project file only. One test run tests one judge.
 
 **Why this priority**: Different judges check different things; the ready examples may not fit,
 but the product works without custom categories.
@@ -836,8 +841,8 @@ case and confirm the new case has the same fields and expected errors.
 7. **Given** any case, **When** the user presses "Edit expected errors" in its read-only view,
    **Then** the JSON of its expected errors opens for editing (FR-089); a change is saved with "Save expected errors", and
    the test cases version changes; for a case with a reply the tool asks first.
-8. **Given** finalized test cases with replies, **When** the user adds a test case, **Then** it
-   appears on Run as Not run, and every earlier reply and decision is kept.
+8. **Given** a started test run with replies, **When** the user adds a test case, **Then** it
+   appears on Test run as Not run, and every earlier reply and decision is kept.
 6. **Given** "Rename" at a case, **When** the user types a name another case already has, **Then**
    the name is refused and the tool says which case has it.
 
@@ -865,7 +870,7 @@ case and confirm the new case has the same fields and expected errors.
 - A sample reply that is not JSON, is wrapped in other text or a code fence, or contains no list:
   wrapped JSON is read; anything unreadable is explained and nothing changes.
 - The sample reply is replaced and a rule still uses a field that is gone: the rule is marked as
-  broken and reported when finalizing.
+  broken and reported at the start of the test run.
 - No rules, or a rule without a "Where the error is": allowed, with a warning that every case
   will then be verified by hand or with an LLM opinion.
 - A rule that uses only fields outside any list: it gives one finding for the whole reply, with
@@ -887,7 +892,7 @@ case and confirm the new case has the same fields and expected errors.
 - Import is interrupted halfway: the previously loaded test project must remain intact.
 - Empty text or text consisting only of spaces.
 - A judge variable with no matching field in a case: filled with empty text and flagged with a
-  warning; finalizing is still allowed (FR-047).
+  warning; starting the test run is still allowed (FR-047).
 - A loaded file with fields that match no variable of the judge prompt: reported in the summary;
   the fields are kept but do not reach the prompt.
 - A loaded file that uses categories missing from the error catalog (FR-029).
@@ -920,7 +925,7 @@ case and confirm the new case has the same fields and expected errors.
   clean base case that other cases were made from: refused, naming those cases (FR-017).
 - Test project with only cases with injected errors or only clean cases: some measures cannot be
   computed, and the tool says so clearly.
-- Finalizing an empty test project or one with only one kind of case.
+- Starting the test run of an empty test project or of one with only one kind of case.
 - Saving an empty test project: the tool explains there is nothing to save.
 - Loading a saved file while there are unsaved changes.
 - A case being made in the test case window but not yet kept with "Save case" or "Approve and
@@ -930,7 +935,7 @@ case and confirm the new case has the same fields and expected errors.
 - A saved case that turns out to be wrong: its text is not edited; the user makes it again
   ("Case with errors" started from it, or "From JSON"), corrects it, saves it and removes the original. Its expected
   errors are corrected with "Edit expected errors", which asks first when the case has a reply; one that
-  should not count can also be marked "Ignored" on Run (FR-053, FR-089).
+  should not count can also be marked "Ignored" on Test run (FR-053, FR-089).
 - A case added after the first reply: it is Not run, so it is counted among the cases not decided yet until it is
   run and decided; the result and the report list it as added after the first reply (FR-075).
 
@@ -960,15 +965,15 @@ case and confirm the new case has the same fields and expected errors.
   paste into with Ctrl+V instead.
 - The user exports the report while cases are not run or await verification: the report says
   how many cases are not decided yet (T267).
-- A remembered file (judge set, test cases or evaluation) was moved or removed, or the browser
+- A remembered file (the test project file) was moved or removed, or the browser
   withdrew permission: the tool says so, forgets it and asks for a file again; the work on the
   page is kept.
-- "Run again with a new judge…" after the evaluation was saved: the new run's first "Save
-  evaluation" asks for a file, so the earlier run's file is never overwritten.
+- A test project with a test run is loaded with "Load the test project only": the first "Save
+  test project" asks for a file, so the loaded file and its test run are never overwritten.
 - Every expected error of a case is ignored: its expected errors are left out of the counts; the
   case is still not a clean case, and its status follows only its additional findings (FR-064).
-- A saved evaluation is loaded while another evaluation is in progress.
-- The page stops responding after many replies were entered: work since the last "Save evaluation"
+- A saved test project is loaded while another test run is in progress: the warning of FR-051 comes first.
+- The page stops responding after many replies were entered: work since the last "Save test project"
   is lost, so the tool shows how many replies are not saved to a file and reminds the user to save
   after every 25 (FR-059).
 
@@ -982,9 +987,9 @@ case and confirm the new case has the same fields and expected errors.
   with one primary next action: (1) Judge: the judge set, that is the judge prompt with its
   variables and its judged text, the sample reply with its reply mapping and the error rules;
   (2) Test cases: the collapsible "Error categories" section (FR-015) and one table of all test
-  cases, clean and with injected errors (FR-025, FR-087), adding cases in the test case window, ending with finalizing; (3) Run:
+  cases, clean and with injected errors (FR-025, FR-087), adding cases in the test case window, ending with "Start test run"; (3) Test run:
   every case with its complete prompt to copy, a place to paste the received reply and, right after
-  it, the marks of every expected error and additional finding, and saving the evaluation; (4)
+  it, the marks of every expected error and additional finding, and saving the test project; (4)
   Results: the summary, the error analysis and the list of test cases, all read-only, and
   export. The user MUST be able
   to go back to an earlier step to look, and the current step and progress MUST always be visible.
@@ -993,7 +998,7 @@ case and confirm the new case has the same fields and expected errors.
   explanations longer than one sentence; they belong in Help and in short hints that open on demand
   next to the field they explain. There is no welcome section: when nothing is loaded the tool
   opens the Judge step with an empty judge prompt, its "what next" line says what is missing, and
-  loading an example, a test project or an evaluation is offered only in the "More" menu.
+  loading the demo or a test project is offered only in the "More" menu.
 - **FR-002**: The system MUST NOT call any LLM itself; the judge, and any prompt the tool prepares
   for generating test data or verifying results, is run by the user outside the tool, by copying
   the prompt and pasting the answer back.
@@ -1004,25 +1009,25 @@ case and confirm the new case has the same fields and expected errors.
   are not supported in this version.
 - **FR-004**: The system MUST NOT retain judge sets, test cases, replies, decisions or results
   after the page is closed; it MUST warn the user before they leave or reload the page with
-  unsaved changes, and MUST make saving the current work one clear action: "Save test project"
-  and "Save evaluation", both buttons of the page header at all times (FR-076).
+  unsaved changes, and MUST make saving the current work one clear action: "Save test project",
+  a button of the page header at all times (FR-076).
 - **FR-005**: All data (judge sets, error catalogs, test cases, results, metric definitions) MUST be
   loadable from and exportable to files, with clear errors for invalid or unsupported-version
   files. The check thresholds have no file of their own: they are saved in, and loaded with, the
-  test project and the evaluation.
+  test project.
 - **FR-006**: The tool MUST include built-in Help explaining how to use each part of the
   workflow, kept current with the features. Help MUST be written in plain, everyday language for a
   user without a statistics background: short sentences, a worked example for each measure and for
   the test size, and any technical term explained where it first appears. It MUST explain what one
   test case is and how many cases and errors a test needs; variables, the reply mapping and error
   rules; making clean cases; preparing cases with injected errors from
-  their JSON, getting a case's JSON back with "Show JSON" and cloning; categories and finalizing;
-  the marks of Run ("Found", "Not found", "False positive", "Genuine error", "Ignored");
+  their JSON, getting a case's JSON back with "Show JSON" and cloning; categories and "Start test run";
+  the marks of Test run ("Found", "Not found", "False positive", "Genuine error", "Ignored");
   loading test cases
   from a file and loading demo data; the manual copy-paste workflow,
-  including the second opinion from an LLM for one case; the two files (the test project, reused for
-  every run, and the evaluation), the indicator of unsaved changes, loading back and "Continue";
-  "Reopen test cases" before the first reply; judges that give only a verdict and are evaluated per
+  including the second opinion from an LLM for one case; the one file (the test project, which
+  holds the test run once it has started), loading it with or without the test run, the indicator
+  of unsaved changes and "Continue"; judges that give only a verdict and are evaluated per
   case, with a worked example; and how to read and export the results, with
   examples that are valid for the current file formats.
 - **FR-007**: The interface MUST be modern, clear, responsive, accessible, and present helpful
@@ -1037,46 +1042,47 @@ case and confirm the new case has the same fields and expected errors.
   "…" when the button opens a dialog or a file picker (T245). Text pasted into a box that is checked
   as it changes (the sample reply, the LLM answer for a clean case, the JSON of a case) needs no
   action. Actions that keep something are named "Save ...". The main actions are:
-  "More" menu (was "File", T246): "Load test project…", "Load evaluation…", "Save test project as…", "Save evaluation as…",
-  "Import test cases…", "Export test cases…", "Load demo…" and "New evaluation".
+  "More" menu (was "File", T246): "Load test project…" (for a file with a test run it asks "Load
+  with the test run" or "Load the test project only"), "Save test project as…", "Import test
+  cases…", "Export test cases…", "Load demo…" and "New test project".
   Judge: "Add rule" (with "Add condition" and "Remove" inside a rule); these and the one action of
   the "what next" line are the only buttons of the Judge step (FR-011, FR-088).
-  Test cases: "Add categories", "Rename" and "Remove" in the "Error categories" section; "Add test case…" (above the list; Run has the same button above its cases); "Open", "Rename" and "Remove" at
-  each case; "Finalize test cases…", "Reopen test cases" (FR-053); in the import window "Download example file".
+  Test cases: "Add categories", "Rename" and "Remove" in the "Error categories" section; "Add test case…" (above the list; Test run has the same button above its cases); "Open", "Rename" and "Remove" at
+  each case; "Start test run" at the top of the step (FR-053); in the import window "Download example file".
   In the test case window when adding a case: "From JSON", "Clean case" and "Case with errors"; for
   "From JSON" "Save case" and "Close without saving"; for a clean case "Copy prompt", "Rebuild prompt" (once the prompt is edited, T262), "Save case" and
   "Close without saving"; for a case with errors "Add error" and "Remove" in the list of errors to
   prepare, "Copy prompt", "Rebuild prompt", "Save case" and "Close without saving". In the read-only view of a saved case
   ("Open"): "Previous case", "Next case", "Show the issue", "Show prompt", "Copy prompt"
-  and, after finalizing, "Edit expected errors".
-  Run: "Save evaluation", "Save evaluation as…", "Open" at each case; in its window "Previous case",
+  and "Edit expected errors".
+  Test run: "Open" at each case; in its window "Previous case",
   "Next case", "Show the issue", "Copy prompt", "Show prompt", "Paste reply", "Keep as text" (for a text in the
   box that is not JSON), "Change reply" (in the question before a saved reply is changed, T261), the marks of an item ("Found", "Not found", "False positive", "Genuine error",
   "Ignored"), "No more findings" (only for a reply that cannot be read), "Add finding…", "Remove" (for
   a finding added by hand), "Second opinion…" (in its window "Copy prompt", "Apply opinion" and
-  "Cancel") and "Save evaluation". Results: the views "Summary", "Error analysis" and "Test case
-  list", and the actions "Export HTML report…" and "Run again with a new judge…". Removing
+  "Cancel"). Results: the views "Summary", "Error analysis" and "Test case
+  list", and the action "Export HTML report…". Removing
   something (a rule, condition, category, error to prepare or test case) is always named "Remove".
   Available at any time, in the header: the indicator of unsaved changes, the "More" menu with
   "Load demo…" (the demo, loaded at once),
-  "Load test project", "Save test project", "Save test project as", "Load evaluation", "Import
-  test cases", "Export test cases" and "New evaluation"; and Help. "Save test project" and "Save evaluation"
-  are buttons of the header, each with the name of its file under it; "Save … as…" is in the More menu (FR-076, T242).
-  On every screen: "Explain" opens the explanation of a section, and "Continue" and "Edit test
-  cases" appear in the "what next" line. No action may duplicate another one under a different name. There is no Verify
+  "Load test project…", "Save test project as…", "Import test cases…", "Export test cases…" and
+  "New test project"; and Help. "Save test project" is a button of the header, with the name of
+  its file under it; "Save test project as…" is in the More menu (FR-076, T242).
+  On every screen: "Explain" opens the explanation of a section, and "Continue" appears in the
+  "what next" line. No action may duplicate another one under a different name. There is no Verify
   step, no Compare step, no result shelf, and no action that leads to them; "Modify", "Describe
   errors again", "Compare with base", "Use selected text as fragment", "Read sample reply", "Copy
   prompt for clean base cases", "Read clean base cases", "Read LLM answer", "Discard case", "Copy
   verification prompt", "Paste LLM opinion from clipboard", "Read LLM opinion" and "More actions"
   are not offered. To keep the screens light, a table row MUST show its actions as visible buttons,
   never in a menu of the row: Test cases "Open", "Rename" and "Remove" (FR-025);
-  Run and Results "Open". A click on the row also opens the case. In the case window of Run the one
+  Test run and Results "Open". A click on the row also opens the case. In the case window of Test run the one
   action needed next ("Copy prompt", then "Paste reply", and nothing after it) MUST be the
   primary one, and for a reply that cannot be read "No more findings"; the actions for the whole
   case that are needed less often, "Add finding" and
   "Second opinion…", MUST be visible buttons in the row of part 2, never in a collapsed section
   or a menu, and the marks of single items stay visible. "Continue"
-  (FR-073) is the action of the "what next" line after a file is loaded, and on the Run step
+  (FR-073) is the action of the "what next" line after a file is loaded, and on the Test run step
   whenever a case is not run or awaits verification.
 
 
@@ -1086,7 +1092,7 @@ case and confirm the new case has the same fields and expected errors.
   (FR-010), the sample reply with its reply mapping (FR-011, FR-012), the error rules (FR-013,
   FR-014); the error catalog (FR-015, FR-016) and the clean base cases (FR-017, FR-082, FR-083) belong to the
   Test cases step. One
-  evaluation MUST test one judge. Users MUST be able to provide the judge prompt by typing or
+  test run MUST test one judge. Users MUST be able to provide the judge prompt by typing or
   pasting it or by loading a test project file. The system MUST use the prompt exactly as written.
 - **FR-010**: The system MUST detect every variable written as `{{name}}` in the judge prompt and
   list the detected variables next to the prompt, updated as the prompt changes. It MUST NOT assume
@@ -1158,7 +1164,7 @@ case and confirm the new case has the same fields and expected errors.
   a category that no test case uses is removed at once; for a category in use it asks first ("N
   test cases use it. Their expected errors stay and lose the category. The test cases version
   changes."), and after the user confirms, those expected errors (and the findings added by hand
-  with that category) stay without a category. Renames and removals are allowed after finalizing;
+  with that category) stay without a category. Renames and removals are allowed after the start of the test run;
   they change the test cases version, and the error analysis, the totals per category and the
   report are computed from the current categories. The system MUST NOT add, rename or remove
   categories by itself. It MUST show each category's description where the category is chosen. The
@@ -1180,30 +1186,31 @@ case and confirm the new case has the same fields and expected errors.
   (FR-027).
 - **FR-019**: The system MUST offer one ready starting point, the demo (FR-026), through the
   "Load demo…" item of the More menu. The item loads it at once, with no window, and opens the Judge
-  step; the tool MUST ask before replacing existing content, and both remembered files are forgotten
-  (FR-076). There are no other examples, no starter of its own (Accuracy and Completeness as examples
+  step; the demo is loaded with its test run, without the load question. The tool MUST ask before
+  replacing existing content, and the remembered file is forgotten (FR-076). There are no other examples, no starter of its own (Accuracy and Completeness as examples
   were removed, T243) and no separate "Load metric definition…": no metric is built in (Constitution VI): the test project file carries its metric in
-  `metric.definition` (the evaluation file keeps only the metric id and parameters), and loading the
+  `metric.definition`, and loading the
   test project registers it (T243). The default metric file (Accuracy) is only what a new test project
   starts with; it is registered like any loaded file and a loaded file with the same id replaces it
   (T274). A file that names a metric which is not loaded, and carries no definition of it, is refused
   with a plain message. The judge, the catalog and the cases come from the file the user loads.
 - **FR-020**: "Save test project" MUST write the judge set and the test cases to one file, at any
-  time, whether or not the test cases are finalized: the judge prompt with its judged text, the sample
+  time, whether or not the test run has started: the judge prompt with its judged text, the sample
   reply and reply mapping, the error rules, the error catalog, the test project
   name and every test case with its fields, expected errors, and base reference, together with the
-  active metric (its id and parameters) and the check settings in use (the thresholds). It holds
-  no replies, decisions, results or model details, and saves as FR-076 describes. "Load test project" MUST restore all of
-  it with identical content, including the active metric and the thresholds, and start a new
-  evaluation with no replies; the test project MUST come back
-  in the state it was saved in, finalized or open, so that a finalized test project can be run again
-  at once (FR-053 says how to change a part of it first). An
+  active metric (its id, parameters and definition) and the check settings in use (the
+  thresholds). Once the test run has started it also holds the test run: replies, decisions,
+  results and model details (FR-073). It saves as FR-076 describes. "Load test project" MUST restore all of
+  it with identical content, including the active metric and the thresholds. For a file that
+  holds a test run it MUST ask "Load with the test run" (the work comes back as saved, FR-073) or
+  "Load the test project only" (no reply is loaded and the test run has not started, so the
+  prompt can be changed, User Story 12). An
   invalid or incomplete file MUST be explained and MUST NOT replace the current work. There is no
   separate judge set file; the cases alone can be exported and imported (FR-050).
 - **FR-021**: Other kinds of judges MUST be usable by typing or loading their prompt, writing
   their rules and typing or pasting their category list, without changing the rest of the tool.
   The check thresholds are changed in "Details" on Results and saved with the test project. The system MUST warn, on the Judge step
-  and before finalizing, when replies cannot be read automatically (no sample reply, no rules, a
+  and before the start of the test run, when replies cannot be read automatically (no sample reply, no rules, a
   broken rule, or a rule without a "Where the error is"), explaining that every case will
   then need verification by hand or with an LLM opinion.
 
@@ -1229,12 +1236,12 @@ case and confirm the new case has the same fields and expected errors.
 - **FR-025**: The Test cases step MUST show all test cases, clean and with injected errors, in one
   table below the "Error categories" section (FR-087). Each row shows the case's
   identifier, name, kind ("Clean" or "Injected errors"), base case,
-  number of expected errors, categories and any warnings. "Add test case" is above the table (and, after finalizing, above the table of cases on Run), never in the "what next" line, and the
+  number of expected errors, categories and any warnings. "Add test case" is above the table (and, after the start of the test run, above the table of cases on Test run), never in the "what next" line, and the
   user can search, sort and filter it, including by kind. Each row MUST show three buttons: "Open" (the read-only
   view, FR-086; a click on the row does the same), "Rename" (asks for the new
   name; a name another case has is refused, FR-079) and "Remove" (asks for confirmation; refused
   for a base case in use, FR-017). There is no details panel and no menu in a row. All three buttons
-  stay enabled at all times, also after finalizing and for a case with a reply; "Remove" of a case
+  stay enabled at all times, also after the start of the test run and for a case with a reply; "Remove" of a case
   with a reply asks first, saying that its reply and its N decisions are removed with it and the results
   change. The fields of a saved case are never edited. The expected errors of any case can be
   corrected (FR-089). To change a field, make a new case with "From JSON" (FR-078) and remove the
@@ -1242,7 +1249,7 @@ case and confirm the new case has the same fields and expected errors.
 - **FR-026**: The system MUST offer demo data as a fixed sample that is usable without
   regeneration: a judge set, test cases and replies, loaded
   from the "Load demo…" window
-  (FR-019) in one clearly labeled choice as a finalized evaluation (the same state "Load evaluation" produces), so that the Run and Results
+  (FR-019) in one clearly labeled choice as a test project with a started test run (the same state "Load with the test run" produces), so that the Test run and Results
   steps can be tried at once. The demo's variables are named after their content (`source_text`
   and `summary`, not `input` and `output`), so that the free choice of variables (FR-010) is
   visible.
@@ -1305,9 +1312,9 @@ case and confirm the new case has the same fields and expected errors.
   clean case view (FR-083); "Case with errors" to the five parts of FR-040, FR-041 and
   FR-085. Every one of them is one vertical page with the save button in the header (FR-085). There
   is no "Clone" (FR-078). The read-only view of a saved case ("Open", FR-086) and the
-  case window of Run (FR-055) show a case whose passages are highlighted by "Show the issue" (T257). The window replaces the former preparation window, the details panel of the Test cases
+  case window of Test run (FR-055) show a case whose passages are highlighted by "Show the issue" (T257). The window replaces the former preparation window, the details panel of the Test cases
   step and every way of editing a saved case.
-- **FR-039**: Users MUST be able to add, rename and remove cases, before and after finalizing. "Remove"
+- **FR-039**: Users MUST be able to add, rename and remove cases, before and after the start of the test run. "Remove"
   of a case with a reply asks first (FR-025). Each change MUST update the test
   cases version. A saved case's fields are not edited (FR-025).
 - **FR-040**: For a case with injected errors the window MUST first offer the base: any clean case,
@@ -1335,7 +1342,7 @@ case and confirm the new case has the same fields and expected errors.
   for every variable of the judge prompt, and give every expected error a description; the other
   keys are treated as FR-031 says. An expected error without a fragment
   (for example bias of the whole text) or without a category is allowed and named as a warning:
-  it cannot be matched automatically and is decided by hand on Run (FR-061). Every problem and
+  it cannot be matched automatically and is decided by hand on Test run (FR-061). Every problem and
   warning MUST be shown under the box with where it is. A JSON with no expected errors is valid
   here too: it is saved as a clean case, and the window says so before saving.
   "Save case" MUST be enabled only while the JSON is valid, and the expected errors it holds are
@@ -1363,7 +1370,7 @@ case and confirm the new case has the same fields and expected errors.
   changed fragment of the judged text; for an omission, the fragment of another field that the
   judged text no longer covers. A new category in the JSON joins the catalog on saving (FR-024).
 
-**Step 2: Test cases — prompts, feedback, saving and finalizing**
+**Step 2: Test cases — prompts, feedback, saving and starting the test run**
 
 - **FR-045**: The system MUST show live feedback on the test cases: counts of clean cases and of cases with injected errors,
   warnings for missing kinds (stating clearly that some measures cannot be computed without both
@@ -1384,68 +1391,63 @@ case and confirm the new case has the same fields and expected errors.
   to that prompt (no appended material, instructions, or format requirements); the prompt is
   used exactly as the user wrote it. When a case has no field for a variable in the prompt, the
   variable MUST be replaced with empty text and the case MUST be flagged with a warning naming
-  the missing field, in the read-only view of the case, in its row and in the finalize summary;
-  this MUST NOT block finalizing.
+  the missing field, in the read-only view of the case, in its row and in the summary of "Start test run";
+  this MUST NOT block the start.
 - **FR-048**: Whenever a judge prompt and at least one case are present, the system MUST show, in
-  the read-only view of a case (FR-086) and in the case window of Run, the complete prompt that
-  would be sent to the LLM for that case (FR-047), with "Copy prompt", including before the test
-  cases are finalized.
+  the read-only view of a case (FR-086) and in the case window of Test run, the complete prompt that
+  would be sent to the LLM for that case (FR-047), with "Copy prompt", including before the start of
+  the test run.
 - **FR-049**: Users MUST be able to combine cases prepared in the tool with cases imported from a
-  file in one test project before finalizing.
+  file in one test project before the start of the test run.
 - **FR-050**: "Export test cases" MUST write all cases of the test project (clean ones included, with
   their expected errors and base references) to a JSON file, at any time, whether or not the
-  test cases are finalized. The file holds only the cases: no judge, catalog, metric, thresholds or
-  replies, and no record of whether the test cases were finalized. It is an export, not a save: each
+  test run has started. The file holds only the cases: no judge, catalog, metric, thresholds or
+  replies, and no record of whether the test run has started. It is an export, not a save: each
   export asks for a file name, no file is remembered for it, and it does not clear the indicator
-  of unsaved changes (FR-051); the whole work is saved only as the test project (FR-020) and the
-  evaluation (FR-073). "Import test cases" (FR-027) reads the exported file back, adds its cases
-  to the test project, also after finalizing (FR-053).
+  of unsaved changes (FR-051); the whole work is saved only as the test project (FR-020,
+  FR-073). "Import test cases" (FR-027) reads the exported file back, adds its cases
+  to the test project, also after the start of the test run (FR-053).
 - **FR-051**: The system MUST show, in the header, whether there are unsaved changes, and MUST warn
-  before a load, a new evaluation, "Load demo…" or "Run again with a new judge…" would replace
-  work that has unsaved changes, with three choices: "Save evaluation first", "Discard" and
-  "Cancel". That offer inside the warning is the only way to save the evaluation outside the Run
-  step; it is not a standing action (FR-076).
-  There is one indicator. It clears after "Save evaluation" or "Save evaluation as";
-  while no reply has been entered it also clears after "Save test project" or "Save test project as",
-  because the test project then holds all the work. Once a reply exists, saving the test project does not
-  clear it, and the tool says that the replies are saved only by "Save evaluation". Any change sets
-  it, including a threshold changed in "Details", because both files
-  store the thresholds (FR-020, FR-069); such a change is saved by the next "Save evaluation" on
-  the Run step or "Save test project".
-- **FR-052**: Users MUST be able to finalize the test cases after seeing a summary of counts, balance
-  and warnings. The summary MUST warn when replies cannot be read automatically (FR-021), when a
+  before a load, "New test project" or "Load demo…" would replace work that has unsaved changes,
+  with three choices: "Save test project first", "Discard" and "Cancel". There is one indicator.
+  Any change sets it, including a threshold changed in "Details" (FR-020, FR-069). "Save test
+  project" or "Save test project as…" clears it, because the one file holds all the work (FR-076).
+- **FR-052**: Users MUST be able to start the test run with "Start test run", a button at the top of
+  the Test cases step, after seeing a summary of counts, balance and warnings. The summary MUST warn when replies cannot be read automatically (FR-021), when a
   rule is broken (FR-014), when a case lacks a field for a variable (FR-047), and when no expected error
   is marked subtle, because the result would then say nothing about subtle errors.
-- **FR-053**: The test cases MUST stay open until the user finalizes them, whether they came from a file,
-  was built in the tool, or both. Once it is finalized, the system MUST keep the judge prompt and
-  the cases' fields fixed for the evaluation and MUST offer "New evaluation" instead of
-  editing them. One exception: while no reply has been entered, the Test cases and Run steps MUST
-  offer "Reopen test cases", which opens the test project and the judge prompt for editing again; nothing
-  is lost, and the test cases are finalized again before replies can be entered. After the first reply
-  "Reopen test cases" MUST NOT be offered. Two things MAY still be corrected, because they describe
-  how replies are read and judged, not what was sent to the judge: the reply mapping and the error
-  rules. After such a change, automatic decisions MUST be recomputed, decisions made by hand MUST
-  be kept, and the judge gets a new version (FR-075). Two changes to the test cases MAY also be made
-  after finalizing, each giving a new test cases version: the expected errors of any case are
-  corrected through its JSON (FR-089), and new test cases are added with "Add test
-  case" (a button above the list of cases on Test cases and on Run, disabled at the limit of cases, never in the "what next" line) or "Import test cases"; a new case starts as Not run, and the replies and
-  decisions of the other cases are kept. For a case with a reply, correcting its expected errors asks first (FR-089); an expected error
-  that should not count can also be marked "Ignored" on Run (FR-062). A category may still be renamed
-  (FR-015). After finalizing, a test case can still be renamed and removed (the test
-  cases version changes); "Remove" of a case with a reply asks first (FR-025). Entering replies MUST be available only after finalizing. "Load test
-  project" MUST start a new evaluation; if replies exist, the system MUST warn that they will be
-  discarded, offer to save the evaluation first, and proceed only after confirmation. "Import test
-  cases" adds cases to the test project before and after finalizing.
+- **FR-053**: The test cases MUST stay open until the user starts the test run, whether they came
+  from a file, were built in the tool, or both. Before the start, the Test run step MUST show its
+  actions disabled, each with the reason "Start the test run first" beside it; entering replies is
+  available only after the start. Once the test run has started, the system MUST keep the judge
+  prompt and the judged text fixed. The Judge step shows them locked, with the reason "The test
+  run has started, so the prompt is fixed. To test another prompt, load the test project with
+  "Load the test project only"." and "Load test project…" beside it. There is no way back to
+  before the start. Two things MAY still be corrected, because they describe how replies are read
+  and judged, not what was sent to the judge: the reply mapping and the error rules. After such a
+  change, automatic decisions MUST be recomputed, decisions made by hand MUST be kept, and the
+  judge gets a new version (FR-075). Two changes to the test cases MAY also be made after the
+  start, each giving a new test cases version: the expected errors of any case are corrected
+  through its JSON (FR-089), and new test cases are added with "Add test case" (a button above the
+  list of cases on Test cases and on Test run, disabled at the limit of cases, never in the "what
+  next" line) or "Import test cases"; a new case starts as Not run, and the replies and decisions
+  of the other cases are kept. For a case with a reply, correcting its expected errors asks first
+  (FR-089); an expected error that should not count can also be marked "Ignored" on Test run
+  (FR-062). A category may still be renamed (FR-015). After the start, a test case can still be
+  renamed and removed (the test cases version changes); "Remove" of a case with a reply asks first
+  (FR-025). Loading a test project replaces the current work; with unsaved changes the system MUST
+  warn first (FR-051). "Import test cases" adds cases to the test project before and after the
+  start.
 
-**Step 3: Run**
+**Step 3: Test run**
 
-- **FR-054**: The Run step MUST show all test cases in one list, each with its name, kind, number of
+- **FR-054**: The Test run step MUST show all test cases in one list, each with its name, kind, number of
   expected errors, number of additional findings (the judge's findings that point at no expected
   error), number of findings added by hand, number of items to decide and status (Not run,
   Awaiting verification, Pass, Fail; the counts are 0 before the reply, T263), together with the
   progress (replies received and cases decided, out of all cases) and the number of items still to
   decide. The user MUST be able to show the cases that await verification first, or only those.
-  Above the list the Run step MUST show a short summary of the judge being run: the judge
+  Above the list the Test run step MUST show a short summary of the judge being run: the judge
   version, the test project name and version, and the judged text. The judge prompt and the error rules
   are not repeated there; they are on the Judge step.
 - **FR-055**: Each case in the list MUST have an "Open" button that opens the **case window**. It
@@ -1463,7 +1465,7 @@ case and confirm the new case has the same fields and expected errors.
   (FR-060 to FR-064); there is no separate list of the findings in the reply (T258). The window has no "More
   actions" section and no "Approve". The window header MUST hold "Previous case" and
   "Next case", always visible and also reachable from the keyboard, and the position of the case
-  ("case 7 of 20"); "Save evaluation" is in the page header (FR-076). Moving to another case MUST NOT lose a reply
+  ("case 7 of 20"); "Save test project" is in the page header (FR-076). Moving to another case MUST NOT lose a reply
   that was typed but not saved (a text that is not JSON and was not kept with "Keep as text"): the system asks first.
 - **FR-056**: Users MUST be able to enter the received reply for each case in one action with
   "Paste reply", which reads the clipboard and saves the reply, or by pasting or
@@ -1483,22 +1485,22 @@ case and confirm the new case has the same fields and expected errors.
   reply; after "Change reply" the reply of that case can be edited freely until the window moves to
   another case.
 - **FR-057**: The system MUST keep, with every test case, the judge prompt that was composed for it
-  and the reply that was received, and MUST include both in the saved evaluation and in every
+  and the reply that was received, and MUST include both in the saved test project file and in every
   exported result.
-- **FR-058**: On the Run step the user MUST be able to record **model details**: optional
+- **FR-058**: On the Test run step the user MUST be able to record **model details**: optional
   multi-line free text with the parameters of the LLM that ran the judge (for example the model
   name, temperature and other settings), in any form. The tool does not read or check it. It MUST
   be stored with the result and shown in the
-  report, and the Run step MUST remind the user to run every prompt in a new conversation, so that
+  report, and the Test run step MUST remind the user to run every prompt in a new conversation, so that
   one case cannot influence another.
 - **FR-059**: Replies are entered one case at a time. Exporting all prompts to one file and
   importing all replies from one file are not part of this version (see Assumptions). Because
-  nothing is saved automatically (FR-004), the page header MUST offer "Save evaluation" at all times (FR-076); the Run step and the case window of
-  Run have no save button of their own. The system MUST show in both how many replies were not saved
-  since the last "Save evaluation" and remind the user after every 25 of them: in the case window with
-  "25 replies are not saved to a file. Close the window and press Save evaluation at the top." (T242).
+  nothing is saved automatically (FR-004), the page header MUST offer "Save test project" at all times (FR-076); the Test run step and the case window of
+  Test run have no save button of their own. The system MUST show in both how many replies were not saved
+  since the last "Save test project" and remind the user after every 25 of them: in the case window with
+  "25 replies are not saved to a file. Close the window and press Save test project at the top." (T242).
 
-**Step 3: Run — resolving the differences**
+**Step 3: Test run — resolving the differences**
 
 - **FR-060**: Right after a reply is saved, the case window MUST show **one list of items** with
   their marks: every expected error of the case, and every additional finding (a finding that
@@ -1543,7 +1545,7 @@ case and confirm the new case has the same fields and expected errors.
   Results › Summary MUST list every such finding with its case and **Open** under "Genuine errors the test cases missed", so the
   owner sees which test cases are not complete. The user MUST be able to
   change any mark, including an automatic one. A case has no note of its own in the case window:
-  the note of the run is the "Model details" box of the Run step (a note of a case in a loaded file
+  the note of the run is the "Model details" box of the Test run step (a note of a case in a loaded file
   is kept and shown in the report).
 - **FR-063**: In the case window of every case with a reply, the system MUST offer a second
   opinion from the user's own LLM, one case at a time, through one button, "Second opinion…", under
@@ -1568,7 +1570,7 @@ case and confirm the new case has the same fields and expected errors.
   user's approval: it sets the mark of every answered item, including marks set by hand and marks
   from an earlier opinion, with the source "LLM opinion, approved by the user"; items the opinion
   does not answer keep their marks, and an undecided one gets the reason "The LLM opinion gave no
-  answer for this item" (shown in the window only, not stored in the evaluation file). When the
+  answer for this item" (shown in the window only, not stored in the file). When the
   answer is not readable JSON, or is for another case, the problem and where it is are shown under the box and "Apply opinion" is disabled. When it is readable but
   classifies none of the items and adds no finding, the window says "The opinion classifies none of the N items of
   this case. Nothing will change.", names the reason for each item, and "Apply opinion" stays
@@ -1587,13 +1589,12 @@ case and confirm the new case has the same fields and expected errors.
 
 - **FR-065**: The Results step MUST have three views: Summary, Error analysis, and Test case
   list. Summary is shown first. The Results step MUST be read-only: no reply, decision, expected
-  error, rule or reply mapping can be changed there; changes are made on the Run step or the
+  error, rule or reply mapping can be changed there; changes are made on the Test run step or the
   Judge step. The only exception is the thresholds in "Details" (FR-069). Results MUST be computed
   from the cases that are decided; while any case is not run or awaits verification the number of
   such cases MUST be shown. There is no "provisional" or "final" result, because the test cases
   can change at any time (T267). The bar of the Results step says how many cases are decided, and
-  how many are not yet; its main action is always "Export HTML report", with "Run again with a new judge…"
-  beside it. The step has no section "Report and next version".
+  how many are not yet; its main action is always "Export HTML report". The step has no section "Report and next version".
 - **FR-066**: The Summary view MUST show these counts before anything else: the total number of
   expected errors, with how many were found and how many missed; the number of additional
   findings the judge reported, with how many were confirmed as real errors and how many were
@@ -1657,38 +1658,37 @@ case and confirm the new case has the same fields and expected errors.
 - **FR-071**: The Test case list view MUST list every test case with its name, kind, expected
   errors, what the judge reported (findings, and how many expected errors were found), its
   status and the source of its decisions. Opening a case MUST show, as three numbered parts, the case with its full judge prompt, the
-  received reply, and the errors with a summary line first and then the two groups of Run (expected and additional errors, FR-062), read-only, with "Previous case" and "Next test
+  received reply, and the errors with a summary line first and then the two groups of Test run (expected and additional errors, FR-062), read-only, with "Previous case" and "Next test
   case" and "Show the issue" for each error (T256); it MUST offer no action that changes the case.
 - **FR-072**: Users MUST be able to export the result as an HTML report at any time ("Export HTML
-  report"). The result as JSON is the evaluation file of FR-073; there is no separate "Export
+  report"). The result as JSON is the test project file of FR-073; there is no separate "Export
   JSON". While any case is not run or awaits verification, the report MUST say how many cases are not
   decided yet (not run, awaiting verification); it is not called "provisional" (T267). The HTML report MUST contain the
   three views in the same order, be readable without the tool, and print cleanly to PDF from the
-  browser. The report and the evaluation file MUST always contain the judge set (prompt,
+  browser. The report and the test project file MUST always contain the judge set (prompt,
   reply mapping, error rules, error catalog), the full final prompts with the real input data
   filled in, the expected errors, the received replies, every decision with its source, the
   ignored items, and the overall result with the values it was based on; there is no option to
   omit them. The Help MUST state that exported files contain the user's data.
-- **FR-073**: "Save evaluation", a button of the page header on every step (FR-076), MUST
-  save the whole progress to a file on the user's device at any time on that step, also while
-  cases are not run or await verification. Before the test cases are finalized the work is saved
-  with "Save test project", which then holds all of it (FR-051). It saves as FR-076 describes. The evaluation file is also the result as JSON (FR-072): one file format whose
-  results part is empty until decisions exist. "Load evaluation" MUST restore the judge set, the
-  test cases, every prompt, reply and decision exactly as saved (finalized or not), so that the
-  user can view the result or continue the work. An evaluation file alone is enough: the user can
-  start by loading it, without a test project file, to see the result and generate the
-  report. An invalid file MUST be explained and MUST NOT replace the current work. After "Load
-  evaluation" or "Load test project" the tool MUST open the first step with unfinished work, derived
-  from the content of the file: Judge when there is no judge prompt, Test cases when the test project
-  is not finalized, Run when any case is not run or awaits verification (so a finalized test project
-  opens on Run), and Results when every case is decided. The "what next" line MUST then say how far the work is (for example "12 of 20
-  cases decided") and offer "Continue", which on the Run step opens the first case that is not run
-  or awaits verification. On the Results step the line has no "Continue" (FR-065, T267).
-- **FR-074**: The system MUST offer "Run again with a new judge…" on the Results step. It keeps
-  the finalized test cases, offers to save and export the current result first, clears the
-  replies and decisions, lets the user change the judge prompt, and gives the judge a new version
-  identity. The new run forgets both remembered files (FR-076), so its first "Save test project" and
-  its first "Save evaluation" each ask for a file and never overwrite the earlier run.
+- **FR-073**: "Save test project", a button of the page header on every step (FR-076), MUST save
+  the whole work to one file on the user's device at any time, also while cases are not run or
+  await verification. Once the test run has started, the file holds it: every prompt, reply and
+  decision. The file is also the result as JSON (FR-072): its results part is empty until
+  decisions exist. "Load test project…" MUST restore the judge set and the test cases and, with
+  "Load with the test run", every prompt, reply and decision exactly as saved, so that the user can
+  view the result or continue the work. One file is enough to see the result and generate the
+  report. An invalid file MUST be explained and MUST NOT replace the current work. After a load the
+  tool MUST open the first step with unfinished work, derived from the content of the file: Judge
+  when there is no judge prompt, Test cases when the test run has not started, Test run when any
+  case is not run or awaits verification, and Results when every case is decided. The "what next"
+  line MUST then say how far the work is (for example "12 of 20 cases decided") and offer
+  "Continue", which on the Test run step opens the first case that is not run or awaits
+  verification. On the Results step the line has no "Continue" (FR-065, T267).
+- **FR-074**: Removed (owner trial 2026-11-15, T289): "Run again with a new judge…" is not
+  offered. A changed judge is tested by loading the test project with "Load the test project only"
+  (FR-076, User Story 12): the test cases, rules and categories come back without replies, the
+  prompt can be changed and gets a new judge version, and the first save asks for a new file, so
+  the earlier test run is never overwritten.
 - **FR-075**: Every result MUST record what produced it: the judge version (prompt, reply mapping
   and error rules), the test project name and version, the model details when given, the
   thresholds used, and the version of the tool. When the error rules or the reply mapping were
@@ -1700,32 +1700,28 @@ case and confirm the new case has the same fields and expected errors.
   expected error and counting per case; when it does, the result, the Results step and the report
   MUST say which way was counted before and after. Recalculating results from the same judge
   set, cases, replies and decisions MUST give identical numbers.
-- **FR-076**: The tool MUST work with two files on the user's device: the test project (FR-020) and
-  the evaluation (FR-073). The Results step has no file of its own; it shows the result held in
-  the evaluation and generates the HTML report (FR-072). The load actions of both files and "Save test project as…" and "Save evaluation as…" MUST be in the header's "More" menu. "Save test project" and "Save evaluation" MUST be buttons of the page header on every step, each with the name of its file (or "no file yet") under it; no other screen has a save button (T242). For
-  each of the two files the system MUST remember,
-  separately and only for the page session, the file it last saved to or loaded through the file
-  picker:
-  - The first "Save test project" or "Save evaluation" MUST ask for a file name and folder; every
-    later one MUST overwrite that same file without asking for a file again.
-  - "Save test project as" and "Save evaluation as" MUST save to a new file, which then becomes the
-    remembered one.
-  - After a load through the file picker, saving goes to the loaded file; the browser may ask once
-    for permission to write to it. A file dropped onto the page is loaded but not remembered, so
-    the next save asks for a file.
-  - "Load test project" sets the remembered test project file and forgets the evaluation file, because a
-    new evaluation starts. "Load evaluation" sets the remembered evaluation file and forgets the
-    test project file, so that "Save test project" can never silently overwrite the file of another test.
-  - When a remembered file can no longer be written (moved, removed, or permission withdrawn), the
+- **FR-076**: The tool MUST work with one file on the user's device: the test project (FR-020),
+  which holds the test run once it has started (FR-073). The Results step has no file of its own;
+  it shows the result held in the test project and generates the HTML report (FR-072). "Load test
+  project…" and "Save test project as…" MUST be in the header's "More" menu. "Save test project"
+  MUST be a button of the page header on every step, with the name of its file (or "no file yet")
+  under it; no other screen has a save button (T242). The system MUST remember, only for the page
+  session, the file it last saved to or loaded through the file picker:
+  - The first "Save test project" MUST ask for a file name and folder; every later one MUST
+    overwrite that same file without asking for a file again.
+  - "Save test project as…" MUST save to a new file, which then becomes the remembered one.
+  - After "Load with the test run" through the file picker, saving goes to the loaded file; the
+    browser may ask once for permission to write to it. After "Load the test project only" the
+    loaded file is not remembered, so the first save asks for a new file and the loaded test run is
+    never overwritten. A file dropped onto the page is loaded but not remembered.
+  - When the remembered file can no longer be written (moved, removed, or permission withdrawn), the
     system MUST say so, forget it and ask for a file again; nothing is lost from the page.
-  - "New evaluation" and "Load demo…" (an example or the demo) forget both files. "Run again with a new judge…"
-    also forgets both, because the changed judge is a new test (FR-074); "Reopen test cases" before
-    the first reply (FR-053) keeps both, because it corrects the same test.
-  The name of each remembered file MUST be shown under its save button in the page header.
-
+  - "New test project" and "Load demo…" forget the file.
+  The name of the remembered file MUST be shown under "Save test project" in the page header. The
+  tool is not released, so files of the earlier evaluation format are not read.
 - **FR-077**: To help the user check the data, the case windows MUST highlight text, and every
   highlight MUST carry a number or a word as well as its color (FR-007):
-  - In the case window of Run and in the read-only case views of Test cases and Results the fields
+  - In the case window of Test run and in the read-only case views of Test cases and Results the fields
     show no highlight of their own (T257): "Show the issue" at an error highlights its passages for a
     moment, the fragment in the judged text (found word for word, otherwise the nearest match) with the
     number of the error and, once there is a reply, its state in words and a sign, and the words of the
@@ -1833,7 +1829,7 @@ case and confirm the new case has the same fields and expected errors.
   the page of FR-085): name, fields with highlighted fragments, the list of expected errors with
   "Show the issue", "Show prompt" (a dialog with the whole composed prompt and only "Close")
   with "Copy prompt" (FR-048), with "Previous case" and "Next case". It does not show a
-  reply: a reply belongs to Run. Its sections are in frames. Nothing in it can be edited. There is
+  reply: a reply belongs to Test run. Its sections are in frames. Nothing in it can be edited. There is
   no "Show JSON" and no "Copy JSON" (T238). "Show prompt" opens a dialog of about 90% of the screen in
   both directions. There is no "Recreate the test case" (T262): a similar case is made with "Add test case…" › "Case
   with errors", which can start from a case with errors (FR-040), or "Clean case" with "Like case" (FR-083). A case saved from those
@@ -1853,7 +1849,7 @@ case and confirm the new case has the same fields and expected errors.
   judged text and the sample reply are read as they change, with no action of their own; "Explain"
   hints open on demand. The step MUST NOT show a welcome section; saving is done with the buttons of the page header (FR-076).
 
-- **FR-089**: The read-only view of every case, whether or not the test cases are finalized and
+- **FR-089**: The read-only view of every case, whether or not the test run has started and
   whether or not the case has a reply, MUST offer "Edit expected errors" (T254). It opens the standard large dialog with the JSON of the
   list of the expected errors of that case only, each with its `id`; the name, the base and the fields cannot change there (they are not in the JSON). The JSON is checked as
   it changes (FR-041, FR-080, FR-084): the check line and the changed places that no error covers are shown under the box, and a mismatch is asked about before saving, as for any case; "Save expected errors" is disabled with the reason beside it while there is a problem or nothing changed. An error that keeps its
@@ -1873,7 +1869,7 @@ case and confirm the new case has the same fields and expected errors.
 - **Test Project** (formerly "test set"; also replaces "dataset"): the user's whole test, saved and
   loaded as one file and used again for every run of the same test. It holds the judge set, the
   error catalog, the test cases with their name and version, the active metric with its parameters
-  and the thresholds. It holds no replies and no decisions (they are in the evaluation).
+  and the thresholds. Once the test run has started it also holds the test run: replies, decisions and model details.
 - **Judge Set**: Everything on the Judge step, saved inside the test project file: the judge prompt,
   the sample reply with its reply mapping and the error rules. Has a version identity.
 - **Judge Prompt**: The prompt under test, used exactly as written. Only the prompt comes from
@@ -1898,8 +1894,8 @@ case and confirm the new case has the same fields and expected errors.
   variable) with no injected errors. A clean test case, listed in the table of test cases with the kind "Clean", and the
   optional base that cases with injected errors are made from.
 - **Test Cases**: All test cases of a test project, evaluated together. Their version is derived from
-  their content. Cases can be added, renamed and removed until finalized; afterwards they
-  can still be added, and a case without a reply can still be renamed and removed; a saved case's fields are never edited, and after finalizing only the
+  their content. Cases can be added, renamed and removed before the start of the test run; afterwards they
+  can still be added, and a case without a reply can still be renamed and removed; a saved case's fields are never edited, and after the start only the
   expected errors of a case without a reply can be corrected.
 - **Test Case**: One input to be judged, with a unique identifier, a name, one field per
   variable, zero or more expected errors, and, when it was made from a clean base case, a
@@ -1913,7 +1909,7 @@ case and confirm the new case has the same fields and expected errors.
   proposal for the user to review.
 - **Import Summary**: The report shown after reading a file or a pasted answer: counts, invalid
   rows with reasons, and the user's choice on how to proceed.
-- **Test Cases Summary**: The overview shown while building and before finalizing: counts, balance,
+- **Test Cases Summary**: The overview shown while building and before the start of the test run: counts, balance,
   test size against its minimums, and warnings.
 - **Received Reply**: The text the judge produced for one case, pasted by the user in any format
   and kept with the judge prompt that produced it.
@@ -1930,13 +1926,13 @@ case and confirm the new case has the same fields and expected errors.
   nothing until the user applies it after seeing the preview of every change; it then sets the
   marks of the items it answers.
 - **Case Status**: Not run, Awaiting verification, Pass or Fail, derived from the decisions.
-- **Evaluation Result**: The counts and measures for one judge version on one test cases version,
+- **Test Run Result**: The counts and measures for one judge version on one test cases version,
   together with everything needed to reproduce it. Saved and loaded as one file.
 - **Overall Result**: The one-line conclusion for the evaluated judge (Works, Does not work,
   Inconclusive), with the thresholds, the minimum sample and the reason it was based on.
 - **Metric Definition**: A loadable file that describes one kind of judge evaluation: a complete
   starter judge set, the matching parameters and the measures computed from the counts. Thresholds
-  are kept with the test project and the evaluation (FR-020, FR-069).
+  are kept with the test project (FR-020, FR-069).
 
 ## Success Criteria *(mandatory)*
 
@@ -1949,17 +1945,17 @@ case and confirm the new case has the same fields and expected errors.
   15 minutes.
 - **SC-002**: A user can run one test case (open its window or move to it, copy the prompt, paste
   the reply from the clipboard) with no more than 3 deliberate actions inside the tool.
-- **SC-003**: 100% of saved evaluation files can be loaded in a fresh session and show identical
+- **SC-003**: 100% of saved test project files with a test run can be loaded in a fresh session and show identical
   numbers, judge version and test cases.
-- **SC-004**: 100% of invalid files (test projects, test-case files, evaluation files) are
+- **SC-004**: 100% of invalid files (test projects, test-case files) are
   rejected with a message that tells the user what to fix.
 - **SC-005**: Adding a new measure requires only loading one definition file, with no change
   to any other part of the tool.
 - **SC-006**: The tool is fully usable with no account, server or database, and no user data
   leaves the device unless exported.
 - **SC-007**: Every test case shows an unambiguous status (Pass, Fail, Awaiting verification, Not run) in the test case list.
-- **SC-008**: A result can be exported as an HTML report that a person without the tool can read, and the evaluation file that holds it as JSON can be loaded again with identical content.
-- **SC-009**: 100% of evaluations show exactly one overall result (Works, Does not work, or Inconclusive) together with the reason, on the Results step and in the report.
+- **SC-008**: A result can be exported as an HTML report that a person without the tool can read, and the test project file that holds it as JSON can be loaded again with identical content.
+- **SC-009**: 100% of test runs show exactly one overall result (Works, Does not work, or Inconclusive) together with the reason, on the Results step and in the report.
 - **SC-010**: A first-time user can say how many expected errors the judge found and missed, and how many false positives it reported, within 30 seconds of opening the Results step.
 
 **Setting up the judge**
@@ -1971,7 +1967,7 @@ case and confirm the new case has the same fields and expected errors.
 - **SC-013**: A test project saved and loaded again has identical content in 100% of cases: prompt,
   reply mapping, rules, catalog and test cases (clean base cases included).
 - **SC-014**: 100% of rules that use a field missing from the sample reply are refused or marked
-  as broken before the test project can be finalized without a warning.
+  as broken before the test run can start without a warning.
 
 **Building test cases**
 
@@ -1999,7 +1995,7 @@ case and confirm the new case has the same fields and expected errors.
 - **SC-024**: 100% of attempts to save an invalid case (empty text, an expected error without a
   description, a version identical to its base) are refused with a message the user can act on.
 - **SC-025**: A user building a one-sided test project (only clean or only with injected errors) is warned in
-  100% of cases before finalizing.
+  100% of cases before the start of the test run.
 - **SC-026**: At least 90% of first-time users complete a small test project (5 cases, mixed) using
   only the in-tool help.
 
@@ -2010,17 +2006,17 @@ case and confirm the new case has the same fields and expected errors.
 - **SC-028**: No item counts in the results on the strength of an LLM opinion alone: in 100% of
   cases an opinion changes marks only when the user presses "Apply opinion" after its preview has
   listed every change.
-- **SC-029**: An evaluation saved part-way and loaded in a later session has identical content in
+- **SC-029**: A test run saved part-way and loaded in a later session has identical content in
   100% of cases, and the user can continue within 1 minute of choosing the file.
-- **SC-030**: A user can move from one test case to the next on Run, or in the read-only view of
+- **SC-030**: A user can move from one test case to the next on Test run, or in the read-only view of
   a case, with a single action and see the next case's data and prompt, or its reply and marks,
   without scrolling the page, on a screen of 1280 x 720 pixels or larger.
 - **SC-031**: A case with up to five expected errors can be read, with every expected error shown
-  by "Show the issue", in the read-only view and the case window of Run without
+  by "Show the issue", in the read-only view and the case window of Test run without
   scrolling the list of expected errors, on a screen of 1280 x 720 pixels or larger.
 - **SC-032**: A user who has entered replies never has more than 25 replies unsaved to a file
   without having been reminded to save.
-- **SC-033**: In the case window of Run, for a case with up to five expected errors whose
+- **SC-033**: In the case window of Test run, for a case with up to five expected errors whose
   fragments occur in the judged text, 100% of the fragments are highlighted with their numbers,
   and every finding in a JSON reply is marked as matching, partly matching or matching no
   expected error, each with its label.
@@ -2063,7 +2059,7 @@ case and confirm the new case has the same fields and expected errors.
   Calling an LLM from the tool is out of scope for this version, and so are exporting all
   prompts to one file and importing all replies from one file; both return when the tool is
   connected to an LLM.
-- Version 1 handles one judge and one test project per evaluation; batch management of many judges
+- Version 1 handles one judge and one test project per test run; batch management of many judges
   is out of scope.
 - The tool supports the current versions of Google Chrome and Microsoft Edge only. Other
   browsers (Firefox, Safari) are not supported in this version.
@@ -2091,7 +2087,7 @@ case and confirm the new case has the same fields and expected errors.
 - The results always show two overall measures: detection rate and false-positive rate. No
   metric is built in. A new test project starts with the default metric file, Accuracy (judge
   prompt, sample reply, reply mapping, error rules, error catalog and a few clean cases), which
-  works like any metric the user loads; each metric is tested in its own evaluation; other kinds of
+  works like any metric the user loads; each metric is tested in its own test run; other kinds of
   judges (Completeness, Bias, Reliance and so on) are typed or loaded by the user. Further
   measures built from the same counts can be loaded from metric definition files; measures that
   need other inputs (agreement with human ratings, stability across repeated runs) are out of scope
@@ -2119,7 +2115,7 @@ case and confirm the new case has the same fields and expected errors.
 **Test projects and files**
 
 - Test cases reach the test project from files, from a ready example, or from the test case window;
-  all routes build the same test project, which is editable until finalized and
+  all routes build the same test project, whose judge prompt is editable until the test run starts and
   fixed afterwards.
 - Test cases can be loaded from CSV (editable in a spreadsheet) or JSON and are always saved as
   JSON, so no information is lost. Exact field layouts are decided in planning.
@@ -2147,11 +2143,11 @@ case and confirm the new case has the same fields and expected errors.
 **Saving and privacy**
 
 - Nothing is stored on a server, in a temporary file elsewhere, or in the browser between
-  sessions. Saving to a file on the user's device is the only way to keep work. Two files cover
-  it, each remembered and overwritten by its save action (FR-076): the test project (the judge set
-  with the test cases) and the evaluation (the whole progress of one run: the test project together
-  with every prompt, reply, decision and the results). The results have no file of their own; the HTML report is generated
-  from the evaluation.
+  sessions. Saving to a file on the user's device is the only way to keep work. One file covers
+  it, remembered and overwritten by "Save test project" (FR-076): the test project (the judge set
+  with the test cases and, once it has started, the test run with every prompt, reply, decision and
+  the results). The results have no file of their own; the HTML report is generated from the test
+  run.
 - Help requirements are unchanged by the review of prototype v7. Help content is updated together
   with the features it describes, before the first public release.
 - Exported reports and result files are plain files on the user's device and may contain sensitive
