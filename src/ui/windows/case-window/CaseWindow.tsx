@@ -75,6 +75,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange: apply, onNa
     apply(synced.evaluation);
   };
 
+  const madeFromFindings = effective?.expected.filter((e) => e.promoted).length ?? 0;
   const text = drafts[caseId] ?? reply?.reply ?? '';
   const changed = text !== (reply?.reply ?? '');
   const setText = (value: string) => setDrafts((d) => ({ ...d, [caseId]: value }));
@@ -244,6 +245,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange: apply, onNa
             }
           >
             <p>{`Replacing this reply removes ${replacing?.count ?? 0} ${replacing?.count === 1 ? 'decision' : 'decisions'} you made. The case is marked again from the new reply.`}</p>
+            {madeFromFindings > 0 ? <p>{`${madeFromFindings === 1 ? 'An expected error' : `${madeFromFindings} expected errors`} made from real errors of the judge stay${madeFromFindings === 1 ? 's' : ''} in the case; edit them with Edit expected errors.`}</p> : null}
           </Dialog>
           <Dialog
             open={leaving !== null}

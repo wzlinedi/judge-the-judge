@@ -108,7 +108,7 @@ test('replacing a reply asks only when decisions were set by hand, and an empty 
   await expect(page.getByRole('dialog', { name: /Replace this reply/ })).toHaveCount(0);
 
   // a decision by hand: the second replacement asks and names it
-  await page.locator('[data-expected], [data-additional]').first().getByRole('button').first().click();
+  await page.locator('[data-additional]').first().getByRole('button', { name: 'False positive' }).click();
   await box(page).fill(replyOf('1'));
   const question = page.getByRole('dialog', { name: /Replace this reply/ });
   await expect(question).toContainText('1 decision');

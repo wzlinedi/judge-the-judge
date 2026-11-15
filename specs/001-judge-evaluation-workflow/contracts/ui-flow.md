@@ -246,6 +246,7 @@ Opened by **Open** (FR-055, FR-060).
   puts the focus on the passage of the judged text and highlights both passages strongly for a
   moment.
 - A decision made in the window takes effect at once and the window stays open.
+- **Real error (missed in scenario)** (T253) adds the finding to the expected errors of the case at once; a status line under the row of part 2 says so ("Added to the expected errors of case 15 as E4."), the finding says "Added to the expected errors as E4", and the new expected error is shown found, with no marks of its own. Changing the mark, or **Remove** on a finding added by hand, takes it out again ("Removed from the expected errors of case 15: E4."). When a reply is replaced, the question also says that such expected errors stay in the case. In Results the case then carries the notice "Cases corrected after the first reply".
 - A new reply resets the case: its decisions, the added findings included, are removed and the
   automatic marks are computed again (FR-056). Running one case takes three actions: **Open** or
   **Next case**, **Copy prompt**, **Paste reply** (SC-002).
