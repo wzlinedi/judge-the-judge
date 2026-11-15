@@ -71,7 +71,7 @@ describe('the case window of Run: three parts from top to bottom', () => {
     open('3');
     const before = meterOf('3');
     expect(within(part(2)).getByText(before)).toBeTruthy();
-    fireEvent.click(within(document.querySelector('[data-additional="claims[]#2"]') as HTMLElement).getByRole('button', { name: 'Real error (missed in scenario)' }));
+    fireEvent.click(within(document.querySelector('[data-additional="claims[]#2"]') as HTMLElement).getByRole('button', { name: 'Genuine error' }));
     expect(within(part(2)).queryByText(before)).toBeNull();
     expect(within(part(2)).getByText(/Pass/)).toBeTruthy();
   });

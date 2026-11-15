@@ -91,7 +91,7 @@ describe('the second-opinion window', () => {
     paste(JSON.stringify({ opinion: { id: '17', expected: [{ index: 2, found: false }], additional: [], new: [{ text: 'Bilbo is a hobbit', real: true, category: 'factual-error', difficulty: 'subtle' }] } }));
     const preview = within(dialog()).getByRole('list', { name: 'What will change' }).textContent ?? '';
     expect(preview).toContain('E2 Not found — no change');
-    expect(preview).toContain('+ new finding “Bilbo is a hobbit” → Real error (missed in scenario)');
+    expect(preview).toContain('+ new finding “Bilbo is a hobbit” → Genuine error');
     expect(preview).toContain('factual-error');
   });
 

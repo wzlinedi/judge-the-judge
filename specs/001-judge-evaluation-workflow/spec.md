@@ -168,6 +168,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-14, third look, T255) What does "Copy and recreate" open? → A: The empty "From JSON" window, as before (the box is the place for the new case, nothing is pasted into it), now with **Show prompt** at the top: it opens the prompt that was copied, in the standard large dialog (with **Copy prompt** and **Close**), in case it is needed again. The case saved from that window keeps that prompt as its `generation_prompt`. This replaces the part of T238 that opened the window with nothing on it (FR-086).
 - Q: (Owner review 2026-11-14, third look, T256) What does Open show in Results › Test case list, and can marks be changed there? → A: The same layout as Run, read-only, in three parts: 1. Case (the fields with the highlights and the complete prompt, no buttons), 2. Judge reply, 3. Errors, which begins with a summary line ("3 expected: 2 found, 1 not found · Additional: 2 false positive") and then the two groups with the shared error component and "Show the issue". The part "Result" and the meter "Marked N of M" go; the status is in the header. Marks cannot be changed there; "Open on Run" stays as the way to change them. This replaces T241 and keeps FR-071 ("no action that changes the case"). (The owner's list said "Test Run"; this is the screen understood by it.)
 - Q: (Owner review 2026-11-15, fourth look, T259) Is a real error of the judge that the test case missed still added to the expected errors? → A: No. It stays in "Additional errors" with its mark (Genuine error, T260) and is counted on its own, so the owner gets the feedback that the test case was not complete; Results › Summary lists every such finding with its case and Open ("Genuine errors the test cases missed"). Adding it to the case is a separate step (Test cases › Open › Edit expected errors). This replaces the answer of T253; a file with `promoted_to` loads and the key is dropped. The demo is back to 27 of 30 found and 1 genuine error.
+- Q: (Owner review 2026-11-15, fourth look, T260) A shorter name for "Real error (missed in scenario)"? → A: **Genuine error**: the judge was right and the test case missed it, so it may be added to the case. Used in Run, Results (counts "Genuine errors"), the second opinion preview and the HTML report; the state value `real_error` in the files stays. Replaces the name of T252.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -529,7 +530,7 @@ reply.
 As soon as a reply is saved, the tool reads it with the judge's reply mapping and error rules and
 shows one list of items with their marks: each expected error the judge found is "Found", each one
 it did not find is "Not found", and each finding that matches no expected error is an
-additional finding for the user to mark "False positive" or "Real error (missed in scenario)". "Ignored" is
+additional finding for the user to mark "False positive" or "Genuine error". "Ignored" is
 available on every item. For unclear items the user can ask their own LLM for a second opinion in
 a window of its own, which shows every change it would make, with a short reason and the matching
 fragment of data, before the user applies it. The user always decides last.
@@ -557,7 +558,7 @@ one item, add a finding by hand and remove it, and confirm the statuses and the 
    finding may be this error in other words".
 4. **Given** a finding that points at no expected error, **When** the reply is read, **Then** it is
    added to the list as an additional finding, and the user can mark it "False positive" or
-   "Real error (missed in scenario)".
+   "Genuine error".
 5. **Given** any item, **When** the user looks at its marks, **Then** "Ignored" is always among them.
 6. **Given** that window, **When** the user presses "Next case" or "Previous case",
    **Then** the next or previous case opens at once, and the user can limit this to the cases that
@@ -988,7 +989,7 @@ case and confirm the new case has the same fields and expected errors.
   test case is and how many cases and errors a test needs; variables, the reply mapping and error
   rules; making clean cases; preparing cases with injected errors from
   their JSON, getting a case's JSON back with "Show JSON" and cloning; categories and finalizing;
-  the marks of Run ("Found", "Not found", "False positive", "Real error (missed in scenario)", "Ignored");
+  the marks of Run ("Found", "Not found", "False positive", "Genuine error", "Ignored");
   loading test cases
   from a file, loading check settings and loading demo data; the manual copy-paste workflow,
   including the second opinion from an LLM for one case; the two files (the test project, reused for
@@ -1022,7 +1023,7 @@ case and confirm the new case has the same fields and expected errors.
   and, after finalizing, "Edit expected errors".
   Run: "Save evaluation", "Save evaluation as…", "Open" at each case; in its window "Previous case",
   "Next case", "Show the issue", "Copy prompt", "Show prompt", "Paste reply", "Keep as text" (for a text in the
-  box that is not JSON), the marks of an item ("Found", "Not found", "False positive", "Real error (missed in scenario)",
+  box that is not JSON), the marks of an item ("Found", "Not found", "False positive", "Genuine error",
   "Ignored"), "No more findings" (only for a reply that cannot be read), "Add finding…", "Remove" (for
   a finding added by hand), "Second opinion…" (in its window "Copy prompt", "Apply opinion" and
   "Cancel") and "Save evaluation". Results: the views "Summary", "Error analysis" and "Test case
@@ -1467,7 +1468,7 @@ case and confirm the new case has the same fields and expected errors.
   their marks: every expected error of the case, and every additional finding (a finding that
   points at no expected error), each undecided item with its reason, together with the decisions
   of FR-062 to FR-064. The marks are: for an expected error "Found", "Not found"
-  or "Ignored"; for an additional finding "False positive", "Real error (missed in scenario)" or "Ignored". The two
+  or "Ignored"; for an additional finding "False positive", "Genuine error" or "Ignored". The two
   "Issue" marks count against the judge; "Ignored" leaves the item out of every count. "Previous
   test case" and "Next case" MUST move through the cases, and the user MUST be able to limit
   this to the cases that await verification. There is no separate Verify step.
@@ -1501,7 +1502,7 @@ case and confirm the new case has the same fields and expected errors.
   list of Results and the report, and counted in the table of additional findings of FR-070. A finding added by hand MUST have "Remove", which removes it
   with its mark; a finding read from the reply MUST NOT have one. An item
   marked "Ignored" MUST be left out of every count and listed as ignored in the report. An
-  additional finding marked "Real error (missed in scenario)" (a true error that was not planned) is counted on its own
+  additional finding marked "Genuine error" (a true error that was not planned) is counted on its own
   (FR-066); it MUST NOT be added to the expected errors of the case (T259, which undoes T253): it stays in "Additional errors", and
   Results › Summary MUST list every such finding with its case and **Open** under "Genuine errors the test cases missed", so the
   owner sees which test cases are not complete. The user MUST be able to
@@ -1523,9 +1524,9 @@ case and confirm the new case has the same fields and expected errors.
   any finding the reply contains that is not in the list (for example when the reply is not
   JSON), each with its text, "real" true or false, a reason and, optionally, a category and a
   difficulty. The preview MUST list, for each
-  answered item, its mark now and the mark it will get ("E1 undecided → Found", "A1 Real error (missed in scenario) →
+  answered item, its mark now and the mark it will get ("E1 undecided → Found", "A1 Genuine error →
   False positive (set by hand)") with the reason and fragment, and every new finding as
-  "+ new finding “…” → Real error (missed in scenario)". "Apply opinion" adds each new finding as a finding added by
+  "+ new finding “…” → Genuine error". "Apply opinion" adds each new finding as a finding added by
   hand (FR-062: with "Remove", and with its category and difficulty when the opinion gives them),
   marked with the source "LLM opinion, approved by the user". "Apply opinion" is the
   user's approval: it sets the mark of every answered item, including marks set by hand and marks
@@ -1886,10 +1887,10 @@ case and confirm the new case has the same fields and expected errors.
 - **Finding**: A part of the judge's reply (or the whole reply) for which at least one error rule
   holds; its text is the place it points at.
 - **Additional Finding** (formerly "unexpected finding"): A finding that points at no expected
-  error of the case. The user marks it "False positive", "Real error (missed in scenario)" or "Ignored". One added
+  error of the case. The user marks it "False positive", "Genuine error" or "Ignored". One added
   by hand may have a category and a difficulty, and can be removed.
 - **Decision** (mark): What was settled for one expected error ("Found", "Not found",
-  "Ignored") or one additional finding ("False positive", "Real error (missed in scenario)", "Ignored"), with its
+  "Ignored") or one additional finding ("False positive", "Genuine error", "Ignored"), with its
   source: automatic, set by hand, or an LLM opinion approved by the user.
 - **Verification Opinion**: An external LLM's JSON assessment of one case, with a short reason
   and a fragment for each item, pasted back by the user in the second-opinion window. It changes

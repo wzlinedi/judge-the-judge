@@ -41,7 +41,7 @@ function Additional({ label, first, rows }: { label: string; first: string; rows
         <thead>
           <tr>
             <th>{first}</th>
-            <th>Real errors</th>
+            <th>Genuine errors</th>
             <th>False positives</th>
           </tr>
         </thead>

@@ -83,7 +83,7 @@ describe('case window of Run, with a reply', () => {
     const finding = item('additional', 'claims[]#2');
     expect(finding.textContent).toContain('The prince speaks about the rose he loves.');
     expect(finding.textContent).toContain('Contradicted or unsupported claim');
-    for (const name of ['Real error (missed in scenario)', 'False positive', 'Ignored']) expect(within(finding).getByRole('button', { name })).toBeTruthy();
+    for (const name of ['Genuine error', 'False positive', 'Ignored']) expect(within(finding).getByRole('button', { name })).toBeTruthy();
     expect(finding.querySelector('[aria-pressed="true"]')).toBeNull();
   });
 
@@ -114,7 +114,7 @@ describe('case window of Run, with a reply', () => {
 
   it('a real error does not fail the case', () => {
     render(<Window caseId="3" />);
-    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Real error (missed in scenario)' }));
+    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Genuine error' }));
     expect(screen.getAllByText(/Pass/).length).toBeGreaterThan(0);
   });
 

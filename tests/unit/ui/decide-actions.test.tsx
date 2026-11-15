@@ -105,7 +105,7 @@ describe('the note of a case', () => {
     const seen = open('3', e);
     expect(within(win()).queryByRole('button', { name: 'Note' })).toBeNull();
     expect(within(win()).queryByRole('textbox', { name: 'Note' })).toBeNull();
-    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Real error (missed in scenario)' }));
+    fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Genuine error' }));
     expect(seen.at(-1)?.decisions['3']?.note).toBe('an earlier note');
   });
 });

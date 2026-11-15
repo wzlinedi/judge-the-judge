@@ -71,7 +71,7 @@ export const labels = {
   found: 'Found',
   issueMissed: 'Not found',
   issueFalsePositive: 'False positive',
-  realError: 'Real error (missed in scenario)',
+  realError: 'Genuine error',
   ignore: 'Ignored',
   approve: 'Approve',
   noMoreFindings: 'No more findings',

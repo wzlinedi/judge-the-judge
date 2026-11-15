@@ -13,5 +13,5 @@ export const STATE_LABELS: Record<string, string> = {
   missed: 'Not found',
   ignored: 'Ignored',
   false_positive: 'False positive',
-  real_error: 'Real error (missed in scenario)',
+  real_error: 'Genuine error',
 };

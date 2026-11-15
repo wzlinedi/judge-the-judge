@@ -54,7 +54,7 @@ test('the Run step has no second-opinion card; a second opinion is previewed, ap
   await expect(opinionWindow(page)).toHaveCount(0);
   await expect(finding).toContainText('LLM opinion, approved by the user');
   await expect(win).not.toContainText('Awaiting verification');
-  await finding.getByRole('button', { name: 'Real error (missed in scenario)' }).click();
+  await finding.getByRole('button', { name: 'Genuine error' }).click();
   await expect(finding).toContainText('Set by hand');
   await finding.getByRole('button', { name: 'Ignored' }).click();
   await expect(finding.getByRole('button', { name: 'Ignored' })).toHaveAttribute('aria-pressed', 'true');
@@ -123,8 +123,8 @@ test('only the cases awaiting verification; a reply that could not be read: Add 
   await win.getByRole('button', { name: 'Second opinion…' }).click();
   const dialog = opinionWindow(page);
   await opinionBox(page).fill(JSON.stringify({ opinion: { id: '10', expected: [], additional: [{ index: 1, real: true, reason: 'It is a real gap.' }], new: [{ text: 'The reply is not an analysis', real: true, reason: 'It has no claims.', category: 'omission', difficulty: 'obvious' }] } }));
-  await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('+ new finding “The reply is not an analysis” → Real error');
-  await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('A1 False positive → Real error (missed in scenario) (replaces a mark set by hand)');
+  await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('+ new finding “The reply is not an analysis” → Genuine error');
+  await expect(dialog.getByRole('list', { name: 'What will change' })).toContainText('A1 False positive → Genuine error (replaces a mark set by hand)');
   await dialog.getByRole('button', { name: 'Apply opinion' }).click();
   const added = item(page, 'additional', 'added#2');
   await expect(added).toContainText('The reply is not an analysis');

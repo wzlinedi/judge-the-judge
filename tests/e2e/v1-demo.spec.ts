@@ -71,7 +71,7 @@ test('deciding the five cases gives the numbers of the expected results file', a
 
   // 19: a real error that was not injected
   await expect(page.getByRole('dialog', { name: /Case 19 /})).toBeVisible();
-  await item(page, 'additional', 'claims[]#3').getByRole('button', { name: 'Real error (missed in scenario)' }).click();
+  await item(page, 'additional', 'claims[]#3').getByRole('button', { name: 'Genuine error' }).click();
   await page.getByRole('button', { name: 'Close' }).click();
 
   await expect(page.getByRole('region', { name: 'What next' })).toContainText('20 of 20 cases decided');

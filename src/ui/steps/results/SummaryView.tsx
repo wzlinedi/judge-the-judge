@@ -41,7 +41,7 @@ function GenuineErrors({ reviewed, onOpenCase }: { reviewed: readonly ReviewedCa
   return (
     <section role="region" aria-label="Genuine errors the test cases missed" class="genuine-errors">
       <h3>Genuine errors the test cases missed</h3>
-      <p class="muted">The judge found these real errors that the test cases do not list. Consider adding them to the case with Test cases › Open › Edit expected errors.</p>
+      <p class="muted">The judge found these errors, and they are genuine, but the test cases do not list them. Consider adding them to the case with Test cases › Open › Edit expected errors.</p>
       <ul class="plain-list">
         {list.map((g, i) => (
           <li key={`${g.caseId}-${i}`}>
@@ -99,7 +99,7 @@ export function SummaryView({ results, evaluation, onThreshold, onLoadChecks, re
             </Group>
             <Group title="Additional findings">
               <Count label="Total" value={c.additional_total} />
-              <Count label="Real errors" value={c.real_errors} />
+              <Count label="Genuine errors" value={c.real_errors} />
               <Count label="False positives" value={c.false_positives} />
             </Group>
             <Group title="Subtle errors">

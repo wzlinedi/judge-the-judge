@@ -233,7 +233,7 @@ Opened by **Open** (FR-055, FR-060).
 |---|---|
 | **1. Case** | Kind and base; every field of the case, over the full width, with the fragments of the expected errors highlighted and numbered (and, after a reply, marked found, missed, undecided or ignored); then **Show prompt** (a dialog with the whole prompt and only **Close**) and **Copy prompt** (primary until pressed). |
 | **2. Marking** | One row: **Add finding** (text, optional category, optional difficulty), **Second opinion…**, the meter "Marked N of M" and the status of the case (Awaiting verification, Pass, Fail). **Without a reply** only the status is shown. There is no **Approve**. |
-| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column, and **Paste reply** below it (primary once **Copy prompt** was pressed). A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. **Right, "Errors"**: without a reply "The errors appear here when the judge’s reply is saved."; with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; two groups (T252), each item shown by the shared error component (below): **Expected errors**, each with its marks (**Found**, **Not found**, **Ignored**), the reason for anything undecided and the source of every mark; **Additional errors**, each with its marks (**Real error (missed in scenario)**, **False positive**, **Ignored**; a finding with no text has no passage and no **Show the issue**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**; then **Findings in the reply** with the words that go with their colours. |
+| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column, and **Paste reply** below it (primary once **Copy prompt** was pressed). A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. **Right, "Errors"**: without a reply "The errors appear here when the judge’s reply is saved."; with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; two groups (T252), each item shown by the shared error component (below): **Expected errors**, each with its marks (**Found**, **Not found**, **Ignored**), the reason for anything undecided and the source of every mark; **Additional errors**, each with its marks (**Genuine error**, **False positive**, **Ignored**; a finding with no text has no passage and no **Show the issue**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**; then **Findings in the reply** with the words that go with their colours. |
 
 - **The shared error component** (T251) shows an error the same way in Test cases (Open and the
   windows for adding a case), in Run and in Results: its number (E1 …) for an expected error, what is
@@ -266,7 +266,7 @@ collapsed section, for that case only.
 - **1 · Prompt for your LLM**: the verification prompt, read-only, with **Copy prompt**.
 - **2 · Paste your LLM's answer**: one box, checked as it changes.
 - **3 · What will change**: a preview of every change: "E1 undecided → Found" with the LLM's reason
-  and fragment, "replaces a mark set by hand" when it does, "+ new finding “…” → Real error" for a
+  and fragment, "replaces a mark set by hand" when it does, "+ new finding “…” → Genuine error" for a
   finding the reply contains that is not in the list, "no change" for answers that agree with the
   current mark, and "No answer" for items the opinion does not answer.
 - **Apply opinion** (primary) and **Cancel**, pinned to the bottom of the dialog. Applying sets the
@@ -305,7 +305,7 @@ leads to the case window.
   or mapping corrected after replies; the cases added or corrected after the first reply (FR-053).
 - **Three views**, as tabs in this order:
   1. **Summary**: three groups of counts first (expected errors: total, found, missed; additional
-     findings: total, real errors, false positives; subtle errors: total, found, missed), and the
+     findings: total, genuine errors, false positives; subtle errors: total, found, missed), and the
      ignored count when not zero; then the two rates with their counts; then one line of overall
      result with its reasons; then the test size against the minimum; then a collapsed
      **Details** section (the thresholds with one-sentence explanations and **Load check
@@ -315,7 +315,7 @@ leads to the case window.
      and **Details** shows their two thresholds. When a correction of the rules switched the way
      of counting, a notice says which way was used before and after (FR-075).
   2. **Error analysis**: per category and per difficulty (expected, found, missed, rate or "counts
-     only"); additional findings per category and per difficulty (real errors, false positives;
+     only"); additional findings per category and per difficulty (genuine errors, false positives;
      counts only, with "(no category)" and "(not set)"); additional findings per error rule. For a
      judge evaluated per case, cases are counted once in each category and difficulty their errors
      have, as flagged or not flagged, with counts only and one sentence saying why (FR-070).

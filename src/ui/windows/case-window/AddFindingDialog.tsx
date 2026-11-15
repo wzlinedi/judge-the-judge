@@ -57,7 +57,7 @@ export function AddFindingDialog({ catalog, onAdd, onClose }: AddFindingDialogPr
         <option value="obvious">obvious</option>
         <option value="subtle">subtle</option>
       </select>
-      <p class="muted">The finding starts as a real error. Press the mark that fits after adding it.</p>
+      <p class="muted">The finding starts as a genuine error. Press the mark that fits after adding it.</p>
     </Dialog>
   );
 }

@@ -30,7 +30,7 @@ export function errorsSummary(effective: Pick<Effective, 'expected' | 'additiona
   const expected = effective.expected;
   const additional = effective.additional;
   const left = expected.length === 0 ? 'No expected errors' : `${expected.length} expected: ${[...count(by(expected, 'found'), 'found'), ...count(by(expected, 'missed'), 'not found'), ...count(by(expected, 'ignored'), 'ignored'), ...count(by(expected, 'undecided'), 'undecided')].join(', ')}`;
-  const right = additional.length === 0 ? 'no additional errors' : `Additional: ${[...count(by(additional, 'real_error'), 'real error (missed in scenario)'), ...count(by(additional, 'false_positive'), 'false positive'), ...count(by(additional, 'ignored'), 'ignored'), ...count(by(additional, 'undecided'), 'undecided')].join(', ')}`;
+  const right = additional.length === 0 ? 'no additional errors' : `Additional: ${[...count(by(additional, 'real_error'), 'genuine error'), ...count(by(additional, 'false_positive'), 'false positive'), ...count(by(additional, 'ignored'), 'ignored'), ...count(by(additional, 'undecided'), 'undecided')].join(', ')}`;
   return `${left} · ${right}`;
 }
 

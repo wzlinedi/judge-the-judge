@@ -29,7 +29,7 @@ describe('Summary', () => {
     expect(expectedGroup.getByText('27')).toBeTruthy(); // found
     expect(expectedGroup.getByText('3')).toBeTruthy(); // missed
     const additional = screen.getByRole('group', { name: 'Additional findings' }).textContent ?? '';
-    expect(additional).toMatch(/Real errors\s*1/);
+    expect(additional).toMatch(/Genuine errors\s*1/);
     expect(additional).toMatch(/False positives\s*2/);
     const subtle = screen.getByRole('group', { name: 'Subtle errors' }).textContent ?? '';
     expect(subtle).toMatch(/Found\s*12/);

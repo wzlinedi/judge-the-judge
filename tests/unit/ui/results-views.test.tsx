@@ -274,7 +274,7 @@ describe('the read-only case view', () => {
 
   it('T256: the summary line counts the states in the words of Run', () => {
     expect(errorsSummary({ expected: [{ state: 'found' }, { state: 'found' }, { state: 'missed' }], additional: [{ state: 'false_positive' }, { state: 'false_positive' }] } as never)).toBe('3 expected: 2 found, 1 not found · Additional: 2 false positive');
-    expect(errorsSummary({ expected: [], additional: [{ state: 'real_error' }, { state: 'ignored' }] } as never)).toBe('No expected errors · Additional: 1 real error (missed in scenario), 1 ignored');
+    expect(errorsSummary({ expected: [], additional: [{ state: 'real_error' }, { state: 'ignored' }] } as never)).toBe('No expected errors · Additional: 1 genuine error, 1 ignored');
     expect(errorsSummary({ expected: [{ state: 'undecided' }], additional: [] } as never)).toBe('1 expected: 1 undecided · no additional errors');
   });
 

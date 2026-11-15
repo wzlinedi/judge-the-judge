@@ -61,7 +61,7 @@ function summary(evaluation: Evaluation, results: Results, reviewed: ReviewedCas
         ]
       : [
           table('Expected errors', ['Total', 'Found', 'Not found'], [[String(c.expected_total), String(c.expected_found), String(c.expected_missed)]]),
-          table('Additional findings', ['Total', 'Real errors', 'False positives'], [[String(c.additional_total), String(c.real_errors), String(c.false_positives)]]),
+          table('Additional findings', ['Total', 'Genuine errors', 'False positives'], [[String(c.additional_total), String(c.real_errors), String(c.false_positives)]]),
           table('Subtle errors', ['Total', 'Found', 'Not found'], [[String(c.subtle_total), String(c.subtle_found), String(c.subtle_missed)]]),
         ]),
   );
@@ -120,11 +120,11 @@ function analysis(results: Results): string {
     table('By difficulty', head, groupRows(a.byDifficulty, perCase)),
     `<p>${esc(perCase ? PER_CASE_WHY : 'A group with fewer than 10 expected errors shows counts only, with no rate.')}</p>`,
     '<h3>Additional findings per rule</h3>',
-    table('Additional findings per rule', ['Rule', 'Real errors', 'False positives'], a.perRule.map((r) => [r.rule, String(r.real), String(r.fp)])),
+    table('Additional findings per rule', ['Rule', 'Genuine errors', 'False positives'], a.perRule.map((r) => [r.rule, String(r.real), String(r.fp)])),
     '<h3>Additional findings per category</h3>',
-    table('Additional findings per category', ['Category', 'Real errors', 'False positives'], a.additionalByCategory.map((r) => [r.name, String(r.real), String(r.fp)])),
+    table('Additional findings per category', ['Category', 'Genuine errors', 'False positives'], a.additionalByCategory.map((r) => [r.name, String(r.real), String(r.fp)])),
     '<h3>Additional findings per difficulty</h3>',
-    table('Additional findings per difficulty', ['Difficulty', 'Real errors', 'False positives'], a.additionalByDifficulty.map((r) => [r.name, String(r.real), String(r.fp)])),
+    table('Additional findings per difficulty', ['Difficulty', 'Genuine errors', 'False positives'], a.additionalByDifficulty.map((r) => [r.name, String(r.real), String(r.fp)])),
     '</section>',
   ].join('\n');
 }

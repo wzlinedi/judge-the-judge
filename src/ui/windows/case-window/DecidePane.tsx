@@ -87,7 +87,7 @@ function AdditionalItem({ item, testCase, judged, onMark, onShow, onRemove }: { 
             </button>
           ))}
         </div>
-        {item.state === 'undecided' ? <p class="reason">This finding matches no expected error. Is it a real error that the test case missed, or a false positive?</p> : <p class="source muted">{SOURCE_LABELS[item.source]}</p>}
+        {item.state === 'undecided' ? <p class="reason">This finding matches no expected error. Is it a genuine error that the test case missed, or a false positive?</p> : <p class="source muted">{SOURCE_LABELS[item.source]}</p>}
       </ErrorCard>
     </li>
   );

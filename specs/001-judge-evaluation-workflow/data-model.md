@@ -260,7 +260,7 @@ Built from the case, its findings and the matching rule (research.md, sections 1
 **Decision**: `state` and `source`: `manual` (set by hand) or `llm-approved` (an LLM opinion the
 user applied with "Apply opinion"). Automatic results are not stored; their source is shown as
 `automatic`. The states are shown as "Found", "Not found", "Ignored", "False positive"
-and "Real error (missed in scenario)".
+and "Genuine error".
 
 - The effective state of an item is the stored decision when there is one, otherwise the automatic
   state.
