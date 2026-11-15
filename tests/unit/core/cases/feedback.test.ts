@@ -35,17 +35,17 @@ describe('testProjectFeedback', () => {
     expect(big.size.clean).toMatchObject({ have: 10, missing: 0, met: true });
   });
 
-  it('says that the final answer needs the minimums, and that it is Inconclusive until then', () => {
-    expect(testProjectFeedback(sampleEvaluation()).size.sentence).toBe('A final answer needs at least 30 injected errors and 10 clean cases; until then the result is Inconclusive.');
+  it('says that a reliable answer needs the minimums, and that it is Inconclusive until then', () => {
+    expect(testProjectFeedback(sampleEvaluation()).size.sentence).toBe('A reliable answer needs at least 30 injected errors and 10 clean cases; until then the result is Inconclusive.');
     const cases = [...Array.from({ length: 10 }, (_, i) => withErrors(`e${i}`, 3, i === 0 ? 'subtle' : 'obvious')), ...Array.from({ length: 10 }, (_, i) => clean(`c${i}`))];
-    expect(testProjectFeedback(make(cases)).size.sentence).toMatch(/enough for a final answer/);
+    expect(testProjectFeedback(make(cases)).size.sentence).toMatch(/enough for a reliable answer/);
   });
 
   it('counts cases with expected errors instead of injected errors for a judge evaluated per case', () => {
     const f = testProjectFeedback(verdictEvaluation());
     expect(f.size.unit).toBe('cases with expected errors');
     expect(f.size.errors).toEqual({ have: 3, need: 30, missing: 27, met: false });
-    expect(f.size.sentence).toBe('A final answer needs at least 30 cases with expected errors and 10 clean cases; until then the result is Inconclusive.');
+    expect(f.size.sentence).toBe('A reliable answer needs at least 30 cases with expected errors and 10 clean cases; until then the result is Inconclusive.');
     expect(testProjectFeedback(sampleEvaluation()).size.unit).toBe('injected errors');
   });
 

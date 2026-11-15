@@ -3,7 +3,7 @@ import type { Need, TestProjectFeedback } from '../../../core/cases/feedback';
 const total = (label: string, n: Need) => `${label}: ${n.have} of ${n.need} (${n.met ? 'met' : `${n.missing} missing`})`;
 export const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
 
-/** The test size against the minimums, the balance by number of errors, and the sentence about the final answer (FR-045, FR-052). */
+/** The test size against the minimums, the balance by number of errors, and the sentence about the reliable answer (FR-045, FR-052). */
 export function TestSize({ feedback }: { feedback: TestProjectFeedback }) {
   const errorsLabel = feedback.size.unit === 'injected errors' ? 'Injected errors' : 'Cases with expected errors';
   return (

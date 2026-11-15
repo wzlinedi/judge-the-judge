@@ -27,7 +27,7 @@ test('the card shows the counts and the test size; only clean cases warn; a case
   const size = card(page).getByRole('group', { name: 'Test size' });
   await expect(size).toContainText('Injected errors: 0 of 30 (30 missing)');
   await expect(size).toContainText('Clean cases: 3 of 10 (7 missing)');
-  await expect(size).toContainText('A final answer needs at least 30 injected errors and 10 clean cases; until then the result is Inconclusive.');
+  await expect(size).toContainText('A reliable answer needs at least 30 injected errors and 10 clean cases; until then the result is Inconclusive.');
   const warnings = card(page).getByRole('list', { name: 'Warnings' });
   await expect(warnings).toContainText('no cases with injected errors');
   await expect(warnings).toContainText('detection rate cannot be computed');

@@ -32,7 +32,7 @@ describe('the test project card', () => {
     expect(size.textContent).toContain('Injected errors: 2 of 30 (28 missing)');
     expect(size.textContent).toContain('Clean cases: 1 of 10 (9 missing)');
     expect(size.textContent).toContain('1 case with 2 errors');
-    expect(size.textContent).toContain('A final answer needs at least 30 injected errors and 10 clean cases; until then the result is Inconclusive.');
+    expect(size.textContent).toContain('A reliable answer needs at least 30 injected errors and 10 clean cases; until then the result is Inconclusive.');
   });
 
   it('says "met" for a total that reaches its minimum', () => {

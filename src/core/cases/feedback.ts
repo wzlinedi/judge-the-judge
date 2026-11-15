@@ -1,5 +1,5 @@
 // Live feedback on the test cases being built (FR-045, FR-046): counts, the test size against the fixed minimums,
-// warnings, and the remaining capacity. A forecast: the minimum that decides the final answer is counted from decided items (FR-068).
+// warnings, and the remaining capacity. A forecast: the minimum that decides the answer is counted from decided items (FR-068).
 import { MINIMUM_SAMPLE } from '../evaluation/results';
 import { countingModeOf } from '../judge/counting-mode';
 import type { Evaluation } from '../model';
@@ -64,7 +64,7 @@ export function testProjectFeedback(evaluation: Pick<Evaluation, 'dataset' | 'ju
   const errors = need(perCase ? withErrorsCases.length : errorsTotal, MINIMUM_SAMPLE.expected_errors);
   const cleanNeed = need(clean, MINIMUM_SAMPLE.clean_cases);
   const required = `at least ${MINIMUM_SAMPLE.expected_errors} ${unit} and ${MINIMUM_SAMPLE.clean_cases} clean cases`;
-  const sentence = errors.met && cleanNeed.met ? `The test is big enough for a final answer (${required} are needed).` : `A final answer needs ${required}; until then the result is Inconclusive.`;
+  const sentence = errors.met && cleanNeed.met ? `The test is big enough for a reliable answer (${required} are needed).` : `A reliable answer needs ${required}; until then the result is Inconclusive.`;
 
   const warnings: string[] = [];
   if (cases.length > 0 && withErrorsCases.length === 0) {
