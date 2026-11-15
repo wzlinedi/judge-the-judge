@@ -68,13 +68,15 @@ Given the same input files, the evaluation MUST produce the same results.
 Rationale: a tool that evaluates judges must itself be auditable and trustworthy.
 
 ### VI. Extensible Metrics and Configurable Checks
-Metrics are data-driven plug-ins, not hard-coded features. Exactly two metrics are built in and
-ship with the application. All further metrics MUST be loadable by the user from a file at
-runtime, and adding one MUST NOT require changes to the core, the interface, or existing metrics.
+Metrics are data-driven plug-ins, not hard-coded features. No metric is built in, and the system
+MUST NOT depend on any one metric. The application ships one default metric file (Accuracy) that
+a new test project starts with; it behaves exactly like a file the user loads and can be replaced.
+Every metric MUST be loadable by the user from a file at runtime, and adding one MUST NOT require
+changes to the core, the interface, or existing metrics.
 
-- Every metric, built-in or loaded, MUST conform to one common metric contract and be registered
-  in one central registry. Built-in metrics are registered at startup; file-based metrics are
-  registered when the user loads their definition file.
+- Every metric, default or loaded, MUST conform to one common metric contract and be registered
+  in one central registry. A metric is registered when its definition file is loaded; the default
+  metric file takes the same route.
 - Metric definition files MUST be declarative (JSON or similar data format) with a documented,
   versioned schema. They MUST NOT contain or cause execution of arbitrary code. Metric logic
   MUST be expressed by combining operations the application provides.
@@ -90,7 +92,7 @@ runtime, and adding one MUST NOT require changes to the core, the interface, or 
   and a loaded configuration that tries to change it MUST be told that the value is fixed.
 - The repository MUST contain a short "how to add a metric" guide and an example metric
   definition file, kept in sync with the schema, so a non-developer can write one with AI help.
-- A shared contract test suite MUST run against every built-in metric and against the example
+- A shared contract test suite MUST run against the default metric file and against the example
   definition file. Per Principle I, tests come first.
 
 Rationale: the owner expects to add metrics over time. A single contract, registry, and
@@ -123,13 +125,14 @@ itself (available on the published static site) and explains how to use the syst
 - Help MAY be written after the core features exist, but before the first public release it MUST
   be complete.
 - Any change that alters user-visible behavior (a feature, metric, file format, schema, or
-  setting) MUST update the matching Help content in the same change. A change is not done until
-  Help reflects it.
+  setting) MUST be reflected in the matching Help content. When that happens is set by the
+  Development Workflow: in one pass after the owner has tried the changes, and always before the
+  next public release.
 - Help MUST stay consistent with the "how to add a metric" guide and the file schemas
   (Principles IV and VI); examples shown in Help MUST be valid against the current schemas.
 
 Rationale: users, including the project owner, rely on Help to use the tool correctly. Stale
-documentation is worse than none, so updating it is part of finishing every change.
+documentation is worse than none, so Help is brought up to date before anything is published.
 
 ## Constraints & Standards
 
@@ -171,4 +174,4 @@ rationale, approval from the project owner, and a note of any affected specs or 
 - **Compliance review**: every spec, plan, and implementation review MUST verify compliance
   with this constitution. Unjustified violations block completion.
 
-**Version**: 2.0.0 | **Ratified**: 2026-11-08 | **Last Amended**: 2026-11-15
+**Version**: 3.0.0 | **Ratified**: 2026-11-08 | **Last Amended**: 2026-11-15
