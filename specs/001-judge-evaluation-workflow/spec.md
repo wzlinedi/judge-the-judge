@@ -796,14 +796,13 @@ case and confirm the new case has the same fields and expected errors.
    shows only matching cases with a count, and the kind filter shows only clean cases or only cases
    with injected errors.
 2. **Given** the user presses "Open" at a case, **When** the window opens, **Then** it shows the
-   case read-only: its fields with the fragments highlighted, its expected errors with "Show in
-   text", its composed prompt, and its reply if one exists; nothing in it can be edited.
-3. **Given** an open case that was made with "Clean case" or "Case with errors", **When** the user presses
-   "Recreate the test case", **Then** a dialog "Original prompt" shows the prompt the case was made
-   with, with "Copy", "Copy and recreate" (copies the prompt and opens an empty "From JSON" window) and
-   "Close"; for a case without a saved prompt the button is disabled and says why.
-4. **Given** an open case, **When** the user looks at its buttons, **Then** there is no "Clone", no "Show JSON"
-   and no "Copy JSON"; a copy is made with "Recreate the test case" or "Export test cases".
+   case read-only: its fields, with no highlight until "Show the issue" (T257), its expected errors with "Show the
+   issue", and its composed prompt; nothing in it can be edited.
+3. **Given** a case with errors, **When** the user opens "Add test case…" › "Case with errors" and chooses that case as the
+   base (T262), **Then** its errors are copied into "Errors to prepare" and its own clean base is the base text; the
+   prompt can be edited before it is copied, and "Rebuild prompt" asks before it replaces the edit.
+4. **Given** an open case, **When** the user looks at its buttons, **Then** there is no "Clone", no "Recreate the test
+   case", no "Show JSON" and no "Copy JSON"; a copy is made with "Export test cases" and "From JSON".
 5. **Given** a row of either list, **When** the user looks at its actions, **Then** it shows "Open",
    "Rename" and "Remove"; after finalizing "Open" stays enabled, "Rename" and
    "Remove" stay enabled for a case without a reply, and for a case with a reply they are disabled
@@ -904,7 +903,7 @@ case and confirm the new case has the same fields and expected errors.
   a file while it is open; "Close without saving" with pasted or typed content asks first, and a
   file holds only kept cases.
 - A saved case that turns out to be wrong: its text is not edited; before finalizing the user makes it again
-  ("Recreate the test case" when it keeps its prompt, otherwise "From JSON"), corrects it, saves it and removes the original; after finalizing, its expected
+  ("Case with errors" started from it, or "From JSON"), corrects it, saves it and removes the original; after finalizing, its expected
   errors are corrected with "Edit expected errors" while it has no reply, and are marked
   "Ignored" on Run once it has one (FR-053, FR-089).
 - A case added after the first reply: it is Not run, so the result stays provisional until it is
@@ -1020,14 +1019,14 @@ case and confirm the new case has the same fields and expected errors.
   Test cases: "Add categories", "Rename" and "Remove" in the "Error categories" section; "Add test case…" (above the list; Run has the same button above its cases); "Open", "Rename" and "Remove" at
   each case; "Finalize test cases…", "Reopen test cases" (FR-053); in the import window "Download example file".
   In the test case window when adding a case: "From JSON", "Clean case" and "Case with errors"; for
-  "From JSON" "Save case" and "Close without saving"; for a clean case "Copy prompt", "Save case" and
+  "From JSON" "Save case" and "Close without saving"; for a clean case "Copy prompt", "Rebuild prompt" (once the prompt is edited, T262), "Save case" and
   "Close without saving"; for a case with errors "Add error" and "Remove" in the list of errors to
-  prepare, "Copy prompt", "Save case" and "Close without saving". In the read-only view of a saved case
+  prepare, "Copy prompt", "Rebuild prompt", "Save case" and "Close without saving". In the read-only view of a saved case
   ("Open"): "Previous case", "Next case", "Show the issue", "Show prompt", "Copy prompt"
   and, after finalizing, "Edit expected errors".
   Run: "Save evaluation", "Save evaluation as…", "Open" at each case; in its window "Previous case",
   "Next case", "Show the issue", "Copy prompt", "Show prompt", "Paste reply", "Keep as text" (for a text in the
-  box that is not JSON), the marks of an item ("Found", "Not found", "False positive", "Genuine error",
+  box that is not JSON), "Change reply" (in the question before a saved reply is changed, T261), the marks of an item ("Found", "Not found", "False positive", "Genuine error",
   "Ignored"), "No more findings" (only for a reply that cannot be read), "Add finding…", "Remove" (for
   a finding added by hand), "Second opinion…" (in its window "Copy prompt", "Apply opinion" and
   "Cancel") and "Save evaluation". Results: the views "Summary", "Error analysis" and "Test case
@@ -1279,7 +1278,7 @@ case and confirm the new case has the same fields and expected errors.
   clean case view (FR-083); "Case with errors" to the five parts of FR-040, FR-041 and
   FR-085. Every one of them is one vertical page with the save button in the header (FR-085). There
   is no "Clone" (FR-078). The read-only view of a saved case ("Open", FR-086) and the
-  case window of Run (FR-055) show a case with its fragments highlighted. The window replaces the former preparation window, the details panel of the Test cases
+  case window of Run (FR-055) show a case whose passages are highlighted by "Show the issue" (T257). The window replaces the former preparation window, the details panel of the Test cases
   step and every way of editing a saved case.
 - **FR-039**: Until the test cases are finalized, users MUST be able to add, rename and
   remove cases; after finalizing, to add them, and to rename and remove a case that has
