@@ -46,7 +46,8 @@ describe('the case window of Run: three parts from top to bottom', () => {
   it('part 1 holds every field of the case with the highlights of the expected errors, over the full width', () => {
     open('11');
     expect(within(part(1)).getByText(/Injected errors/)).toBeTruthy();
-    expect(part(1).querySelectorAll('mark.fragment')).toHaveLength(3);
+    expect(part(1).querySelectorAll('[data-error]')).toHaveLength(3);
+    expect(part(1).querySelectorAll('.fragment')).toHaveLength(0); // only Show the issue highlights (T257)
     expect(part(1).querySelector('.case-half')).toBeNull();
     expect(part(1).querySelectorAll('.field-block').length).toBeGreaterThan(0);
   });
@@ -167,7 +168,7 @@ describe('T240: where each finding is, and Show the issue', () => {
     expect(strong.map((m) => m.closest<HTMLElement>('[data-field]')?.dataset['field']).sort()).toEqual(['source_text', 'summary']);
     const meta = demo.dataset.cases.find((c) => c.id === '11')!.expected_errors.find((x) => x.id === li.dataset['expected'])!;
     expect(part(1).querySelector('[data-field="source_text"] mark[data-shown]')?.textContent).toBe(meta.source_fragment);
-    expect(part(1).querySelector(`[data-field="summary"] mark[data-error="${meta.id}"]`)?.classList.contains('fragment-strong')).toBe(true);
+    expect(part(1).querySelector(`[data-field="summary"] [data-error="${meta.id}"]`)?.classList.contains('fragment-strong')).toBe(true);
   });
 
   it('a finding with no text has no field line and no button', () => {

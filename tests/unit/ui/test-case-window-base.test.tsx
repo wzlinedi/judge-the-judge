@@ -115,7 +115,8 @@ describe('the read-only view (Open)', () => {
     expect(within(view).getByRole('button', { name: 'Previous case' })).toBeTruthy();
     expect(within(view).queryByRole('textbox', { name: 'Complete judge prompt' })).toBeNull();
     expect(within(view).queryByLabelText('Judge’s reply')).toBeNull();
-    expect(view.querySelectorAll('mark').length).toBe(2);
+    expect(view.querySelectorAll('[data-error]').length).toBe(2);
+    expect(view.querySelectorAll('mark').length).toBe(0); // nothing highlighted until Show the issue (T257)
     expect(within(view).getByRole('button', { name: 'Copy prompt' })).toBeTruthy();
     fireEvent.click(within(view).getByRole('button', { name: 'Show prompt' }));
     const prompt = screen.getByRole('dialog', { name: 'Complete judge prompt' });

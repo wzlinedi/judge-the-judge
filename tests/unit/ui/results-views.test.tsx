@@ -269,7 +269,7 @@ describe('the read-only case view', () => {
     expect(within(errors).getByRole('heading', { name: 'Expected errors' })).toBeTruthy();
     Element.prototype.scrollIntoView = vi.fn();
     fireEvent.click(within(errors).getAllByRole('button', { name: 'Show the issue' })[0]!);
-    expect(win.querySelectorAll('mark.fragment-strong').length).toBeGreaterThan(0);
+    expect(win.querySelectorAll('.fragment-strong').length).toBeGreaterThan(0);
   });
 
   it('T256: the summary line counts the states in the words of Run', () => {

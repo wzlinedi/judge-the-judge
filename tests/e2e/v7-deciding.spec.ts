@@ -143,11 +143,11 @@ test('an error shows the words of the source beside the words of the judged text
   await expect(e2.getByRole('group', { name: 'Mark for E2' }).getByRole('button')).toHaveText(['Found', 'Not found', 'Ignored']);
 
   await e2.getByRole('button', { name: 'Show the issue' }).click();
-  const source = win.locator('[data-field="source_text"] mark.fragment-strong');
-  const summary = win.locator('[data-field="summary"] mark.fragment-strong');
+  const source = win.locator('[data-field="source_text"] .fragment-strong');
+  const summary = win.locator('[data-field="summary"] .fragment-strong');
   await expect(source).toHaveText('lost his leg to a white whale');
   await expect(summary).toContainText('the whale that took his arm');
   await expect(summary).toBeInViewport();
   // the strong highlight lasts a moment
-  await expect(win.locator('mark.fragment-strong')).toHaveCount(0, { timeout: 6000 });
+  await expect(win.locator('.fragment-strong')).toHaveCount(0, { timeout: 6000 });
 });

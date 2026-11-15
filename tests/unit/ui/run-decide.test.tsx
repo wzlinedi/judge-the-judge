@@ -150,7 +150,7 @@ describe('case window of Run, with a reply', () => {
   it('shows the data of the case: kind, expected errors with their fragments in the text, and the complete prompt', () => {
     render(<Window caseId="11" />);
     expect(screen.getByText(/Injected errors/)).toBeTruthy();
-    expect(document.querySelectorAll('mark.fragment')).toHaveLength(3);
+    expect(document.querySelectorAll('[data-error]')).toHaveLength(3);
     fireEvent.click(screen.getByRole('button', { name: 'Show prompt' }));
     expect((screen.getByRole('textbox', { name: 'Complete judge prompt' }) as HTMLTextAreaElement).value).toContain('SUMMARY:');
   });

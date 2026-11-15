@@ -16,16 +16,22 @@ const five: TestCase = {
 };
 
 describe('fragments in the judged text', () => {
-  it('highlights up to five expected errors with E1 … E5', () => {
+  it('highlights nothing until Show the issue points at an error (T257)', () => {
     const { container } = render(<MarkedFields testCase={five} judged="summary" effective={null} uncovered={[]} />);
-    const marks = Array.from(container.querySelectorAll('mark[data-error]'));
+    expect(container.querySelectorAll('.fragment, mark, sup')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-error]')).toHaveLength(5);
+  });
+
+  it('highlights the error that Show the issue points at with its number, E1 … E5', () => {
+    const { container } = render(<MarkedFields testCase={five} judged="summary" effective={null} uncovered={[]} strong={['e1', 'e2', 'e3', 'e4', 'e5']} />);
+    const marks = Array.from(container.querySelectorAll('.fragment-strong[data-error]'));
     expect(marks.map((m) => m.querySelector('sup')?.textContent)).toEqual(['E1', 'E2', 'E3', 'E4', 'E5']);
   });
 
   it('puts a fragment of an omission into the field where it occurs', () => {
     const omission: TestCase = { ...five, expected_errors: [{ id: 'e1', description: 'left out', fragment: 'Eleven twelve' }] };
-    const { container } = render(<MarkedFields testCase={omission} judged="summary" effective={null} uncovered={[]} />);
-    expect(container.querySelector('mark[data-error]')?.closest('section')?.textContent).toContain('source_text');
+    const { container } = render(<MarkedFields testCase={omission} judged="summary" effective={null} uncovered={[]} strong="e1" />);
+    expect(container.querySelector('.fragment-strong[data-error]')?.closest('section')?.textContent).toContain('source_text');
   });
 
   it('marks a fragment found only with another case (nearest match)', () => {
@@ -55,10 +61,10 @@ describe('after a reply', () => {
   });
 
   it('each mark says found, missed, undecided or ignored in words as well as a sign', () => {
-    const { container } = render(<MarkedFields testCase={five} judged="summary" effective={effective(['found', 'missed', 'undecided', 'ignored', 'found'])} uncovered={[]} />);
-    const labels = Array.from(container.querySelectorAll('mark[data-error]')).map((m) => m.getAttribute('title'));
+    const { container } = render(<MarkedFields testCase={five} judged="summary" effective={effective(['found', 'missed', 'undecided', 'ignored', 'found'])} uncovered={[]} strong={['e1', 'e2', 'e3', 'e4', 'e5']} />);
+    const labels = Array.from(container.querySelectorAll('[data-error]')).map((m) => m.getAttribute('title'));
     expect(labels).toEqual(['E1 found', 'E2 missed', 'E3 undecided', 'E4 ignored', 'E5 found']);
-    expect(container.querySelector('mark.fragment-found sup')?.textContent).toMatch(/E1 ✓/);
+    expect(container.querySelector('.fragment-found sup')?.textContent).toMatch(/E1 ✓/);
   });
 });
 

@@ -227,7 +227,8 @@ test('every action is reachable with the keyboard alone: the File menu, a dialog
   await expect(caseWindow).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(caseWindow).toHaveCount(0);
-  expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY');
+  // the focus comes back after the window is gone, so wait for it
+  await expect.poll(() => page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY');
 
   // the step bar by keyboard
   await page.getByRole('button', { name: /4\s*Results/ }).focus();

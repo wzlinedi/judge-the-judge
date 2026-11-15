@@ -21,8 +21,9 @@ export interface MarkedFieldsProps {
 }
 
 /**
- * The fields of a case with the fragments of its expected errors highlighted (FR-077). Every highlight
- * carries its number (E1 …) and a word, so a colour is never the only sign; the text itself is never changed.
+ * The fields of a case (FR-077). Nothing is highlighted until "Show the issue" points at an error (T257); the changed places that no
+ * expected error covers are always marked (FR-080). Every highlight carries its number (E1 …) or a word, so a colour is never the
+ * only sign; the text itself is never changed.
  */
 export function MarkedFields({ testCase, judged, effective, uncovered, strong, shown = [], rootRef }: MarkedFieldsProps) {
   return (
@@ -36,13 +37,22 @@ export function MarkedFields({ testCase, judged, effective, uncovered, strong, s
           <p class="field-text">
             {fieldMarks(testCase, name, judged, effective, uncovered, shown).map((segment, i) => {
               if (segment.error) {
+                // the fragment of an expected error is highlighted only while "Show the issue" points at it (T257); the element stays, so the focus does
                 const { id, label, state } = segment.error;
+                const isStrong = Array.isArray(strong) ? strong.includes(id) : strong === id;
+                if (!isStrong) {
+                  return (
+                    <span key={i} data-error={id} tabIndex={-1}>
+                      {segment.text}
+                    </span>
+                  );
+                }
                 const sign = effective ? ` ${SIGNS[state] ?? ''}` : '';
                 return (
-                  <mark key={i} class={`fragment${effective ? ` fragment-${state}` : ''}${(Array.isArray(strong) ? strong.includes(id) : strong === id) ? ' fragment-strong' : ''}`} data-error={id} tabIndex={-1} title={effective ? `${label} ${state}` : label}>
+                  <span key={i} class={`fragment fragment-strong${effective ? ` fragment-${state}` : ''}`} data-error={id} tabIndex={-1} title={effective ? `${label} ${state}` : label}>
                     <sup>{`${label}${sign}`}</sup>
                     {segment.text}
-                  </mark>
+                  </span>
                 );
               }
               if (segment.shown) {

@@ -38,7 +38,8 @@ test('the table of test cases at 1280 px: every header cell on one line and the 
 test('the marker of a mark has room before the text it marks', async ({ page }) => {
   await openDemoCases(page);
   await page.getByRole('row').filter({ hasText: 'Injected errors' }).first().getByRole('button', { name: 'Open' }).click();
-  const gap = await page.locator('.case-window mark.fragment').first().evaluate((mark) => {
+  await page.locator('.case-window').getByRole('button', { name: 'Show the issue' }).first().click(); // nothing is highlighted before (T257)
+  const gap = await page.locator('.case-window .fragment-strong[data-error]').first().evaluate((mark) => {
     const sup = mark.querySelector('sup') as HTMLElement;
     const text = document.createRange();
     text.setStart(sup.nextSibling as Node, 0);

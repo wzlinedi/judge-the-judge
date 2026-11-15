@@ -184,11 +184,11 @@ which asks first when something was pasted or typed.
      list is replaced by a line saying so.
   **Save case** is in the header, enabled only while the JSON is valid; with a mismatch of FR-080
   it asks for confirmation; a case identical to its base is refused.
-- **Open** (FR-086): the case read-only (its own layout, with highlighted fields), with **Previous test
+- **Open** (FR-086): the case read-only (its own layout; the fields show no highlight until **Show the issue**, T257, except the warnings of FR-080), with **Previous test
   case**, **Next case** and the position ("case 7 of 20") in the header (Alt + Left/Right do
   the same), **Recreate the test case** (enabled when the case keeps `generation_prompt`; opens **Original prompt** with **Copy**, **Copy and recreate** and **Close**; **Copy and recreate** copies the prompt and opens an empty **From JSON** window, which has **Show prompt** at the top (the standard large dialog with the copied prompt, **Copy prompt** and **Close**), and the case saved from it keeps that prompt; no **Show JSON** or **Copy JSON**), and, on every case, **Edit expected errors**; also **Show prompt** (a dialog of about 90% of the screen with
   the whole composed prompt and only **Close**) with **Copy prompt**. No reply is shown (a reply belongs to Run).
-  Sections are in frames and the expected errors are highlighted strongly. A saved case is never edited.
+  Sections are in frames. A saved case is never edited.
 - **Edit expected errors** (FR-089, T254): the standard large dialog with the JSON of the list of the expected errors of the case
   only (with their `id`), checked as it changes, with **Cancel** and **Save expected errors** at the bottom, the check line of FR-080 and the uncovered places under the box; **Save expected errors** is disabled with the reason beside it
   ("Fix the problems listed under the JSON to save." or "Change the JSON to save."). A mismatch, and a case with a reply, ask first
@@ -231,7 +231,7 @@ Opened by **Open** (FR-055, FR-060).
 
 | Part | Content |
 |---|---|
-| **1. Case** | Kind and base; every field of the case, over the full width, with the fragments of the expected errors highlighted and numbered (and, after a reply, marked found, missed, undecided or ignored); then **Show prompt** (a dialog with the whole prompt and only **Close**) and **Copy prompt** (primary until pressed). |
+| **1. Case** | Kind and base; every field of the case, over the full width, with no highlight until **Show the issue** (T257), which highlights the passages of that error for a moment with its number (and, after a reply, found, missed, undecided or ignored); then **Show prompt** (a dialog with the whole prompt and only **Close**) and **Copy prompt** (primary until pressed). |
 | **2. Marking** | One row: **Add finding** (text, optional category, optional difficulty), **Second opinion…**, the meter "Marked N of M" and the status of the case (Awaiting verification, Pass, Fail). **Without a reply** only the status is shown. There is no **Approve**. |
 | **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: the reply box, always visible, holding the saved reply once there is one, checked as it changes with line and column, and **Paste reply** below it (primary once **Copy prompt** was pressed). A reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. **Right, "Errors"**: without a reply "The errors appear here when the judge’s reply is saved."; with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; two groups (T252), each item shown by the shared error component (below): **Expected errors**, each with the words of the judge that match it ("Judge: “…” (matches)" or "(partly matches)", T258) and its marks (**Found**, **Not found**, **Ignored**), the reason for anything undecided and the source of every mark; **Additional errors**, each with its marks (**Genuine error**, **False positive**, **Ignored**; a finding with no text has no passage and no **Show the issue**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**. There is no list "Findings in the reply" (T258). |
 
@@ -286,7 +286,7 @@ collapsed section, for that case only.
 Opened by **Open** in the Test case list (FR-071). The same frame as the case window of Run
 (header with **Previous case**, **Next case**, position, name, **Close**, **Open on Run**), and
 the same page: three numbered parts, one below the other, each in a frame, nothing editable (T256):
-1. Case (the fields with the highlights and, below them, the complete judge prompt in a read-only box; no buttons),
+1. Case (the fields, highlighted only by **Show the issue** (T257), and, below them, the complete judge prompt in a read-only box; no buttons),
 2. Judge reply (read-only, with the note when the file has one), 3. Errors: first one summary line ("3 expected: 2 found, 1 not found ·
 Additional: 2 false positive"), then the two groups **Expected errors** and **Additional errors**, each item shown by the shared error
 component (both passages, the state in words, the source of the mark) with **Show the issue**. The status of the case is in the header, and the

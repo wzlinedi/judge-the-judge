@@ -16,13 +16,14 @@ const open = (name: string) => fireEvent.click(within(screen.getAllByRole('row')
 const view = () => screen.getByRole('dialog', { name: /Anna \+ 2 errors/ });
 
 describe('the read-only view', () => {
-  it('numbers and highlights the expected errors and offers Show the issue for each', () => {
+  it('highlights nothing at first, and Show the issue highlights the error (T257)', () => {
     show();
     open('Anna + 2 errors');
-    expect(view().querySelectorAll('mark[data-error]')).toHaveLength(2);
+    expect(view().querySelectorAll('[data-error]')).toHaveLength(2);
+    expect(view().querySelectorAll('.marked-fields .fragment')).toHaveLength(0);
     Element.prototype.scrollIntoView = vi.fn();
     fireEvent.click(within(view()).getAllByRole('button', { name: 'Show the issue' })[0]!);
-    expect(view().querySelector('mark.fragment-strong')?.textContent).toContain('Anna is a doctor');
+    expect(view().querySelector('.fragment-strong')?.textContent).toContain('Anna is a doctor');
   });
 
   it('shows both sides of an error, the source first, and Show the issue highlights both passages (T251)', () => {
@@ -35,7 +36,7 @@ describe('the read-only view', () => {
     expect([...second.querySelectorAll('.error-side dt')].map((d) => d.textContent)).toEqual(['summary']);
     Element.prototype.scrollIntoView = vi.fn();
     fireEvent.click(within(first).getByRole('button', { name: 'Show the issue' }));
-    const strong = [...view().querySelectorAll<HTMLElement>('mark.fragment-strong')];
+    const strong = [...view().querySelectorAll<HTMLElement>('.fragment-strong')];
     expect(strong.map((m) => m.closest<HTMLElement>('[data-field]')?.dataset['field']).sort()).toEqual(['source_text', 'summary']);
     expect(view().querySelector('[data-field="source_text"] mark[data-shown]')?.textContent).toBe('Anna is a baker');
   });

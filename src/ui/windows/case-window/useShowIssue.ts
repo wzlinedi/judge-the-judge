@@ -31,7 +31,7 @@ export function useShowIssue(root: RefObject<HTMLElement | null>) {
     // after the highlight is drawn, bring the fields into view and put the focus on the place
     setTimeout(() => {
       const fields = root.current;
-      const own = next.expectedId !== undefined ? fields?.querySelector<HTMLElement>(`mark[data-error="${next.expectedId}"]`) : null;
+      const own = next.expectedId !== undefined ? fields?.querySelector<HTMLElement>(`[data-error="${next.expectedId}"]`) : null;
       const el = own ?? fields?.querySelector<HTMLElement>('mark[data-shown]') ?? fields?.querySelector<HTMLElement>(`[data-field="${next.spots[0]?.field ?? ''}"]`);
       el?.scrollIntoView?.({ block: 'center' });
       el?.focus?.();
