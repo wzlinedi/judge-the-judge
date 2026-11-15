@@ -37,6 +37,13 @@ the save dialog of "Save test project" is replaced by an in-memory file
 installed with an init script (research.md, sections 6 and 25). By hand, both are the real browser
 features.
 
+**What only a person can check** (T310): every step of V5, V9 (steps 1 to 5 and 7), V10 and V11 has an
+end-to-end test. By hand, check only what the in-memory file cannot show: the browser's permission to
+write to a real file (asked once; later saves overwrite the file), a saved file removed from the disk
+(V9 step 4, the tool says it cannot write and asks for a file), and the look and the wording of the
+screens. V9 step 6 (a file dropped onto the page) cannot be tried yet: the page has no drop zone until
+the interface redesign.
+
 ### V1. First run with demo data (SC-001, SC-009, SC-010, User Stories 1 and 9)
 
 1. Open the tool; in the More menu choose "Load demo…". The demo is loaded at once, with its test run and no load question, and the Judge step opens; go on to Test run.
@@ -212,7 +219,7 @@ were corrected after the replies were received.
 4. Remove the saved file on disk and press "Save test project".
 5. With replies entered and the indicator showing unsaved changes, choose "Load demo…" and then
    "Save test project first".
-6. Drop the saved file onto the page and choose "Load with the test run"; press "Save test project".
+6. (Waits for the drop zone of the interface redesign, T310.) Drop the saved file onto the page and choose "Load with the test run"; press "Save test project".
 7. In the test case window paste a case JSON and press "Close without saving".
 
 **Expected**: the second "Save test project" overwrites the chosen file without asking for a file;

@@ -163,3 +163,31 @@ test('"Load the test project only" drops the test run, forgets the file, and the
   expect(JSON.parse(memory.files.get('books-2.json')!)).not.toHaveProperty('test_run');
   expect(memory.files.get('books.json')).toBe(first); // the loaded test run is never overwritten
 });
+
+test('V9 step 7: in the test case window "Close without saving" asks first, and no file save is reachable while the window is open (T310)', async ({ page }) => {
+  await installMemoryFiles(page);
+  await page.goto('/');
+  await loadDemo(page);
+  await page.getByRole('button', { name: /2\s*Test cases/ }).click();
+  const rows = page.getByRole('row');
+  const before = await rows.count();
+
+  await page.getByRole('button', { name: 'Add test case…' }).click();
+  const win = page.getByRole('dialog', { name: 'Test case' });
+  await win.getByRole('button', { name: 'Case with errors' }).click();
+  await win.getByLabel('Case JSON').fill(JSON.stringify({ name: 'Pasted and not saved', fields: {}, expected_errors: [] }));
+
+  // the header still shows Save test project, but the open window blocks it
+  await expect(saveButton(page).click({ trial: true, timeout: 1500 })).rejects.toThrow();
+  await expect(win.getByRole('button', { name: /Save test project|Save test project as/ })).toHaveCount(0);
+
+  await win.getByRole('button', { name: 'Close without saving' }).click();
+  const ask = page.getByRole('dialog', { name: 'Close without saving?' });
+  await ask.getByRole('button', { name: 'Keep editing' }).click();
+  await expect(win).toBeVisible();
+  await win.getByRole('button', { name: 'Close without saving' }).click();
+  await page.getByRole('dialog', { name: 'Close without saving?' }).getByRole('button', { name: 'Close without saving' }).click();
+  await expect(win).toHaveCount(0);
+  await expect(rows).toHaveCount(before);
+  await expect(page.getByText('Pasted and not saved')).toHaveCount(0);
+});
