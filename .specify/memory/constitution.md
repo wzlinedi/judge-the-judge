@@ -50,7 +50,7 @@ All inputs and results MUST be loadable from and exportable to plain files in op
 - No hidden state: the app's state MUST be reconstructible from the files the user supplied.
 - The user MUST be able to load everything the app needs (data, judge results, metric
   definitions) from files, with no other setup step. The check thresholds are saved in, and
-  loaded with, the test project and evaluation files; they have no file of their own.
+  loaded with, the test project file; they have no file of their own.
 - The application MUST offer an option to generate mock data so it can be tried and tested
   without real data. Mock data MAY be a fixed, committed sample set; it does not need to be
   regenerated on each run, and the same mock files MUST be usable as test fixtures.
@@ -186,4 +186,4 @@ rationale, approval from the project owner, and a note of any affected specs or 
 - **Compliance review**: every spec, plan, and implementation review MUST verify compliance
   with this constitution. Unjustified violations block completion.
 
-**Version**: 3.1.0 | **Ratified**: 2026-11-08 | **Last Amended**: 2026-11-15
+**Version**: 3.1.1 | **Ratified**: 2026-11-08 | **Last Amended**: 2026-11-15
