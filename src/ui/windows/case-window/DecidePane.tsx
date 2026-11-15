@@ -96,6 +96,34 @@ function AdditionalItem({ item, testCase, judged, onMark, onShow, onRemove }: { 
   );
 }
 
+/** Part 3 before the reply is saved: the expected errors of the case, read-only, with no marks (FR-055, T264). */
+export function ExpectedPreview({ testCase, judged, onShowInText }: { testCase: TestCase; judged: string | undefined; onShowInText: (target: ShowTarget) => void }) {
+  const errors = testCase.expected_errors;
+  return (
+    <section class="decide-pane">
+      <h4>Errors</h4>
+      {errors.length === 0 ? (
+        <p class="muted">No expected errors.</p>
+      ) : (
+        <>
+          <h5>Expected errors</h5>
+          <ul class="decide-list" aria-label="Expected errors">
+            {errors.map((error, i) => {
+              const sides = errorSides(testCase, judged, error);
+              return (
+                <li key={error.id} data-expected={error.id} class="decide-item">
+                  <ErrorCard name={`E${i + 1}`} title={error.description} facts={[error.category, error.difficulty].filter((x): x is NonNullable<typeof x> => !!x)} sides={sides} onShow={() => onShowInText(showTargetOf(sides, error.id))} />
+                </li>
+              );
+            })}
+          </ul>
+          <p class="muted">The judge’s findings and the marks appear when its reply is saved.</p>
+        </>
+      )}
+    </section>
+  );
+}
+
 /** Part 2 of the case window of Run: Add finding, Second opinion…, the meter "Marked N of M" and the status of the case. */
 export function DecideBar({ reviewed, effective, onAddFinding, onSecondOpinion }: DecideBarProps) {
   const progress = effective ? markProgress(effective) : null;

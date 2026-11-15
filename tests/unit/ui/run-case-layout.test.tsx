@@ -112,14 +112,32 @@ describe('the case window of Run: three parts from top to bottom', () => {
     expect(within(right).getAllByRole('button', { name: 'Ignored' }).length).toBeGreaterThan(0);
   });
 
-  it('before a reply is saved, marking is not offered and the case says so', () => {
+  it('before a reply is saved, marking is not offered, the case says so, and its expected errors are already listed with no marks (T264)', () => {
+    const e = structuredClone(demo);
+    delete e.replies['11'];
+    delete e.decisions['11'];
+    open('11', e);
+    expect(within(part(2)).queryByRole('button', { name: 'Add finding…' })).toBeNull();
+    expect(within(part(2)).getByText(/Not run/)).toBeTruthy();
+    const right = part(3).querySelectorAll<HTMLElement>('.case-half > section')[1] as HTMLElement;
+    const list = within(right).getByRole('list', { name: 'Expected errors' });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(3);
+    const expected = demo.dataset.cases.find((c) => c.id === '11')!.expected_errors;
+    expected.forEach((error, i) => expect(within(list).getAllByRole('listitem')[i]?.textContent).toContain(error.description));
+    expect(within(right).queryAllByRole('button', { name: /Found|Missed|Ignored|Real error|False positive/ })).toHaveLength(0);
+    expect(right.querySelectorAll('.judge-says')).toHaveLength(0);
+    expect(within(right).getAllByRole('button', { name: 'Show the issue' }).length).toBeGreaterThan(0);
+    expect(within(right).getByText('The judge’s findings and the marks appear when its reply is saved.')).toBeTruthy();
+    expect(within(part(3)).queryByText('The errors appear here when the judge’s reply is saved.')).toBeNull();
+  });
+
+  it('a clean case without a reply says it has no expected errors (T264)', () => {
     const e = structuredClone(demo);
     delete e.replies['3'];
     delete e.decisions['3'];
     open('3', e);
-    expect(within(part(2)).queryByRole('button', { name: 'Add finding…' })).toBeNull();
-    expect(within(part(2)).getByText(/Not run/)).toBeTruthy();
-    expect(within(part(3)).getByText('The errors appear here when the judge’s reply is saved.')).toBeTruthy();
+    expect(within(part(3)).getByText('No expected errors.')).toBeTruthy();
+    expect(within(part(3)).queryByRole('list', { name: 'Expected errors' })).toBeNull();
   });
 });
 

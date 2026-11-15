@@ -11,7 +11,7 @@ import { Dialog } from '../../components/Dialog';
 import { Part } from '../../components/CasePart';
 import { PromptButtons } from '../../components/PromptButtons';
 import { labels } from '../../labels';
-import { DecideBar, ErrorsPane } from './DecidePane';
+import { DecideBar, ErrorsPane, ExpectedPreview } from './DecidePane';
 import { MarkedFields } from './MarkedFields';
 import { useShowIssue } from './useShowIssue';
 import { SecondOpinionWindow } from '../second-opinion/SecondOpinionWindow';
@@ -169,10 +169,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
               onRemove={(item) => item.added !== undefined && onChange(removeFinding(evaluation, caseId, item.added))}
             />
           ) : (
-            <section class="decide-pane">
-              <h4>Errors</h4>
-              <p class="muted">The errors appear here when the judge’s reply is saved.</p>
-            </section>
+            <ExpectedPreview testCase={testCase} judged={judged} onShowInText={showInText} />
           )}
         </div>
       </Part>
