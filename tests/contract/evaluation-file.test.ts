@@ -86,6 +86,19 @@ describe('evaluation file (file-formats.md, section 5)', () => {
     if (read.ok) expect(read.notes.filter((n) => /field/.test(n))).toHaveLength(1);
   });
 
+  it('loads a file saved when a real-error mark kept a link to an expected error (T253, undone by T259) and drops the link', async () => {
+    const { text } = await written();
+    const file = JSON.parse(text);
+    file.decisions['2'].added_findings[0].state = 'real_error';
+    file.decisions['2'].added_findings[0].promoted_to = 'e9';
+    file.decisions['2'].additional = { 'x#1': { state: 'real_error', source: 'manual', promoted_to: 'e8' } };
+    const read = readEvaluation(JSON.stringify(file));
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(read.value.evaluation.decisions['2']!.added_findings[0]).not.toHaveProperty('promoted_to');
+    expect(read.value.evaluation.decisions['2']!.additional['x#1']).toEqual({ state: 'real_error', source: 'manual' });
+  });
+
   it('refuses a test project file with a message that names "Load test project"', () => {
     const read = readEvaluation(JSON.stringify({ format: 'judge-the-judge-test-project', schema_version: 1 }));
     expect(read.ok).toBe(false);

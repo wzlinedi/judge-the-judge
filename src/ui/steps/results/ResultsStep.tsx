@@ -82,7 +82,7 @@ export function ResultsStep({ results, evaluation, reviewed, onContinue, onRerun
       </div>
       <div role="tabpanel" id={`panel-${view}`} aria-labelledby={`tab-${view}`}>
         {view === 'summary' ? (
-          <SummaryView results={results} evaluation={evaluation} onThreshold={onThreshold} onLoadChecks={onLoadChecks} />
+          <SummaryView results={results} evaluation={evaluation} onThreshold={onThreshold} onLoadChecks={onLoadChecks} reviewed={reviewed} onOpenCase={onOpenCase} />
         ) : view === 'analysis' ? (
           <ErrorAnalysisView results={results} />
         ) : (

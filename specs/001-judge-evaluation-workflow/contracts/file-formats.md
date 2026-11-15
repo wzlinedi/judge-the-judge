@@ -348,9 +348,7 @@ evaluation", and the demo of "Load demo…"; it is also the result as JSON (ther
 - `state` is one of `found`, `missed` ("Not found"), `ignored`, `real_error`,
   `false_positive` ("False positive"); `source` is `automatic`, `manual` (set by hand) or
   `llm-approved` (an LLM opinion applied by the user with "Apply opinion", FR-063).
-- `promoted_to` (T253), on a decision of an additional finding or on an added finding whose state is `real_error`, names the
-  expected error of the case that this mark made; that expected error is an ordinary one in `dataset.cases` and is found by definition,
-  never matched against the reply. A link to an error the case does not have is ignored.
+- `promoted_to`, written by an earlier build (T253, undone by T259), is dropped when the file is read; the file loads.
 - `added_findings` are the findings added by hand ("Add finding") or by an applied LLM opinion
   (`from_opinion: true`), in their order; each may carry `category` and `difficulty` (FR-062).
   They are the only findings with "Remove". A new reply removes them with the other decisions

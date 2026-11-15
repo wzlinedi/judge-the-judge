@@ -96,7 +96,7 @@ export function ReadOnlyCaseView({ evaluation, reviewed, caseId, onNavigate, onC
                     return (
                       <li key={e.id} class="decide-item" data-expected={e.id}>
                         <ErrorCard name={`E${i + 1}`} title={meta?.description ?? ''} facts={[meta?.category, meta?.difficulty].filter((x): x is NonNullable<typeof x> => !!x)} sides={sides} onShow={() => show(showTargetOf(sides, e.id))}>
-                          <p class="error-state">{e.promoted ? 'Found (added from a real error of the judge)' : STATE_LABELS[e.state]}</p>
+                          <p class="error-state">{STATE_LABELS[e.state]}</p>
                           {e.state !== 'undecided' ? <p class="source muted">{SOURCE_LABELS[e.source]}</p> : <p class="reason">{e.reason ?? 'Not decided.'}</p>}
                         </ErrorCard>
                       </li>

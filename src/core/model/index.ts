@@ -146,15 +146,8 @@ export interface Decision<S extends string> {
   source: DecisionSource;
 }
 
-/** The decision on an additional finding. `promoted_to` is the expected error that a "Real error (missed in scenario)" mark made (T253). */
-export interface AdditionalDecision extends Decision<AdditionalState> {
-  promoted_to?: string;
-}
-
 export interface AddedFinding {
   text: string;
-  /** The expected error that the real-error mark of this finding made (T253). */
-  promoted_to?: string;
   category?: string;
   difficulty?: Difficulty;
   from_opinion?: boolean;
@@ -164,7 +157,7 @@ export interface AddedFinding {
 
 export interface CaseDecisions {
   expected: Record<string, Decision<ExpectedState>>;
-  additional: Record<string, AdditionalDecision>;
+  additional: Record<string, Decision<AdditionalState>>;
   added_findings: AddedFinding[];
   approved: boolean;
   note: string;

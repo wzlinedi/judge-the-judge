@@ -1,4 +1,5 @@
-import type { Results } from '../../../core/evaluation/results';
+import { genuineErrors } from '../../../core/evaluation/genuine-errors';
+import type { Results, ReviewedCase } from '../../../core/evaluation/results';
 import { MINIMUM_SAMPLE } from '../../../core/evaluation/results';
 import type { Evaluation } from '../../../core/model';
 import { PER_CASE_SENTENCE } from '../../../core/evaluation/counting-note';
@@ -29,9 +30,33 @@ export interface SummaryViewProps {
   evaluation: Evaluation;
   onThreshold: (measure: string, value: number) => void;
   onLoadChecks: () => void;
+  reviewed: readonly ReviewedCase[];
+  onOpenCase: (caseId: string) => void;
 }
 
-export function SummaryView({ results, evaluation, onThreshold, onLoadChecks }: SummaryViewProps) {
+/** The findings marked Genuine error (T259): the test cases did not expect them, so the owner sees which cases are not complete. */
+function GenuineErrors({ reviewed, onOpenCase }: { reviewed: readonly ReviewedCase[]; onOpenCase: (caseId: string) => void }) {
+  const list = genuineErrors(reviewed);
+  if (list.length === 0) return null;
+  return (
+    <section role="region" aria-label="Genuine errors the test cases missed" class="genuine-errors">
+      <h3>Genuine errors the test cases missed</h3>
+      <p class="muted">The judge found these real errors that the test cases do not list. Consider adding them to the case with Test cases › Open › Edit expected errors.</p>
+      <ul class="plain-list">
+        {list.map((g, i) => (
+          <li key={`${g.caseId}-${i}`}>
+            {`Case ${g.caseId} · ${g.caseName}: ${g.text === '' ? 'a finding about the whole reply' : `“${g.text}”`} `}
+            <button type="button" class="link-button" onClick={() => onOpenCase(g.caseId)}>
+              Open
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export function SummaryView({ results, evaluation, onThreshold, onLoadChecks, reviewed, onOpenCase }: SummaryViewProps) {
   const c = results.counters;
   const rateIds = results.evaluated_per === 'case' ? ['case_detection_rate', 'clean_case_false_positive_rate'] : ['detection_rate', 'false_positive_rate'];
   const ignored = c.ignored_expected + c.ignored_additional;
@@ -85,6 +110,8 @@ export function SummaryView({ results, evaluation, onThreshold, onLoadChecks }: 
           </>
         )}
       </div>
+
+      <GenuineErrors reviewed={reviewed} onOpenCase={onOpenCase} />
 
       {ignored > 0 ? (
         <p class="muted">

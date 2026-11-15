@@ -122,17 +122,5 @@ export function saveExpectedErrors(state: AppState, id: string, text: string): C
   if (!stored) return { state: next, problems: [] };
   const decisions = structuredClone(stored);
   for (const gone of [...plan.changed, ...plan.removed]) delete decisions.expected[gone];
-  for (const made of plan.promotedRemoved) {
-    for (const d of Object.values(decisions.additional)) {
-      if (d.promoted_to !== made) continue;
-      Object.assign(d, { state: 'ignored', source: 'manual' });
-      delete d.promoted_to;
-    }
-    for (const f of decisions.added_findings) {
-      if (f.promoted_to !== made) continue;
-      Object.assign(f, { state: 'ignored', source: 'manual' });
-      delete f.promoted_to;
-    }
-  }
   return { state: edit(next, (e) => ({ ...e, decisions: { ...e.decisions, [id]: decisions } })), problems: [] };
 }

@@ -49,8 +49,6 @@ export interface ExpectedErrorsPlan {
   added: number;
   /** Marks set by hand or by an opinion for a changed or removed error: they are dropped. */
   marksDropped: number;
-  /** Removed errors that a real-error mark of a finding made (T253). */
-  promotedRemoved: string[];
   nothing: boolean;
 }
 
@@ -64,8 +62,6 @@ export function planExpectedErrors(before: readonly ExpectedError[], after: read
   const removed = before.filter((e) => !now.has(e.id)).map((e) => e.id);
   const added = after.filter((e) => !was.has(e.id)).length;
   const marksDropped = [...changed, ...removed].filter((id) => decisions?.expected[id] !== undefined).length;
-  const made = new Set([...Object.values(decisions?.additional ?? {}), ...(decisions?.added_findings ?? [])].filter((d) => d.state === 'real_error' && d.promoted_to !== undefined).map((d) => d.promoted_to as string));
-  const promotedRemoved = removed.filter((id) => made.has(id));
   const reordered = before.length === after.length && before.some((e, i) => after[i]?.id !== e.id);
-  return { changed, removed, added, marksDropped, promotedRemoved, nothing: changed.length === 0 && removed.length === 0 && added === 0 && !reordered };
+  return { changed, removed, added, marksDropped, nothing: changed.length === 0 && removed.length === 0 && added === 0 && !reordered };
 }

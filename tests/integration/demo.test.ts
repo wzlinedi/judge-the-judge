@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { syncPromotions } from '../../src/core/evaluation/promotion';
 import { computeResults, reviewEvaluation } from '../../src/core/evaluation/results';
 import { readEvaluation } from '../../src/core/io/evaluation-file';
 import { findVariables } from '../../src/core/judge/variables';
@@ -16,12 +15,6 @@ if (!read.ok) throw new Error(read.problems.map((p) => p.message).join('; '));
 const evaluation = read.value.evaluation;
 const expected = JSON.parse(load('expected-results.json'));
 const roundTrip = (v: unknown) => JSON.parse(JSON.stringify(v));
-/** The five decisions of the file, then the step the window takes after each one: a real error becomes an expected error (T253). */
-function finishedDemo() {
-  let finished = { ...evaluation, decisions: expected.decisions_after };
-  for (const id of Object.keys(expected.decisions_after)) finished = syncPromotions(finished, reviewEvaluation(finished, accuracyMetric).find((r) => r.testCase.id === id)!).evaluation;
-  return finished;
-}
 
 describe('the demo (FR-026, research.md section 23)', () => {
   it('loads finalized with 20 cases and 20 replies and no decisions', () => {
@@ -72,11 +65,11 @@ describe('the demo (FR-026, research.md section 23)', () => {
   });
 
   it('after the 5 cases are decided the result is Works with the full test size', () => {
-    const results = computeResults(finishedDemo(), accuracyMetric);
+    const finished = { ...evaluation, decisions: expected.decisions_after };
+    const results = computeResults(finished, accuracyMetric);
     expect(roundTrip(results)).toEqual(expected.after_deciding);
     expect(results.overall.result).toBe('Works');
-    // the real error of case 19 is an expected error of that case now, found (T253): 30 injected errors and one more
-    expect(results.counters).toMatchObject({ expected_total: 31, expected_found: 28, real_errors: 0, clean_cases_decided: 10, cases_awaiting: 0 });
+    expect(results.counters).toMatchObject({ expected_total: 30, clean_cases_decided: 10, cases_awaiting: 0 });
     expect(results.provisional).toBe(false);
   });
 
@@ -90,7 +83,7 @@ describe('the demo (FR-026, research.md section 23)', () => {
     expect(extractJson(fenced[0]!.reply).ok).toBe(true);
     const after = computeResults({ ...evaluation, decisions: expected.decisions_after }, accuracyMetric).counters;
     expect(after.false_positives).toBeGreaterThan(0);
-    expect(after.real_errors).toBeGreaterThan(0); // before the real error is made an expected error
+    expect(after.real_errors).toBeGreaterThan(0);
   });
 
   it('records the versions of the judge and of the test cases', async () => {

@@ -167,6 +167,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-14, third look, T254) Where and when can the expected errors of a case be edited? → A: On every case in Open, before and after finalizing, with or without a reply. "Edit expected errors" opens the standard large dialog with the JSON of the list of the expected errors only (each with its `id`), checked as it changes. An error that keeps its `id` and its words keeps its mark. For a case with a reply Save asks first: the marks of the changed and removed errors are dropped, the case is marked again from the reply and the test cases version changes. This replaces FR-089 (only a case without a reply, after finalizing, in the From JSON window).
 - Q: (Owner review 2026-11-14, third look, T255) What does "Copy and recreate" open? → A: The empty "From JSON" window, as before (the box is the place for the new case, nothing is pasted into it), now with **Show prompt** at the top: it opens the prompt that was copied, in the standard large dialog (with **Copy prompt** and **Close**), in case it is needed again. The case saved from that window keeps that prompt as its `generation_prompt`. This replaces the part of T238 that opened the window with nothing on it (FR-086).
 - Q: (Owner review 2026-11-14, third look, T256) What does Open show in Results › Test case list, and can marks be changed there? → A: The same layout as Run, read-only, in three parts: 1. Case (the fields with the highlights and the complete prompt, no buttons), 2. Judge reply, 3. Errors, which begins with a summary line ("3 expected: 2 found, 1 not found · Additional: 2 false positive") and then the two groups with the shared error component and "Show the issue". The part "Result" and the meter "Marked N of M" go; the status is in the header. Marks cannot be changed there; "Open on Run" stays as the way to change them. This replaces T241 and keeps FR-071 ("no action that changes the case"). (The owner's list said "Test Run"; this is the screen understood by it.)
+- Q: (Owner review 2026-11-15, fourth look, T259) Is a real error of the judge that the test case missed still added to the expected errors? → A: No. It stays in "Additional errors" with its mark (Genuine error, T260) and is counted on its own, so the owner gets the feedback that the test case was not complete; Results › Summary lists every such finding with its case and Open ("Genuine errors the test cases missed"). Adding it to the case is a separate step (Test cases › Open › Edit expected errors). This replaces the answer of T253; a file with `promoted_to` loads and the key is dropped. The demo is back to 27 of 30 found and 1 genuine error.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -1500,15 +1501,10 @@ case and confirm the new case has the same fields and expected errors.
   list of Results and the report, and counted in the table of additional findings of FR-070. A finding added by hand MUST have "Remove", which removes it
   with its mark; a finding read from the reply MUST NOT have one. An item
   marked "Ignored" MUST be left out of every count and listed as ignored in the report. An
-  additional finding marked "Real error (missed in scenario)" (a true error that was not planned) MUST be added at once, with no
-  question, to the expected errors of its test case (T253): a new expected error with the next free identifier, the text of the finding as
-  its fragment (a finding about the whole reply has none), its category and difficulty when it has them, and the description of the finding. A banner in the case
-  window says so ("Added to the expected errors of case 15 as E4."). The finding stays in "Additional errors" with its mark and
-  the words "Added to the expected errors as E4"; it is counted once, as an expected error that was found, and never as an additional
-  real error (FR-066). The new expected error is never matched against the reply and has no marks of its own. Changing the mark of that finding, or removing it (a finding
-  added by hand), removes the expected error again with the mark it had; this also holds for a finding added with "Add finding…" and for an
-  applied opinion. The test cases version changes and, after the first reply, the case is marked "corrected". When the replies are cleared
-  the expected error stays as an ordinary one. The user MUST be able to
+  additional finding marked "Real error (missed in scenario)" (a true error that was not planned) is counted on its own
+  (FR-066); it MUST NOT be added to the expected errors of the case (T259, which undoes T253): it stays in "Additional errors", and
+  Results › Summary MUST list every such finding with its case and **Open** under "Genuine errors the test cases missed", so the
+  owner sees which test cases are not complete. The user MUST be able to
   change any mark, including an automatic one. A case has no note of its own in the case window:
   the note of the run is the "Model details" box of the Run step (a note of a case in a loaded file
   is kept and shown in the report).
@@ -1829,7 +1825,7 @@ case and confirm the new case has the same fields and expected errors.
   it changes (FR-041, FR-080, FR-084): the check line and the changed places that no error covers are shown under the box, and a mismatch is asked about before saving, as for any case; "Save expected errors" is disabled with the reason beside it while there is a problem or nothing changed. An error that keeps its
   `id` and its words keeps its mark; an error without `id` is a new one and gets the next free identifier. Saving gives a new test cases version; after the first reply the
   case is marked "corrected". For a case with a reply "Save" asks first: the marks set by hand or by an opinion for the changed and removed errors are dropped, the case is marked again from
-  the reply, and an error that a real-error mark made (T253) that is removed sets that finding to "Ignored".
+  the reply.
 
 - **FR-090**: "From JSON" MUST open the page of FR-085 with only the JSON box of FR-041 and the list of expected errors under it, for a case JSON the user
   already has (prepared elsewhere, or exported). The checks of FR-041 and

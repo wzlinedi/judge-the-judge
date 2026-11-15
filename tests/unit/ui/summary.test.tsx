@@ -35,6 +35,22 @@ describe('Summary', () => {
     expect(subtle).toMatch(/Found\s*12/);
   });
 
+  it('lists the genuine errors the test cases missed, each with its case and Open (T259)', () => {
+    const onOpenCase = vi.fn();
+    render(<ResultsStep results={final} {...finalContext} {...props} onOpenCase={onOpenCase} />);
+    const region = screen.getByRole('region', { name: 'Genuine errors the test cases missed' });
+    const rows = within(region).getAllByRole('listitem');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.textContent).toMatch(/^Case 19 · The Old Man and the Sea \+ 3 errors: “.+”/);
+    fireEvent.click(within(rows[0]!).getByRole('button', { name: 'Open' }));
+    expect(onOpenCase).toHaveBeenCalledWith('19');
+  });
+
+  it('has no list of genuine errors when there is none', () => {
+    render(<ResultsStep results={provisional} {...provisionalContext} {...props} />);
+    expect(screen.queryByRole('region', { name: 'Genuine errors the test cases missed' })).toBeNull();
+  });
+
   it('shows the ignored count only when it is not zero', () => {
     const { unmount } = render(<ResultsStep results={final} {...finalContext} {...props} />);
     expect(screen.queryByText(/Ignored/)).toBeNull();

@@ -73,8 +73,7 @@ test('a finished result is reproduced from the evaluation file alone: identical 
   await loadEvaluation(page, memory, 'finished.json');
   await expect(page.getByRole('status', { name: 'Message' })).not.toContainText('differ');
   await page.getByRole('button', { name: /4\s*Results/ }).click();
-  // the real error of case 19 became an expected error after the first reply (T253), and the notice says so: nothing else
-  await expect(page.getByRole('region', { name: 'Notices' })).toHaveText(/^Cases corrected after the first reply: case 19 \(The Old Man and the Sea \+ 3 errors\)\.$/);
+  await expect(page.getByRole('region', { name: 'Notices' })).toHaveCount(0);
   await expect.poll(() => summary(page)).toBe(numbers);
   await page.getByRole('button', { name: /3\s*Run/ }).click();
   await page.getByRole('button', { name: 'More', exact: true }).click();
@@ -131,8 +130,7 @@ test('a file whose stored numbers do not follow from its data is loaded, and the
   const details = page.locator('details.details-section');
   await details.getByText('Details', { exact: true }).click();
   await details.getByLabel('Detection rate: at least (%)').fill('70');
-  // the real error of case 19 became an expected error after the first reply (T253), and the notice says so: nothing else
-  await expect(page.getByRole('region', { name: 'Notices' })).toHaveText(/^Cases corrected after the first reply: case 19 \(The Old Man and the Sea \+ 3 errors\)\.$/);
+  await expect(page.getByRole('region', { name: 'Notices' })).toHaveCount(0);
 });
 
 test('the earlier run is never overwritten: after Run again with a new judge… both files ask for a new name (step 5)', async ({ page }) => {

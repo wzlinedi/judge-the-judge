@@ -119,7 +119,6 @@ export function ExpectedErrorsDialog({ state, caseId, onApply, onClose }: Expect
           </>
         ) : null}
         {hasReply ? <p>{`This case has a reply. ${plan ? `${plural(plan.marksDropped, 'mark you set', 'marks you set')} for changed or removed errors ${plan.marksDropped === 1 ? 'is' : 'are'} dropped, ` : ''}the case is marked again from the reply, and the test cases version changes.`}</p> : null}
-        {plan && plan.promotedRemoved.length > 0 ? <p>{`${plural(plan.promotedRemoved.length, 'error was', 'errors were')} made from a real error of the judge. Removing ${plan.promotedRemoved.length === 1 ? 'it' : 'them'} sets that finding to Ignored.`}</p> : null}
       </Dialog>
     </>
   );

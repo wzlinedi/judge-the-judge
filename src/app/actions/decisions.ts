@@ -17,8 +17,7 @@ export function setExpectedMark(evaluation: Evaluation, caseId: string, expected
 
 export function setAdditionalMark(evaluation: Evaluation, caseId: string, key: string, state: AdditionalState): Evaluation {
   return withCase(evaluation, caseId, (d) => {
-    const linked = d.additional[key]?.promoted_to;
-    d.additional[key] = { state, source: 'manual', ...(linked !== undefined ? { promoted_to: linked } : {}) };
+    d.additional[key] = { state, source: 'manual' };
     return d;
   });
 }

@@ -49,10 +49,6 @@ function ExpectedItem({ error, index, testCase, judged, onMark, onShow }: { erro
   return (
     <li data-expected={error.id} class="decide-item">
       <ErrorCard name={name} title={meta?.description ?? ''} facts={[meta?.category, meta?.difficulty].filter((x): x is NonNullable<typeof x> => !!x)} sides={sides} onShow={() => onShow(showTargetOf(sides, error.id))}>
-        {error.promoted ? (
-          <p class="promoted-note">{`Found. Added here from a real error of the judge (${SOURCE_LABELS[error.source]}). Change the mark of that finding to take it out.`}</p>
-        ) : (
-        <>
         <div role="group" aria-label={`Mark for ${name}`} class="marks">
           {EXPECTED_MARKS.map((m) => (
             <button key={m.state} type="button" aria-pressed={error.state === m.state} class={error.state === m.state ? 'pressed' : ''} onClick={() => onMark(m.state)}>
@@ -61,14 +57,12 @@ function ExpectedItem({ error, index, testCase, judged, onMark, onShow }: { erro
           ))}
         </div>
         {error.state === 'undecided' ? <p class="reason">{error.reason ?? 'Decide this by hand.'}</p> : <p class="source muted">{SOURCE_LABELS[error.source]}</p>}
-        </>
-        )}
       </ErrorCard>
     </li>
   );
 }
 
-function AdditionalItem({ item, number, testCase, judged, onMark, onShow, onRemove }: { item: EffectiveAdditional; number: string | undefined; testCase: TestCase; judged: string | undefined; onMark: (s: AdditionalState) => void; onShow: (target: ShowTarget) => void; onRemove: () => void }) {
+function AdditionalItem({ item, testCase, judged, onMark, onShow, onRemove }: { item: EffectiveAdditional; testCase: TestCase; judged: string | undefined; onMark: (s: AdditionalState) => void; onShow: (target: ShowTarget) => void; onRemove: () => void }) {
   const sides = item.text === '' ? [] : errorSides(testCase, judged, { fragment: item.text });
   const facts = [item.rules.length > 0 ? `Rule: ${item.rules.join(', ')}` : undefined, item.category, item.difficulty].filter((x): x is string => !!x);
   return (
@@ -94,7 +88,6 @@ function AdditionalItem({ item, number, testCase, judged, onMark, onShow, onRemo
           ))}
         </div>
         {item.state === 'undecided' ? <p class="reason">This finding matches no expected error. Is it a real error that the test case missed, or a false positive?</p> : <p class="source muted">{SOURCE_LABELS[item.source]}</p>}
-        {number !== undefined ? <p class="promoted-note">{`Added to the expected errors as ${number}.`}</p> : null}
       </ErrorCard>
     </li>
   );
@@ -175,7 +168,7 @@ export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onAp
           <h5>Additional errors</h5>
           <ul class="decide-list" aria-label="Additional errors">
             {effective.additional.map((a) => (
-              <AdditionalItem key={a.key} item={a} number={a.promotedTo === undefined ? undefined : `E${reviewed.testCase.expected_errors.findIndex((x) => x.id === a.promotedTo) + 1}`} testCase={reviewed.testCase} judged={judged} onMark={(s) => onAdditional(a, s)} onShow={onShowInText} onRemove={() => onRemove(a)} />
+              <AdditionalItem key={a.key} item={a} testCase={reviewed.testCase} judged={judged} onMark={(s) => onAdditional(a, s)} onShow={onShowInText} onRemove={() => onRemove(a)} />
             ))}
           </ul>
         </>

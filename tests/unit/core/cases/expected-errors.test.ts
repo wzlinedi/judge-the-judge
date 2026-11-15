@@ -87,9 +87,4 @@ describe('planExpectedErrors', () => {
     expect(plan.marksDropped).toBe(0);
   });
 
-  it('names an error that a real-error mark made when it is removed', () => {
-    const [first] = original.expected_errors as [TestCase['expected_errors'][number]];
-    const plan = planExpectedErrors(original.expected_errors, [], decisions({ additional: { 'c#1': { state: 'real_error', source: 'manual', promoted_to: first.id } } }));
-    expect(plan.promotedRemoved).toEqual([first.id]);
-  });
 });

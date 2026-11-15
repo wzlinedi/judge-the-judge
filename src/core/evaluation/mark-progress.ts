@@ -10,7 +10,6 @@ export interface MarkProgress {
  * and an item is marked once it is not undecided (Ignore is a decision too).
  */
 export function markProgress(effective: Pick<Effective, 'expected' | 'additional'>): MarkProgress {
-  // an expected error that a real-error mark made has no mark of its own (T253)
-  const items = [...effective.expected.filter((e) => !e.promoted), ...effective.additional];
+  const items = [...effective.expected, ...effective.additional];
   return { marked: items.filter((i) => i.state !== 'undecided').length, total: items.length };
 }

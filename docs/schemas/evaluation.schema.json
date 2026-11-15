@@ -360,9 +360,6 @@
                     "manual",
                     "llm-approved"
                   ]
-                },
-                "promoted_to": {
-                  "type": "string"
                 }
               },
               "required": [
@@ -392,9 +389,6 @@
                 },
                 "from_opinion": {
                   "type": "boolean"
-                },
-                "promoted_to": {
-                  "type": "string"
                 },
                 "state": {
                   "type": "string",

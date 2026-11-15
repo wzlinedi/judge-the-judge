@@ -2,7 +2,6 @@
 // Every function returns a new evaluation, or for a correction of the judge a new state with one sentence.
 import { addCategories, normalizeCategoryName } from '../../core/cases/catalog';
 import { applyOpinion, type OpinionPlan } from '../../core/evaluation/opinions';
-import { dropPromotion } from '../../core/evaluation/promotion';
 import { reviewEvaluation } from '../../core/evaluation/results';
 import type { CaseDecisions, Difficulty, Evaluation } from '../../core/model';
 import type { MetricDefinition } from '../../core/metrics/types';
@@ -54,8 +53,7 @@ export function addFinding(evaluation: Evaluation, caseId: string, finding: NewF
 /** "Remove": only a finding added by hand or by an opinion can be removed, with its mark. */
 export function removeFinding(evaluation: Evaluation, caseId: string, index: number): Evaluation {
   if (!evaluation.decisions[caseId]?.added_findings[index]) return evaluation;
-  // a finding that made an expected error takes it with it (T253)
-  return withDecisions(dropPromotion(evaluation, caseId, index), caseId, (d) => {
+  return withDecisions(evaluation, caseId, (d) => {
     d.added_findings.splice(index, 1);
     return d;
   });

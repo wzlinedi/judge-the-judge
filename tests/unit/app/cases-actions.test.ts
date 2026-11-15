@@ -155,15 +155,6 @@ describe('saveExpectedErrors (T254)', () => {
     expect(same.note).toBe('Nothing changed.');
   });
 
-  it('removing an error that a real-error mark made sets that finding to Ignored, so the next sync does not add it again', () => {
-    const base = finalized(true);
-    const made = base.evaluation.dataset.cases[1]!.expected_errors[0]!.id;
-    const state: AppState = { ...base, evaluation: { ...base.evaluation, decisions: { '2': { expected: {}, additional: { 'claims[]#1': { state: 'real_error', source: 'manual', promoted_to: made } }, added_findings: [{ text: 'x', state: 'real_error', source: 'manual', promoted_to: made }], approved: false, note: '' } } } };
-    const r = saveExpectedErrors(state, '2', JSON.stringify(listOf(state, '2').slice(1)));
-    expect(r.state.evaluation.decisions['2']!.additional['claims[]#1']).toEqual({ state: 'ignored', source: 'manual' });
-    expect(r.state.evaluation.decisions['2']!.added_findings[0]).toEqual({ text: 'x', state: 'ignored', source: 'manual' });
-  });
-
   it('refuses a list with a problem and says where it is; the state is untouched', () => {
     const state = finalized(false);
     const r = saveExpectedErrors(state, '2', JSON.stringify([{ category: 'x' }]));

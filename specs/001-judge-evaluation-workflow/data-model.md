@@ -251,8 +251,8 @@ Built from the case, its findings and the matching rule (research.md, sections 1
 | Field | Type | Rules |
 |---|---|---|
 | `expected` | expected error id → Decision | State `found`, `missed` or `ignored`. |
-| `additional` | finding key → Decision | State `real_error`, `false_positive` or `ignored`. A `real_error` carries `promoted_to`, the identifier of the expected error it made in the case (T253), while it is `real_error`. |
-| `added_findings` | list | Findings added with "Add finding", or by an applied LLM opinion (`from_opinion`): `text`, optional `category` (a catalog name; a new one joins the catalog) and `difficulty` (`obvious` or `subtle`), and a Decision, with `promoted_to` while it is `real_error` (T253). The only findings with "Remove" (FR-062); removing one removes the expected error it made. |
+| `additional` | finding key → Decision | State `real_error`, `false_positive` or `ignored`. A `real_error` (Genuine error) stays an additional finding; nothing is added to the case (T259). |
+| `added_findings` | list | Findings added with "Add finding", or by an applied LLM opinion (`from_opinion`): `text`, optional `category` (a catalog name; a new one joins the catalog) and `difficulty` (`obvious` or `subtle`), and a Decision. The only findings with "Remove" (FR-062). |
 | `approved` | yes/no | Set by "No more findings" (formerly "Approve") and by "Apply opinion"; required when the reply could not be read. |
 | no answer | item → yes, not stored | Items an applied opinion did not answer and that were undecided; their reason becomes "The LLM opinion gave no answer for this item" (FR-063). |
 | `note` | text | Optional. Not written by the case window any more (T231); a file that holds it is read, kept and shown in the report and the read-only view. |
