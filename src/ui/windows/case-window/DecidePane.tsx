@@ -1,5 +1,5 @@
 import type { Effective, EffectiveAdditional, EffectiveExpected } from '../../../core/evaluation/decisions';
-import { markFindings } from '../../../core/evaluation/finding-marks';
+import { markFindings, type FindingMark } from '../../../core/evaluation/finding-marks';
 import { markProgress } from '../../../core/evaluation/mark-progress';
 import type { ReviewedCase } from '../../../core/evaluation/results';
 import type { AdditionalState, ExpectedState, TestCase } from '../../../core/model';
@@ -42,13 +42,16 @@ export interface ErrorsPaneProps {
   onRemove: (item: EffectiveAdditional) => void;
 }
 
-function ExpectedItem({ error, index, testCase, judged, onMark, onShow }: { error: EffectiveExpected; index: number; testCase: TestCase; judged: string | undefined; onMark: (s: ExpectedState) => void; onShow: (target: ShowTarget) => void }) {
+function ExpectedItem({ error, index, testCase, judged, judgeSays, onMark, onShow }: { error: EffectiveExpected; index: number; testCase: TestCase; judged: string | undefined; judgeSays: readonly FindingMark[]; onMark: (s: ExpectedState) => void; onShow: (target: ShowTarget) => void }) {
   const meta = testCase.expected_errors.find((e) => e.id === error.id);
   const sides = errorSides(testCase, judged, meta ?? {});
   const name = `E${index + 1}`;
   return (
     <li data-expected={error.id} class="decide-item">
       <ErrorCard name={name} title={meta?.description ?? ''} facts={[meta?.category, meta?.difficulty].filter((x): x is NonNullable<typeof x> => !!x)} sides={sides} onShow={() => onShow(showTargetOf(sides, error.id))}>
+        {judgeSays.map((m) => (
+          <p key={m.key} class="judge-says">{`Judge: ${m.text === '' ? 'the whole reply' : `“${m.text}”`} (${m.kind === 'clear' ? 'matches' : 'partly matches'})`}</p>
+        ))}
         <div role="group" aria-label={`Mark for ${name}`} class="marks">
           {EXPECTED_MARKS.map((m) => (
             <button key={m.state} type="button" aria-pressed={error.state === m.state} class={error.state === m.state ? 'pressed' : ''} onClick={() => onMark(m.state)}>
@@ -93,22 +96,6 @@ function AdditionalItem({ item, testCase, judged, onMark, onShow, onRemove }: { 
   );
 }
 
-/** Each finding of the reply with the words that go with its colour (FR-077): green matches, amber partly matches, red matches no expected error. */
-function FindingsInReply({ reviewed, unreadable }: { reviewed: ReviewedCase; unreadable: boolean }) {
-  if (unreadable) return <p class="muted">The reply is shown without finding highlights because it cannot be read.</p>;
-  const marks = markFindings(reviewed);
-  if (marks.length === 0) return <p class="muted">The reply holds no findings to highlight.</p>;
-  return (
-    <ul class="plain-list findings-in-reply" aria-label="Findings in the reply">
-      {marks.map((m) => (
-        <li key={m.key}>
-          <mark class={`finding finding-${m.kind}`}>{m.text === '' ? 'The whole reply' : m.text}</mark> <span class="finding-label">{m.label}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 /** Part 2 of the case window of Run: Add finding, Second opinion…, the meter "Marked N of M" and the status of the case. */
 export function DecideBar({ reviewed, effective, onAddFinding, onSecondOpinion }: DecideBarProps) {
   const progress = effective ? markProgress(effective) : null;
@@ -130,10 +117,12 @@ export function DecideBar({ reviewed, effective, onAddFinding, onSecondOpinion }
   );
 }
 
-/** The right column of part 3: the errors of the case in two groups, expected and additional, each with its marks (T252), and the findings of the reply. */
+/** The right column of part 3: the errors of the case in two groups, expected and additional, each with its marks (T252). */
 export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onApprove, onShowInText, judged, onRemove }: ErrorsPaneProps) {
   const unreadable = reviewed.review !== null && !reviewed.review.readable;
   const awaiting = reviewed.status === 'awaiting';
+  // the words of the judge that match each expected error (FR-077, T258): the list "Findings in the reply" is gone
+  const marks = markFindings(reviewed);
   return (
     <section class="decide-pane">
       <h4>Errors</h4>
@@ -157,7 +146,7 @@ export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onAp
           <h5>Expected errors</h5>
           <ul class="decide-list" aria-label="Expected errors">
             {effective.expected.map((e, i) => (
-              <ExpectedItem key={e.id} error={e} index={i} testCase={reviewed.testCase} judged={judged} onMark={(s) => onExpected(e.id, s)} onShow={onShowInText} />
+              <ExpectedItem key={e.id} error={e} index={i} testCase={reviewed.testCase} judged={judged} judgeSays={marks.filter((m) => m.kind !== 'none' && m.errorNumbers.includes(i + 1))} onMark={(s) => onExpected(e.id, s)} onShow={onShowInText} />
             ))}
           </ul>
         </>
@@ -173,9 +162,6 @@ export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onAp
           </ul>
         </>
       ) : null}
-
-      <h5>Findings in the reply</h5>
-      <FindingsInReply reviewed={reviewed} unreadable={unreadable} />
     </section>
   );
 }

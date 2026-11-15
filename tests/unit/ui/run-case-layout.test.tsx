@@ -103,11 +103,11 @@ describe('the case window of Run: three parts from top to bottom', () => {
     for (const n of [1, 2, 3]) expect(part(n).classList.contains('case-part')).toBe(true);
   });
 
-  it('the right column lists the expected errors, the additional errors and the findings in the reply, with their marks (T252)', () => {
+  it('the right column lists the expected errors and the additional errors with their marks (T252), and no list of the findings in the reply (T258)', () => {
     open('3');
     const right = part(3).querySelectorAll<HTMLElement>('.case-half > section')[1] as HTMLElement;
     expect(within(right).getByRole('list', { name: 'Additional errors' })).toBeTruthy();
-    expect(within(right).getByRole('list', { name: 'Findings in the reply' })).toBeTruthy();
+    expect(within(right).queryByRole('list', { name: 'Findings in the reply' })).toBeNull();
     expect(within(right).getAllByRole('button', { name: 'Ignored' }).length).toBeGreaterThan(0);
   });
 

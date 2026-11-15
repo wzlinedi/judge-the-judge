@@ -169,6 +169,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-14, third look, T256) What does Open show in Results › Test case list, and can marks be changed there? → A: The same layout as Run, read-only, in three parts: 1. Case (the fields with the highlights and the complete prompt, no buttons), 2. Judge reply, 3. Errors, which begins with a summary line ("3 expected: 2 found, 1 not found · Additional: 2 false positive") and then the two groups with the shared error component and "Show the issue". The part "Result" and the meter "Marked N of M" go; the status is in the header. Marks cannot be changed there; "Open on Run" stays as the way to change them. This replaces T241 and keeps FR-071 ("no action that changes the case"). (The owner's list said "Test Run"; this is the screen understood by it.)
 - Q: (Owner review 2026-11-15, fourth look, T259) Is a real error of the judge that the test case missed still added to the expected errors? → A: No. It stays in "Additional errors" with its mark (Genuine error, T260) and is counted on its own, so the owner gets the feedback that the test case was not complete; Results › Summary lists every such finding with its case and Open ("Genuine errors the test cases missed"). Adding it to the case is a separate step (Test cases › Open › Edit expected errors). This replaces the answer of T253; a file with `promoted_to` loads and the key is dropped. The demo is back to 27 of 30 found and 1 genuine error.
 - Q: (Owner review 2026-11-15, fourth look, T260) A shorter name for "Real error (missed in scenario)"? → A: **Genuine error**: the judge was right and the test case missed it, so it may be added to the case. Used in Run, Results (counts "Genuine errors"), the second opinion preview and the HTML report; the state value `real_error` in the files stays. Replaces the name of T252.
+- Q: (Owner review 2026-11-15, fourth look, T258) Does "Findings in the reply" repeat the expected and additional errors? → A: Yes; the list goes. The one thing only it showed, which words of the judge match an expected error and whether fully or partly, moves into the card of that expected error ("Judge: “…” (matches)" or "(partly matches)"). Replaces the reply part of FR-077.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -1425,8 +1426,8 @@ case and confirm the new case has the same fields and expected errors.
   JSON reply, always shown, checked as the text changes (FR-084) with only the problems said ("This is
   not JSON" and its place, an empty or refused clipboard); a reply that is readable JSON is saved as soon as it is in the box, and once
   a reply is saved the box holds it. The right column, "Errors", lists
-  the expected errors and the additional findings with their marks, then the findings in the reply
-  (FR-060 to FR-064). The window has no "More
+  the expected errors and the additional findings with their marks
+  (FR-060 to FR-064); there is no separate list of the findings in the reply (T258). The window has no "More
   actions" section and no "Approve". The window header MUST hold "Previous case" and
   "Next case", always visible and also reachable from the keyboard, the position of the case
   ("case 7 of 20"), and "Save evaluation". Moving to another case MUST NOT lose a reply
@@ -1689,10 +1690,9 @@ case and confirm the new case has the same fields and expected errors.
   - In the case window of Run and in the read-only case view: each expected error is highlighted
     in the judged text, wherever its fragment is found (word for word, otherwise the nearest
     match), with the number the error has in the list of expected errors, and the same number
-    stands beside its decision. In the judge's reply, the part each finding points at is
-    highlighted: green with the label "matches error N" when it hits an expected error, amber
-    with "partial match with error N" when it only partly resembles it, and red with "no
-    expected error" for an additional finding. An expected error whose fragment is not found in
+    stands beside its decision. Each expected error MUST show the words of the judge's findings that
+    match it, with "matches" or "partly matches" (T258); a finding that matches no expected error is an
+    additional error. There is no separate list of the findings in the reply. An expected error whose fragment is not found in
     the text is listed with the note "fragment not found". A reply that is not JSON, or a judge
     evaluated per case (FR-061), is shown without finding highlights and says so in one line.
   - In the read-only view (FR-086): the fragments of

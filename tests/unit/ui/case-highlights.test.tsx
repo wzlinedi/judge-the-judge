@@ -83,14 +83,14 @@ describe('findings in the reply', () => {
 });
 
 describe('the case window of Run', () => {
-  it('lists the findings of the reply with the words matches error N, partial match, or no expected error', () => {
+  it('each expected error says which words of the judge match it, and there is no list of the findings in the reply (T258)', () => {
     const e = sampleEvaluation();
     const reviewed = reviewEvaluation(e, accuracyMetric).find((r) => r.testCase.id === '2')!;
     const noop = () => undefined;
-    const { getByRole } = render(<ErrorsPane reviewed={reviewed} effective={reviewed.effective!} onExpected={noop} onAdditional={noop} onApprove={noop} onShowInText={noop} judged={undefined} onRemove={noop} />);
-    const list = getByRole('list', { name: 'Findings in the reply' });
-    expect(list.textContent).toContain('matches error 1');
-    expect(list.textContent).toContain('matches error 2');
-    expect(list.querySelector('mark.finding-clear')).not.toBeNull();
+    const { container, queryByRole } = render(<ErrorsPane reviewed={reviewed} effective={reviewed.effective!} onExpected={noop} onAdditional={noop} onApprove={noop} onShowInText={noop} judged={undefined} onRemove={noop} />);
+    expect(queryByRole('list', { name: 'Findings in the reply' })).toBeNull();
+    const says = [...container.querySelectorAll('[data-expected] .judge-says')].map((p) => p.textContent);
+    expect(says).toContain('Judge: “Anna is a doctor.” (matches)');
+    expect(says).toContain('Judge: “She bought a second oven in 2005.” (matches)');
   });
 });
