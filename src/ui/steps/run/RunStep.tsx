@@ -29,6 +29,13 @@ export function itemsToDecide(r: ReviewedCase): number {
   return undecided + (r.effective.needsApproval && !r.effective.approved && undecided === 0 ? 1 : 0);
 }
 
+/** The judge's findings that point at no expected error, and the findings the user added by hand (FR-054, T263); both 0 before the reply. */
+export function findingCounts(r: ReviewedCase): { additional: number; byHand: number } {
+  const all = r.effective?.additional ?? [];
+  const byHand = all.filter((a) => a.added !== undefined).length;
+  return { additional: all.length - byHand, byHand };
+}
+
 export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd, onModelDetails }: RunStepProps) {
   const [show, setShow] = useState<Show>('all');
   const versions = useVersions(evaluation);
@@ -92,6 +99,8 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
                 <th>Name</th>
                 <th>Kind</th>
                 <th>Expected errors</th>
+                <th>Additional findings</th>
+                <th>Added by hand</th>
                 <th>Status</th>
                 <th>Items to decide</th>
                 <th>
@@ -100,7 +109,9 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {rows.map((r) => {
+                const counts = findingCounts(r);
+                return (
                 <tr key={r.testCase.id}>
                   <td>{r.testCase.id}</td>
                   <td>
@@ -109,6 +120,8 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
                   </td>
                   <td>{r.testCase.expected_errors.length === 0 ? 'Clean' : 'Injected errors'}</td>
                   <td>{r.testCase.expected_errors.length}</td>
+                  <td>{counts.additional}</td>
+                  <td>{counts.byHand}</td>
                   <td>
                     <StatusMark status={r.status} />
                   </td>
@@ -119,7 +132,8 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </TableScroll>

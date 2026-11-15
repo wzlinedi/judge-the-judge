@@ -72,6 +72,33 @@ describe('the Run step', () => {
     expect(reminder.textContent).toContain('Save evaluation');
   });
 
+  // T263: four counts per case (FR-054), all 0 before the reply
+  it('shows four counts per case: Expected errors, Additional findings, Added by hand and Items to decide', () => {
+    render(<RunStep {...props} />);
+    const table = screen.getByRole('table');
+    const headers = within(table).getAllByRole('columnheader').map((h) => h.textContent);
+    expect(headers.slice(3, 8)).toEqual(['Expected errors', 'Additional findings', 'Added by hand', 'Status', 'Items to decide']);
+    const rows = within(table).getAllByRole('row').slice(1);
+    props.reviewed.forEach((r, i) => {
+      const cells = within(rows[i]!).getAllByRole('cell').map((c) => c.textContent);
+      const additional = r.effective?.additional ?? [];
+      expect(cells[3]).toBe(String(r.testCase.expected_errors.length));
+      expect(cells[4]).toBe(String(additional.filter((a) => a.added === undefined).length));
+      expect(cells[5]).toBe(String(additional.filter((a) => a.added !== undefined).length));
+    });
+  });
+
+  it('shows 0 in all counts of a case that has no reply yet, and counts hand-added findings apart from the judge\'s', () => {
+    const base = sampleEvaluation();
+    const firstId = base.dataset.cases[0]!.id;
+    const none: Evaluation = { ...base, replies: {}, decisions: {}, reply_judge_version: undefined };
+    render(<RunStep {...props} evaluation={none} reviewed={reviewEvaluation(none, accuracyMetric)} />);
+    const row = within(screen.getByRole('table')).getAllByRole('row')[1]!;
+    const cells = within(row).getAllByRole('cell').map((c) => c.textContent);
+    expect(cells[0]).toBe(firstId);
+    expect([cells[4], cells[5], cells[7]]).toEqual(['0', '0', '0']);
+  });
+
   it('says "1 reply" for one', () => {
     render(<RunStep {...props} repliesSinceSave={1} />);
     expect(screen.getByText('1 reply not saved to a file')).toBeTruthy();
