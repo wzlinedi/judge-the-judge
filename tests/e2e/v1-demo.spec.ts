@@ -81,9 +81,9 @@ test('deciding the five cases gives the numbers of the expected results file', a
   await expect(page.getByRole('status', { name: 'Provisional' })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Overall result' })).toContainText('Works');
   await expect(page.getByRole('group', { name: 'Expected errors' })).toContainText(`Found${c.expected_found}`);
-  await expect(page.getByRole('group', { name: 'Rates' })).toContainText('Detection rate90% (27 of 30)');
+  await expect(page.getByRole('group', { name: 'Rates' })).toContainText('Detection rate90.3% (28 of 31)');
   await expect(page.getByRole('group', { name: 'Rates' })).toContainText('False-positive rate6.7% (2 of 30)');
-  await expect(page.getByRole('region', { name: 'Test size' })).toContainText('30 of 30 expected errors, 10 of 10 clean cases');
+  await expect(page.getByRole('region', { name: 'Test size' })).toContainText('31 of 30 expected errors, 10 of 10 clean cases');
   await expect(page.getByText('Unsaved changes')).toBeVisible();
 });
 

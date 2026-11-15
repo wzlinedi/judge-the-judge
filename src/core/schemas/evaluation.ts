@@ -10,7 +10,7 @@ export const EVALUATION_SCHEMA_VERSION = 1;
 
 const source = z.enum(['manual', 'llm-approved']);
 const expectedDecision = z.object({ state: z.enum(['found', 'missed', 'ignored']), source });
-const additionalDecision = z.object({ state: z.enum(['real_error', 'false_positive', 'ignored']), source });
+const additionalDecision = z.object({ state: z.enum(['real_error', 'false_positive', 'ignored']), source, promoted_to: z.string().optional() });
 
 export const caseDecisionsSchema = z.object({
   expected: z.record(z.string(), expectedDecision).default({}),
@@ -22,6 +22,7 @@ export const caseDecisionsSchema = z.object({
         category: z.string().optional(),
         difficulty: z.enum(['obvious', 'subtle']).optional(),
         from_opinion: z.boolean().optional(),
+        promoted_to: z.string().optional(),
         state: z.enum(['real_error', 'false_positive', 'ignored']),
         source,
       }),

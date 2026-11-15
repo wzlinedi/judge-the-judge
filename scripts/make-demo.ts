@@ -5,7 +5,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import accuracy from '../src/core/metrics/builtin/accuracy.json';
 import checksDefault from '../src/core/metrics/builtin/checks.default.json';
 import { testCasesVersion } from '../src/core/cases/version';
-import { computeResults, reviewEvaluation } from '../src/core/evaluation/results';
+import { syncPromotions } from '../src/core/evaluation/promotion';
+import { computeResults, reviewEvaluation, type ReviewedCase } from '../src/core/evaluation/results';
 import { writeEvaluation } from '../src/core/io/evaluation-file';
 import { writeTestProject } from '../src/core/io/test-project-file';
 import { composePrompt } from '../src/core/judge/compose';
@@ -119,7 +120,9 @@ const decisionsAfter: Record<string, CaseDecisions> = {
 
 const versions = { judgeVersion: await judgeVersion(judge_set), testCasesVersion: await testCasesVersion(cases) };
 const asLoaded = computeResults(evaluation, metric);
-const finished: Evaluation = { ...evaluation, decisions: decisionsAfter };
+// a real error marked in the window is an expected error of its case at once (T253): the same step the window takes
+let finished: Evaluation = { ...evaluation, decisions: decisionsAfter };
+for (const id of Object.keys(decisionsAfter)) finished = syncPromotions(finished, reviewEvaluation(finished, metric).find((r) => r.testCase.id === id) as ReviewedCase).evaluation;
 const afterDeciding = computeResults(finished, metric);
 
 const awaiting = reviewEvaluation(evaluation, metric).filter((r) => r.status === 'awaiting').map((r) => r.testCase.id);

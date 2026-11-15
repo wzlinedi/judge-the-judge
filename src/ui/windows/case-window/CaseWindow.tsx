@@ -1,8 +1,9 @@
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { addFinding, applyOpinionTo, removeFinding } from '../../../app/actions/decide';
 import { approveCase, setAddedMark, setAdditionalMark, setExpectedMark } from '../../../app/actions/decisions';
 import { reminderDue, type ReplyOutcome } from '../../../app/actions/replies';
 import type { ReviewedCase } from '../../../core/evaluation/results';
+import { syncPromotions } from '../../../core/evaluation/promotion';
 import { composePrompt } from '../../../core/judge/compose';
 import { extractJson } from '../../../core/judge/extract-json';
 import type { Evaluation } from '../../../core/model';
@@ -38,7 +39,7 @@ export interface CaseWindowProps {
   reply: ReplyActions;
 }
 
-export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate, onClose, onlyAwaiting, onOnlyAwaitingChange, repliesSinceSave, reply: replyActions }: CaseWindowProps) {
+export function CaseWindow({ evaluation, reviewed, caseId, onChange: apply, onNavigate, onClose, onlyAwaiting, onOnlyAwaitingChange, repliesSinceSave, reply: replyActions }: CaseWindowProps) {
   const textRef = useRef<HTMLDivElement>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState<Record<string, boolean>>({});
@@ -48,6 +49,9 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   const [adding, setAdding] = useState(false);
   const [opinionOpen, setOpinionOpen] = useState(false);
   const { strong, shown, show: showInText } = useShowIssue(textRef);
+  /** What the last change did to the expected errors of the case (T253); it is said in the window, which covers the page. */
+  const [promotion, setPromotion] = useState('');
+  useEffect(() => setPromotion(''), [caseId]);
   const position = reviewed.findIndex((r) => r.testCase.id === caseId);
   const current = reviewed[position];
   if (!current) return null;
@@ -63,6 +67,13 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   const judged = evaluation.judge_set.judged_text;
   const prompt = reply?.prompt ?? composePrompt(evaluation.judge_set.prompt, testCase).text;
   const base = testCase.base ? reviewed.find((r) => r.testCase.id === testCase.base)?.testCase : undefined;
+
+  /** Every change of the decisions, then the expected errors follow the real-error marks: one idempotent step (T253). */
+  const onChange = (next: Evaluation) => {
+    const synced = syncPromotions(next, current);
+    if (synced.notes.length > 0) setPromotion(synced.notes.join(' '));
+    apply(synced.evaluation);
+  };
 
   const text = drafts[caseId] ?? reply?.reply ?? '';
   const changed = text !== (reply?.reply ?? '');
@@ -131,6 +142,9 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
 
       <Part number={2} title="Marking">
         <DecideBar reviewed={current} effective={effective ?? null} onAddFinding={() => setAdding(true)} onSecondOpinion={() => setOpinionOpen(true)} />
+        <p class="promotion-note" role="status" aria-label="Expected errors changed">
+          {promotion}
+        </p>
       </Part>
 
       <Part number={3} title="Judge reply and errors">

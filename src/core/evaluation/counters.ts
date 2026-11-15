@@ -120,6 +120,7 @@ export function countAll(inputs: readonly CountInput[], mode: CountingMode = 'pe
 
     let falsePositive = false;
     for (const a of effective.additional) {
+      if (a.promotedTo !== undefined) continue; // counted once, as the expected error it made (T253)
       if (a.state === 'ignored') {
         c.ignored_additional++;
         continue;

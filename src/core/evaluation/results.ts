@@ -5,7 +5,7 @@ import { recognizeFields } from '../judge/fields';
 import { countingModeOf } from '../judge/counting-mode';
 import type { MeasureValue, MetricDefinition } from '../metrics/types';
 import { countAll, type Counters } from './counters';
-import { applyDecisions, type Effective, type EffectiveSource } from './decisions';
+import { applyDecisions, promotedErrors, type Effective, type EffectiveSource } from './decisions';
 import { DEFAULT_MATCH, type MatchParameters } from './match';
 import { computeMeasures } from './measures';
 import { overallResult, type MinimumSample, type OverallResult } from './overall';
@@ -59,9 +59,12 @@ export function reviewEvaluation(evaluation: Evaluation, metric?: Pick<MetricDef
     const reply = evaluation.replies[testCase.id];
     if (!reply) return { testCase, review: null, effective: null, status: 'not_run' as const, findings: [] };
     const found = findFindings(reply.reply, judge_set.error_rules, judge_set.reply_mapping.finding_text, recognized);
-    const review = reviewCase(testCase, found, parameters, mode);
     const decisions: CaseDecisions | undefined = evaluation.decisions[testCase.id];
-    const effective = applyDecisions(review, decisions);
+    // the expected errors that real-error marks made are not matched: they are found by definition (T253)
+    const made = promotedErrors(decisions);
+    const matched = made.size === 0 ? testCase : { ...testCase, expected_errors: testCase.expected_errors.filter((e) => !made.has(e.id)) };
+    const review = reviewCase(matched, found, parameters, mode);
+    const effective = applyDecisions(review, decisions, testCase.expected_errors.map((e) => e.id));
     return { testCase, review, effective, status: caseStatus(effective), findings: found.findings };
   });
 }

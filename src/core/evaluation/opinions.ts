@@ -147,7 +147,10 @@ export function applyOpinion(decisions: CaseDecisions | undefined, plan: Opinion
   for (const m of plan.marks) {
     if (m.kind === 'expected') next.expected[m.target] = { state: m.to as ExpectedState, source: 'llm-approved' };
     else if (m.added !== undefined && next.added_findings[m.added]) next.added_findings[m.added] = { ...(next.added_findings[m.added] as CaseDecisions['added_findings'][number]), state: m.to as AdditionalState, source: 'llm-approved' };
-    else next.additional[m.target] = { state: m.to as AdditionalState, source: 'llm-approved' };
+    else {
+      const linked = next.additional[m.target]?.promoted_to;
+      next.additional[m.target] = { state: m.to as AdditionalState, source: 'llm-approved', ...(linked !== undefined ? { promoted_to: linked } : {}) };
+    }
   }
   for (const n of plan.newFindings) {
     next.added_findings.push({

@@ -163,6 +163,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-14, third look, T250) An error is shown with the text of the source beside the text that was judged ("lost his leg" beside "took his arm"). Where does the text of the source come from? → A: From a new optional key of an expected error, `source_fragment`: the exact words of another field that the error contradicts. The generation prompt asks the LLM for it, "From JSON", the import and "Edit expected errors" accept it, and the demo has it for every error. An error without it shows only its own side. It is not used for matching, and it is part of the test cases version only for an error that has it, so older files keep their version (FR-041).
 - Q: (Owner review 2026-11-14, third look, T251) How is an error shown in Test cases, Run and Results? → A: By one shared component: its number, what is wrong, the category and difficulty, then one line per side with the name of the field before the passage, the words of the source first and the words of the judged text second ("source_text: “lost his leg to a white whale”", "summary: “the whale that took his arm”"). The field names come from the case, so they follow the variables and the judged text of Judge. "Show the issue" scrolls to the fields and highlights both passages strongly for a moment. A finding of the judge, and an error without `source_fragment`, show one side (FR-062, FR-063, FR-086).
 - Q: (Owner review 2026-11-14, third look, T252) What are the marks called? → A: The errors of Run are in two groups. **Expected errors**: Found · Not found · Ignored. **Additional errors**: Real error (missed in scenario) · False positive · Ignored. The same words are used for the state of an item in Results, in the preview of a second opinion and in the HTML report, and the count columns say "Not found" (was "Missed"). This replaces "Missed", "Ignore", "Real error", "Issue: missed" and "Issue: false positive" (FR-008, FR-062, FR-064).
+- Q: (Owner review 2026-11-14, third look, T253) What happens to an additional error marked "Real error (missed in scenario)"? → A: It is added at once, with no question, to the expected errors of its test case, and a banner in the window says so ("Added to the expected errors of case 15 as E4."). It stays in "Additional errors" with its mark and the words "Added to the expected errors as E4"; it is counted once, as an expected error that was found (not as an additional real error). Changing the mark or removing the finding takes the expected error out again; when the replies are cleared the error stays. The decision keeps the link (`promoted_to`); the test cases version changes and the case is marked "corrected" after the first reply. The demo results change accordingly (31 expected errors, 28 found). This replaces FR-062: "it MUST NOT be added to the expected errors".
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -1496,8 +1497,15 @@ case and confirm the new case has the same fields and expected errors.
   list of Results and the report, and counted in the table of additional findings of FR-070. A finding added by hand MUST have "Remove", which removes it
   with its mark; a finding read from the reply MUST NOT have one. An item
   marked "Ignored" MUST be left out of every count and listed as ignored in the report. An
-  additional finding marked "Real error (missed in scenario)" (a true error that was not planned) is counted on its own
-  (FR-066); it MUST NOT be added to the expected errors of the case. The user MUST be able to
+  additional finding marked "Real error (missed in scenario)" (a true error that was not planned) MUST be added at once, with no
+  question, to the expected errors of its test case (T253): a new expected error with the next free identifier, the text of the finding as
+  its fragment (a finding about the whole reply has none), its category and difficulty when it has them, and the description of the finding. A banner in the case
+  window says so ("Added to the expected errors of case 15 as E4."). The finding stays in "Additional errors" with its mark and
+  the words "Added to the expected errors as E4"; it is counted once, as an expected error that was found, and never as an additional
+  real error (FR-066). The new expected error is never matched against the reply and has no marks of its own. Changing the mark of that finding, or removing it (a finding
+  added by hand), removes the expected error again with the mark it had; this also holds for a finding added with "Add finding…" and for an
+  applied opinion. The test cases version changes and, after the first reply, the case is marked "corrected". When the replies are cleared
+  the expected error stays as an ordinary one. The user MUST be able to
   change any mark, including an automatic one. A case has no note of its own in the case window:
   the note of the run is the "Model details" box of the Run step (a note of a case in a loaded file
   is kept and shown in the report).

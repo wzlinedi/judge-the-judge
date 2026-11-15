@@ -466,11 +466,11 @@
     "provisional": false,
     "undecided": 0,
     "counters": {
-      "expected_total": 30,
-      "expected_found": 27,
+      "expected_total": 31,
+      "expected_found": 28,
       "expected_missed": 3,
-      "additional_total": 3,
-      "real_errors": 1,
+      "additional_total": 2,
+      "real_errors": 0,
       "false_positives": 2,
       "findings_total": 30,
       "subtle_total": 15,
@@ -506,6 +506,10 @@
         "unsupported-claim": {
           "expected_total": 1,
           "expected_found": 1
+        },
+        "(no category)": {
+          "expected_total": 1,
+          "expected_found": 1
         }
       },
       "per_difficulty": {
@@ -516,23 +520,27 @@
         "subtle": {
           "expected_total": 15,
           "expected_found": 12
+        },
+        "(not set)": {
+          "expected_total": 1,
+          "expected_found": 1
         }
       },
       "per_rule": {
         "Contradicted or unsupported claim": {
-          "real_errors": 1,
+          "real_errors": 0,
           "false_positives": 2
         }
       },
       "additional_per_category": {
         "(no category)": {
-          "real": 1,
+          "real": 0,
           "fp": 2
         }
       },
       "additional_per_difficulty": {
         "(not set)": {
-          "real": 1,
+          "real": 0,
           "fp": 2
         }
       },
@@ -544,12 +552,12 @@
         "id": "detection_rate",
         "name": "Detection rate",
         "better": "higher",
-        "value": 0.9,
-        "numerator": 27,
-        "denominator": 30,
+        "value": 0.9032258064516129,
+        "numerator": 28,
+        "denominator": 31,
         "interval": {
-          "lower": 0.7437891726682571,
-          "upper": 0.9654001115225814
+          "lower": 0.7510006140569959,
+          "upper": 0.9665353560978241
         }
       },
       "false_positive_rate": {
@@ -568,11 +576,11 @@
     "overall": {
       "result": "Works",
       "reasons": [
-        "Detection rate is 90% (at least 80% required).",
+        "Detection rate is 90.3% (at least 80% required).",
         "False-positive rate is 6.7% (at most 10% required)."
       ],
       "borderline": [
-        "Detection rate is borderline: its 95% interval 74.4% to 96.5% contains the threshold 80%.",
+        "Detection rate is borderline: its 95% interval 75.1% to 96.7% contains the threshold 80%.",
         "False-positive rate is borderline: its 95% interval 1.8% to 21.3% contains the threshold 10%."
       ]
     },
@@ -832,6 +840,11 @@
             "id": "e3",
             "state": "found",
             "source": "automatic"
+          },
+          {
+            "id": "e4",
+            "state": "found",
+            "source": "llm-approved"
           }
         ],
         "additional": [
