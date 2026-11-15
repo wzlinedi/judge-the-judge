@@ -27,7 +27,7 @@ async function enterFirstReply(page: Page) {
 }
 async function exportReport(page: Page, testInfo: { outputPath: (name: string) => string }, name: string): Promise<string> {
   await page.getByRole('button', { name: /4\s*Results/ }).click();
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('region', { name: 'Report and next version' }).getByRole('button', { name: 'Export HTML report…' }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('region', { name: 'What next' }).getByRole('button', { name: 'Export HTML report…' }).click()]);
   const path = testInfo.outputPath(name);
   await download.saveAs(path);
   return readFileSync(path, 'utf8');

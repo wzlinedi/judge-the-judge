@@ -74,14 +74,15 @@ describe('the order of the report', () => {
   });
 });
 
-describe('provisional', () => {
-  it('is marked, with the number of cases not decided, while a case is not run or awaits verification', () => {
-    expect(provisional).toMatch(/Provisional/);
-    expect(provisional).toContain('5 cases are not decided');
+describe('cases not decided yet (T267: the report is never called provisional)', () => {
+  it('says at the top how many cases are not decided while a case is not run or awaits verification', () => {
+    expect(provisional).toContain('5 cases are not decided yet');
+    expect(provisional).not.toMatch(/provisional/i);
   });
 
-  it('is not marked when every case is decided', () => {
-    expect(final).not.toMatch(/Provisional/);
+  it('says nothing of the kind when every case is decided', () => {
+    expect(final).not.toMatch(/not decided yet/);
+    expect(final).not.toMatch(/provisional/i);
   });
 });
 
@@ -95,7 +96,8 @@ describe('the three views', () => {
   it('has the Error analysis: per category, per difficulty, per rule and additional findings per category and per difficulty', () => {
     const html = report(sampleEvaluation());
     const analysis = html.slice(at(html, 'id="error-analysis"'), at(html, 'id="test-case-list"'));
-    for (const text of ['By category', 'By difficulty', 'Additional findings per rule', 'Additional findings per category', 'Additional findings per difficulty', '(no category)', '(not set)', 'factual-error', 'counts only']) expect(analysis).toContain(text);
+    for (const text of ['By category', 'By difficulty', 'Additional findings per rule', 'Additional findings per category', 'Additional findings per difficulty', '(no category)', '(not set)', 'factual-error', 'A rate of a small group says little']) expect(analysis).toContain(text);
+    expect(analysis).not.toContain('counts only');
   });
 
   it('has the Test case list with every prompt, expected error, reply and decision with its source', () => {

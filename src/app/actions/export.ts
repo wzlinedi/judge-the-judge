@@ -1,4 +1,4 @@
-// "Export HTML report" (FR-072): the report of the current work at any time, also while it is provisional.
+// "Export HTML report" (FR-072): the report of the current work at any time; it says how many cases are not decided yet (T267).
 import { testCasesVersion } from '../../core/cases/version';
 import { computeResults, reviewEvaluation } from '../../core/evaluation/results';
 import { buildHtmlReport } from '../../core/io/html-report';
@@ -10,7 +10,6 @@ import type { FileEnv } from './files';
 export interface ReportExport {
   fileName: string;
   html: string;
-  provisional: boolean;
   message: string;
 }
 
@@ -25,13 +24,11 @@ export async function exportReport(state: AppState, env: FileEnv, metric: Metric
     judgeVersion: await judgeVersion(evaluation.judge_set),
     testCasesVersion: await testCasesVersion(evaluation.dataset.cases),
   }, recomputeDifferences(state));
-  const provisional = results.provisional;
   return {
-    fileName: `${safeName(evaluation.dataset.name)} - report${provisional ? ' (provisional)' : ''}.html`,
+    fileName: `${safeName(evaluation.dataset.name)} - report.html`,
     html,
-    provisional,
-    message: provisional
-      ? `The report was exported. It is marked provisional because ${results.undecided} ${results.undecided === 1 ? 'case is' : 'cases are'} not decided yet.`
+    message: results.provisional
+      ? `The report was exported. ${results.undecided} ${results.undecided === 1 ? 'case is' : 'cases are'} not decided yet, and the report says so.`
       : 'The report was exported.',
   };
 }

@@ -34,10 +34,11 @@ test('the demo opens on Judge, and Run shows 15 of 20 cases decided, and Continu
   await expect(page.getByText('1 of 5').or(page.getByText('3 of 20'))).toBeVisible();
 });
 
-test('while cases await verification Results is provisional and Inconclusive, with the test size', async ({ page }) => {
+test('while cases await verification Results says how many are not decided yet and is Inconclusive, with the test size', async ({ page }) => {
   await loadDemo(page);
   await page.getByRole('button', { name: /4\s*Results/ }).click();
-  await expect(page.getByRole('status', { name: 'Provisional' })).toContainText('5 cases');
+  await expect(page.getByRole('status', { name: 'Cases not decided' })).toContainText('5 cases are not decided yet');
+  await expect(page.getByText(/provisional/i)).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Overall result' })).toContainText('Inconclusive');
   await expect(page.getByRole('region', { name: 'Test size' })).toContainText('21 of 30 expected errors');
 });
@@ -78,7 +79,7 @@ test('deciding the five cases gives the numbers of the expected results file', a
   await page.getByRole('button', { name: /4\s*Results/ }).click();
 
   const c = expected.after_deciding.counters;
-  await expect(page.getByRole('status', { name: 'Provisional' })).toHaveCount(0);
+  await expect(page.getByRole('status', { name: 'Cases not decided' })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Overall result' })).toContainText('Works');
   await expect(page.getByRole('group', { name: 'Expected errors' })).toContainText(`Found${c.expected_found}`);
   await expect(page.getByRole('group', { name: 'Rates' })).toContainText('Detection rate90% (27 of 30)');

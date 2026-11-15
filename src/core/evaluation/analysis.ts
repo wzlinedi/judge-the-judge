@@ -1,14 +1,21 @@
-// The tables of the Error analysis view and the report (FR-070). Counts only below this many expected errors.
+// The tables of the Error analysis view and the report (FR-070). The detection rate of every group is shown (T268); a group of fewer than MIN_GROUP says little.
 import { NOT_SET, type Counters } from './counters';
+import { MINIMUM_SAMPLE } from './results';
 
 export const MIN_GROUP = 10;
+
+/** The sentence under the two tables of groups (T268). */
+export const SMALL_GROUP_NOTE = `A rate of a small group says little: with fewer than ${MIN_GROUP} expected errors, one error more or less changes it a lot.`;
+
+/** The sentence of Details › Thresholds on how much data the result needs (T268). */
+export const DATA_NEEDED_NOTE = `The overall result needs at least ${MINIMUM_SAMPLE.expected_errors} expected errors and ${MINIMUM_SAMPLE.clean_cases} clean cases, and a group of fewer than ${MIN_GROUP} expected errors says little.`;
 
 export interface GroupRow {
   name: string;
   expected: number;
   found: number;
   missed: number;
-  /** null means "counts only": the group is too small for a rate. */
+  /** null only when there is nothing to divide (no expected errors) or the judge is evaluated per case, which has no rate. */
   rate: number | null;
 }
 
@@ -43,7 +50,7 @@ function groups(source: Counters['per_category'], order?: readonly string[]): Gr
       expected: g.expected_total,
       found: g.expected_found,
       missed: g.expected_total - g.expected_found,
-      rate: g.expected_total >= MIN_GROUP ? g.expected_found / g.expected_total : null,
+      rate: g.expected_total > 0 ? g.expected_found / g.expected_total : null,
     }));
 }
 

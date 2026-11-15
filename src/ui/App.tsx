@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import demoEvaluation from '../../examples/demo/evaluation.json?raw';
 import { loadExample } from '../app/actions/evaluation';
-import { changeThreshold, loadChecksFromFile } from '../app/actions/checks';
+import { changeThreshold } from '../app/actions/checks';
 import { correctRules } from '../app/actions/decide';
 import { exportReport } from '../app/actions/export';
 import { modelDetailsEdit, pasteReplyFromClipboard, saveReply, type ReplyOutcome } from '../app/actions/replies';
 import type { CaseEdit } from '../app/actions/cases';
 import type { CatalogEdit } from '../app/actions/catalog';
 import type { JudgeEdit } from '../app/actions/judge';
-import { continueWork, loadEvaluation, loadTestProject, saveEvaluation, saveEvaluationAs, saveTestProject, saveTestProjectAs, type FileEnv } from '../app/actions/files';
+import { loadEvaluation, loadTestProject, saveEvaluation, saveEvaluationAs, saveTestProject, saveTestProjectAs, type FileEnv } from '../app/actions/files';
 import { guardFor, installBeforeUnload, type GuardedAction } from '../app/guard';
 import { metricFor } from '../app/metrics';
 import { browserSupported, type BrowserEnv } from '../app/ports/browser';
@@ -141,15 +141,6 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     say(report.message);
   };
 
-  const loadChecks = async () => {
-    const result = await loadChecksFromFile(stateRef.current, portsRef.current, metricFor(stateRef.current.evaluation.metric.id));
-    setState(result.state);
-    if (result.outcome === 'invalid') {
-      setNotice('');
-      setProblems(result.problems ?? []);
-    } else if (result.outcome === 'loaded') say(result.message);
-  };
-
   const exportCases = async () => {
     const result = await exportTestCases(stateRef.current, portsRef.current, fileEnv);
     say(result.message);
@@ -215,7 +206,6 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     if (guardFor(state, 'edit-judge-and-run-again')) setPending('edit-judge-and-run-again');
     else rerun();
   };
-  const onResultsContinue = () => setState((s) => continueWork(s));
 
   return (
     <div class="app">
@@ -242,11 +232,9 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
             results={results}
             evaluation={state.evaluation}
             reviewed={reviewed}
-            onContinue={onResultsContinue}
             onRerun={onRerun}
             onExport={() => void exportHtml()}
             onThreshold={(measure, value) => setState((s) => changeThreshold(s, measure, value))}
-            onLoadChecks={() => void loadChecks()}
             onOpenCase={setViewCase}
             differences={recomputeDifferences(state)}
           />

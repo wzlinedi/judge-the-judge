@@ -94,10 +94,3 @@ export async function loadTestProject(state: AppState, ports: Ports, _env?: File
   const next = atResumePoint(applyLoadedTestProject(state, read.value.evaluation, ports));
   return { state: next, outcome: 'loaded', message: joinNotes(read.notes, 'The test project was loaded.'), notes: read.notes };
 }
-
-/** **Continue**: opens the case window on the case that needs the user, on Run (FR-073). */
-export function continueWork(state: AppState): AppState {
-  const point = resumePoint(state.evaluation, metricFor(state.evaluation.metric.id));
-  if (point.step === 'run' && point.caseId !== undefined) return { ...state, step: 'run', openCase: point.caseId };
-  return { ...state, step: point.step, openCase: null };
-}

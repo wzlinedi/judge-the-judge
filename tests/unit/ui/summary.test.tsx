@@ -15,7 +15,7 @@ const final = computeResults({ ...loaded.value.evaluation, decisions: expected.d
 const finalEvaluation = { ...loaded.value.evaluation, decisions: expected.decisions_after };
 const finalContext = { evaluation: finalEvaluation, reviewed: reviewEvaluation(finalEvaluation, accuracyMetric) };
 const provisionalContext = { evaluation: loaded.value.evaluation, reviewed: reviewEvaluation(loaded.value.evaluation, accuracyMetric) };
-const props = { onContinue: vi.fn(), onRerun: vi.fn(), onExport: undefined as undefined | (() => void), onThreshold: vi.fn(), onLoadChecks: vi.fn(), onOpenCase: vi.fn() };
+const props = { onRerun: vi.fn(), onExport: undefined as undefined | (() => void), onThreshold: vi.fn(), onOpenCase: vi.fn() };
 
 describe('Summary', () => {
   it('shows three count groups first: expected errors, additional findings, subtle errors', () => {
@@ -78,32 +78,31 @@ describe('Summary', () => {
   it('shows the test size against the minimum', () => {
     render(<ResultsStep results={final} {...finalContext} {...props} />);
     const size = screen.getByRole('region', { name: 'Test size' }).textContent ?? '';
-    expect(size).toMatch(/at least 30 injected errors and 10 clean cases/);
+    expect(size).toContain('A reliable answer needs at least 30 injected errors and 10 clean cases.');
+    expect(size).not.toMatch(/final/i);
     expect(size).toMatch(/30 of 30 expected errors/);
     expect(size).toMatch(/10 of 10 clean cases/);
   });
 
-  it('is marked provisional with the counts while cases are undecided, and the result is Inconclusive', () => {
+  it('says how many cases are not decided yet, without the word provisional, and the result is Inconclusive (T267)', () => {
     render(<ResultsStep results={provisional} {...provisionalContext} {...props} />);
-    const notice = screen.getByRole('status', { name: 'Provisional' });
-    expect(notice.textContent).toMatch(/provisional/i);
-    expect(notice.textContent).toMatch(/5 cases/);
+    const notice = screen.getByRole('status', { name: 'Cases not decided' });
+    expect(notice.textContent).toBe('5 cases are not decided yet (0 not run, 5 awaiting verification).');
+    expect(document.body.textContent).not.toMatch(/provisional/i);
     expect(screen.getByRole('region', { name: 'Overall result' }).textContent).toContain('Inconclusive');
     expect(screen.getByRole('region', { name: 'Test size' }).textContent).toMatch(/21 of 30 expected errors/);
   });
 
-  it('shows no provisional notice when all cases are decided', () => {
+  it('shows no notice of undecided cases when all cases are decided', () => {
     render(<ResultsStep results={final} {...finalContext} {...props} />);
-    expect(screen.queryByRole('status', { name: 'Provisional' })).toBeNull();
+    expect(screen.queryByRole('status', { name: 'Cases not decided' })).toBeNull();
   });
 
-  it('says in the "what next" line that the result is provisional and offers Continue', () => {
+  it('says in the "what next" line how many cases are decided and how many not, and has no Continue (T267)', () => {
     render(<ResultsStep results={provisional} {...provisionalContext} {...props} />);
     const next = screen.getByRole('region', { name: 'What next' });
-    expect(next.textContent).toMatch(/provisional/i);
-    expect(next.textContent).toMatch(/15 of 20 cases decided/);
-    fireEvent.click(within(next).getByRole('button', { name: 'Continue' }));
-    expect(props.onContinue).toHaveBeenCalled();
+    expect(next.textContent).toContain('15 of 20 cases decided · 5 not decided yet');
+    expect(within(next).queryByRole('button', { name: 'Continue' })).toBeNull();
   });
 
   it('offers Export HTML report when all cases are decided', () => {

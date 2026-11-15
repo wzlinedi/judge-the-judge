@@ -6,7 +6,7 @@ import { composePrompt } from '../judge/compose';
 import type { Evaluation } from '../model';
 import { differenceNote, rulesCorrectedAfterReplies, type Difference } from '../evaluation/recompute';
 import { countingSwitchNote, PER_CASE_SENTENCE, PER_CASE_WHY } from '../evaluation/counting-note';
-import { errorAnalysis, falsePositiveShares, type GroupRow } from '../evaluation/analysis';
+import { DATA_NEEDED_NOTE, errorAnalysis, falsePositiveShares, SMALL_GROUP_NOTE, type GroupRow } from '../evaluation/analysis';
 import { measuresInUse } from '../evaluation/measures';
 import { MINIMUM_SAMPLE, type ReviewedCase, type Results } from '../evaluation/results';
 import { SOURCE_LABELS, STATE_LABELS } from '../evaluation/source-labels';
@@ -23,7 +23,7 @@ h1 { font-size: 1.6rem; } h2 { margin-top: 2rem; border-bottom: 2px solid #111; 
 table { border-collapse: collapse; width: 100%; margin: .5rem 0 1rem; } th, td { border: 1px solid #888; padding: .3rem .5rem; text-align: left; vertical-align: top; }
 pre { white-space: pre-wrap; word-break: break-word; background: #f4f4f4; border: 1px solid #ccc; padding: .5rem; }
 dl.meta { display: grid; grid-template-columns: max-content 1fr; gap: .2rem 1rem; } dl.meta dd { margin: 0; }
-.provisional { border: 2px solid #b00; padding: .5rem .75rem; font-weight: 600; }
+.undecided { border: 2px solid #b00; padding: .5rem .75rem; font-weight: 600; }
 .note { border-left: 4px solid #666; padding-left: .75rem; }
 .case { border: 1px solid #888; padding: .5rem 1rem; margin: 1rem 0; break-inside: avoid-page; }
 summary { cursor: pointer; font-weight: 600; }
@@ -44,7 +44,7 @@ function table(label: string, head: string[], rows: string[][]): string {
 
 function groupRows(rows: GroupRow[], perCase = false): string[][] {
   if (perCase) return rows.map((g) => [g.name, String(g.expected), String(g.found), String(g.missed)]);
-  return rows.map((g) => [g.name, String(g.expected), String(g.found), String(g.missed), g.rate === null ? 'counts only' : pct(g.rate)]);
+  return rows.map((g) => [g.name, String(g.expected), String(g.found), String(g.missed), g.rate === null ? '–' : pct(g.rate)]);
 }
 
 function summary(evaluation: Evaluation, results: Results, reviewed: ReviewedCase[]): string {
@@ -91,7 +91,7 @@ function summary(evaluation: Evaluation, results: Results, reviewed: ReviewedCas
 
   out.push(`<h3>Overall result: ${esc(results.overall.result)}</h3><ul>${results.overall.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>`);
   for (const b of results.overall.borderline) out.push(`<p class="note">${esc(b)}</p>`);
-  out.push(`<p>A final answer needs at least ${MINIMUM_SAMPLE.expected_errors} injected errors and ${MINIMUM_SAMPLE.clean_cases} clean cases.</p>`);
+  out.push(`<p>A reliable answer needs at least ${MINIMUM_SAMPLE.expected_errors} injected errors and ${MINIMUM_SAMPLE.clean_cases} clean cases.</p>`);
 
   const shares = falsePositiveShares(c);
   const thresholds = evaluation.checks.rules.filter((r) => use.includes(r.measure));
@@ -102,6 +102,7 @@ function summary(evaluation: Evaluation, results: Results, reviewed: ReviewedCas
       ['Measure', 'Rule'],
       thresholds.map((r) => [results.measures[r.measure]?.name ?? r.measure, `${r.comparison === 'at_least' ? 'at least' : 'at most'} ${pct(r.value)}`]),
     ),
+    `<p>${esc(DATA_NEEDED_NOTE)}</p>`,
     `<p>Cases with at least one false positive: ${shares.cases.count} of ${shares.cases.of}. Clean cases with a false positive: ${shares.clean.count} of ${shares.clean.of}.</p>`,
     '</details></section>',
   );
@@ -118,7 +119,7 @@ function analysis(results: Results): string {
     table('By category', head, groupRows(a.byCategory, perCase)),
     '<h3>By difficulty</h3>',
     table('By difficulty', head, groupRows(a.byDifficulty, perCase)),
-    `<p>${esc(perCase ? PER_CASE_WHY : 'A group with fewer than 10 expected errors shows counts only, with no rate.')}</p>`,
+    `<p>${esc(perCase ? PER_CASE_WHY : SMALL_GROUP_NOTE)}</p>`,
     '<h3>Additional findings per rule</h3>',
     table('Additional findings per rule', ['Rule', 'Genuine errors', 'False positives'], a.perRule.map((r) => [r.rule, String(r.real), String(r.fp)])),
     '<h3>Additional findings per category</h3>',
@@ -221,7 +222,7 @@ export function buildHtmlReport(evaluation: Evaluation, results: Results, review
     `<p>Tool version ${esc(meta.toolVersion)}. Exported ${esc(meta.now)}.</p>`,
   ];
   if (results.provisional) {
-    head.push(`<p class="provisional">Provisional. ${plural(results.undecided, 'case is', 'cases are')} not decided (${c.cases_not_run} not run, ${c.cases_awaiting} awaiting verification), so the numbers can still change.</p>`);
+    head.push(`<p class="undecided">${plural(results.undecided, 'case is', 'cases are')} not decided yet (${c.cases_not_run} not run, ${c.cases_awaiting} awaiting verification), so the numbers can still change.</p>`);
   }
   if (rulesCorrectedAfterReplies(evaluation.reply_judge_version, meta.judgeVersion)) {
     head.push(

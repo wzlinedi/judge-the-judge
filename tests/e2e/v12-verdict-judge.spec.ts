@@ -10,7 +10,6 @@ import { installMemoryFiles } from '../helpers/memory-files';
 
 const metricText = readFileSync('examples/metrics/bias-verdict-example.json', 'utf8');
 const metric = JSON.parse(metricText);
-const checksText = readFileSync('examples/metrics/checks-example.json', 'utf8');
 const { clean_base_cases: _clean, ...judgeSet } = metric.judge_set;
 const { name, description, limitations, output_format, parameters, measures } = metric;
 const definition = { name, description, limitations, output_format, parameters, measures };
@@ -47,7 +46,6 @@ async function pasteReply(page: Page, reply: string) {
 test('a verdict judge: the Judge step says so, replies decide whole cases, the Summary counts cases, and a correction that switches the way is named', async ({ page }) => {
   const memory = await installMemoryFiles(page);
   memory.files.set('bias-texts.json', await projectFile());
-  memory.files.set('checks-example.json', checksText);
   await page.goto('/');
 
   // the test project with its cases and its metric is loaded and opens on Run
@@ -101,8 +99,8 @@ test('a verdict judge: the Judge step says so, replies decide whole cases, the S
   await expect(page.getByRole('region', { name: 'Overall result' })).toContainText('The judge was evaluated per case.');
   await page.locator('details.details-section').getByText('Details', { exact: true }).click();
   await expect(page.getByLabel('Case detection rate: at least (%)')).toHaveValue('80');
-  memory.chooseOpenName('checks-example.json');
-  await page.getByRole('button', { name: 'Load check settings…' }).click();
+  await expect(page.getByRole('button', { name: /Load check settings/ })).toHaveCount(0);
+  await page.getByLabel('Case detection rate: at least (%)').fill('70');
   await expect(page.getByLabel('Case detection rate: at least (%)')).toHaveValue('70');
   await page.getByRole('tab', { name: 'Error analysis' }).click();
   await expect(page.getByRole('table', { name: 'By category' })).toContainText('gender-bias');

@@ -1,7 +1,7 @@
 // US6: saving the two files and continuing later, with the port fakes (FR-020, FR-051, FR-073, FR-076, SC-029).
 import { describe, expect, it } from 'vitest';
 import {
-  continueWork, loadEvaluation, loadTestProject, saveEvaluation, saveEvaluationAs, saveTestProject, saveTestProjectAs,
+  loadEvaluation, loadTestProject, saveEvaluation, saveEvaluationAs, saveTestProject, saveTestProjectAs,
   type FileEnv,
 } from '../../src/app/actions/files';
 import { createFakePorts, type FakePorts } from '../../src/app/ports/fakes';
@@ -82,7 +82,7 @@ describe('load evaluation and continue', () => {
     expect(loaded.state).toMatchObject({ step, unsaved: false, evaluationFile: 'chosen.json', testProjectFile: null, hasFile: true });
   });
 
-  it('opens Run on the case Continue should open, and Continue opens it', async () => {
+  it('opens Run on loading, with no case open yet: Continue on Run opens it (FR-073)', async () => {
     const saver = createFakePorts();
     const e = sampleEvaluation();
     await saveEvaluation(stateWith({ ...e, replies: { '1': e.replies['1']! }, decisions: {} }), saver, env);
@@ -91,8 +91,6 @@ describe('load evaluation and continue', () => {
     const loaded = await loadEvaluation(createState(), ports, env);
     expect(loaded.state.step).toBe('run');
     expect(loaded.state.openCase).toBeNull();
-    const continued = continueWork(loaded.state);
-    expect(continued).toMatchObject({ step: 'run', openCase: '2' });
   });
 
   it('makes the loaded file the current one: the next save overwrites it, and the test project file is forgotten', async () => {

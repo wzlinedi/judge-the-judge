@@ -130,13 +130,14 @@ describe('Continue on Run and Results', () => {
     expect(within(screen.getByRole('region', { name: 'What next' })).getByRole('button', { name: 'Continue' })).toBeTruthy();
   });
 
-  it('Results offers Continue while the result is provisional, and it opens the case', async () => {
+  it('Results has no Continue even while cases are not decided: its main action is Export HTML report (T267)', async () => {
     const e = sampleEvaluation();
     e.decisions = {};
     e.replies = { '1': e.replies['1']! };
     renderApp(createFakePorts(), stateOn('results', e));
-    fireEvent.click(within(screen.getByRole('region', { name: 'What next' })).getByRole('button', { name: 'Continue' }));
-    expect(screen.getByRole('dialog', { name: /Case 2/ })).toBeTruthy();
+    const next = screen.getByRole('region', { name: 'What next' });
+    expect(within(next).queryByRole('button', { name: 'Continue' })).toBeNull();
+    expect(within(next).getByRole('button', { name: 'Export HTML report…' })).toBeTruthy();
   });
 
   it('saving after loading goes to the same file', async () => {

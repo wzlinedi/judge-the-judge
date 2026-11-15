@@ -1,8 +1,7 @@
-// quickstart.md V9 steps 2 and 3, and V12 step 3: the three views, the read-only case view, the report, Load check settings (User Story 9).
+// quickstart.md V9 steps 2 and 3, and V12 step 3: the three views, the read-only case view, the report and the thresholds (User Story 9; T265 to T268).
 import { readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { installMemoryFiles } from '../helpers/memory-files';
 
 const opinions = JSON.parse(readFileSync('examples/demo/opinions.json', 'utf8')) as Record<string, unknown>;
 const next = (page: Page) => page.getByRole('region', { name: 'What next' });
@@ -35,18 +34,17 @@ async function decideEverything(page: Page) {
   await expect(next(page)).toContainText('20 of 20 cases decided');
 }
 
-test('three views, the read-only case view, thresholds in Details and Load check settings', async ({ page }) => {
-  const memory = await installMemoryFiles(page);
-  memory.files.set('checks-example.json', readFileSync('examples/metrics/checks-example.json', 'utf8'));
+test('three views, the read-only case view and the thresholds in Details', async ({ page }) => {
   await loadDemo(page);
   await decideEverything(page);
   await goToResults(page);
 
-  // Summary first; Details closed by default
+  // Summary first; Details at the top of it, above the counts, closed by default (T265)
   await expect(page.getByRole('tab', { name: 'Summary' })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('region', { name: 'Overall result' })).toContainText('Works');
   const details = page.locator('details.details-section');
   await expect(details).not.toHaveAttribute('open', '');
+  expect((await details.boundingBox())!.y).toBeLessThan((await page.getByRole('group', { name: 'Counts' }).boundingBox())!.y);
   await details.getByText('Details', { exact: true }).click();
   await expect(details.getByLabel('Detection rate: at least (%)')).toHaveValue('80');
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
@@ -56,17 +54,19 @@ test('three views, the read-only case view, thresholds in Details and Load check
   await expect(page.getByRole('region', { name: 'Overall result' })).toContainText('Does not work');
   await expect(page.getByText('Unsaved changes')).toBeVisible();
 
-  // Load check settings: the thresholds change and the minimum test size is reported as fixed
-  memory.chooseOpenName('checks-example.json');
-  await details.getByRole('button', { name: 'Load check settings…' }).click();
-  await expect(details.getByLabel('Detection rate: at least (%)')).toHaveValue('70');
-  await expect(details.getByLabel('False-positive rate: at most (%)')).toHaveValue('15');
-  await expect(page.getByRole('status', { name: 'Message' })).toContainText('minimum test size is fixed');
+  // there is no Load check settings (T266): the two thresholds are changed in their boxes, and the data they need is explained (T268)
+  await expect(page.getByRole('button', { name: /Load check settings/ })).toHaveCount(0);
+  await expect(details).toContainText('The overall result needs at least 30 expected errors and 10 clean cases');
+  await details.getByLabel('Detection rate: at least (%)').fill('70');
+  await details.getByLabel('False-positive rate: at most (%)').fill('15');
   await expect(page.getByRole('region', { name: 'Overall result' })).toContainText('Works');
 
   // Error analysis
   await page.getByRole('tab', { name: 'Error analysis' }).click();
   await expect(page.getByRole('table', { name: 'By category' })).toBeVisible();
+  await expect(page.getByRole('table', { name: 'By category' })).not.toContainText('counts only');
+  await expect(page.getByRole('table', { name: 'By category' })).toContainText('misattribution');
+  await expect(page.getByRole('table', { name: 'By category' }).getByRole('row').filter({ hasText: 'misattribution' })).toContainText('100%');
   await expect(page.getByRole('table', { name: 'By difficulty' })).toContainText(/obvious/);
   await expect(page.getByRole('table', { name: 'Additional findings per category' })).toContainText('(no category)');
   await expect(page.getByRole('table', { name: 'Additional findings per difficulty' })).toContainText('(not set)');
@@ -93,17 +93,19 @@ test('three views, the read-only case view, thresholds in Details and Load check
   await expect(caseWindow(page).getByRole('button', { name: 'Second opinion…' })).toBeVisible();
 });
 
-test('the report is exported while cases are undecided (provisional) and again when all are decided; it reads and prints without the tool', async ({ page, browser }, testInfo) => {
+test('the report is exported while cases are undecided and again when all are decided; neither is called provisional; it reads and prints without the tool', async ({ page, browser }, testInfo) => {
   await loadDemo(page);
   await goToResults(page);
-  await expect(page.getByRole('region', { name: 'Report and next version' })).toContainText('provisional');
+  await expect(page.getByRole('region', { name: 'Report and next version' })).toHaveCount(0);
+  await expect(next(page)).toContainText('15 of 20 cases decided · 5 not decided yet');
+  await expect(next(page).getByRole('button', { name: 'Continue' })).toHaveCount(0);
 
-  const [provisional] = await Promise.all([page.waitForEvent('download'), page.getByRole('region', { name: 'Report and next version' }).getByRole('button', { name: 'Export HTML report…' }).click()]);
-  expect(provisional.suggestedFilename()).toBe('Book summaries, set A - report (provisional).html');
-  const provisionalHtml = readFileSync((await provisional.path()) as string, 'utf8');
-  expect(provisionalHtml).toContain('Provisional');
-  expect(provisionalHtml).toContain('5 cases are not decided');
-  await expect(page.getByRole('status', { name: 'Message' })).toContainText('provisional');
+  const [undecided] = await Promise.all([page.waitForEvent('download'), next(page).getByRole('button', { name: 'Export HTML report…' }).click()]);
+  expect(undecided.suggestedFilename()).toBe('Book summaries, set A - report.html');
+  const undecidedHtml = readFileSync((await undecided.path()) as string, 'utf8');
+  expect(undecidedHtml).not.toMatch(/provisional/i);
+  expect(undecidedHtml).toContain('5 cases are not decided yet');
+  await expect(page.getByRole('status', { name: 'Message' })).toContainText('5 cases are not decided yet');
 
   await page.getByRole('button', { name: /3\s*Run/ }).click();
   await decideEverything(page);
@@ -112,7 +114,7 @@ test('the report is exported while cases are undecided (provisional) and again w
   expect(final.suggestedFilename()).toBe('Book summaries, set A - report.html');
   const path = testInfo.outputPath('report.html');
   await final.saveAs(path);
-  expect(readFileSync(path, 'utf8')).not.toContain('Provisional');
+  expect(readFileSync(path, 'utf8')).not.toMatch(/provisional|not decided yet/i);
 
   // opened on its own, with no tool and with scripts off: readable, with the three views in order
   const context = await browser.newContext({ javaScriptEnabled: false });

@@ -16,7 +16,7 @@ const decisionsAfter = JSON.parse(readFileSync('examples/demo/expected-results.j
 const decided: Evaluation = { ...loaded.value.evaluation, decisions: decisionsAfter };
 
 const ctx = (e: Evaluation) => ({ evaluation: e, reviewed: reviewEvaluation(e, accuracyMetric), results: computeResults(e, accuracyMetric) });
-const handlers = () => ({ onContinue: vi.fn(), onRerun: vi.fn(), onExport: vi.fn(), onThreshold: vi.fn(), onLoadChecks: vi.fn(), onOpenCase: vi.fn() });
+const handlers = () => ({ onRerun: vi.fn(), onExport: vi.fn(), onThreshold: vi.fn(), onOpenCase: vi.fn() });
 const show = (e: Evaluation, h = handlers()) => {
   render(<ResultsStep {...ctx(e)} {...h} />);
   return h;
@@ -49,10 +49,26 @@ describe('Details in the Summary', () => {
     expect(h.onThreshold).not.toHaveBeenCalled();
   });
 
-  it('has Load check settings', () => {
+  it('is at the top of the Summary, above the counts, and still closed (T265)', () => {
+    show(decided);
+    const details = screen.getByText('Details').closest('details') as HTMLDetailsElement;
+    const counts = screen.getByRole('group', { name: 'Counts' });
+    expect(details.compareDocumentPosition(counts) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(details.compareDocumentPosition(screen.getByRole('region', { name: 'Overall result' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(details.open).toBe(false);
+  });
+
+  it('has no Load check settings: the two thresholds only change in their boxes (T266)', () => {
     const h = show(decided);
-    fireEvent.click(screen.getByRole('button', { name: 'Load check settings…' }));
-    expect(h.onLoadChecks).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: /Load check settings/ })).toBeNull();
+    fireEvent.input(screen.getByLabelText('False-positive rate: at most (%)'), { target: { value: '12.5' } });
+    expect(h.onThreshold).toHaveBeenCalledWith('false_positive_rate', 0.125);
+  });
+
+  it('says in the Thresholds how much data the result needs (T268)', () => {
+    show(decided);
+    const details = screen.getByText('Details').closest('details') as HTMLElement;
+    expect(details.textContent).toContain('The overall result needs at least 30 expected errors and 10 clean cases, and a group of fewer than 10 expected errors says little.');
   });
 
   it('shows the 95% interval of each rate and both borderline notes', () => {
@@ -84,7 +100,7 @@ describe('Details in the Summary', () => {
 });
 
 describe('Error analysis', () => {
-  it('has a table per category and one per difficulty, with a rate only for a group of 10 expected errors or more', () => {
+  it('has a table per category and one per difficulty, with the detection rate of every group, whatever its size (T268)', () => {
     const e = ctx(decided);
     show(decided);
     tab('Error analysis');
@@ -94,11 +110,13 @@ describe('Error analysis', () => {
       expect(within(table).getAllByRole('row')).toHaveLength(rows.length + 1);
       for (const row of rows) {
         const cells = [...within(table).getByRole('cell', { name: row.name }).closest('tr')!.querySelectorAll('td')].map((c) => c.textContent);
-        expect(cells).toEqual([row.name, String(row.expected), String(row.found), String(row.missed), row.rate === null ? 'counts only' : pct(row.rate)]);
+        expect(cells).toEqual([row.name, String(row.expected), String(row.found), String(row.missed), pct(row.rate!)]);
+        expect(row.rate).not.toBeNull();
       }
     }
-    expect(a.byCategory.some((r) => r.rate === null)).toBe(true);
-    expect(a.byDifficulty.some((r) => r.rate !== null)).toBe(true);
+    expect(a.byCategory.some((r) => r.expected < 10)).toBe(true);
+    expect(screen.queryByText('counts only')).toBeNull();
+    expect(screen.getByText(/a rate of a small group says little/i)).toBeTruthy();
   });
 
   it('has the additional findings per rule, per category and per difficulty, counts only, with "(no category)" and "(not set)"', () => {
@@ -165,23 +183,37 @@ describe('Test case list', () => {
   });
 });
 
-describe('the "Report and next version" card', () => {
-  it('has Export HTML report in the "what next" line when every case is decided, and says the JSON is the evaluation file', () => {
+describe('the actions of Results (T267): no card "Report and next version", Export is always the main action, no Continue', () => {
+  it('has no section "Report and next version", whatever the state', () => {
+    for (const e of [decided, loaded.value.evaluation]) {
+      const { unmount } = render(<ResultsStep {...ctx(e)} {...handlers()} />);
+      expect(screen.queryByRole('region', { name: 'Report and next version' })).toBeNull();
+      expect(screen.queryByText('Report and next version')).toBeNull();
+      unmount();
+    }
+  });
+
+  it('has Export HTML report as the main action when every case is decided, and Run again with a new judge… beside it', () => {
     const h = show(decided);
-    const card = screen.getByRole('region', { name: 'Report and next version' });
-    expect(card.textContent).toMatch(/evaluation file/);
-    expect(card.textContent).toMatch(/Save evaluation/);
-    fireEvent.click(within(screen.getByRole('region', { name: 'What next' })).getByRole('button', { name: 'Export HTML report…' }));
+    const next = screen.getByRole('region', { name: 'What next' });
+    expect(within(next).getByRole('button', { name: 'Export HTML report…' }).classList.contains('primary')).toBe(true);
+    expect(within(next).getByText('20 of 20 cases decided')).toBeTruthy();
+    fireEvent.click(within(next).getByRole('button', { name: 'Export HTML report…' }));
     expect(h.onExport).toHaveBeenCalledTimes(1);
+    fireEvent.click(within(next).getByRole('button', { name: 'Run again with a new judge…' }));
+    expect(h.onRerun).toHaveBeenCalledTimes(1);
     expect(screen.getAllByRole('button', { name: 'Export HTML report…' })).toHaveLength(1);
   });
 
-  it('has Export HTML report in the card while cases are undecided, and says the report is then provisional', () => {
+  it('has the same main action while cases are not decided, says how many, and never says provisional or final or offers Continue', () => {
     const h = show(loaded.value.evaluation);
-    const card = screen.getByRole('region', { name: 'Report and next version' });
-    expect(card.textContent).toMatch(/provisional/i);
-    fireEvent.click(within(card).getByRole('button', { name: 'Export HTML report…' }));
+    const next = screen.getByRole('region', { name: 'What next' });
+    expect(next.textContent).toContain('15 of 20 cases decided · 5 not decided yet');
+    expect(next.textContent).not.toMatch(/provisional|final/i);
+    expect(within(next).queryByRole('button', { name: 'Continue' })).toBeNull();
+    fireEvent.click(within(next).getByRole('button', { name: 'Export HTML report…' }));
     expect(h.onExport).toHaveBeenCalled();
+    expect(document.body.textContent).not.toMatch(/provisional|The result is final/i);
   });
 
   it('has no Export JSON', () => {

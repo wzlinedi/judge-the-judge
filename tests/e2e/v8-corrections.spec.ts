@@ -48,7 +48,7 @@ test('correcting a rule after replies keeps the replies, changes the judge versi
 
   // the report says it too
   await page.getByRole('button', { name: /4\s*Results/ }).click();
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('region', { name: 'Report and next version' }).getByRole('button', { name: 'Export HTML report…' }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('region', { name: 'What next' }).getByRole('button', { name: 'Export HTML report…' }).click()]);
   const path = testInfo.outputPath('corrected-report.html');
   await download.saveAs(path);
   const html = readFileSync(path, 'utf8');

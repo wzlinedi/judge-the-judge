@@ -29,7 +29,6 @@ export interface SummaryViewProps {
   results: Results;
   evaluation: Evaluation;
   onThreshold: (measure: string, value: number) => void;
-  onLoadChecks: () => void;
   reviewed: readonly ReviewedCase[];
   onOpenCase: (caseId: string) => void;
 }
@@ -56,7 +55,7 @@ function GenuineErrors({ reviewed, onOpenCase }: { reviewed: readonly ReviewedCa
   );
 }
 
-export function SummaryView({ results, evaluation, onThreshold, onLoadChecks, reviewed, onOpenCase }: SummaryViewProps) {
+export function SummaryView({ results, evaluation, onThreshold, reviewed, onOpenCase }: SummaryViewProps) {
   const c = results.counters;
   const rateIds = results.evaluated_per === 'case' ? ['case_detection_rate', 'clean_case_false_positive_rate'] : ['detection_rate', 'false_positive_rate'];
   const ignored = c.ignored_expected + c.ignored_additional;
@@ -66,9 +65,10 @@ export function SummaryView({ results, evaluation, onThreshold, onLoadChecks, re
   return (
     <div class="summary-view">
       <h2 class="visually-hidden">Summary</h2>
+      <DetailsSection results={results} rules={evaluation.checks.rules} onThreshold={onThreshold} />
       {results.provisional ? (
-        <p role="status" aria-label="Provisional" class="notice warn">
-          {`These results are provisional: ${results.undecided} ${results.undecided === 1 ? 'case is' : 'cases are'} not decided yet (${c.cases_not_run} not run, ${c.cases_awaiting} awaiting verification).`}
+        <p role="status" aria-label="Cases not decided" class="notice warn">
+          {`${results.undecided} ${results.undecided === 1 ? 'case is' : 'cases are'} not decided yet (${c.cases_not_run} not run, ${c.cases_awaiting} awaiting verification).`}
         </p>
       ) : null}
 
@@ -146,11 +146,9 @@ export function SummaryView({ results, evaluation, onThreshold, onLoadChecks, re
       </section>
 
       <section role="region" aria-label="Test size" class="test-size">
-        <p>{`A final answer needs at least ${MINIMUM_SAMPLE.expected_errors} injected errors and ${MINIMUM_SAMPLE.clean_cases} clean cases.`}</p>
+        <p>{`A reliable answer needs at least ${MINIMUM_SAMPLE.expected_errors} injected errors and ${MINIMUM_SAMPLE.clean_cases} clean cases.`}</p>
         <p>{`Decided so far: ${have} of ${MINIMUM_SAMPLE.expected_errors} ${perCase ? 'cases with errors' : 'expected errors'}, ${c.clean_cases_decided} of ${MINIMUM_SAMPLE.clean_cases} clean cases.`}</p>
       </section>
-
-      <DetailsSection results={results} rules={evaluation.checks.rules} onThreshold={onThreshold} onLoadChecks={onLoadChecks} />
     </div>
   );
 }

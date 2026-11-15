@@ -1,8 +1,7 @@
-import { falsePositiveShares } from '../../../core/evaluation/analysis';
+import { DATA_NEEDED_NOTE, falsePositiveShares } from '../../../core/evaluation/analysis';
 import { measuresInUse } from '../../../core/evaluation/measures';
 import type { Results } from '../../../core/evaluation/results';
 import type { CheckRule } from '../../../core/model';
-import { labels } from '../../labels';
 
 const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
 
@@ -10,11 +9,10 @@ export interface DetailsSectionProps {
   results: Results;
   rules: readonly CheckRule[];
   onThreshold: (measure: string, value: number) => void;
-  onLoadChecks: () => void;
 }
 
 /** The only part of the Results step that changes data (FR-069): collapsed by default, so the counts keep the attention. */
-export function DetailsSection({ results, rules, onThreshold, onLoadChecks }: DetailsSectionProps) {
+export function DetailsSection({ results, rules, onThreshold }: DetailsSectionProps) {
   const use = measuresInUse(results.evaluated_per === 'case' ? 'per_case' : 'per_expected_error');
   const inUse = rules.filter((r) => use.includes(r.measure));
   const shares = falsePositiveShares(results.counters);
@@ -53,11 +51,7 @@ export function DetailsSection({ results, rules, onThreshold, onLoadChecks }: De
           );
         })}
       </ul>
-      <div class="button-row">
-        <button type="button" onClick={onLoadChecks}>
-          {labels.loadCheckSettings}
-        </button>
-      </div>
+      <p class="muted">{DATA_NEEDED_NOTE}</p>
 
       <h3>95% intervals</h3>
       <ul class="plain-list">
