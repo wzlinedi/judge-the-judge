@@ -24,3 +24,6 @@ Thumbs.db
 dist/
 test-results/
 playwright-report/
+
+# Files made by scripts for trying the tool by hand
+tmp/

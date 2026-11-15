@@ -6,6 +6,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { installMemoryFiles, type MemoryFiles } from '../helpers/memory-files';
 import { accuracyStarterProject, startFromAccuracy } from '../helpers/start-project';
 import { loadQuestion, loadTestProject, TEST_RUN_STEP } from '../helpers/test-run-flow';
+import { invalidFiles } from '../../scripts/invalid-files';
 
 const demoProject = readFileSync('examples/demo/test-project.json', 'utf8');
 const biasMetric = JSON.parse(readFileSync('examples/metrics/bias-example.json', 'utf8')) as { measures: Array<Record<string, unknown>> };
@@ -136,4 +137,53 @@ test('a metric definition with an unknown operation, inside a test project, is r
   expect(message).toMatch(/median/);
   expect(message).toMatch(/metric\.definition\.measures\[0\]\.operation/);
   expect(await snapshot(page)).toEqual(before);
+});
+
+// The files of `npm run invalid-files` (scripts/invalid-files.ts), the ones the owner would try by hand: each gets the message of quickstart V11.
+test('the files of "npm run invalid-files" get the messages of the quickstart, and nothing changes (T313)', async ({ page }) => {
+  const memory = await openDemo(page);
+  const before = await snapshot(page);
+  const refused: Array<[string, RegExp[]]> = [
+    ['1-broken.json', [/not readable JSON.*line \d+, column \d+/s]],
+    ['2-newer-version.json', [/schema version 3, which is newer than this tool knows.*up to 2/s]],
+    ['3-no-prompt.json', [/prompt/]],
+    ['4-other-format.json', [/format "judge-the-judge-something-else".*reads "judge-the-judge-test-project"/s]],
+    ['5-error-catalog.json', [/format "judge-the-judge-error-catalog".*reads "judge-the-judge-test-project"/s]],
+    ['6-evaluation-file.json', [/format "judge-the-judge-evaluation".*reads "judge-the-judge-test-project"/s]],
+    ['7-invalid-test-run.json', [/test_run\.replies\.1\.reply/]],
+    ['9-unknown-operation.json', [/median/, /metric\.definition\.measures\[0\]\.operation/]],
+  ];
+  for (const [name, patterns] of refused) {
+    const message = await refusedBy(page, memory, name, invalidFiles[name]!);
+    for (const pattern of patterns) expect(message, name).toMatch(pattern);
+    expect(message, name).not.toContain('Load evaluation');
+    await expect(loadQuestion(page), name).toHaveCount(0);
+    expect(await snapshot(page), name).toEqual(before);
+  }
+
+  const importWindow = page.getByRole('dialog', { name: 'Import test cases…' });
+  memory.files.set('10-cases-501.json', invalidFiles['10-cases-501.json']!);
+  memory.chooseOpenName('10-cases-501.json');
+  await menu(page, 'Import test cases…');
+  await importWindow.getByRole('button', { name: 'Choose file…' }).click();
+  await expect(importWindow.getByRole('alert')).toContainText(/limit is 500\. Nothing was imported\./);
+  await importWindow.getByRole('button', { name: 'Cancel' }).click();
+
+  memory.files.set('11-field-100001-characters.json', invalidFiles['11-field-100001-characters.json']!);
+  memory.chooseOpenName('11-field-100001-characters.json');
+  await menu(page, 'Import test cases…');
+  await importWindow.getByRole('button', { name: 'Choose file…' }).click();
+  await expect(importWindow.getByRole('list', { name: 'Invalid rows' })).toContainText(/Too long.*100,000/s);
+  await expect(importWindow.getByRole('button', { name: 'Import test cases…' })).toBeDisabled();
+  await importWindow.getByRole('button', { name: 'Cancel' }).click();
+  expect(await snapshot(page)).toEqual(before);
+
+  // the version 1 file last: it replaces the loaded work, with a note and no question
+  memory.files.set('8-version-1.json', invalidFiles['8-version-1.json']!);
+  memory.chooseOpenName('8-version-1.json');
+  await menu(page, 'Load test project…');
+  await expect(loadQuestion(page)).toHaveCount(0);
+  await expect(page.getByRole('status', { name: 'Message' })).toContainText('schema version 1');
+  await expect(page.getByRole('button', { name: /2\s*Test cases/ })).toHaveAttribute('aria-current', 'step');
+  await expect(page.getByRole('region', { name: 'What next' }).getByRole('button', { name: 'Start test run' })).toBeVisible();
 });

@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "demo": "tsx scripts/make-demo.ts",
     "examples": "tsx scripts/make-example-files.ts",
+    "invalid-files": "tsx scripts/make-invalid-files.ts",
     "schemas": "tsx scripts/generate-json-schemas.ts"
   },
   "dependencies": {

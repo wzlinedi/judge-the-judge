@@ -25,6 +25,10 @@ shows these flows.
 | `npm run build` | Produces the static site in `dist/`. |
 | `npm run preview` | Serves `dist/` locally, as a static host would. |
 | `npm run e2e` | Runs the end-to-end and accessibility checks against the built site, in Chromium and Edge. |
+| `npm run demo` | Writes the demo test project, its opinions and its expected results into `examples/demo/`. |
+| `npm run examples` | Writes the example CSV of the import window into `examples/files/`. |
+| `npm run schemas` | Writes the JSON Schemas of the file formats into `docs/schemas/`. |
+| `npm run invalid-files` | Writes the invalid files of V11 into `tmp/invalid-files/`, to try by hand. The test `v11-invalid-files` loads the same files and checks every message. |
 
 Opening `dist/` from any static file server, in any subfolder, must work without configuration.
 
@@ -37,12 +41,28 @@ the save dialog of "Save test project" is replaced by an in-memory file
 installed with an init script (research.md, sections 6 and 25). By hand, both are the real browser
 features.
 
-**What only a person can check** (T310): every step of V5, V9 (steps 1 to 5 and 7), V10 and V11 has an
-end-to-end test. By hand, check only what the in-memory file cannot show: the browser's permission to
-write to a real file (asked once; later saves overwrite the file), a saved file removed from the disk
-(V9 step 4, the tool says it cannot write and asks for a file), and the look and the wording of the
-screens. V9 step 6 (a file dropped onto the page) cannot be tried yet: the page has no drop zone until
-the interface redesign.
+Which test checks which scenario (run `npm run e2e`):
+
+| Scenario | End-to-end tests (`tests/e2e/`) |
+|---|---|
+| V1 | `v1-demo`, `us9-results` |
+| V2 | `v2-judge` |
+| V3 | `v3-clean-cases` |
+| V4 | `v4-test-case-window` |
+| V5 | `v5-load-file` |
+| V6 | `v6-run`, `us11-start-test-run` |
+| V7 | `v7-deciding` |
+| V8 | `v8-corrections` |
+| V9 (steps 1 to 5 and 7) | `v9-save-continue`, `v9-reproduce` |
+| V10 | `v10-another-judge` |
+| V11 (also the files of `npm run invalid-files`) | `v11-invalid-files` |
+| V12 | `v12-catalog-and-metric`, `v12-verdict-judge` |
+| V13 | `v13-privacy-a11y`, `layout-details` |
+| Performance checks | `us15-large-test-project` |
+
+Only a person can check what the in-memory file and the automatic checks cannot show. It is listed
+under "Manual checks" at the end, with exact steps. V9 step 6 (a file dropped onto the page) cannot
+be tried yet: the page has no drop zone until the interface redesign (T310).
 
 ### V1. First run with demo data (SC-001, SC-009, SC-010, User Stories 1 and 9)
 
@@ -153,7 +173,7 @@ other cases are kept.
    "Open" at the first case.
 2. "Copy prompt", copy a reply into the clipboard, "Paste reply", "Next case".
    Repeat with Alt + Right.
-3. Paste a reply written on one line into the box of a case without a reply: it is saved at once and shown read-only, with new lines, an indent of 2 spaces and the findings highlighted ("F1 · rule name"); press a finding on the right, then a highlighted block. "Change reply", edit the text, "Save reply" (asks first) for a case that
+3. Paste a reply written on one line into the box of a case without a reply: it is saved at once and shown read-only, with new lines, an indent of 2 spaces and a bar at the left of each finding (T311); press a finding on the right, then a block with a bar; press "Show the issue" on an error the judge found: its block is highlighted for a moment. "Change reply", edit the text, "Save reply" (asks first) for a case that
    has only automatic decisions, then for a case with a decision set by hand; "Cancel" drops the edits.
 4. With an empty clipboard press "Paste reply"; then deny clipboard permission and
    press it again; paste a reply that is not JSON into the box with Ctrl+V: it says "This is not JSON", and "Keep as
@@ -314,6 +334,89 @@ browser a notice says the tool supports Chrome and Edge. The accent is red on a 
 (dark) or near-white one (light); every text pair meets 4.5:1; every error and "Fail" carries a
 word or a sign besides its color; each step has exactly one primary action in its "what next"
 line.
+
+## Manual checks
+
+Do these by hand before a release, in Chrome or Edge. They need what the tests cannot give: a real
+file on the disk, the browser's own windows, and a human reading the screen. Build and start the
+site first:
+
+```
+npm run build
+npm run preview        # http://localhost:4173
+mkdir -p ~/jtj-check   # a folder for the files you save
+```
+
+Write the result of each check (what matched, what did not) as a note under T201 in
+`specs/001-judge-evaluation-workflow/tasks.md`.
+
+### M1. A real file: permission, overwrite and a removed file (V9 steps 1 and 4)
+
+1. More › "Load demo…", then open Test run.
+2. Press "Save test project". In the browser's save window choose `~/jtj-check` and the name
+   `check-1.json`.
+3. Press "Continue", decide the case that opens (for example mark an item), then close the window.
+4. Press "Save test project" again.
+5. In a terminal: `ls -l --time-style=full-iso ~/jtj-check/check-1.json`, then change something
+   in the tool, press "Save test project" and run the same command again.
+6. Remove the file: `rm ~/jtj-check/check-1.json`. In the tool type a word in "Model details" and
+   press "Save test project".
+7. Choose `~/jtj-check` and the name `check-2.json` in the save window that opens.
+
+**Expected**: step 2 shows the browser's save window once and the header says "All changes saved
+(check-1.json)". Step 4 shows no save window; the browser may ask once for permission to edit the
+file (allow it). In step 5 the time of the file changes. In step 6 the tool says the file can no
+longer be written and asks you to choose a file; the model details you typed are still on the page
+and the indicator says "Unsaved changes". Step 7 saves, and the header says "All changes saved
+(check-2.json)".
+
+### M2. Another version of the judge, with real files (V10)
+
+1. More › "Load demo…", open Test run. Press "Save test project" and save `judge-1.json` in
+   `~/jtj-check`. On Results press "Export HTML report": the browser downloads it as
+   `<test project name> - report.html`. Move it with
+   `mv "$(ls -t ~/Downloads/*report*.html | head -1)" ~/jtj-check/report-1.html`. Run
+   `md5sum ~/jtj-check/judge-1.json` and write the number down.
+2. Open the Judge step. Read the notice beside the prompt and check that "Load test project…" is
+   beside it.
+3. Press that "Load test project…", choose `judge-1.json`. In the window that asks, choose "Load
+   the test project only".
+4. Check Test cases opens, the header says "no file yet", and Test run shows its actions disabled
+   with "Start the test run first".
+5. On Judge add one sentence at the end of the prompt. On Test cases press "Start test run" and
+   confirm.
+6. On Test run press "Continue" and put `{"claims": []}` into the clipboard (type it in any text
+   editor and copy it); press "Paste reply".
+7. Press "Save test project": the save window opens. Save `judge-2.json`. Export the report and move it to
+   `~/jtj-check/report-2.html` as in step 1. Run `md5sum ~/jtj-check/judge-1.json` again.
+8. More › "Load test project…", choose `judge-1.json`, answer "Load the test project only". Press
+   "Start test run" and confirm, write "another LLM" in "Model details", paste one reply as in
+   step 6, press "Save test project" and save `llm-3.json`. Export the report and move it to
+   `~/jtj-check/report-3.html`.
+9. More › "Load test project…", choose `judge-1.json` and answer "Load with the test run".
+
+**Expected**: step 2 shows the reason "The test run has started, so the prompt is fixed…" and the
+button; the rules, the reply mapping and the error categories stay editable. After step 3 there
+are no replies, no decisions and no "added after first reply" marks. The number in step 7 is the
+same as in step 1: the first file is never overwritten. In the reports, `report-1` and `report-2`
+name the same test cases version and different judge versions; `report-3` names the judge version
+and test cases version of `report-1` and "another LLM" in its model details. After step 9 the
+original replies are back and the prompt is locked.
+
+### M3. Look and wording
+
+Read each screen of the five steps and the windows once, and note anything that is not clear.
+Check in particular:
+
+- The step names are Judge, Test cases, Test run and Results. No screen says "evaluation",
+  "Finalize", "Reopen" or "File menu".
+- Before the start, Test run explains why its buttons are disabled ("Start the test run first").
+- The reply of the judge shows a bar at the left of each finding, with no text highlight; "Show
+  the issue" highlights the block for a moment.
+- First-time use (SC-001, SC-010): give the tool to a person who has not seen it, and time how
+  long they need to go from the demo to the exported report.
+
+The look (colors, layout) is redone in the interface redesign; note only what blocks understanding.
 
 ## Performance checks
 
