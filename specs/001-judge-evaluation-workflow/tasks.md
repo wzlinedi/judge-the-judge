@@ -807,3 +807,8 @@ Across stories (after US6): A: US2 → US3 → US14a → US4    B: US7 → US8 �
 
 Each increment ends with its end-to-end scenario passing and its Help section written. Commit after
 each task or logical group.
+
+## Phase 20: Convergence
+
+- [X] T271 Add end-to-end checks for the Run step of quickstart.md V1: the table has the columns Expected errors, Additional findings, Added by hand and Items to decide, and a case without a reply already lists its expected errors with no marks and the line "The judge’s findings and the marks appear when its reply is saved." (`tests/e2e/v1-demo.spec.ts` or `v6-run.spec.ts`; today only unit tests cover T263 and T264) per FR-054, FR-055, quickstart V1 (partial) **Done 2026-11-15** (`v6-run.spec.ts`).
+- [X] T272 In the read-only case view of Results (`src/ui/windows/case-window/ReadOnlyCaseView.tsx`), list the expected errors of a case without a reply, as the case window of Run does since T264 (read-only, "Show the issue", no state), instead of "The errors appear when the judge’s reply is saved."; test in `tests/unit/ui/results-views.test.tsx` per FR-071, FR-055 (T264) (partial) **Done 2026-11-15**.

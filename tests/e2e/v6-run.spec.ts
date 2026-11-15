@@ -36,6 +36,24 @@ async function runCase(page: Page, id: string, move: 'click' | 'key' | 'stay') {
   else if (move === 'click') await win.getByRole('button', { name: 'Next case' }).click();
 }
 
+test('T263/T264: the table has four counts, and a case with errors and no reply already lists its expected errors with no marks', async ({ page }) => {
+  await openRunWithoutReplies(page);
+  const headers = page.getByRole('region', { name: 'Test cases to run' }).getByRole('columnheader');
+  await expect(headers).toHaveText(['Id', 'Name', 'Kind', 'Expected errors', 'Additional findings', 'Added by hand', 'Status', 'Items to decide', 'Actions']);
+  const row = page.getByRole('row').filter({ hasText: 'Injected errors' }).first();
+  const cells = row.getByRole('cell');
+  await expect(cells.nth(4)).toHaveText('0');
+  await expect(cells.nth(5)).toHaveText('0');
+  await expect(cells.nth(7)).toHaveText('0');
+  await row.getByRole('button', { name: 'Open' }).click();
+  const win = caseWindow(page);
+  const list = win.getByRole('list', { name: 'Expected errors' });
+  await expect(list.getByRole('listitem').first()).toBeVisible();
+  await expect(list.getByRole('button', { name: 'Show the issue' }).first()).toBeVisible();
+  await expect(list.getByRole('button', { name: /Found|Missed|Ignored/ })).toHaveCount(0);
+  await expect(win).toContainText('The judge’s findings and the marks appear when its reply is saved.');
+});
+
 test('the Run step shows the judge on one line, the model details and the evaluation file, and the case window runs a case in three actions', async ({ page }) => {
   await openRunWithoutReplies(page);
 
