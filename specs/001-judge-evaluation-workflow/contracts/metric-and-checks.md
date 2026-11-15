@@ -7,12 +7,14 @@ supported by the source?) or Completeness (is every element of the source presen
 A **measure** is a number computed from the results, for example the detection rate. A **check** is
 a pass-or-fail rule on a measure.
 
-- Exactly two metrics are built in: `accuracy` and `completeness`. They are ordinary definition
-  files bundled with the tool (`src/core/metrics/builtin/`) and registered at start. They are the
-  two ready examples of the "Load example…" window (FR-019).
-- A user loads further metrics from a file at run time ("Load metric definition…" in the "Load example…"
-  window). Loading one never requires a change to the core, the interface or the other metrics
-  (SC-005).
+- No metric is built in, and no code depends on one metric (constitution 3.0.0). The tool bundles
+  one default metric file, `accuracy` (`src/core/metrics/builtin/accuracy.json`), which a new test
+  project starts with. It is registered at start by the same route as a loaded file, and a loaded file
+  with the same `id` replaces it (T274).
+- A user loads further metrics at run time: a test project file carries its metric in
+  `metric.definition` (FR-019, T243), and loading the file registers it. Loading one never requires a
+  change to the core, the interface or the other metrics (SC-005). A file that names a metric which
+  is not loaded, and carries no definition of it, is refused with a plain message.
 - Definition files are data only. They cannot contain or trigger code.
 
 ## 1. Metric definition file
@@ -60,7 +62,7 @@ a pass-or-fail rule on a measure.
 
 | Key | Meaning |
 |---|---|
-| `id` | Unique in the registry: lower case, digits, dashes. Loading a file whose `id` is already registered is refused unless the user chooses to replace a previously loaded one; built-in metrics cannot be replaced. |
+| `id` | Unique in the registry: lower case, digits, dashes. Loading a file whose `id` is already registered is refused unless the user chooses to replace the earlier one; no definition is protected. |
 | `name`, `description`, `limitations` | Shown in the tool, in Help and in reports. |
 | `output_format` | Plain description of the judge reply this metric expects. |
 | `judge_set` | A complete judge set in the `judge_set` layout of the test project file (file-formats.md, section 1), plus `clean_base_cases`: a list of cases in the case layout with no expected errors, which become the first test cases. The variables of its prompt are the required inputs of the metric. |
@@ -161,7 +163,8 @@ Since T266 and constitution 2.0.0 there is no file for the thresholds on their o
   rule on a measure that is "not available" counts as passed for `false_positive_rate` (no
   findings means no false positives) and as failed for any other measure.
 - The bundled default (`src/core/metrics/builtin/checks.default.json`) holds the four rules above
-  and, in addition, the minimum test size:
+  and, in addition, the minimum test size. The tool reads both from this file: a new test project
+  starts with the rules, and `MINIMUM_SAMPLE` is the minimum (T273); neither is written in code:
 
 ```json
 "minimum_sample": { "expected_errors": 30, "clean_cases": 10 }
@@ -177,7 +180,7 @@ Since T266 and constitution 2.0.0 there is no file for the thresholds on their o
 
 ## 3. Registry
 
-- One registry holds all metric definitions for the session. Built-in definitions are registered
+- One registry holds all metric definitions for the session. The default metric file is registered
   at start; loaded ones when the user loads their file. Nothing is remembered after the page is
   closed.
 - The interface reads the list of examples and the list of measures only from the registry and the
@@ -190,7 +193,7 @@ Since T266 and constitution 2.0.0 there is no file for the thresholds on their o
 - `examples/metrics/bias-example.json`: an example metric for a judge that reads a single text (one
   variable) and lists the biased sentences; `examples/metrics/bias-verdict-example.json`: the same
   judge giving only a verdict for the whole text, evaluated per case.
-- A shared contract test suite runs against `accuracy`, `completeness` and the two example files:
+- A shared contract test suite runs against the default metric file (`accuracy`) and the two example files:
   schema-valid, validation rules pass, every measure computes on a fixed set of counters, the
   starter prompt composes with each of its clean base cases, and the starter rules give the
   expected findings on the definition's own sample reply.
