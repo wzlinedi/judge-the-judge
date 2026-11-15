@@ -37,12 +37,25 @@ export function blocksOf(reply: string, findings: readonly Finding[]): Block[] {
   return kept;
 }
 
+/** A block widened to whole lines, so that the bar at its left stands beside every line of it: it starts where its first line starts and ends after its last line. */
+function wholeLines(reply: string, block: Block): Block {
+  const lineStart = reply.lastIndexOf('\n', block.start - 1) + 1;
+  const start = /^[ \t]*$/.test(reply.slice(lineStart, block.start)) ? lineStart : block.start;
+  const newline = reply.indexOf('\n', block.end);
+  const lineEnd = newline === -1 ? reply.length : newline;
+  const end = /^[\s,]*$/.test(reply.slice(block.end, lineEnd)) ? (newline === -1 ? reply.length : newline + 1) : block.end;
+  return { ...block, start, end };
+}
+
 /**
- * A saved reply, read-only (T293, FR-055): the text as it is kept (formatted when it is JSON), with each part that an error rule turned
- * into a finding highlighted and labelled with the rule and the number of the finding in the right column. A reply kept as text has no highlight.
+ * A saved reply, read-only (T293, T311, FR-055): the text as it is kept (formatted when it is JSON), with a bar at the left of each part that an
+ * error rule turned into a finding. The bar has no label; the part is highlighted only while its finding is pointed at (T311). A reply kept as text has no bar.
  */
 export function ReplyView({ reply, findings, pointed, onPoint }: ReplyViewProps) {
-  const blocks = useMemo(() => blocksOf(reply, findings), [reply, findings]);
+  const blocks = useMemo(() => {
+    const widened = blocksOf(reply, findings).map((b) => wholeLines(reply, b));
+    return widened.filter((b, i) => i === 0 || b.start >= (widened[i - 1] as Block).end);
+  }, [reply, findings]);
   const parts: Array<string | Block> = [];
   let at = 0;
   for (const block of blocks) {
@@ -60,7 +73,7 @@ export function ReplyView({ reply, findings, pointed, onPoint }: ReplyViewProps)
         ) : (
           <mark
             key={i}
-            class={`fragment reply-block${pointed === part.key ? ' fragment-strong' : ''}`}
+            class={`reply-block${pointed === part.key ? ' fragment-strong' : ''}`}
             data-finding-block={part.key}
             role="button"
             tabIndex={0}
@@ -72,7 +85,6 @@ export function ReplyView({ reply, findings, pointed, onPoint }: ReplyViewProps)
               }
             }}
           >
-            <sup>{`F${part.number}${part.rules.length > 0 ? ` · ${part.rules.join(', ')}` : ''}`}</sup>
             {reply.slice(part.start, part.end)}
           </mark>
         ),

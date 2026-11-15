@@ -222,6 +222,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
               onRemove={(item) => item.added !== undefined && onChange(removeFinding(evaluation, caseId, item.added))}
               pointed={pointed}
               onPoint={isEditing ? undefined : (key) => point(key, 'errors')}
+              onHighlight={isEditing ? undefined : setPointed}
             />
           ) : (
             <ExpectedPreview testCase={testCase} judged={judged} onShowInText={showInText} />

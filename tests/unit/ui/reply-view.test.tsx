@@ -24,17 +24,30 @@ const textbox = () => within(win()).queryByRole('textbox', { name: 'Judge reply'
 const blocks = () => [...left().querySelectorAll<HTMLElement>('[data-finding-block]')];
 
 describe('a saved reply that is JSON', () => {
-  it('is shown read-only and formatted, not in a text box, with the findings highlighted by rule and number', () => {
+  it('is shown read-only and formatted, not in a text box, with a bar at the left of each finding, no label and no rule name (T311)', () => {
     open('2');
     expect(textbox()).toBeNull();
     expect(left().textContent).toContain('"claims": [');
     expect(blocks()).toHaveLength(2);
     expect(blocks().map((b) => b.dataset['findingBlock'])).toEqual(['claims[]#1', 'claims[]#3']);
-    expect(blocks()[0]!.textContent).toContain('F1');
-    expect(blocks()[0]!.textContent).toContain('Contradicted or unsupported claim');
+    // a block covers whole lines, from the start of its first line to the end of its last, so the bar stands beside all of them
+    expect(blocks()[0]!.textContent).toMatch(/^ {4}\{\n[\s\S]*\n {4}\},?\n$/);
     expect(blocks()[0]!.textContent).toContain('Anna is a doctor.');
-    expect(blocks()[1]!.textContent).toContain('F2');
     expect(blocks()[1]!.textContent).not.toContain('Anna is a baker.');
+    for (const block of blocks()) {
+      expect(block.querySelector('sup')).toBeNull();
+      expect(block.textContent).not.toMatch(/\bF\d\b|Contradicted or unsupported claim/);
+    }
+    expect(left().textContent).not.toContain('Contradicted or unsupported claim');
+  });
+
+  it('"Show the issue" of an error that the judge found also marks that finding in the reply (T311)', () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    open('2');
+    expect(blocks().some((b) => b.classList.contains('fragment-strong'))).toBe(false);
+    const card = right().querySelector('[data-finding-line="claims[]#1"]')!.closest('li') as HTMLElement;
+    fireEvent.click(within(card).getByRole('button', { name: 'Show the issue' }));
+    expect(blocks().filter((b) => b.classList.contains('fragment-strong')).map((b) => b.dataset['findingBlock'])).toEqual(['claims[]#1']);
   });
 
   it('numbers the findings in the right column the same way', () => {

@@ -44,6 +44,8 @@ export interface ErrorsPaneProps {
   pointed?: string | null;
   /** A finding was pressed here: its block in the saved reply is marked and brought into view. Not offered while the reply is being changed. */
   onPoint?: ((key: string) => void) | undefined;
+  /** "Show the issue" of an error that the judge found also marks that finding in the reply (T311); it does not scroll. */
+  onHighlight?: ((key: string) => void) | undefined;
 }
 
 function ExpectedItem({ error, index, testCase, judged, judgeSays, onMark, onShow, pointed, onPoint }: { error: EffectiveExpected; index: number; testCase: TestCase; judged: string | undefined; judgeSays: readonly FindingMark[]; onMark: (s: ExpectedState) => void; onShow: (target: ShowTarget) => void; pointed: string | null; onPoint: ((key: string) => void) | undefined }) {
@@ -169,7 +171,7 @@ export function DecideBar({ reviewed, effective, onAddFinding, onSecondOpinion }
 }
 
 /** The right column of part 3: the errors of the case in two groups, expected and additional, each with its marks (T252). */
-export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onApprove, onShowInText, judged, onRemove, pointed = null, onPoint }: ErrorsPaneProps) {
+export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onApprove, onShowInText, judged, onRemove, pointed = null, onPoint, onHighlight }: ErrorsPaneProps) {
   const unreadable = reviewed.review !== null && !reviewed.review.readable;
   const awaiting = reviewed.status === 'awaiting';
   // the words of the judge that match each expected error (FR-077, T258): the list "Findings in the reply" is gone
@@ -197,7 +199,7 @@ export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onAp
           <h5>Expected errors</h5>
           <ul class="decide-list" aria-label="Expected errors">
             {effective.expected.map((e, i) => (
-              <ExpectedItem key={e.id} error={e} index={i} testCase={reviewed.testCase} judged={judged} judgeSays={marks.filter((m) => m.kind !== 'none' && m.errorNumbers.includes(i + 1))} onMark={(s) => onExpected(e.id, s)} onShow={onShowInText} pointed={pointed} onPoint={onPoint} />
+              <ExpectedItem key={e.id} error={e} index={i} testCase={reviewed.testCase} judged={judged} judgeSays={marks.filter((m) => m.kind !== 'none' && m.errorNumbers.includes(i + 1))} onMark={(s) => onExpected(e.id, s)} onShow={(target) => { onShowInText(target); const found = marks.find((m) => m.kind !== 'none' && m.errorNumbers.includes(i + 1)); if (found) onHighlight?.(found.key); }} pointed={pointed} onPoint={onPoint} />
             ))}
           </ul>
         </>
@@ -208,7 +210,7 @@ export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onAp
           <h5>Additional errors</h5>
           <ul class="decide-list" aria-label="Additional errors">
             {effective.additional.map((a) => (
-              <AdditionalItem key={a.key} item={a} number={marks.find((m) => m.key === a.key)?.number} testCase={reviewed.testCase} judged={judged} onMark={(s) => onAdditional(a, s)} onShow={onShowInText} onRemove={() => onRemove(a)} pointed={pointed} onPoint={onPoint} />
+              <AdditionalItem key={a.key} item={a} number={marks.find((m) => m.key === a.key)?.number} testCase={reviewed.testCase} judged={judged} onMark={(s) => onAdditional(a, s)} onShow={(target) => { onShowInText(target); onHighlight?.(a.key); }} onRemove={() => onRemove(a)} pointed={pointed} onPoint={onPoint} />
             ))}
           </ul>
         </>
