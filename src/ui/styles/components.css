@@ -209,6 +209,7 @@ mark.fragment-uncovered { background: var(--warning-bg); border-bottom: 4px dash
 .error-side dd { margin: 0; }
 .error-side.not-found dt { color: var(--warning); font-family: inherit; }
 .error-state { margin: 0; font-weight: 600; }
+.errors-summary { margin: 0 0 var(--space-3); font-weight: 600; }
 .promoted-note { margin: 0; font-weight: 600; }
 .promotion-note { margin: var(--space-2) 0 0; min-height: 1.5em; font-weight: 600; }
 .base-fields { max-height: 12rem; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; }

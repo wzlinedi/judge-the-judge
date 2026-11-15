@@ -7,7 +7,7 @@ import { computeResults, reviewEvaluation } from '../../../src/core/evaluation/r
 import { readEvaluation } from '../../../src/core/io/evaluation-file';
 import type { Evaluation } from '../../../src/core/model';
 import { ResultsStep } from '../../../src/ui/steps/results/ResultsStep';
-import { ReadOnlyCaseView } from '../../../src/ui/windows/case-window/ReadOnlyCaseView';
+import { errorsSummary, ReadOnlyCaseView } from '../../../src/ui/windows/case-window/ReadOnlyCaseView';
 import { accuracyMetric, sampleEvaluation } from '../../helpers/fixtures';
 
 const loaded = readEvaluation(readFileSync('examples/demo/evaluation.json', 'utf8'));
@@ -210,9 +210,11 @@ describe('the read-only case view', () => {
   it('shows the case, its complete judge prompt, the reply and every mark with its source, all read-only', () => {
     view('2');
     const win = screen.getByRole('dialog', { name: /^Case 2 / });
-    fireEvent.click(within(win).getByRole('button', { name: 'Show prompt' }));
-    expect((screen.getByRole('textbox', { name: 'Complete judge prompt' }) as HTMLTextAreaElement).readOnly).toBe(true);
-    fireEvent.click(within(screen.getByRole('dialog', { name: 'Complete judge prompt' })).getByRole('button', { name: 'Close' }));
+    // T256: the complete prompt is in part 1, not behind a button
+    expect(within(win).queryByRole('button', { name: 'Show prompt' })).toBeNull();
+    const promptBox = within(win).getByRole('textbox', { name: 'Complete judge prompt' }) as HTMLTextAreaElement;
+    expect(promptBox.readOnly).toBe(true);
+    expect(promptBox.value.length).toBeGreaterThan(0);
     const replyBox = within(win).getByRole('textbox', { name: 'Judge reply' }) as HTMLTextAreaElement;
     expect(replyBox.readOnly).toBe(true);
     expect(replyBox.value).toContain('Anna is a doctor.');
@@ -222,10 +224,11 @@ describe('the read-only case view', () => {
     expect(win.textContent).toMatch(/factual-error · obvious/);
   });
 
-  it('offers no action that changes the case: only Previous, Next, Open on Run, Close and the prompt buttons', () => {
+  it('offers no action that changes the case: only Previous, Next, Open on Run, Close and Show the issue (T256)', () => {
     view('2');
     const names = within(screen.getByRole('dialog')).getAllByRole('button').map((b) => b.textContent);
-    expect(names.sort()).toEqual(['Close', 'Copy prompt', 'Next case', 'Open on Run', 'Previous case', 'Show prompt']);
+    expect(new Set(names)).toEqual(new Set(['Close', 'Next case', 'Open on Run', 'Previous case', 'Show the issue']));
+    expect(names).not.toContain('Copy prompt');
   });
 
   it('moves with Previous case and Next case, shows the position, and stops at the ends', () => {
@@ -244,16 +247,35 @@ describe('the read-only case view', () => {
     expect(h.onClose).toHaveBeenCalled();
   });
 
-  it('T241: is one page of four numbered parts in the order of Run: Case, Result, Judge reply, Errors', () => {
+  it('T256: is one page of three numbered parts: Case, Judge reply, Errors; the part Result is gone', () => {
     view('2');
     const win = screen.getByRole('dialog', { name: /^Case 2 / });
     const heads = Array.from(win.querySelectorAll('.case-part > h3')).map((h) => h.textContent);
-    expect(heads).toEqual(['1. Case', '2. Result', '3. Judge reply', '4. Errors']);
+    expect(heads).toEqual(['1. Case', '2. Judge reply', '3. Errors']);
     expect(win.querySelector('.case-columns')).toBeNull();
-    const result = within(win).getByRole('heading', { name: '2. Result' }).closest('.case-part') as HTMLElement;
-    expect(result.textContent).toMatch(/Marked \d+ of \d+/);
-    const errors = within(win).getByRole('heading', { name: '4. Errors' }).closest('.case-part') as HTMLElement;
+    expect(win.textContent).not.toMatch(/Marked \d+ of \d+/);
+    const errors = within(win).getByRole('heading', { name: '3. Errors' }).closest('.case-part') as HTMLElement;
     expect(errors.querySelector('.error-side dt')?.textContent).toMatch(/^(summary|source_text|not found in the case)$/);
+    expect(win.querySelector('.case-window-header')?.textContent).toMatch(/Fail|Pass|Awaiting/);
+  });
+
+  it('T256: the Errors part begins with a summary line, then the two groups, each item with Show the issue that highlights its passages', () => {
+    view('2');
+    const win = screen.getByRole('dialog', { name: /^Case 2 / });
+    const errors = within(win).getByRole('heading', { name: '3. Errors' }).closest('.case-part') as HTMLElement;
+    const summary = within(errors).getByRole('status', { name: 'Summary of the errors' });
+    expect(summary.textContent).toMatch(/^\d+ expected: .+ · (Additional: .+|no additional errors)$/);
+    expect(errors.firstElementChild?.nextElementSibling).toBe(summary);
+    expect(within(errors).getByRole('heading', { name: 'Expected errors' })).toBeTruthy();
+    Element.prototype.scrollIntoView = vi.fn();
+    fireEvent.click(within(errors).getAllByRole('button', { name: 'Show the issue' })[0]!);
+    expect(win.querySelectorAll('mark.fragment-strong').length).toBeGreaterThan(0);
+  });
+
+  it('T256: the summary line counts the states in the words of Run', () => {
+    expect(errorsSummary({ expected: [{ state: 'found' }, { state: 'found' }, { state: 'missed' }], additional: [{ state: 'false_positive' }, { state: 'false_positive' }] } as never)).toBe('3 expected: 2 found, 1 not found · Additional: 2 false positive');
+    expect(errorsSummary({ expected: [], additional: [{ state: 'real_error' }, { state: 'ignored' }] } as never)).toBe('No expected errors · Additional: 1 real error (missed in scenario), 1 ignored');
+    expect(errorsSummary({ expected: [{ state: 'undecided' }], additional: [] } as never)).toBe('1 expected: 1 undecided · no additional errors');
   });
 
   it('says so for a case without a reply', () => {

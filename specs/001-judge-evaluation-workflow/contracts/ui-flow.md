@@ -284,10 +284,12 @@ collapsed section, for that case only.
 
 Opened by **Open** in the Test case list (FR-071). The same frame as the case window of Run
 (header with **Previous case**, **Next case**, position, name, **Close**, **Open on Run**), and
-the same page: four numbered parts, one below the other, each in a frame, nothing editable:
-1. Case (fields with the highlights, **Show prompt**, **Copy prompt**), 2. Result (the status and
-"Marked N of M", the note), 3. Judge reply (read-only), 4. Errors (each with its field, fragment,
-mark and the source of the mark). It offers no action that changes the case, and **Open on Run**
+the same page: three numbered parts, one below the other, each in a frame, nothing editable (T256):
+1. Case (the fields with the highlights and, below them, the complete judge prompt in a read-only box; no buttons),
+2. Judge reply (read-only, with the note when the file has one), 3. Errors: first one summary line ("3 expected: 2 found, 1 not found ·
+Additional: 2 false positive"), then the two groups **Expected errors** and **Additional errors**, each item shown by the shared error
+component (both passages, the state in words, the source of the mark) with **Show the issue**. The status of the case is in the header, and the
+part "Result" with "Marked N of M" is gone. It offers no action that changes the case (marks are changed on Run), and **Open on Run**
 leads to the case window.
 
 ## Step 4: Results

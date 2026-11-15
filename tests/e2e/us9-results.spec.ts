@@ -80,6 +80,8 @@ test('three views, the read-only case view, thresholds in Details and Load check
   await expect(view).toContainText('Case 3 ');
   await expect(view).toContainText('LLM opinion, approved by the user');
   await expect(view.getByRole('textbox', { name: 'Judge reply' })).toHaveAttribute('readonly', '');
+  await expect(view.getByRole('textbox', { name: 'Complete judge prompt' })).toHaveAttribute('readonly', ''); // T256: the prompt is in part 1
+  await expect(view.getByRole('status', { name: 'Summary of the errors' })).toContainText(/expected|No expected errors/);
   await expect(view.getByRole('button', { name: /Approve|Ignore|Found|Save/ })).toHaveCount(0);
   await view.getByRole('button', { name: 'Next case' }).click();
   await expect(view).toContainText('Case 4 ');
