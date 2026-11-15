@@ -109,7 +109,7 @@ describe('loading', () => {
     expect(screen.getByText('mine.json')).toBeTruthy();
   });
 
-  it('shows the notes of a file that loaded', async () => {
+  it('says plainly that the metric of a file is not loaded (T274)', async () => {
     const saver = createFakePorts();
     await saveTestProject(stateOn('judge'), saver, fileEnv);
     const file = JSON.parse(saver.testProjectTarget.lastText!);
@@ -117,7 +117,7 @@ describe('loading', () => {
     const ports = createFakePorts();
     renderApp(ports);
     await loadFile(ports, 'Load test project…', JSON.stringify(file));
-    expect(await screen.findByText(/not registered/)).toBeTruthy();
+    expect(await screen.findByText(/which is not loaded/)).toBeTruthy();
   });
 });
 

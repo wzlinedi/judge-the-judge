@@ -1,6 +1,7 @@
 // Derived values for the interface, recomputed from state and never stored in it.
 import type { ReviewedCase } from '../core/evaluation/results';
 import { findVariables } from '../core/judge/variables';
+import { labels } from '../ui/labels';
 import type { AppState, StepId } from './store';
 
 export const STEPS: ReadonlyArray<{ id: Exclude<StepId, 'help'>; number: number; name: string }> = [
@@ -43,7 +44,7 @@ export function stepGate(state: AppState, step: StepId): StepGateInfo | null {
   if ((step === 'run' || step === 'results') && !state.evaluation.dataset.finalized) {
     return {
       sentence: `${step === 'run' ? 'Run' : 'Results'} needs finalized test cases. Finalize them on the Test cases step first.`,
-      action: { label: 'Go to Test cases', go: 'cases' },
+      action: { label: labels.goToTestCases, go: 'cases' },
     };
   }
   return null;
@@ -59,7 +60,7 @@ function afterFinalizing(state: AppState): NextAction['others'] {
   const { dataset, replies } = state.evaluation;
   if (!dataset.finalized) return [];
   const others: NonNullable<NextAction['others']> = [];
-  if (Object.keys(replies).length === 0) others.push({ label: 'Reopen test cases', intent: 'edit-cases' });
+  if (Object.keys(replies).length === 0) others.push({ label: labels.editTestCases, intent: 'edit-cases' });
   return others;
 }
 
@@ -75,7 +76,7 @@ export function nextAction(state: AppState, step: StepId = state.step, reviewed:
         return {
           sentence: 'The judge prompt and the test cases are fixed. Go on with the run.',
           detail: 'The reply mapping and the error rules can still be changed. Test cases can still be added on the Test cases step.',
-          action: { label: 'Continue', go: 'run' },
+          action: { label: labels.continue, go: 'run' },
           others: afterFinalizing(state),
         };
       }
@@ -86,11 +87,11 @@ export function nextAction(state: AppState, step: StepId = state.step, reviewed:
       const blocking = needed.length > 0;
       if (!hasSample) needed.push('a sample reply');
       if (judge_set.error_rules.length === 0) needed.push('an error rule');
-      if (needed.length === 0) return { sentence: 'The judge is ready. Next, prepare the test cases.', action: { label: 'Next: Test cases', go: 'cases' } };
+      if (needed.length === 0) return { sentence: 'The judge is ready. Next, prepare the test cases.', action: { label: labels.nextTestCases, go: 'cases' } };
       return {
         sentence: `Still missing: ${needed.join(', ')}.`,
         ...(blocking ? {} : { detail: 'You can go on, but every case will then need verification by hand.' }),
-        action: { label: 'Next: Test cases', ...(blocking ? { disabled: true } : { go: 'cases' as const }) },
+        action: { label: labels.nextTestCases, ...(blocking ? { disabled: true } : { go: 'cases' as const }) },
       };
     }
     case 'cases':
@@ -98,25 +99,25 @@ export function nextAction(state: AppState, step: StepId = state.step, reviewed:
         return {
           sentence: 'The test cases are finalized. Go on with the run.',
           detail: `${count} test cases. The prompt and the fields are fixed; cases can still be added.`,
-          action: { label: 'Continue', go: 'run' },
+          action: { label: labels.continue, go: 'run' },
           others: afterFinalizing(state),
         };
       }
       if (count === 0) {
-        return { sentence: 'Add your first test case with the button below, or import test cases from the File menu.', action: { label: 'Finalize test cases…', intent: 'finalize', disabled: true } };
+        return { sentence: 'Add your first test case with the button below, or import test cases from the File menu.', action: { label: labels.finalizeTestCases, intent: 'finalize', disabled: true } };
       }
-      return { sentence: 'Finalize the test cases when they are ready.', detail: `${count} test cases`, action: { label: 'Finalize test cases…', intent: 'finalize' } };
+      return { sentence: 'Finalize the test cases when they are ready.', detail: `${count} test cases`, action: { label: labels.finalizeTestCases, intent: 'finalize' } };
     case 'run': {
       const decided = reviewed.filter((r) => r.status === 'pass' || r.status === 'fail').length;
       const next = caseToContinue(reviewed);
       const detail = `${decided} of ${reviewed.length} cases decided`;
       const others = afterFinalizing(state);
-      if (next === undefined) return { sentence: 'Every case is decided. Read the results.', detail, action: { label: 'Next: Results', go: 'results' }, others };
-      return { sentence: 'Continue with the next case that needs you.', detail, note: NEW_CONVERSATION, action: { label: 'Continue', openCase: next }, others };
+      if (next === undefined) return { sentence: 'Every case is decided. Read the results.', detail, action: { label: labels.nextResults, go: 'results' }, others };
+      return { sentence: 'Continue with the next case that needs you.', detail, note: NEW_CONVERSATION, action: { label: labels.continue, openCase: next }, others };
     }
     case 'results':
-      return { sentence: 'Read the result of the evaluation.', action: { label: 'Continue' } };
+      return { sentence: 'Read the result of the evaluation.', action: { label: labels.continue } };
     default:
-      return { sentence: 'Help explains each step with examples.', action: { label: 'Continue', go: 'judge' } };
+      return { sentence: 'Help explains each step with examples.', action: { label: labels.continue, go: 'judge' } };
   }
 }

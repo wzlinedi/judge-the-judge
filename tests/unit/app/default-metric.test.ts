@@ -1,16 +1,16 @@
-// The built-in metric (FR-019): Accuracy is an ordinary definition in the registry.
+// The default metric file (FR-019, Constitution VI): Accuracy is an ordinary definition in the registry, with no special place in code.
 import { describe, expect, it } from 'vitest';
 import { listExamples } from '../../../src/core/metrics/registry';
-import { BUILT_IN_REGISTRY, metricFor } from '../../../src/app/metrics';
+import { DEFAULT_REGISTRY, metricFor } from '../../../src/app/metrics';
 import { composePrompt } from '../../../src/core/judge/compose';
 import { findFindings } from '../../../src/core/judge/findings';
 import { recognizeFields } from '../../../src/core/judge/fields';
 import { findVariables } from '../../../src/core/judge/variables';
 import { validateRules } from '../../../src/core/judge/rules';
 
-describe('built-in metrics', () => {
-  it('lists Accuracy only (Completeness was removed, T243)', () => {
-    expect(listExamples(BUILT_IN_REGISTRY).map((m) => m.id)).toEqual(['accuracy']);
+describe('the default metric file', () => {
+  it('starts with Accuracy only (Completeness was removed, T243)', () => {
+    expect(listExamples(DEFAULT_REGISTRY).map((m) => m.id)).toEqual(['accuracy']);
   });
 
   it.each(['accuracy'])('%s: starter prompt, rules and clean cases agree with each other', (id) => {

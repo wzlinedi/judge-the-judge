@@ -15,7 +15,7 @@ afterEach(() => resetRegistry());
 
 describe('a metric definition inside a file', () => {
   it('Load test project registers it, and metricFor then finds it', async () => {
-    expect(metricFor('bias-verdict').id).toBe('accuracy');
+    expect(() => metricFor('bias-verdict')).toThrow(/not loaded/);
     const ports = createFakePorts();
     await saveTestProject(withEvaluation(bias()), ports, env);
     ports.opener.next = { name: 'bias.json', text: ports.testProjectTarget.lastText! };
@@ -41,7 +41,24 @@ describe('a metric definition inside a file', () => {
     expect(metricFor('bias-verdict').name).toBe(embeddedDefinition().name);
   });
 
-  it('loading it again replaces the earlier definition without asking, and a built-in metric is never replaced', async () => {
+  it('an evaluation file whose metric is not loaded is refused with a plain message and changes nothing (T274)', async () => {
+    const ports = createFakePorts();
+    await saveTestProject(withEvaluation(bias()), ports, env);
+    ports.opener.next = { name: 'p.json', text: ports.testProjectTarget.lastText! };
+    const loaded = await loadTestProject(createState(), ports, env);
+    await saveEvaluation(loaded.state, ports, env);
+    const text = ports.evaluationTarget.lastText!;
+    resetRegistry();
+    const before = createState();
+    ports.opener.next = { name: 'e.json', text };
+    const result = await loadEvaluation(before, ports, env);
+    expect(result.outcome).toBe('invalid');
+    expect(result.message).toMatch(/"bias-verdict"/);
+    expect(result.message).toMatch(/Load the test project or the metric file/);
+    expect(result.state).toBe(before);
+  });
+
+  it('loading it again replaces the earlier definition without asking, and the default metric file is replaced like any other', async () => {
     const ports = createFakePorts();
     const twice = bias();
     await saveTestProject(withEvaluation(twice), ports, env);
@@ -56,6 +73,6 @@ describe('a metric definition inside a file', () => {
     await saveTestProject(withEvaluation(fake), ports, env);
     ports.opener.next = { name: 'fake.json', text: ports.testProjectTarget.lastText! };
     await loadTestProject(createState(), ports, env);
-    expect(metricFor('accuracy').name).toBe('Accuracy');
+    expect(metricFor('accuracy').name).toBe('Not Accuracy');
   });
 });

@@ -3,21 +3,17 @@ import type { MetricDefinition } from './types';
 
 export interface Registry {
   metrics: readonly MetricDefinition[];
-  /** Ids of the definitions registered at start; they cannot be replaced. */
-  builtIn: readonly string[];
 }
 
-export function createRegistry(builtIns: readonly MetricDefinition[]): Registry {
-  return { metrics: [...builtIns], builtIn: builtIns.map((m) => m.id) };
+/** No metric has a special place: the registry starts with the definitions it is given (the default metric file) and takes the rest from loaded files. */
+export function createRegistry(initial: readonly MetricDefinition[]): Registry {
+  return { metrics: [...initial] };
 }
 
 export type RegisterResult = { ok: true; registry: Registry } | { ok: false; reason: string; canReplace: boolean };
 
-/** Adds a definition. An id already used by a loaded definition is refused unless `replace` is set; a built-in one never is. */
+/** Adds a definition. An id already in use is refused unless `replace` is set; every definition is treated alike. */
 export function register(registry: Registry, definition: MetricDefinition, options: { replace?: boolean } = {}): RegisterResult {
-  if (registry.builtIn.includes(definition.id)) {
-    return { ok: false, reason: `"${definition.id}" is a built-in metric and cannot be replaced.`, canReplace: false };
-  }
   if (registry.metrics.some((m) => m.id === definition.id)) {
     if (!options.replace) return { ok: false, reason: `A metric with the id "${definition.id}" is already loaded.`, canReplace: true };
     return { ok: true, registry: { ...registry, metrics: registry.metrics.map((m) => (m.id === definition.id ? definition : m)) } };

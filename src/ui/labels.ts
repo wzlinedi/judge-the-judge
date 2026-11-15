@@ -24,7 +24,6 @@ export const labels = {
   nextTestCases: 'Next: Test cases',
   nextResults: 'Next: Results',
   explain: 'Explain',
-  goToJudge: 'Go to Judge',
   goToTestCases: 'Go to Test cases',
   // Browsing the test cases
   clearFilters: 'Clear search and filters',
@@ -57,7 +56,6 @@ export const labels = {
   closeWithoutSaving: 'Close without saving',
   rebuildPrompt: 'Rebuild prompt',
   showJson: 'Show JSON',
-  copyJson: 'Copy JSON',
   correctExpectedErrors: 'Edit expected errors',
   saveExpectedErrors: 'Save expected errors',
   previousTestCase: 'Previous case',

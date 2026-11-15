@@ -1,19 +1,14 @@
 // The session state and its named actions (contracts/core-api.md, Application state).
 // Actions never change the old state: they return the next one. Derived values are never stored.
 import type { CheckConfiguration, Evaluation } from '../core/model';
+import checksDefaults from '../core/metrics/builtin/checks.default.json';
 import type { Difference } from '../core/evaluation/recompute';
 import type { Ports, SaveResult, SaveTarget } from './ports/types';
 
 export type StepId = 'judge' | 'cases' | 'run' | 'results' | 'help';
 
-export const DEFAULT_CHECKS: CheckConfiguration = {
-  rules: [
-    { measure: 'detection_rate', comparison: 'at_least', value: 0.8 },
-    { measure: 'false_positive_rate', comparison: 'at_most', value: 0.1 },
-    { measure: 'case_detection_rate', comparison: 'at_least', value: 0.8 },
-    { measure: 'clean_case_false_positive_rate', comparison: 'at_most', value: 0.1 },
-  ],
-};
+/** The thresholds a new test project starts with: they come from the bundled checks file, not from code. */
+export const DEFAULT_CHECKS: CheckConfiguration = { rules: checksDefaults.rules as CheckConfiguration['rules'] };
 
 export const DEFAULT_METRIC = {
   id: 'accuracy',

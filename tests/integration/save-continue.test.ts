@@ -213,16 +213,18 @@ describe('test project', () => {
     expect(result.state).toBe(state);
   });
 
-  it('tells the user about notes of a file that loaded', async () => {
+  it('refuses a file whose metric is not loaded and has no definition in the file, and changes nothing (T274)', async () => {
     const saver = createFakePorts();
     await saveTestProject(stateWith(sampleEvaluation()), saver, env);
     const file = JSON.parse(saver.testProjectTarget.lastText!);
     file.metric = { id: 'bias', parameters: {} };
     const ports = createFakePorts();
     open(ports, JSON.stringify(file));
-    const result = await loadTestProject(createState(), ports, env);
-    expect(result.outcome).toBe('loaded');
-    expect(result.message).toContain('bias');
+    const before = createState();
+    const result = await loadTestProject(before, ports, env);
+    expect(result.outcome).toBe('invalid');
+    expect(result.message).toMatch(/"bias".*not loaded/);
+    expect(result.state).toBe(before);
   });
 });
 

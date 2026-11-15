@@ -3,6 +3,7 @@ import type { CaseDecisions, Evaluation, TestCase } from '../model';
 import { findFindings, type Finding } from '../judge/findings';
 import { recognizeFields } from '../judge/fields';
 import { countingModeOf } from '../judge/counting-mode';
+import checksDefaults from '../metrics/builtin/checks.default.json';
 import type { MeasureValue, MetricDefinition } from '../metrics/types';
 import { countAll, type Counters } from './counters';
 import { applyDecisions, type Effective, type EffectiveSource } from './decisions';
@@ -12,7 +13,8 @@ import { overallResult, type MinimumSample, type OverallResult } from './overall
 import { reviewCase, type CaseReview } from './review';
 import { caseStatus, type CaseStatus } from './status';
 
-export const MINIMUM_SAMPLE: MinimumSample = { expected_errors: 30, clean_cases: 10 };
+/** The fixed minimum test size: held in the bundled checks file, not in code (Constitution VI). */
+export const MINIMUM_SAMPLE: MinimumSample = { ...checksDefaults.minimum_sample };
 
 export interface ReviewedCase {
   testCase: TestCase;

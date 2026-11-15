@@ -71,6 +71,11 @@ export async function loadEvaluation(state: AppState, ports: Ports, _env?: FileE
   if (!picked) return { state, outcome: 'cancelled', notes: [] };
   const read = readEvaluation(picked.text);
   if (!read.ok) return { state, outcome: 'invalid', message: describeProblems(read.problems), problems: read.problems, notes: [] };
+  const metricId = read.value.evaluation.metric.id;
+  if (findMetric(sessionRegistry(), metricId) === undefined) {
+    const message = `This evaluation uses the metric "${metricId}", which is not loaded. Load the test project or the metric file that has it, then load the evaluation again.`;
+    return { state, outcome: 'invalid', message, problems: [{ message }], notes: [] };
+  }
   ports.evaluationTarget.useLoaded(picked.handle);
   // Recomputing is how a file is audited: the numbers it stored must follow from what it holds (SC-003).
   const { evaluation } = read.value;
@@ -89,7 +94,12 @@ export async function loadTestProject(state: AppState, ports: Ports, _env?: File
   if (!picked) return { state, outcome: 'cancelled', notes: [] };
   const read = readTestProject(picked.text, (id) => findMetric(sessionRegistry(), id) !== undefined);
   if (!read.ok) return { state, outcome: 'invalid', message: describeProblems(read.problems), problems: read.problems, notes: [] };
-  registerEmbeddedMetric(read.value.evaluation.metric);
+  const metric = read.value.evaluation.metric;
+  registerEmbeddedMetric(metric);
+  if (findMetric(sessionRegistry(), metric.id) === undefined) {
+    const message = `This test project uses the metric "${metric.id}", which is not loaded, and the file has no definition of it.`;
+    return { state, outcome: 'invalid', message, problems: [{ message }], notes: [] };
+  }
   ports.testProjectTarget.useLoaded(picked.handle);
   const next = atResumePoint(applyLoadedTestProject(state, read.value.evaluation, ports));
   return { state: next, outcome: 'loaded', message: joinNotes(read.notes, 'The test project was loaded.'), notes: read.notes };

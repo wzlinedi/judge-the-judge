@@ -118,13 +118,14 @@ describe('an invalid definition', () => {
     expect(messages(bad((m) => (m['format'] = 'other')))).toMatch(/format/);
   });
 
-  it('leaves the registry unchanged and cannot replace a built-in', () => {
+  it('leaves the registry unchanged on an invalid file, and the default definition can be replaced like any other', () => {
     const accuracy = load('src/core/metrics/builtin/accuracy.json');
     const registry = createRegistry([accuracy]);
     expect(readMetric('{ nope').ok).toBe(false);
     expect(registry.metrics).toHaveLength(1);
-    expect(register(registry, { ...accuracy, name: 'Changed' }, { replace: true }).ok).toBe(false);
     expect(findMetric(registry, 'accuracy')?.name).toBe('Accuracy');
+    const replaced = register(registry, { ...accuracy, name: 'Changed' }, { replace: true });
+    expect(replaced.ok && findMetric(replaced.registry, 'accuracy')?.name).toBe('Changed');
   });
 
   it('replaces a loaded definition only when asked', () => {

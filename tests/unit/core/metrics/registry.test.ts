@@ -24,11 +24,13 @@ describe('registry', () => {
     expect(registry.metrics).toHaveLength(1);
   });
 
-  it('refuses to replace a built-in definition', () => {
+  it('treats the default definition like any other: refused as a duplicate, replaced when asked (T274)', () => {
     const registry = createRegistry([builtIn]);
     const r = register(registry, { ...builtIn, name: 'Changed' });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toMatch(/built-in|already/i);
+    if (!r.ok) expect(r.reason).toMatch(/already loaded/i);
+    const replaced = register(registry, { ...builtIn, name: 'Changed' }, { replace: true });
+    expect(replaced.ok && listExamples(replaced.registry).map((m) => m.name)).toEqual(['Changed']);
   });
 });
 
