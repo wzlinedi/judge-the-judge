@@ -17,7 +17,7 @@ const open = (name: string) => fireEvent.click(within(screen.getAllByRole('row')
 const edit = () => fireEvent.click(screen.getByRole('button', { name: 'Edit expected errors' }));
 const dialog = () => screen.getByRole('dialog', { name: 'Edit expected errors' });
 const box = () => within(dialog()).getByLabelText('Expected errors') as HTMLTextAreaElement;
-const save = () => within(dialog()).getByRole('button', { name: 'Save' }) as HTMLButtonElement;
+const save = () => within(dialog()).getByRole('button', { name: 'Save expected errors' }) as HTMLButtonElement;
 
 describe('Edit expected errors', () => {
   it('is offered on every case, with or without a reply, finalized or not', () => {
@@ -43,7 +43,7 @@ describe('Edit expected errors', () => {
     expect(items).toHaveLength(2);
     expect(items[0]).toHaveProperty('id');
     expect(box().value).not.toContain('source_text');
-    expect(within(dialog().querySelector('.dialog-actions') as HTMLElement).getAllByRole('button').map((b) => b.textContent)).toEqual(['Cancel', 'Save']);
+    expect(within(dialog().querySelector('.dialog-actions') as HTMLElement).getAllByRole('button').map((b) => b.textContent)).toEqual(['Cancel', 'Save expected errors']);
     expect(save().disabled).toBe(true);
     expect(within(dialog()).getByText('Change the JSON to save.')).toBeTruthy();
   });
@@ -92,7 +92,28 @@ describe('Edit expected errors', () => {
     expect(screen.queryByRole('dialog', { name: 'Save the expected errors?' })).toBeNull();
     expect(screen.getByRole('dialog', { name: 'Edit expected errors' })).toBeTruthy();
     fireEvent.click(save());
-    fireEvent.click(within(screen.getByRole('dialog', { name: 'Save the expected errors?' })).getByRole('button', { name: 'Save' }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Save the expected errors?' })).getByRole('button', { name: 'Save expected errors' }));
+    expect(screen.queryByRole('dialog', { name: 'Edit expected errors' })).toBeNull();
+  });
+
+  it('a list that leaves a changed place of the text uncovered is reported under the box and asked about before saving, even without a reply (FR-080)', () => {
+    show();
+    open('Anna + 2 errors');
+    edit();
+    const items = JSON.parse(box().value);
+    fireEvent.input(box(), { target: { value: JSON.stringify(items.slice(0, 1)) } });
+    expect(within(dialog()).getByRole('list', { name: 'Changed places not in the list' }).textContent).toMatch(/A changed place is not in the list/);
+    expect(within(dialog()).getByRole('status').textContent).toMatch(/changed place not in the list/);
+    expect(save().disabled).toBe(false);
+    fireEvent.click(save());
+    const ask = screen.getByRole('dialog', { name: 'Save the expected errors?' });
+    expect(ask.textContent).toContain('The text and the list of expected errors do not agree:');
+    expect(ask.textContent).toMatch(/A changed place is not in the list/);
+    expect(ask.textContent).not.toContain('This case has a reply');
+    fireEvent.click(within(ask).getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('dialog', { name: 'Edit expected errors' })).toBeTruthy();
+    fireEvent.click(save());
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Save the expected errors?' })).getByRole('button', { name: 'Save expected errors' }));
     expect(screen.queryByRole('dialog', { name: 'Edit expected errors' })).toBeNull();
   });
 

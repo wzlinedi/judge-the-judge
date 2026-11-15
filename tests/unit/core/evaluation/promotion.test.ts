@@ -123,6 +123,17 @@ describe('demoting', () => {
   });
 });
 
+describe('a link whose finding the reply no longer has (FR-053)', () => {
+  it('is left out: the error goes back to the normal matching and nothing counts as found by the link', () => {
+    const made = sync(real(demo), '19').evaluation;
+    const id = caseOf(made, '19').expected_errors.at(-1)!.id;
+    const stale = withDecisions(made, '19', { additional: { 'claims[]#9': { state: 'real_error', source: 'manual', promoted_to: id } } });
+    const without = { ...stale, decisions: { ...stale.decisions, '19': { ...stale.decisions['19']!, additional: { 'claims[]#9': stale.decisions['19']!.additional['claims[]#9']! } } } };
+    const item = reviewOf(without, '19').effective!.expected.find((e) => e.id === id)!;
+    expect(item.promoted).toBeUndefined();
+  });
+});
+
 describe('a judge evaluated per case', () => {
   it('a flag on a clean case, marked real, makes an expected error that is found at once', () => {
     const clean = demo.dataset.cases.find((c) => c.expected_errors.length === 0)!;

@@ -42,10 +42,11 @@ export interface Effective {
 }
 
 /** The expected errors that real-error marks made, with the source of the mark (T253). */
-export function promotedErrors(decisions: CaseDecisions | undefined): Map<string, DecisionSource> {
+export function promotedErrors(decisions: CaseDecisions | undefined, replyKeys?: ReadonlySet<string>): Map<string, DecisionSource> {
   const found = new Map<string, DecisionSource>();
   if (!decisions) return found;
-  for (const d of Object.values(decisions.additional)) if (d.state === 'real_error' && d.promoted_to !== undefined) found.set(d.promoted_to, d.source);
+  // a link of a finding that the reply no longer has (after a correction of the rules, FR-053) is left out
+  for (const [key, d] of Object.entries(decisions.additional)) if (d.state === 'real_error' && d.promoted_to !== undefined && (replyKeys === undefined || replyKeys.has(key))) found.set(d.promoted_to, d.source);
   for (const f of decisions.added_findings) if (f.state === 'real_error' && f.promoted_to !== undefined) found.set(f.promoted_to, f.source);
   return found;
 }
@@ -56,7 +57,9 @@ export function promotedErrors(decisions: CaseDecisions | undefined): Map<string
  */
 export function applyDecisions(review: CaseReview, decisions: CaseDecisions | undefined, order?: readonly string[]): Effective {
   const stored = decisions ?? { expected: {}, additional: {}, added_findings: [] as AddedFinding[], approved: false, note: '' };
-  const promoted = promotedErrors(decisions);
+  const replyKeys = new Set([...review.additional, ...review.partialOnly].map((f) => f.key));
+  for (const e of review.expected) for (const k of [...e.clear, ...e.partial]) replyKeys.add(k);
+  const promoted = promotedErrors(decisions, replyKeys);
 
   const reviewed: EffectiveExpected[] = review.expected.map((e) => {
     const decision = stored.expected[e.id];
@@ -109,7 +112,7 @@ export function applyDecisions(review: CaseReview, decisions: CaseDecisions | un
 
   // a link to an expected error that the case no longer has counts for nothing: the finding is an ordinary one
   const unlinked = (a: EffectiveAdditional): EffectiveAdditional => {
-    if (a.promotedTo === undefined || stateOf.has(a.promotedTo)) return a;
+    if (a.promotedTo === undefined || (stateOf.has(a.promotedTo) && promoted.has(a.promotedTo))) return a;
     const { promotedTo: _gone, ...rest } = a;
     return rest;
   };

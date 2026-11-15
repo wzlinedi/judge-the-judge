@@ -45,11 +45,13 @@ features.
 **Expected**: the Judge step shows no welcome section; the demo opens on Run as a finalized
 evaluation with 20 cases and 20 replies, the "what next" line says "15 of 20 cases decided" and
 "Continue" opens the first case awaiting verification. The Summary shows the counts of expected
-errors (found, missed), additional findings (real errors, false positives) and subtle errors
+errors (found, not found), additional findings (real errors, false positives) and subtle errors
 before anything else, then the two rates and one line of overall result with its reason. While
 cases await verification the results are marked provisional and the overall result is
-Inconclusive; afterwards the numbers match the expected results file. The test size shows 30 of 30
-errors and 10 of 10 clean cases. The first report is marked provisional and names the 5 undecided
+Inconclusive; afterwards the numbers match the expected results file: 28 of 31 expected errors found
+(90.3%), because the one real error that the check of case 19 marks "Real error (missed in scenario)" is added to the expected errors
+of that case (T253) and so is counted as an expected error that was found, and the additional findings show 2 false positives and no
+real error. The test size shows 31 of 30 errors and 10 of 10 clean cases. The first report is marked provisional and names the 5 undecided
 cases; the second has no such mark. (The times of SC-001 and SC-010 are checked by hand with a
 first-time user, not by the automated test.)
 

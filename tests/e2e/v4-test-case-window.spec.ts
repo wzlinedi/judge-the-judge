@@ -150,7 +150,7 @@ test('Edit expected errors is on every case: a case without a reply saves at onc
   items[0].difficulty = 'subtle';
   items[0].source_fragment = 'every evening';
   await box.fill(JSON.stringify(items));
-  await dialog.getByRole('button', { name: 'Save' }).click();
+  await dialog.getByRole('button', { name: 'Save expected errors' }).click();
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole('dialog', { name: 'Save the expected errors?' })).toHaveCount(0);
   await expect(page.getByRole('listitem').filter({ hasText: 'E1' }).locator('.error-side').first()).toContainText('every evening');
@@ -159,7 +159,7 @@ test('Edit expected errors is on every case: a case without a reply saves at onc
   await page.getByRole('button', { name: 'Edit expected errors' }).click();
   await box.fill('[ { "description": ');
   await expect(dialog.getByText(/Line 1, column/)).toBeVisible();
-  await expect(dialog.getByRole('button', { name: 'Save' })).toBeDisabled();
+  await expect(dialog.getByRole('button', { name: 'Save expected errors' })).toBeDisabled();
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await page.getByRole('button', { name: 'Close', exact: true }).click();
 
@@ -169,13 +169,13 @@ test('Edit expected errors is on every case: a case without a reply saves at onc
   const withReply = JSON.parse(await box.inputValue());
   withReply.push({ category: 'omission', description: 'a new one' });
   await box.fill(JSON.stringify(withReply));
-  await dialog.getByRole('button', { name: 'Save' }).click();
+  await dialog.getByRole('button', { name: 'Save expected errors' }).click();
   const ask = page.getByRole('dialog', { name: 'Save the expected errors?' });
   await expect(ask).toContainText('This case has a reply.');
   await ask.getByRole('button', { name: 'Cancel' }).click();
   await expect(dialog).toBeVisible();
-  await dialog.getByRole('button', { name: 'Save' }).click();
-  await page.getByRole('dialog', { name: 'Save the expected errors?' }).getByRole('button', { name: 'Save' }).click();
+  await dialog.getByRole('button', { name: 'Save expected errors' }).click();
+  await page.getByRole('dialog', { name: 'Save the expected errors?' }).getByRole('button', { name: 'Save expected errors' }).click();
   await expect(dialog).toHaveCount(0);
   await expect(page.getByText('Unsaved changes').first()).toBeVisible();
 });

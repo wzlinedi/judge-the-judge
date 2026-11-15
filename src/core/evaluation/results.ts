@@ -61,7 +61,7 @@ export function reviewEvaluation(evaluation: Evaluation, metric?: Pick<MetricDef
     const found = findFindings(reply.reply, judge_set.error_rules, judge_set.reply_mapping.finding_text, recognized);
     const decisions: CaseDecisions | undefined = evaluation.decisions[testCase.id];
     // the expected errors that real-error marks made are not matched: they are found by definition (T253)
-    const made = promotedErrors(decisions);
+    const made = promotedErrors(decisions, new Set(found.findings.map((f) => f.key)));
     const matched = made.size === 0 ? testCase : { ...testCase, expected_errors: testCase.expected_errors.filter((e) => !made.has(e.id)) };
     const review = reviewCase(matched, found, parameters, mode);
     const effective = applyDecisions(review, decisions, testCase.expected_errors.map((e) => e.id));

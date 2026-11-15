@@ -60,6 +60,7 @@ export const labels = {
   showJson: 'Show JSON',
   copyJson: 'Copy JSON',
   correctExpectedErrors: 'Edit expected errors',
+  saveExpectedErrors: 'Save expected errors',
   previousTestCase: 'Previous case',
   nextTestCase: 'Next case',
   close: 'Close',
