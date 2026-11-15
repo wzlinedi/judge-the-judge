@@ -252,8 +252,9 @@ Opened by **Open** (FR-055, FR-060).
   **Next case**, **Copy prompt**, **Paste reply** (SC-002).
 - **States**: first or last case (the matching button is disabled); changed but unsaved reply in
   the box when moving or closing (asks first); empty clipboard (says so, nothing changes);
-  clipboard not readable (says so and points to the box); replacing a reply when the case has
-  decisions set by hand or from an applied opinion (asks, saying how many will be removed);
+  clipboard not readable (says so and points to the box); the first change of a saved reply, typed
+  or pasted (asks "Change the judge’s reply?", naming the marks set by hand or from an opinion that are removed; **Cancel** keeps the reply,
+  **Change reply** applies the change and lets the reply of that case be edited until the window moves, T261);
   reply that cannot be read (kept, line and column shown, nothing marked automatically, the case
   needs **No more findings** after the findings are added by hand).
 

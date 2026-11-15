@@ -171,6 +171,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-15, fourth look, T260) A shorter name for "Real error (missed in scenario)"? → A: **Genuine error**: the judge was right and the test case missed it, so it may be added to the case. Used in Run, Results (counts "Genuine errors"), the second opinion preview and the HTML report; the state value `real_error` in the files stays. Replaces the name of T252.
 - Q: (Owner review 2026-11-15, fourth look, T258) Does "Findings in the reply" repeat the expected and additional errors? → A: Yes; the list goes. The one thing only it showed, which words of the judge match an expected error and whether fully or partly, moves into the card of that expected error ("Judge: “…” (matches)" or "(partly matches)"). Replaces the reply part of FR-077.
 - Q: (Owner review 2026-11-15, fourth look, T257) Should the fields of a case highlight the expected errors all the time? → A: No; that is redundant with "Show the issue". The fields of Test cases › Open, Run part 1 and Results part 1 show no highlight of their own; "Show the issue" highlights both passages of the error for a moment, with its number (and its state after a reply). The warnings of FR-080 ("not in the list") stay. Replaces the always-on highlights of FR-077.
+- Q: (Owner review 2026-11-15, fourth look, T261) Pasting or typing over a saved judge reply changes the results; what should the box do? → A: It stays editable, but the first change (typed or Paste reply) asks "Change the judge’s reply?": the reply is what the judge returned and the results are counted from it; the case is marked again from the changed text and the marks set by hand are removed (named with their number). Cancel keeps the reply; after Change reply the case can be edited freely until the window moves to another case. Replaces the question of FR-056 that asked only when there were marks set by hand.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -1443,10 +1444,13 @@ case and confirm the new case has the same fields and expected errors.
   that has a problem, the problem and where it is (line and column, or the field path) are shown under the box (FR-084),
   nothing is marked automatically, and the user marks the items by hand. An empty clipboard or box
   is explained and changes nothing. Every new reply MUST reset the case: its decisions, the
-  findings added by hand included, are removed and the automatic marks are computed again from the new reply. When
-  the case has decisions set by hand or approved from an LLM opinion, the system MUST ask before
-  replacing the reply, saying how many such decisions will be removed; otherwise it replaces the
-  reply without asking.
+  findings added by hand included, are removed and the automatic marks are computed again from the new reply. The
+  box of a saved reply stays editable, but the first change of it (typed, or "Paste reply") MUST ask
+  first (T261), "Change the judge’s reply?": the reply is what the judge returned and the results are
+  counted from it; the case is marked again from the changed text, and the marks set by hand or from
+  an opinion, named with their number, are removed. "Cancel" (the primary button) keeps the saved
+  reply; after "Change reply" the reply of that case can be edited freely until the window moves to
+  another case.
 - **FR-057**: The system MUST keep, with every test case, the judge prompt that was composed for it
   and the reply that was received, and MUST include both in the saved evaluation and in every
   exported result.

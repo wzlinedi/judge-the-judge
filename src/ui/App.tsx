@@ -132,7 +132,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   };
   const replyActions = {
     save: async (caseId: string, text: string, confirmed?: boolean) => applyReply(await saveReply(stateRef.current, caseId, text, { confirmed: confirmed === true })),
-    paste: async (caseId: string) => applyReply(await pasteReplyFromClipboard(stateRef.current, caseId, portsRef.current)),
+    paste: async (caseId: string, confirmed?: boolean) => applyReply(await pasteReplyFromClipboard(stateRef.current, caseId, portsRef.current, { confirmed: confirmed === true })),
   };
 
   const exportHtml = async () => {

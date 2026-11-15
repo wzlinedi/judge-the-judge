@@ -180,53 +180,57 @@ describe('the case window of Run, without a reply', () => {
   });
 });
 
-describe('replacing a reply', () => {
+describe('changing a saved reply (T261)', () => {
   const open = (caseId: string, ports = createFakePorts()) => renderApp(ports, stateOn(sampleEvaluation(), { openCase: caseId }));
+  const question = () => screen.findByRole('dialog', { name: 'Change the judge’s reply?' });
 
-  it('does not ask when the case has only automatic decisions', async () => {
-    const ports = createFakePorts();
-    open('1', ports);
+  it('asks first, even when the case has only automatic decisions, and changes nothing on Cancel', async () => {
+    open('1');
+    const saved = replyBox().value;
     fireEvent.input(replyBox(), { target: { value: '{"claims": []}' } });
-    await waitFor(() => expect(within(windowOf()).getByText('1 not saved')).toBeTruthy());
-    expect(screen.queryByRole('dialog', { name: /Replace/ })).toBeNull();
-    expect(replyBox().value).toBe('{"claims": []}');
-  });
-
-  it('asks when the case has decisions by hand, naming how many, and keeps everything on Cancel', async () => {
-    open('2');
-    fireEvent.input(replyBox(), { target: { value: '{"claims": []}' } });
-    const question = await screen.findByRole('dialog', { name: /Replace this reply/ });
-    expect(question.textContent).toMatch(/2 decisions/);
-    fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
-    expect(screen.queryByRole('dialog', { name: /Replace this reply/ })).toBeNull();
+    const dialog = await question();
+    expect(dialog.textContent).toMatch(/the results are counted from it/);
+    expect(dialog.textContent).toMatch(/marked again from the changed text/);
+    expect(dialog.textContent).not.toMatch(/you set/);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog', { name: 'Change the judge’s reply?' })).toBeNull();
+    expect(replyBox().value).toBe(saved);
     expect(within(windowOf()).getByText('0 not saved')).toBeTruthy();
-    expect(replyBox().value).toBe('{"claims": []}');
   });
 
-  it('replaces the reply after the question, which resets the case', async () => {
+  it('names the marks that are removed when the case has decisions by hand', async () => {
     open('2');
     fireEvent.input(replyBox(), { target: { value: '{"claims": []}' } });
-    const question = await screen.findByRole('dialog', { name: /Replace this reply/ });
-    fireEvent.click(within(question).getByRole('button', { name: 'Replace reply' }));
+    expect((await question()).textContent).toMatch(/The 2 marks you set .* are removed/);
+  });
+
+  it('after Change reply the change is saved, the case is marked again, and later changes of this case do not ask again', async () => {
+    open('2');
+    fireEvent.input(replyBox(), { target: { value: '{"claims": []}' } });
+    fireEvent.click(within(await question()).getByRole('button', { name: 'Change reply' }));
     await waitFor(() => expect(within(windowOf()).getByText('1 not saved')).toBeTruthy());
+    expect(replyBox().value).toBe('{"claims": []}');
     expect(screen.queryByText('The oven was never bought')).toBeNull();
     // the new reply holds no findings, so the automatic marks put every expected error as missed
     expect(within(windowOf()).getAllByText(/Fail/).length).toBeGreaterThan(0);
+    fireEvent.input(replyBox(), { target: { value: '{"claims": [{"claim": "x"}]}' } });
+    expect(screen.queryByRole('dialog', { name: 'Change the judge’s reply?' })).toBeNull();
+    await waitFor(() => expect(replyBox().value).toBe('{"claims": [{"claim": "x"}]}'));
   });
 
-  it('asks the same question for a paste from the clipboard', async () => {
+  it('asks the same question for Paste reply over a saved reply', async () => {
     const ports = createFakePorts();
-    ports.clipboard = createFakeClipboard('pasted reply');
+    ports.clipboard = createFakeClipboard('{"claims": []}');
     open('2', ports);
     fireEvent.click(within(windowOf()).getByRole('button', { name: 'Paste reply' }));
-    const question = await screen.findByRole('dialog', { name: /Replace this reply/ });
-    fireEvent.click(within(question).getByRole('button', { name: 'Replace reply' }));
-    await waitFor(() => expect(replyBox().value).toBe('pasted reply'));
+    fireEvent.click(within(await question()).getByRole('button', { name: 'Change reply' }));
+    await waitFor(() => expect(replyBox().value).toBe('{"claims": []}'));
   });
 
-  it('changes nothing when the box gets the reply that is already saved', async () => {
+  it('changes nothing and does not ask when the box gets the reply that is already saved', async () => {
     open('1');
     fireEvent.input(replyBox(), { target: { value: sampleEvaluation().replies['1']!.reply } });
+    expect(screen.queryByRole('dialog', { name: 'Change the judge’s reply?' })).toBeNull();
     expect(within(windowOf()).getByText('0 not saved')).toBeTruthy();
   });
 });

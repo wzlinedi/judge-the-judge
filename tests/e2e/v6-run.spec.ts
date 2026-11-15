@@ -93,7 +93,7 @@ test('the Run step shows the judge on one line, the model details and the evalua
   await expect(page.getByText('2 replies not saved to a file')).toBeVisible();
 });
 
-test('replacing a reply asks only when decisions were set by hand, and an empty or refused clipboard is explained', async ({ page }) => {
+test('changing a saved reply asks first and names the marks set by hand (T261), and an empty or refused clipboard is explained', async ({ page }) => {
   await openRunWithoutReplies(page);
   await next(page).getByRole('button', { name: 'Continue' }).click();
   const win = caseWindow(page);
@@ -102,17 +102,29 @@ test('replacing a reply asks only when decisions were set by hand, and an empty 
   await win.getByRole('button', { name: 'Previous case' }).click();
   await expect(win).toContainText('1 of 20');
 
-  // a case with only automatic decisions: the reply is replaced without a question
+  // changing a saved reply asks first, with no marks to name here; Cancel keeps the saved reply
+  const saved = await box(page).inputValue();
   await box(page).fill(replyOf('3'));
-  await expect(win).toContainText('3 not saved');
-  await expect(page.getByRole('dialog', { name: /Replace this reply/ })).toHaveCount(0);
+  const question = page.getByRole('dialog', { name: 'Change the judge’s reply?' });
+  await expect(question).toContainText('the results are counted from it');
+  await expect(question).not.toContainText('you set');
+  await question.getByRole('button', { name: 'Cancel' }).click();
+  await expect(box(page)).toHaveValue(saved);
+  await expect(win).toContainText('2 not saved');
 
-  // a decision by hand: the second replacement asks and names it
-  await page.locator('[data-expected], [data-additional]').first().getByRole('button').first().click();
+  // after Change reply the case is marked again from the changed text, and this case no longer asks
+  await box(page).fill(replyOf('3'));
+  await question.getByRole('button', { name: 'Change reply' }).click();
+  await expect(win).toContainText('3 not saved');
+
+  // on the next visit it asks again, and names the mark set by hand; Change reply removes it
+  await win.getByRole('button', { name: 'Next case' }).click();
+  await win.getByRole('button', { name: 'Previous case' }).click();
+  await expect(win).toContainText('1 of 20');
+  await page.locator('[data-expected], [data-additional]').first().getByRole('button', { name: 'False positive' }).click();
   await box(page).fill(replyOf('1'));
-  const question = page.getByRole('dialog', { name: /Replace this reply/ });
-  await expect(question).toContainText('1 decision');
-  await question.getByRole('button', { name: 'Replace reply' }).click();
+  await expect(question).toContainText('The 1 mark you set');
+  await question.getByRole('button', { name: 'Change reply' }).click();
   await expect(win).toContainText('4 not saved');
   await expect(win.locator('[aria-pressed="true"]')).toHaveCount(0);
 
@@ -165,6 +177,7 @@ test('a reply that was typed and not saved is not lost by moving; and the remind
   for (let i = 0; i < 5; i++) {
     await win.getByRole('button', { name: 'Previous case' }).click();
     await box(page).fill(`{"claims": [], "changed": ${i}}`);
+    await page.getByRole('dialog', { name: 'Change the judge’s reply?' }).getByRole('button', { name: 'Change reply' }).click(); // T261
     if (i < 4) await expect(win.getByRole('alert')).toHaveCount(0);
   }
   await expect(win).toContainText('25 not saved');
