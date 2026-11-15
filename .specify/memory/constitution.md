@@ -49,7 +49,8 @@ All inputs and results MUST be loadable from and exportable to plain files in op
 - Data stays on the user's machine unless the user explicitly exports or shares it.
 - No hidden state: the app's state MUST be reconstructible from the files the user supplied.
 - The user MUST be able to load everything the app needs (data, judge results, metric
-  definitions, check configuration) from files, with no other setup step.
+  definitions) from files, with no other setup step. The check thresholds are saved in, and
+  loaded with, the test project and evaluation files; they have no file of their own.
 - The application MUST offer an option to generate mock data so it can be tried and tested
   without real data. Mock data MAY be a fixed, committed sample set; it does not need to be
   regenerated on each run, and the same mock files MUST be usable as test fixtures.
@@ -117,8 +118,8 @@ All user-facing behavior MUST be documented in a "Help" section that is part of 
 itself (available on the published static site) and explains how to use the system.
 
 - Help is written in English, in plain language for a non-technical reader, and MUST cover at
-  least: loading data, loading metrics and check configuration, generating mock data, reading
-  results, and the manual copy-paste judge workflow.
+  least: loading data, loading metrics, generating mock data, reading results, and the manual
+  copy-paste judge workflow.
 - Help MAY be written after the core features exist, but before the first public release it MUST
   be complete.
 - Any change that alters user-visible behavior (a feature, metric, file format, schema, or
@@ -152,8 +153,8 @@ documentation is worse than none, so updating it is part of finishing every chan
 - Every task that adds production behavior MUST include its test task before its implementation
   task.
 - All tests MUST pass before a change is considered complete.
-- A change that affects user-visible behavior is complete only when Help is updated
-  (Principle VIII).
+- Help (Principle VIII) MAY be updated in one pass after the owner has tried the changes, but
+  MUST be complete before the next public release (push or deploy).
 - Every plan MUST include a Constitution Check against the principles above, and any violation
   MUST be documented and justified.
 - The project owner is a non-developer: technical decisions with product impact MUST be explained
@@ -170,4 +171,4 @@ rationale, approval from the project owner, and a note of any affected specs or 
 - **Compliance review**: every spec, plan, and implementation review MUST verify compliance
   with this constitution. Unjustified violations block completion.
 
-**Version**: 1.5.0 | **Ratified**: 2026-11-08 | **Last Amended**: 2026-11-11
+**Version**: 2.0.0 | **Ratified**: 2026-11-08 | **Last Amended**: 2026-11-15
