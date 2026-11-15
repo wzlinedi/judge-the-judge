@@ -138,6 +138,18 @@ documentation is worse than none, so Help is brought up to date before anything 
 
 - **Language**: all documentation, specifications, code comments, identifiers, and UI text MUST
   be written in English. Conversation with the project owner may happen in Polish.
+- **Writing style**: specs, plans, tasks, docs, Help and code comments default to plain,
+  simplified technical English:
+  - short declarative sentences in active voice, one idea per sentence, at most about
+    25 words;
+  - one term per concept: names of actions come from `src/ui/labels.ts`, domain terms from
+    the glossary in the spec; a synonym for an existing term is a defect;
+  - concrete verbs ("validate", "store", "reject", "retry"), not "handle" or "process";
+  - no filler, introductions or hedging.
+  A longer sentence or a technical term is allowed where a rationale, a trade-off or an edge
+  case needs it; the content is never cut to make the text shorter. The style applies to new
+  text and to every sentence a change touches; completed tasks and recorded research decisions
+  are history and are not rewritten.
 - **Simplicity**: prefer the simplest solution that satisfies the current stage (YAGNI). Added
   complexity MUST be justified in the plan's complexity tracking.
 - **Accessibility and privacy**: the published site MUST NOT send user data to any third party
@@ -174,4 +186,4 @@ rationale, approval from the project owner, and a note of any affected specs or 
 - **Compliance review**: every spec, plan, and implementation review MUST verify compliance
   with this constitution. Unjustified violations block completion.
 
-**Version**: 3.0.0 | **Ratified**: 2026-11-08 | **Last Amended**: 2026-11-15
+**Version**: 3.1.0 | **Ratified**: 2026-11-08 | **Last Amended**: 2026-11-15
