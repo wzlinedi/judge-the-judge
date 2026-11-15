@@ -1,16 +1,15 @@
-// Produces examples/demo/ (research.md, section 23): the evaluation file the demo of "Load example…"
-// loads, the same test as a test project file, the opinions ready for the cases that await
-// verification, and the expected results. Run with `npm run demo`.
+// Produces examples/demo/ (research.md, section 23): the test project file the demo of "Load demo…" loads, with
+// its test run (T289), the opinions ready for the cases that await verification, and the expected results.
+// Run with `npm run demo`.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import accuracy from '../src/core/metrics/builtin/accuracy.json';
 import checksDefault from '../src/core/metrics/builtin/checks.default.json';
 import { testCasesVersion } from '../src/core/cases/version';
 import { computeResults, reviewEvaluation } from '../src/core/evaluation/results';
-import { writeEvaluation } from '../src/core/io/evaluation-file';
 import { writeTestProject } from '../src/core/io/test-project-file';
 import { composePrompt } from '../src/core/judge/compose';
 import { judgeVersion } from '../src/core/judge/version';
-import type { CaseDecisions, Evaluation, JudgeSet, TestCase } from '../src/core/model';
+import type { CaseDecisions, JudgeSet, Reply, TestCase, TestProject } from '../src/core/model';
 import type { MetricDefinition } from '../src/core/metrics/types';
 import { BOOKS, type DemoBook } from './demo-data';
 
@@ -82,22 +81,24 @@ function replyFor(testCase: TestCase): string {
   return reply(all());
 }
 
-const replies: Evaluation['replies'] = {};
+const replies: Record<string, Reply> = {};
 for (const c of cases) replies[c.id] = { prompt: composePrompt(judge_set.prompt, c).text, reply: replyFor(c) };
 
-const checks = { rules: checksDefault.rules } as Evaluation['checks'];
+const checks = { rules: checksDefault.rules } as TestProject['checks'];
 const params = Object.fromEntries(Object.entries(metric.parameters).map(([k, v]) => [k, v.default]));
 
-const evaluation: Evaluation = {
+const evaluation: TestProject = {
   judge_set,
-  dataset: { name: 'Book summaries, set A', finalized: true, cases },
+  dataset: { name: 'Book summaries, set A', cases },
   metric: { id: metric.id, parameters: params },
   checks,
-  model_note: 'Demo run: replies were prepared with a script, not by a real model.',
-  replies,
-  decisions: {},
+  testRun: {
+    model_note: 'Demo run: replies were prepared with a script, not by a real model.',
+    replies,
+    decisions: {},
+    reply_judge_version: await judgeVersion(judge_set),
+  },
 };
-evaluation.reply_judge_version = await judgeVersion(judge_set);
 
 const op = (v: string | boolean, r: string, f: string) => ({ reason: r, fragment: f, ...(typeof v === 'boolean' ? {} : {}) });
 void op;
@@ -119,7 +120,7 @@ const decisionsAfter: Record<string, CaseDecisions> = {
 
 const versions = { judgeVersion: await judgeVersion(judge_set), testCasesVersion: await testCasesVersion(cases) };
 const asLoaded = computeResults(evaluation, metric);
-const finished: Evaluation = { ...evaluation, decisions: decisionsAfter };
+const finished: TestProject = { ...evaluation, testRun: { ...evaluation.testRun!, decisions: decisionsAfter } };
 const afterDeciding = computeResults(finished, metric);
 
 const awaiting = reviewEvaluation(evaluation, metric).filter((r) => r.status === 'awaiting').map((r) => r.testCase.id);
@@ -129,7 +130,6 @@ console.log('after deciding:', afterDeciding.overall.result, afterDeciding.overa
 
 mkdirSync('examples/demo', { recursive: true });
 const json = (v: unknown) => JSON.stringify(v, null, 2) + '\n';
-writeFileSync('examples/demo/evaluation.json', writeEvaluation(evaluation, asLoaded, { now: NOW, toolVersion: TOOL_VERSION, ...versions }));
-writeFileSync('examples/demo/test-project.json', writeTestProject(evaluation, { toolVersion: TOOL_VERSION, testCasesVersion: versions.testCasesVersion }));
+writeFileSync('examples/demo/test-project.json', writeTestProject(evaluation, asLoaded, { now: NOW, toolVersion: TOOL_VERSION, ...versions }));
 writeFileSync('examples/demo/opinions.json', json(opinions));
 writeFileSync('examples/demo/expected-results.json', json({ awaiting_verification: awaiting, decisions_after: decisionsAfter, as_loaded: asLoaded, after_deciding: afterDeciding }));

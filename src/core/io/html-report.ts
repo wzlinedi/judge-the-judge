@@ -3,14 +3,15 @@
 // Every value is escaped. Details are collapsible on screen and expanded in print.
 import { ruleList, whereTheErrorIs } from '../judge/findings';
 import { composePrompt } from '../judge/compose';
-import type { Evaluation } from '../model';
+import type { TestProject } from '../model';
 import { differenceNote, rulesCorrectedAfterReplies, type Difference } from '../evaluation/recompute';
 import { countingSwitchNote, PER_CASE_SENTENCE, PER_CASE_WHY } from '../evaluation/counting-note';
 import { DATA_NEEDED_NOTE, errorAnalysis, falsePositiveShares, SMALL_GROUP_NOTE, type GroupRow } from '../evaluation/analysis';
 import { measuresInUse } from '../evaluation/measures';
 import { MINIMUM_SAMPLE, type ReviewedCase, type Results } from '../evaluation/results';
 import { SOURCE_LABELS, STATE_LABELS } from '../evaluation/source-labels';
-import type { EvaluationMeta } from './evaluation-file';
+import { decisionsOf, repliesOf } from '../cases/test-run';
+import type { TestProjectMeta } from './test-project-file';
 
 const esc = (value: unknown): string =>
   String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -47,7 +48,7 @@ function groupRows(rows: GroupRow[], perCase = false): string[][] {
   return rows.map((g) => [g.name, String(g.expected), String(g.found), String(g.missed), g.rate === null ? '–' : pct(g.rate)]);
 }
 
-function summary(evaluation: Evaluation, results: Results, reviewed: ReviewedCase[]): string {
+function summary(evaluation: TestProject, results: Results, reviewed: ReviewedCase[]): string {
   const c = results.counters;
   const out: string[] = ['<section id="summary"><h2>1. Summary</h2>'];
   const perCase = results.evaluated_per === 'case';
@@ -132,11 +133,11 @@ function analysis(results: Results): string {
 
 const STATUS = { pass: 'Pass', fail: 'Fail', awaiting: 'Awaiting verification', not_run: 'Not run' } as const;
 
-function testCase(evaluation: Evaluation, r: ReviewedCase): string {
+function testCase(evaluation: TestProject, r: ReviewedCase): string {
   const t = r.testCase;
-  const reply = evaluation.replies[t.id];
+  const reply = repliesOf(evaluation)[t.id];
   const prompt = reply?.prompt ?? composePrompt(evaluation.judge_set.prompt, t).text;
-  const decisions = evaluation.decisions[t.id];
+  const decisions = decisionsOf(evaluation)[t.id];
   const out: string[] = [`<article class="case" id="case-${esc(t.id)}"><h3>Case ${esc(t.id)}: ${esc(t.name)}</h3>`];
   out.push(`<p>Kind: ${t.expected_errors.length === 0 ? 'clean' : 'injected errors'}. Status: <strong>${STATUS[r.status]}</strong>.${t.base ? ` Base: case ${esc(t.base)}.` : ''}</p>`);
   out.push(
@@ -176,7 +177,7 @@ function testCase(evaluation: Evaluation, r: ReviewedCase): string {
   return out.join('\n');
 }
 
-function judgeSet(evaluation: Evaluation): string {
+function judgeSet(evaluation: TestProject): string {
   const set = evaluation.judge_set;
   const places = set.error_rules.flatMap((rule) => {
     const list = ruleList(rule);
@@ -207,7 +208,7 @@ function judgeSet(evaluation: Evaluation): string {
 
 const MAX_LISTED_DIFFERENCES = 20;
 
-export function buildHtmlReport(evaluation: Evaluation, results: Results, reviewed: ReviewedCase[], meta: EvaluationMeta, differences: readonly Difference[] = []): string {
+export function buildHtmlReport(evaluation: TestProject, results: Results, reviewed: ReviewedCase[], meta: TestProjectMeta, differences: readonly Difference[] = []): string {
   const c = results.counters;
   const name = evaluation.dataset.name;
   const head = [
@@ -218,15 +219,15 @@ export function buildHtmlReport(evaluation: Evaluation, results: Results, review
     `<dt>Judge version</dt><dd>${esc(meta.judgeVersion)}</dd>`,
     '</dl>',
     '<h2>Model details</h2>',
-    `<pre>${esc(evaluation.model_note.trim() === '' ? 'none given' : evaluation.model_note)}</pre>`,
+    `<pre>${esc((evaluation.testRun?.model_note ?? '').trim() === '' ? 'none given' : (evaluation.testRun?.model_note ?? ''))}</pre>`,
     `<p>Tool version ${esc(meta.toolVersion)}. Exported ${esc(meta.now)}.</p>`,
   ];
   if (results.provisional) {
     head.push(`<p class="undecided">${plural(results.undecided, 'case is', 'cases are')} not decided yet (${c.cases_not_run} not run, ${c.cases_awaiting} awaiting verification), so the numbers can still change.</p>`);
   }
-  if (rulesCorrectedAfterReplies(evaluation.reply_judge_version, meta.judgeVersion)) {
+  if (rulesCorrectedAfterReplies(evaluation.testRun?.reply_judge_version, meta.judgeVersion)) {
     head.push(
-      `<p class="note">The rules were corrected after the replies were received (the error rules or the reply mapping changed). The judge version in force when the replies were received was ${esc(evaluation.reply_judge_version)}; the current one is ${esc(meta.judgeVersion)}.</p>`,
+      `<p class="note">The rules were corrected after the replies were received (the error rules or the reply mapping changed). The judge version in force when the replies were received was ${esc(evaluation.testRun?.reply_judge_version)}; the current one is ${esc(meta.judgeVersion)}.</p>`,
     );
   }
   const mismatch = differenceNote(differences);

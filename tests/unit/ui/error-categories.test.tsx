@@ -6,17 +6,18 @@ import { App } from '../../../src/ui/App';
 import { resetRegistry } from '../../../src/app/metrics';
 import { createFakePorts, type FakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
-import { sampleEvaluation } from '../../helpers/fixtures';
+import { sampleProject, withRun } from '../../helpers/fixtures';
+import { withoutTestRun } from '../../../src/core/cases/test-run';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 afterEach(() => resetRegistry());
 
 const stateWith = (over: { finalized?: boolean; cases?: boolean } = {}): AppState => {
-  const e = sampleEvaluation();
+  const e = sampleProject();
   return {
     ...createState(),
     step: 'cases',
-    evaluation: { ...e, dataset: { ...e.dataset, finalized: over.finalized ?? false, cases: over.cases === false ? [] : e.dataset.cases }, replies: over.finalized ? e.replies : {}, decisions: {} },
+    project: { ...(over.finalized ? withRun(e, { decisions: {} }) : withoutTestRun(e)), dataset: { ...e.dataset, cases: over.cases === false ? [] : e.dataset.cases } },
   };
 };
 const show = (state = stateWith(), ports: FakePorts = createFakePorts()) => render(<App ports={ports} env={env} initialState={state} />);
@@ -102,8 +103,8 @@ describe('each category', () => {
 
   it('Rename counts the expected errors and the cases separately, and says so when no case uses the category (T294)', () => {
     const s = stateWith();
-    const cases = s.evaluation.dataset.cases.map((c) => (c.id === '2' ? { ...c, expected_errors: c.expected_errors.map((e) => ({ ...e, category: 'factual-error' })) } : c));
-    show({ ...s, evaluation: { ...s.evaluation, dataset: { ...s.evaluation.dataset, cases } } });
+    const cases = s.project.dataset.cases.map((c) => (c.id === '2' ? { ...c, expected_errors: c.expected_errors.map((e) => ({ ...e, category: 'factual-error' })) } : c));
+    show({ ...s, project: { ...s.project, dataset: { ...s.project.dataset, cases } } });
     fireEvent.click(heading());
     fireEvent.click(within(rowOf('factual-error')).getByRole('button', { name: 'Rename' }));
     expect(screen.getByRole('dialog', { name: 'Rename category' }).textContent).toContain('2 expected errors in 1 test case get the new name.');
@@ -187,7 +188,7 @@ describe('each category', () => {
 
   it('with no category yet, the button still adds the first row', () => {
     const e = stateWith({ cases: false });
-    show({ ...e, evaluation: { ...e.evaluation, judge_set: { ...e.evaluation.judge_set, error_catalog: [] } } });
+    show({ ...e, project: { ...e.project, judge_set: { ...e.project.judge_set, error_catalog: [] } } });
     expect(screen.getByText('There are no categories yet.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Add category' }));
     expect(rowOf('New category')).toBeTruthy();

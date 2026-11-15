@@ -2,9 +2,9 @@
 import { describe, expect, it } from 'vitest';
 import { checkExpectedErrorsJson, expectedErrorsToJson, planExpectedErrors } from '../../../../src/core/cases/expected-errors';
 import type { CaseDecisions, CaseJsonCheckContext, TestCase } from '../../../../src/core/model';
-import { sampleEvaluation } from '../../../helpers/fixtures';
+import { sampleProject } from '../../../helpers/fixtures';
 
-const e = sampleEvaluation();
+const e = sampleProject();
 const original = e.dataset.cases[1] as TestCase;
 const ctx = (): CaseJsonCheckContext & { original: TestCase } => ({ mode: 'correct', variables: ['source_text', 'summary'], judgedText: 'summary', catalog: e.judge_set.error_catalog, existingCases: e.dataset.cases, original });
 const list = () => JSON.parse(expectedErrorsToJson(original)) as Array<Record<string, unknown>>;

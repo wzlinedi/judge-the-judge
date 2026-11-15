@@ -2,7 +2,8 @@
 // warnings, and the remaining capacity. A forecast: the minimum that decides the answer is counted from decided items (FR-068).
 import { MINIMUM_SAMPLE } from '../evaluation/results';
 import { countingModeOf } from '../judge/counting-mode';
-import type { Evaluation } from '../model';
+import type { TestProject } from '../model';
+import { repliesOf } from './test-run';
 import { MAX_CASES } from '../schemas/test-case';
 
 export interface Need {
@@ -45,7 +46,7 @@ function list(ids: readonly string[]): string {
   return ids.length <= 2 ? ids.join(' and ') : `${ids.slice(0, -1).join(', ')} and ${ids[ids.length - 1]}`;
 }
 
-export function testProjectFeedback(evaluation: Pick<Evaluation, 'dataset' | 'judge_set' | 'replies'>): TestProjectFeedback {
+export function testProjectFeedback(evaluation: Pick<TestProject, 'dataset' | 'judge_set' | 'testRun'>): TestProjectFeedback {
   const cases = evaluation.dataset.cases;
   const withErrorsCases = cases.filter((c) => c.expected_errors.length > 0);
   const clean = cases.length - withErrorsCases.length;
@@ -82,7 +83,7 @@ export function testProjectFeedback(evaluation: Pick<Evaluation, 'dataset' | 'ju
     total: cases.length,
     clean,
     withErrors: withErrorsCases.length,
-    withReply: cases.filter((c) => evaluation.replies[c.id] !== undefined).length,
+    withReply: cases.filter((c) => repliesOf(evaluation)[c.id] !== undefined).length,
     errorsTotal,
     byErrorCount,
     duplicates,

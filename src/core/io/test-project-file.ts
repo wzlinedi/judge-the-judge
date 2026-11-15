@@ -1,60 +1,94 @@
-// Reading and writing the test project file (file-formats.md, section 1; FR-020).
-// The file holds the work that stays the same for every run: no replies, decisions, results or model details.
+// Reading and writing the test project file (file-formats.md, sections 1 and 5; FR-020, FR-073, FR-075).
+// One file holds the whole work: the judge set, the error catalog, the test cases, the metric, the thresholds and,
+// once the test run has started, the `test_run` section with the replies, decisions, model details and results.
 import { measureProblems } from './metric-file';
-import type { Evaluation, MetricRef, ReadResult } from '../model';
+import type { MetricRef, ReadResult, TestProject, TestRun } from '../model';
 import { extractJson } from '../judge/extract-json';
 import { recognizeFields } from '../judge/fields';
 import { validateRules } from '../judge/rules';
 import { findVariables, proposeJudgedText } from '../judge/variables';
+import { resultsForFile, rulesCorrectedAfterReplies } from '../evaluation/recompute';
+import { MINIMUM_SAMPLE, type Results } from '../evaluation/results';
+import type { MinimumSample } from '../evaluation/overall';
 import { checkEnvelope } from '../schemas/common';
 import { zodProblems } from '../schemas/messages';
-import { EVALUATION_FORMAT } from '../schemas/evaluation';
 import { cleanJudgeSet } from '../schemas/judge-set';
 import { joinCategoryExamples } from '../cases/catalog';
 import { assignExpectedIds, ignoredFieldNote, storedCase } from '../schemas/test-case';
 import { TEST_PROJECT_FORMAT, TEST_PROJECT_KEYS, TEST_PROJECT_SCHEMA_VERSION, testProjectSchema } from '../schemas/test-project';
 
 export interface TestProjectMeta {
+  /** The date and time of the save, passed in: the core has no clock. */
+  now: string;
   toolVersion: string;
-  /** The content version of the test cases, passed in: hashing is asynchronous. */
+  /** The versions are passed in: hashing is asynchronous. */
+  judgeVersion: string;
   testCasesVersion: string;
 }
 
-/** The parts of an evaluation a test project holds. */
-export type TestProjectParts = Pick<Evaluation, 'judge_set' | 'dataset' | 'metric' | 'checks'>;
+/** What a loaded test run said about itself, to compare with the recomputed numbers on load (SC-003). */
+export interface StoredTestRun {
+  saved: string | undefined;
+  judgeVersion: string | undefined;
+  minimumSample: MinimumSample;
+  /** The results as stored. */
+  results: Record<string, unknown>;
+}
 
-export function writeTestProject(parts: TestProjectParts, meta: TestProjectMeta): string {
+export interface LoadedTestProject {
+  project: TestProject;
+  /** True when the file has a `test_run` section, so the load can ask its question (FR-076). */
+  hasTestRun: boolean;
+  toolVersion: string | undefined;
+  testCasesVersion: string | undefined;
+  /** Present exactly when the file has a test run. */
+  stored: StoredTestRun | undefined;
+}
+
+export function writeTestProject(project: TestProject, results: Results | null, meta: TestProjectMeta): string {
+  const run = project.testRun;
   const file = {
     format: TEST_PROJECT_FORMAT,
     schema_version: TEST_PROJECT_SCHEMA_VERSION,
     tool_version: meta.toolVersion,
-    judge_set: cleanJudgeSet(parts.judge_set),
+    judge_set: cleanJudgeSet(project.judge_set),
     dataset: {
-      name: parts.dataset.name,
+      name: project.dataset.name,
       version: meta.testCasesVersion,
-      finalized: parts.dataset.finalized,
-      cases: parts.dataset.cases.map(storedCase),
+      cases: project.dataset.cases.map(storedCase),
     },
-    metric: parts.metric,
-    checks: parts.checks,
+    metric: project.metric,
+    checks: project.checks,
+    ...(run !== undefined
+      ? {
+          test_run: {
+            saved: meta.now,
+            judge_version: meta.judgeVersion,
+            ...(run.reply_judge_version !== undefined ? { reply_judge_version: run.reply_judge_version } : {}),
+            ...(run.reply_counted_per !== undefined ? { reply_counted_per: run.reply_counted_per } : {}),
+            rules_corrected_after_replies: rulesCorrectedAfterReplies(run.reply_judge_version, meta.judgeVersion),
+            model_note: run.model_note,
+            replies: run.replies,
+            decisions: run.decisions,
+            minimum_sample: MINIMUM_SAMPLE,
+            results: resultsForFile(results),
+          },
+        }
+      : {}),
   };
   return JSON.stringify(file, null, 2) + '\n';
 }
 
 /**
- * `isMetricRegistered` lets the caller say which metrics it knows; the core knows none.
- * A metric that is not registered keeps its stored parameters and the user is told.
+ * `isMetricLoaded` lets the caller say which metrics it knows; the core knows none.
+ * A metric that is not loaded keeps its stored parameters and the user is told.
  */
-export function readTestProject(text: string, isMetricRegistered: (id: string) => boolean = () => true): ReadResult<{ evaluation: Evaluation; toolVersion: string | undefined }> {
+export function readTestProject(text: string, isMetricLoaded: (id: string) => boolean = () => true): ReadResult<LoadedTestProject> {
   const extracted = extractJson(text);
   if (!extracted.ok) {
     return { ok: false, problems: [{ message: `The file is not readable JSON. ${extracted.message}`, line: extracted.line, column: extracted.column }] };
   }
-  const raw = extracted.value;
-  if (raw !== null && typeof raw === 'object' && (raw as Record<string, unknown>)['format'] === EVALUATION_FORMAT) {
-    return { ok: false, problems: [{ message: 'This is an evaluation file. Use "Load evaluation…" to open it.', path: 'format' }] };
-  }
-  const envelope = checkEnvelope(raw, { format: TEST_PROJECT_FORMAT, schemaVersion: TEST_PROJECT_SCHEMA_VERSION, knownKeys: TEST_PROJECT_KEYS });
+  const envelope = checkEnvelope(extracted.value, { format: TEST_PROJECT_FORMAT, schemaVersion: TEST_PROJECT_SCHEMA_VERSION, knownKeys: TEST_PROJECT_KEYS });
   if (!envelope.ok) return envelope;
 
   const parsed = testProjectSchema.safeParse(envelope.value);
@@ -64,6 +98,12 @@ export function readTestProject(text: string, isMetricRegistered: (id: string) =
   if (definitionProblems.length > 0) return { ok: false, problems: definitionProblems };
 
   const notes = [...envelope.notes];
+  if (envelope.value['schema_version'] === 1) {
+    notes.push('This file uses schema version 1, from an earlier version of the tool. It was upgraded to version 2. The test run has not started, so the judge prompt can still change.');
+  }
+  if ('proposals' in envelope.value) {
+    notes.push('The old key "proposals" was ignored: an LLM opinion changes nothing until it is applied.');
+  }
   const rawChecks = envelope.value['checks'] as Record<string, unknown> | undefined;
   if (rawChecks && 'minimum_sample' in rawChecks) {
     notes.push('The minimum test size in the file was ignored: it is fixed at 30 expected errors and 10 clean cases.');
@@ -93,18 +133,36 @@ export function readTestProject(text: string, isMetricRegistered: (id: string) =
     }
   }
 
-  if (p.metric.definition === undefined && !isMetricRegistered(p.metric.id)) {
+  if (p.metric.definition === undefined && !isMetricLoaded(p.metric.id)) {
     notes.push(`The metric "${p.metric.id}" is not registered in this tool. Its stored parameters are used.`);
   }
 
-  const evaluation: Evaluation = {
+  const run = p.test_run;
+  const testRun: TestRun | undefined =
+    run === undefined
+      ? undefined
+      : {
+          model_note: run.model_note,
+          replies: run.replies,
+          decisions: run.decisions,
+          ...(run.reply_judge_version !== undefined ? { reply_judge_version: run.reply_judge_version } : {}),
+          ...(run.reply_counted_per !== undefined ? { reply_counted_per: run.reply_counted_per } : {}),
+        };
+  const project: TestProject = {
     judge_set: judgeSet,
-    dataset: { name: p.dataset.name, ...(p.dataset.version !== undefined ? { version: p.dataset.version } : {}), finalized: p.dataset.finalized, cases: assignExpectedIds(p.dataset.cases) },
+    dataset: { name: p.dataset.name, ...(p.dataset.version !== undefined ? { version: p.dataset.version } : {}), cases: assignExpectedIds(p.dataset.cases) },
     metric: p.metric as MetricRef,
     checks: p.checks,
-    model_note: '',
-    replies: {},
-    decisions: {},
+    ...(testRun !== undefined ? { testRun } : {}),
   };
-  return { ok: true, notes, value: { evaluation, toolVersion: p.tool_version } };
+  const stored: StoredTestRun | undefined =
+    run === undefined
+      ? undefined
+      : {
+          saved: run.saved,
+          judgeVersion: run.judge_version,
+          minimumSample: run.minimum_sample ?? MINIMUM_SAMPLE,
+          results: run.results !== null && typeof run.results === 'object' ? (run.results as Record<string, unknown>) : {},
+        };
+  return { ok: true, notes, value: { project, hasTestRun: run !== undefined, toolVersion: p.tool_version, testCasesVersion: p.dataset.version, stored } };
 }

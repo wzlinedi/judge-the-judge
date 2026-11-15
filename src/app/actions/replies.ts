@@ -3,7 +3,8 @@ import { formatIfWholeJson } from '../../core/io/format-json';
 import { composePrompt } from '../../core/judge/compose';
 import { countingModeOf } from '../../core/judge/counting-mode';
 import { judgeVersion } from '../../core/judge/version';
-import type { Evaluation, Problem } from '../../core/model';
+import { decisionsOf, updateTestRun, withoutReply } from '../../core/cases/test-run';
+import type { TestProject, Problem } from '../../core/model';
 import { pastedReplySource } from '../../sources/pasted-reply';
 import type { ReplyBatch } from '../../sources/types';
 import type { Ports } from '../ports/types';
@@ -15,8 +16,8 @@ export const REMINDER_EVERY = 25;
 export const reminderDue = (repliesSinceSave: number): boolean => repliesSinceSave >= REMINDER_EVERY;
 
 /** Replacing a reply asks only when decisions were set by hand or approved from an opinion; it says how many (FR-056). */
-export function replaceNeedsQuestion(evaluation: Evaluation, caseId: string): { ask: boolean; count: number } {
-  const decisions = evaluation.decisions[caseId];
+export function replaceNeedsQuestion(evaluation: TestProject, caseId: string): { ask: boolean; count: number } {
+  const decisions = decisionsOf(evaluation)[caseId];
   if (!decisions) return { ask: false, count: 0 };
   const count = Object.keys(decisions.expected).length + Object.keys(decisions.additional).length + decisions.added_findings.length;
   return { ask: count > 0, count };
@@ -32,7 +33,7 @@ export interface AttachOptions {
 }
 
 export interface AttachResult {
-  evaluation: Evaluation;
+  project: TestProject;
   saved: string[];
   unchanged: string[];
   needsConfirmation: Array<{ caseId: string; count: number }>;
@@ -40,15 +41,16 @@ export interface AttachResult {
 }
 
 /** Stores each reply with the prompt composed for its case; a replaced reply resets the case. */
-export function attachReplies(evaluation: Evaluation, batch: ReplyBatch, options: AttachOptions): AttachResult {
-  const result: AttachResult = { evaluation, saved: [], unchanged: [], needsConfirmation: [], problems: [...batch.problems] };
-  if (!evaluation.dataset.finalized) {
-    if (batch.items.length > 0) result.problems.push({ message: 'Finalize the test cases before entering replies.' });
+export function attachReplies(evaluation: TestProject, batch: ReplyBatch, options: AttachOptions): AttachResult {
+  const result: AttachResult = { project: evaluation, saved: [], unchanged: [], needsConfirmation: [], problems: [...batch.problems] };
+  const run = evaluation.testRun;
+  if (run === undefined) {
+    if (batch.items.length > 0) result.problems.push({ message: 'Start the test run first.' });
     return result;
   }
 
-  const replies = { ...evaluation.replies };
-  const decisions = { ...evaluation.decisions };
+  const replies = { ...run.replies };
+  const decisions = { ...run.decisions };
   for (const item of batch.items) {
     const testCase = evaluation.dataset.cases.find((c) => c.id === item.case_id);
     if (!testCase) {
@@ -73,12 +75,15 @@ export function attachReplies(evaluation: Evaluation, batch: ReplyBatch, options
   }
 
   if (result.saved.length === 0) return result;
-  result.evaluation = {
+  result.project = {
     ...evaluation,
-    replies,
-    decisions,
-    reply_judge_version: evaluation.reply_judge_version ?? options.judgeVersion,
-    ...(evaluation.reply_counted_per !== undefined || options.countedPer !== undefined ? { reply_counted_per: evaluation.reply_counted_per ?? (options.countedPer as 'expected_error' | 'case') } : {}),
+    testRun: {
+      ...run,
+      replies,
+      decisions,
+      reply_judge_version: run.reply_judge_version ?? options.judgeVersion,
+      ...(run.reply_counted_per !== undefined || options.countedPer !== undefined ? { reply_counted_per: run.reply_counted_per ?? (options.countedPer as 'expected_error' | 'case') } : {}),
+    },
   };
   return result;
 }
@@ -87,13 +92,9 @@ export function attachReplies(evaluation: Evaluation, batch: ReplyBatch, options
  * Emptying the reply box of a saved reply removes the reply (T291): the case is "Not run" again, with no decisions and no added
  * findings. When the last reply goes, the run starts again from nothing, as when the last case with a reply is removed.
  */
-export function removeReply(evaluation: Evaluation, caseId: string): Evaluation {
-  if (evaluation.replies[caseId] === undefined) return evaluation;
-  const { [caseId]: _reply, ...replies } = evaluation.replies;
-  const { [caseId]: _decisions, ...decisions } = evaluation.decisions;
-  if (Object.keys(replies).length > 0) return { ...evaluation, replies, decisions };
-  const { reply_judge_version: _version, reply_counted_per: _counted, rules_corrected_after_replies: _rules, ...rest } = evaluation;
-  return { ...rest, replies, decisions };
+export function removeReply(evaluation: TestProject, caseId: string): TestProject {
+  if (evaluation.testRun?.replies[caseId] === undefined) return evaluation;
+  return updateTestRun(evaluation, (run) => withoutReply(run, caseId));
 }
 
 export type ReplyStatus = 'saved' | 'unchanged' | 'empty' | 'refused' | 'clipboard_blocked' | 'needs_confirmation';
@@ -114,10 +115,10 @@ export async function saveReply(state: AppState, caseId: string, text: string, o
   const batch = await pastedReplySource.collect({ caseId, text });
   if (batch.items.length === 0) return { state, status: 'empty', message: batch.problems[0]?.message ?? 'The reply is empty.' };
 
-  const version = await judgeVersion(state.evaluation.judge_set);
-  const attached = attachReplies(state.evaluation, batch, {
+  const version = await judgeVersion(state.project.judge_set);
+  const attached = attachReplies(state.project, batch, {
     judgeVersion: version,
-    countedPer: countingModeOf(state.evaluation.judge_set) === 'per_case' ? 'case' : 'expected_error',
+    countedPer: countingModeOf(state.project.judge_set) === 'per_case' ? 'case' : 'expected_error',
     confirmReplace: options.confirmed === true,
   });
   const [first] = attached.needsConfirmation;
@@ -134,7 +135,7 @@ export async function saveReply(state: AppState, caseId: string, text: string, o
     if (attached.unchanged.length > 0) return { state, status: 'unchanged', message: 'This is the reply already saved. Nothing changed.' };
     return { state, status: 'refused', message: attached.problems[0]?.message ?? 'The reply was not saved.' };
   }
-  const next = recordReplySaved({ ...state, evaluation: attached.evaluation });
+  const next = recordReplySaved({ ...state, project: attached.project });
   return { state: next, status: 'saved' };
 }
 
@@ -153,5 +154,5 @@ export async function pasteReplyFromClipboard(state: AppState, caseId: string, p
 
 /** The model details are free text; the tool does not read them (FR-058). */
 export function modelDetailsEdit(state: AppState, text: string): AppState {
-  return edit(state, (e) => ({ ...e, model_note: text }));
+  return edit(state, (e) => updateTestRun(e, (run) => ({ ...run, model_note: text })));
 }

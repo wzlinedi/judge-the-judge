@@ -1,7 +1,7 @@
 import { genuineErrors } from '../../../core/evaluation/genuine-errors';
 import type { Results, ReviewedCase } from '../../../core/evaluation/results';
 import { MINIMUM_SAMPLE } from '../../../core/evaluation/results';
-import type { Evaluation } from '../../../core/model';
+import type { TestProject } from '../../../core/model';
 import { PER_CASE_SENTENCE } from '../../../core/evaluation/counting-note';
 import { DetailsSection } from './DetailsSection';
 
@@ -27,7 +27,7 @@ function Group({ title, children }: { title: string; children: preact.ComponentC
 
 export interface SummaryViewProps {
   results: Results;
-  evaluation: Evaluation;
+  evaluation: TestProject;
   onThreshold: (measure: string, value: number) => void;
   reviewed: readonly ReviewedCase[];
   onOpenCase: (caseId: string) => void;

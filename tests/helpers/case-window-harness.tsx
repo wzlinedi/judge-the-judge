@@ -2,16 +2,16 @@
 import { useState } from 'preact/hooks';
 import { createState } from '../../src/app/store';
 import { reviewEvaluation } from '../../src/core/evaluation/results';
-import type { Evaluation } from '../../src/core/model';
+import type { TestProject } from '../../src/core/model';
 import { CaseWindow } from '../../src/ui/windows/case-window/CaseWindow';
 import { accuracyMetric } from './fixtures';
 
 export interface HarnessProps {
-  start: Evaluation;
+  start: TestProject;
   caseId: string;
   onlyAwaiting?: boolean;
   /** Called with the evaluation after every change made in the window. */
-  seen?: (evaluation: Evaluation) => void;
+  seen?: (evaluation: TestProject) => void;
 }
 
 export function CaseWindowHarness({ start, caseId, onlyAwaiting = false, seen }: HarnessProps) {

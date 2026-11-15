@@ -3,12 +3,12 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { reviewEvaluation } from '../../../../src/core/evaluation/results';
 import { verificationPrompt } from '../../../../src/core/generation/verification-prompt';
-import { readEvaluation } from '../../../../src/core/io/evaluation-file';
+import { readTestProject } from '../../../../src/core/io/test-project-file';
 import { accuracyMetric } from '../../../helpers/fixtures';
 
-const loaded = readEvaluation(readFileSync('examples/demo/evaluation.json', 'utf8'));
+const loaded = readTestProject(readFileSync('examples/demo/test-project.json', 'utf8'));
 if (!loaded.ok) throw new Error('demo not readable');
-const demo = loaded.value.evaluation;
+const demo = loaded.value.project;
 const reviewed = reviewEvaluation(demo, accuracyMetric);
 const caseOf = (id: string) => reviewed.find((r) => r.testCase.id === id)!;
 
@@ -35,14 +35,14 @@ describe('verificationPrompt', () => {
     expect(prompt).toContain('A1.');
     expect(prompt).toContain('Gandalf persuades Bilbo Baggins');
     const withAdded = structuredClone(demo);
-    withAdded.decisions['17'] = { expected: {}, additional: {}, added_findings: [{ text: 'A thing added by hand', state: 'real_error', source: 'manual' }], approved: false, note: '' };
+    withAdded.testRun!.decisions['17'] = { expected: {}, additional: {}, added_findings: [{ text: 'A thing added by hand', state: 'real_error', source: 'manual' }], approved: false, note: '' };
     const again = verificationPrompt(withAdded, reviewEvaluation(withAdded, accuracyMetric).find((x) => x.testCase.id === '17')!);
     expect(again).toContain('A2.');
     expect(again.indexOf('Gandalf persuades Bilbo Baggins')).toBeLessThan(again.indexOf('A thing added by hand'));
   });
 
   it('holds the received reply', () => {
-    expect(prompt).toContain(demo.replies['17']!.reply);
+    expect(prompt).toContain(demo.testRun!.replies['17']!.reply);
   });
 
   it('asks for the fixed JSON opinion with reason and fragment, and for findings that are not in the list', () => {

@@ -2,22 +2,17 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { labels } from '../../labels';
 
 export type FileAction =
-  | 'load-evaluation'
   | 'load-test-project'
   | 'save-test-project'
   | 'save-test-project-as'
-  | 'save-evaluation'
-  | 'save-evaluation-as'
   | 'import-test-cases'
   | 'export-test-cases'
   | 'load-example'
   | 'start-new-evaluation';
 
 export const FILE_ITEMS: ReadonlyArray<{ action: FileAction; label: string }> = [
-  { action: 'load-evaluation', label: labels.loadEvaluation },
   { action: 'load-test-project', label: labels.loadTestProject },
   { action: 'save-test-project-as', label: labels.saveTestProjectAs },
-  { action: 'save-evaluation-as', label: labels.saveEvaluationAs },
   { action: 'import-test-cases', label: labels.importTestCases },
   { action: 'export-test-cases', label: labels.exportTestCases },
   { action: 'load-example', label: labels.loadExample },

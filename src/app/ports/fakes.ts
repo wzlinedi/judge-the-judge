@@ -89,7 +89,6 @@ export function createFakeOpener(): FakeOpener {
 
 export interface FakePorts extends Ports {
   testProjectTarget: FakeSaveTarget;
-  evaluationTarget: FakeSaveTarget;
   exportTarget: FakeSaveTarget;
   clipboard: FakeClipboard;
   opener: FakeOpener;
@@ -98,7 +97,6 @@ export interface FakePorts extends Ports {
 export function createFakePorts(): FakePorts {
   return {
     testProjectTarget: createFakeSaveTarget('test-project.json'),
-    evaluationTarget: createFakeSaveTarget('evaluation.json'),
     exportTarget: createFakeSaveTarget('test-cases.json'),
     clipboard: createFakeClipboard(),
     opener: createFakeOpener(),

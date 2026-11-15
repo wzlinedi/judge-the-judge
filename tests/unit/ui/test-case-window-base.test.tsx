@@ -4,12 +4,13 @@ import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
-import { sampleEvaluation } from '../../helpers/fixtures';
+import { sampleProject } from '../../helpers/fixtures';
+import { withoutTestRun } from '../../../src/core/cases/test-run';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 const withCases = (): AppState => {
-  const e = sampleEvaluation();
-  return { ...createState(), step: 'cases', evaluation: { ...e, dataset: { ...e.dataset, finalized: false }, replies: {}, decisions: {} } };
+  const e = sampleProject();
+  return { ...createState(), step: 'cases', project: withoutTestRun(e) };
 };
 const show = (state: AppState = withCases()) => render(<App ports={createFakePorts()} env={env} initialState={state} />);
 const windowOf = () => screen.getByRole('dialog', { name: 'Test case' });
@@ -165,7 +166,7 @@ describe('"Test case name" (T239)', () => {
 
   it('is filled with "Case N", N being the identifier the case will get, in From JSON', () => {
     start();
-    expect(field().value).toBe(`Case ${Number(sampleEvaluation().dataset.cases.at(-1)!.id) + 1}`);
+    expect(field().value).toBe(`Case ${Number(sampleProject().dataset.cases.at(-1)!.id) + 1}`);
   });
 
   it('takes the name of the pasted JSON while the user has not typed, and keeps what the user typed after that', () => {

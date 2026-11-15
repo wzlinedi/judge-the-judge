@@ -23,7 +23,7 @@ const text = (event: Event) => (event.currentTarget as HTMLInputElement | HTMLSe
 /** Rules say when the judge has reported an error. The tool never proposes one (FR-013). */
 export function RulesSection({ state, onEdit }: SectionProps) {
   const id = useId();
-  const set = state.evaluation.judge_set;
+  const set = state.project.judge_set;
   const sample = set.sample_reply ?? '';
   const recognized = sample.trim() === '' ? null : recognizeFields(sample);
   const fields = recognized?.ok ? recognized : null;

@@ -33,9 +33,9 @@ export function CasesTable({ state, onOpen, onEdit }: CasesTableProps) {
   const [removing, setRemoving] = useState<TestCase | null>(null);
   const impact = removing ? removalImpact(state, removing.id) : null;
   const [view, setView] = useState<CaseView>(DEFAULT_VIEW);
-  const { dataset } = state.evaluation;
+  const { dataset } = state.project;
   // The warnings of all the cases are worked out once per change of the test project, not on every key typed in the search.
-  const rows = useMemo(() => caseRows(state), [state.evaluation]);
+  const rows = useMemo(() => caseRows(state), [state.project]);
   const shown = useMemo(() => filterCases(rows, view), [rows, view]);
   const byId = useMemo(() => new Map(dataset.cases.map((c) => [c.id, c])), [dataset.cases]);
   const change = (over: Partial<CaseView>) => setView((current) => ({ ...current, ...over }));

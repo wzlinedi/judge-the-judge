@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { assignIdentifiers, nextCaseId } from '../../../../src/core/cases/identifiers';
 import { canChangeCase, markLate } from '../../../../src/core/cases/case-actions';
 import type { TestCase } from '../../../../src/core/model';
-import { sampleEvaluation } from '../../../helpers/fixtures';
+import { sampleProject } from '../../../helpers/fixtures';
 
-const e = sampleEvaluation();
+const e = sampleProject();
 const cases = e.dataset.cases;
 
 describe('identifiers', () => {
@@ -37,7 +37,7 @@ describe('canChangeCase', () => {
   });
 
   it('allows Edit expected errors, Rename and Remove for a case with a reply too (T234, T254)', () => {
-    for (const action of ['correct', 'rename', 'remove'] as const) expect(canChangeCase(cases, e.replies, true, '2', action)).toEqual({ allowed: true });
+    for (const action of ['correct', 'rename', 'remove'] as const) expect(canChangeCase(cases, e.testRun!.replies, true, '2', action)).toEqual({ allowed: true });
   });
 
   it('allows them after finalizing for a case without a reply', () => {

@@ -2,7 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { readTestCasesJson } from '../../src/core/io/test-cases-json';
 import { writeTestProject } from '../../src/core/io/test-project-file';
-import { sampleEvaluation } from '../helpers/fixtures';
+import { FILE_META } from '../helpers/file-meta';
+import { sampleProject } from '../helpers/fixtures';
 
 const file = (cases: unknown[], over: Record<string, unknown> = {}) => JSON.stringify({ format: 'judge-the-judge-test-cases', schema_version: 1, name: 'Set', cases, ...over });
 const read = (text: string) => {
@@ -22,8 +23,8 @@ describe('readTestCasesJson', () => {
   });
 
   it('reads a test project file through its dataset.cases', () => {
-    const e = sampleEvaluation();
-    const text = writeTestProject(e, { toolVersion: '1', testCasesVersion: 'v' });
+    const e = sampleProject();
+    const text = writeTestProject(e, null, FILE_META);
     const r = read(text);
     expect(r.value.drafts.map((d) => d.draft.name)).toEqual(['Anna', 'Anna + 2 errors']);
     expect(r.value.drafts[1]!.draft.base).toBe('1');
@@ -37,7 +38,7 @@ describe('readTestCasesJson', () => {
     const bad = readTestCasesJson('{ "format": ');
     expect(bad.ok === false && bad.problems[0]!.line).toBeDefined();
     const evaluation = readTestCasesJson(JSON.stringify({ format: 'judge-the-judge-evaluation', schema_version: 1 }));
-    expect(evaluation.ok === false && evaluation.problems[0]!.message).toMatch(/Load evaluation/);
+    expect(evaluation.ok === false && evaluation.problems[0]!.message).toContain('judge-the-judge-evaluation');
   });
 
   it('lists an invalid case with its position and reason and keeps the rest', () => {

@@ -1,14 +1,15 @@
 // The prompt that asks the user's LLM for a second opinion on ONE case (FR-063). The tool never calls
 // an LLM: the user copies this text, runs it and pastes the answer back.
 import type { ReviewedCase } from '../evaluation/results';
-import type { Evaluation } from '../model';
+import type { TestProject } from '../model';
+import { repliesOf } from '../cases/test-run';
 
 const fence = (text: string) => `"""\n${text}\n"""`;
 
-export function verificationPrompt(evaluation: Evaluation, reviewed: ReviewedCase): string {
+export function verificationPrompt(evaluation: TestProject, reviewed: ReviewedCase): string {
   const { testCase, effective, review } = reviewed;
   const { judge_set } = evaluation;
-  const reply = evaluation.replies[testCase.id]?.reply ?? '';
+  const reply = repliesOf(evaluation)[testCase.id]?.reply ?? '';
   const judged = judge_set.judged_text;
   const parts: string[] = [];
 

@@ -4,20 +4,20 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/preact';
 import { errorAnalysis } from '../../../src/core/evaluation/analysis';
 import { computeResults, reviewEvaluation } from '../../../src/core/evaluation/results';
-import { readEvaluation } from '../../../src/core/io/evaluation-file';
-import type { Evaluation } from '../../../src/core/model';
+import { readTestProject } from '../../../src/core/io/test-project-file';
+import type { TestProject } from '../../../src/core/model';
 import { ResultsStep } from '../../../src/ui/steps/results/ResultsStep';
 import { errorsSummary, ReadOnlyCaseView } from '../../../src/ui/windows/case-window/ReadOnlyCaseView';
-import { accuracyMetric, sampleEvaluation } from '../../helpers/fixtures';
+import { accuracyMetric, sampleProject, withRun } from '../../helpers/fixtures';
 
-const loaded = readEvaluation(readFileSync('examples/demo/evaluation.json', 'utf8'));
+const loaded = readTestProject(readFileSync('examples/demo/test-project.json', 'utf8'));
 if (!loaded.ok) throw new Error('demo not readable');
 const decisionsAfter = JSON.parse(readFileSync('examples/demo/expected-results.json', 'utf8')).decisions_after;
-const decided: Evaluation = { ...loaded.value.evaluation, decisions: decisionsAfter };
+const decided: TestProject = withRun(loaded.value.project, { decisions: decisionsAfter });
 
-const ctx = (e: Evaluation) => ({ evaluation: e, reviewed: reviewEvaluation(e, accuracyMetric), results: computeResults(e, accuracyMetric) });
-const handlers = () => ({ onRerun: vi.fn(), onExport: vi.fn(), onThreshold: vi.fn(), onOpenCase: vi.fn() });
-const show = (e: Evaluation, h = handlers()) => {
+const ctx = (e: TestProject) => ({ evaluation: e, reviewed: reviewEvaluation(e, accuracyMetric), results: computeResults(e, accuracyMetric) });
+const handlers = () => ({ onExport: vi.fn(), onThreshold: vi.fn(), onOpenCase: vi.fn() });
+const show = (e: TestProject, h = handlers()) => {
   render(<ResultsStep {...ctx(e)} {...h} />);
   return h;
 };
@@ -93,7 +93,7 @@ describe('Details in the Summary', () => {
 
   it('is the only place that changes data: the Results step has no mark, approval or save button', () => {
     show(decided);
-    for (const name of ['Approve', 'Ignore', 'Found', 'Add finding…', 'Remove', 'Save evaluation', 'Save reply']) expect(screen.queryByRole('button', { name })).toBeNull();
+    for (const name of ['Approve', 'Ignore', 'Found', 'Add finding…', 'Remove', 'Save reply']) expect(screen.queryByRole('button', { name })).toBeNull();
     const inputs = [...document.querySelectorAll('input, textarea, select')].map((el) => el.getAttribute('aria-label') || el.id || el.closest('label')?.textContent);
     expect(inputs).toHaveLength(2);
   });
@@ -120,7 +120,7 @@ describe('Error analysis', () => {
   });
 
   it('has the additional findings per rule, per category and per difficulty, counts only, with "(no category)" and "(not set)"', () => {
-    show(sampleEvaluation());
+    show(sampleProject());
     tab('Error analysis');
     expect(within(screen.getByRole('table', { name: 'Additional findings per rule' })).getAllByRole('row').length).toBeGreaterThan(1);
     const byCategory = screen.getByRole('table', { name: 'Additional findings per category' });
@@ -135,18 +135,18 @@ describe('Error analysis', () => {
 
 describe('notices above the views', () => {
   it('names the cases added or corrected after the first reply', () => {
-    show(sampleEvaluation());
+    show(sampleProject());
     expect(screen.getByRole('region', { name: 'Notices' }).textContent).toMatch(/added after the first reply: case 2 \(Anna \+ 2 errors\)/i);
   });
 
   it('says the rules were corrected after the replies, naming the version in force when the replies were received', async () => {
-    show(sampleEvaluation());
+    show(sampleProject());
     await waitFor(() => expect(screen.getByRole('region', { name: 'Notices' }).textContent).toMatch(/rules were corrected after the replies/i));
     expect(screen.getByRole('region', { name: 'Notices' }).textContent).toContain('aaaaaaaaaaaa');
   });
 
   it('has no notice when nothing was corrected', async () => {
-    show(loaded.value.evaluation);
+    show(loaded.value.project);
     await new Promise((r) => setTimeout(r, 30));
     expect(screen.queryByRole('region', { name: 'Notices' })).toBeNull();
   });
@@ -154,7 +154,7 @@ describe('notices above the views', () => {
 
 describe('Test case list', () => {
   it('lists every case with its kind, expected errors, what the judge reported, status and the sources of its decisions', () => {
-    show(sampleEvaluation());
+    show(sampleProject());
     tab('Test case list');
     const rows = screen.getAllByRole('row').slice(1);
     expect(rows).toHaveLength(2);
@@ -169,7 +169,7 @@ describe('Test case list', () => {
   });
 
   it('shows the category and difficulty of the findings added by hand', () => {
-    show(sampleEvaluation());
+    show(sampleProject());
     tab('Test case list');
     expect(screen.getAllByRole('row')[2]!.textContent).toMatch(/The oven was never bought[^]*factual-error · obvious/);
   });
@@ -185,7 +185,7 @@ describe('Test case list', () => {
 
 describe('the actions of Results (T267): no card "Report and next version", Export is always the main action, no Continue', () => {
   it('has no section "Report and next version", whatever the state', () => {
-    for (const e of [decided, loaded.value.evaluation]) {
+    for (const e of [decided, loaded.value.project]) {
       const { unmount } = render(<ResultsStep {...ctx(e)} {...handlers()} />);
       expect(screen.queryByRole('region', { name: 'Report and next version' })).toBeNull();
       expect(screen.queryByText('Report and next version')).toBeNull();
@@ -200,13 +200,11 @@ describe('the actions of Results (T267): no card "Report and next version", Expo
     expect(within(next).getByText('20 of 20 cases decided')).toBeTruthy();
     fireEvent.click(within(next).getByRole('button', { name: 'Export HTML report…' }));
     expect(h.onExport).toHaveBeenCalledTimes(1);
-    fireEvent.click(within(next).getByRole('button', { name: 'Run again with a new judge…' }));
-    expect(h.onRerun).toHaveBeenCalledTimes(1);
     expect(screen.getAllByRole('button', { name: 'Export HTML report…' })).toHaveLength(1);
   });
 
   it('has the same main action while cases are not decided, says how many, and never says provisional or final or offers Continue', () => {
-    const h = show(loaded.value.evaluation);
+    const h = show(loaded.value.project);
     const next = screen.getByRole('region', { name: 'What next' });
     expect(next.textContent).toContain('15 of 20 cases decided · 5 not decided yet');
     expect(next.textContent).not.toMatch(/provisional|final/i);
@@ -224,14 +222,14 @@ describe('the actions of Results (T267): no card "Report and next version", Expo
 
 describe('states', () => {
   it('says so when no case is decided yet', () => {
-    const e = { ...sampleEvaluation(), replies: {}, decisions: {} };
+    const e = withRun(sampleProject(), { replies: {}, decisions: {} });
     show(e);
     expect(screen.getByText(/No case is decided yet/)).toBeTruthy();
   });
 });
 
 describe('the read-only case view', () => {
-  const evaluation = sampleEvaluation();
+  const evaluation = sampleProject();
   const reviewed = reviewEvaluation(evaluation, accuracyMetric);
   const view = (caseId: string, over: Partial<{ onNavigate: (id: string) => void; onClose: () => void; onOpenOnRun: (id: string) => void }> = {}) => {
     const h = { onNavigate: vi.fn(), onClose: vi.fn(), onOpenOnRun: vi.fn(), ...over };
@@ -311,13 +309,13 @@ describe('the read-only case view', () => {
   });
 
   it('says so for a case without a reply', () => {
-    const e = { ...evaluation, replies: {}, decisions: {} };
+    const e = withRun(evaluation, { replies: {}, decisions: {} });
     render(<ReadOnlyCaseView evaluation={e} reviewed={reviewEvaluation(e, accuracyMetric)} caseId="1" onNavigate={() => {}} onClose={() => {}} onOpenOnRun={() => {}} />);
     expect(screen.getByText(/This case has no reply yet/)).toBeTruthy();
   });
 
   it('T272: a case without a reply lists its expected errors read-only, as the case window of Run does', () => {
-    const e = { ...evaluation, replies: {}, decisions: {} };
+    const e = withRun(evaluation, { replies: {}, decisions: {} });
     const withErrors = e.dataset.cases.find((c) => c.expected_errors.length > 0)!;
     render(<ReadOnlyCaseView evaluation={e} reviewed={reviewEvaluation(e, accuracyMetric)} caseId={withErrors.id} onNavigate={() => {}} onClose={() => {}} onOpenOnRun={() => {}} />);
     const list = screen.getByRole('list', { name: 'Expected errors' });

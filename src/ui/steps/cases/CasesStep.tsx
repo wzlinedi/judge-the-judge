@@ -20,8 +20,8 @@ export interface CasesStepProps {
 
 /** The Test cases step: Add test case above one table of every case (FR-025, FR-087). */
 export function CasesStep({ state, onAdd, onOpen, onEdit, categoriesOpen, onToggleCategories, onCatalogEdit }: CasesStepProps) {
-  const empty = state.evaluation.dataset.cases.length === 0;
-  const full = testProjectFeedback(state.evaluation).capacity.full;
+  const empty = state.project.dataset.cases.length === 0;
+  const full = testProjectFeedback(state.project).capacity.full;
   return (
     <div class="cases-step">
       <ErrorCategoriesSection state={state} open={categoriesOpen} onToggle={onToggleCategories} onEdit={onCatalogEdit} />

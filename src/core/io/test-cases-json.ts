@@ -3,7 +3,6 @@ import { z } from 'zod';
 import type { ExpectedError, ReadResult, TestCase } from '../model';
 import { extractJson } from '../judge/extract-json';
 import { checkEnvelope } from '../schemas/common';
-import { EVALUATION_FORMAT } from '../schemas/evaluation';
 import { zodProblems } from '../schemas/messages';
 import { assignExpectedIds, ignoredFieldNote, storedCase, testCaseSchema } from '../schemas/test-case';
 import { TEST_CASES_FORMAT, TEST_CASES_KEYS, TEST_CASES_SCHEMA_VERSION } from '../schemas/test-cases';
@@ -60,7 +59,6 @@ export function readTestCasesJson(text: string): ReadResult<ParsedCases> {
   }
   const raw = extracted.value;
   const kind = isObject(raw) ? raw['format'] : undefined;
-  if (kind === EVALUATION_FORMAT) return { ok: false, problems: [{ message: 'This is an evaluation file. Use "Load evaluation…" to open it.', path: 'format' }] };
 
   let notes: string[] = [];
   let name: string | undefined;

@@ -1,10 +1,11 @@
 // What the user sees before finalizing the test cases, and whether finalizing is allowed (FR-052, SC-014, SC-025).
 import { describe, expect, it } from 'vitest';
-import { finalizeSummary } from '../../../../src/core/cases/finalize';
-import type { Evaluation, TestCase } from '../../../../src/core/model';
-import { sampleEvaluation } from '../../../helpers/fixtures';
+import { startSummary } from '../../../../src/core/cases/start-summary';
+import type { TestProject, TestCase } from '../../../../src/core/model';
+import { sampleProject } from '../../../helpers/fixtures';
+import { withoutTestRun } from '../../../../src/core/cases/test-run';
 
-const make = (cases: TestCase[], over: Partial<Evaluation> = {}): Evaluation => ({ ...sampleEvaluation(), dataset: { name: 'p', finalized: false, cases }, replies: {}, decisions: {}, ...over });
+const make = (cases: TestCase[], over: Partial<TestProject> = {}): TestProject => ({ ...withoutTestRun(sampleProject()), dataset: { name: 'p', cases }, ...over });
 const clean = (id: string): TestCase => ({ id, name: `c${id}`, fields: { source_text: `source ${id}`, summary: `summary ${id}` }, expected_errors: [] });
 const withErrors = (id: string, difficulty: 'obvious' | 'subtle' = 'obvious'): TestCase => ({
   id,
@@ -20,7 +21,7 @@ const bigEnough = (): TestCase[] => [
 
 describe('whether finalizing is allowed', () => {
   it('is refused for empty test cases, and says what to do', () => {
-    const summary = finalizeSummary(make([]));
+    const summary = startSummary(make([]));
     expect(summary.allowed).toBe(false);
     expect(summary.refusal).toMatch(/no test cases/i);
     expect(summary.refusal).toMatch(/add|import/i);
@@ -29,40 +30,40 @@ describe('whether finalizing is allowed', () => {
   it('is refused for an empty judge prompt, also when it is only blanks', () => {
     for (const prompt of ['', '  \n ']) {
       const e = make([clean('1'), withErrors('2')]);
-      const summary = finalizeSummary({ ...e, judge_set: { ...e.judge_set, prompt } });
+      const summary = startSummary({ ...e, judge_set: { ...e.judge_set, prompt } });
       expect(summary.allowed).toBe(false);
       expect(summary.refusal).toMatch(/judge prompt is empty/i);
     }
   });
 
   it('is allowed with any warning: the user decides', () => {
-    const summary = finalizeSummary(make([withErrors('1')]));
+    const summary = startSummary(make([withErrors('1')]));
     expect(summary.allowed).toBe(true);
     expect(summary.refusal).toBeUndefined();
     expect(summary.warnings.length).toBeGreaterThan(0);
   });
 
   it('is allowed again when the test cases are already finalized and nothing is wrong (finalizing twice changes nothing)', () => {
-    expect(finalizeSummary(sampleEvaluation()).allowed).toBe(true);
+    expect(startSummary(sampleProject()).allowed).toBe(true);
   });
 });
 
 describe('counts and balance', () => {
   it('gives the counts of cases, clean cases, cases with injected errors and injected errors', () => {
-    const { feedback } = finalizeSummary(make([clean('1'), withErrors('2'), withErrors('3')]));
+    const { feedback } = startSummary(make([clean('1'), withErrors('2'), withErrors('3')]));
     expect(feedback).toMatchObject({ total: 3, clean: 1, withErrors: 2, errorsTotal: 2 });
     expect(feedback.byErrorCount).toEqual([{ errors: 1, cases: 2 }]);
   });
 
   it('shows the test size against the fixed minimums', () => {
-    const { feedback } = finalizeSummary(make([clean('1'), withErrors('2')]));
+    const { feedback } = startSummary(make([clean('1'), withErrors('2')]));
     expect(feedback.size.errors).toMatchObject({ have: 1, need: 30, missing: 29, met: false });
     expect(feedback.size.clean).toMatchObject({ have: 1, need: 10, missing: 9, met: false });
   });
 });
 
 describe('warnings', () => {
-  const text = (e: Evaluation) => finalizeSummary(e).warnings.join('\n');
+  const text = (e: TestProject) => startSummary(e).warnings.join('\n');
 
   it('names a missing kind: no clean cases, no cases with injected errors', () => {
     expect(text(make([withErrors('1', 'subtle')]))).toMatch(/no clean cases/i);
@@ -80,7 +81,7 @@ describe('warnings', () => {
   });
 
   it('has no warning at all for a big enough, balanced test project with a readable judge', () => {
-    expect(finalizeSummary(make(bigEnough())).warnings).toEqual([]);
+    expect(startSummary(make(bigEnough())).warnings).toEqual([]);
   });
 
   it('warns when replies cannot be read automatically: no sample reply, an unreadable one', () => {
@@ -94,7 +95,7 @@ describe('warnings', () => {
     const e = make(bigEnough());
     const rule = e.judge_set.error_rules[0]!;
     const broken = { ...rule, name: 'Broken one', conditions: [{ ...rule.conditions[0]!, field: 'claims[].no_such_field' }] };
-    const warning = finalizeSummary({ ...e, judge_set: { ...e.judge_set, error_rules: [broken, ...e.judge_set.error_rules.slice(1)] } }).warnings.find((w) => /Broken one/.test(w));
+    const warning = startSummary({ ...e, judge_set: { ...e.judge_set, error_rules: [broken, ...e.judge_set.error_rules.slice(1)] } }).warnings.find((w) => /Broken one/.test(w));
     expect(warning).toMatch(/is broken/);
     expect(warning).toMatch(/verification/);
   });
@@ -108,14 +109,14 @@ describe('warnings', () => {
     const cases = bigEnough();
     cases[0] = { ...cases[0]!, fields: { source_text: 'only the source' } };
     cases[1] = { ...cases[1]!, fields: { source_text: 'only the source, too' } };
-    const warning = finalizeSummary(make(cases)).warnings.find((w) => /no field/.test(w));
+    const warning = startSummary(make(cases)).warnings.find((w) => /no field/.test(w));
     expect(warning).toBe('Cases e1 and e2 have no field for the variable "summary"; it will be empty in the prompt.');
   });
 
   it('names a single case in the singular', () => {
     const cases = bigEnough();
     cases[3] = { ...cases[3]!, fields: { summary: 'only the summary' } };
-    expect(finalizeSummary(make(cases)).warnings).toContain('Case e4 has no field for the variable "source_text"; it will be empty in the prompt.');
+    expect(startSummary(make(cases)).warnings).toContain('Case e4 has no field for the variable "source_text"; it will be empty in the prompt.');
   });
 
   it('repeats the duplicate warning of the card, so nothing is lost between the card and the dialog', () => {
@@ -126,8 +127,8 @@ describe('warnings', () => {
 
   it('puts every warning once, in a fixed order', () => {
     const e = make([withErrors('1', 'obvious')]);
-    const warnings = finalizeSummary(e).warnings;
+    const warnings = startSummary(e).warnings;
     expect(new Set(warnings).size).toBe(warnings.length);
-    expect(finalizeSummary(e).warnings).toEqual(warnings);
+    expect(startSummary(e).warnings).toEqual(warnings);
   });
 });

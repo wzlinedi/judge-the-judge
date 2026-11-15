@@ -5,7 +5,7 @@ export type CaseAction = 'rename' | 'remove' | 'correct';
 export type CaseChange = { allowed: true } | { allowed: false; reason: string };
 
 /** Every case may be changed at any time: a case is independent once it is made, so a base in use may be removed too (T283). */
-export function canChangeCase(_cases: readonly TestCase[], _replies: Readonly<Record<string, Reply>>, _finalized: boolean, _id: string, _action: CaseAction): CaseChange {
+export function canChangeCase(_cases: readonly TestCase[], _replies: Readonly<Record<string, Reply>>, _started: boolean, _id: string, _action: CaseAction): CaseChange {
   return { allowed: true };
 }
 

@@ -12,7 +12,7 @@ export interface JudgeEdit {
 }
 
 const refuse = (state: AppState, note: string): JudgeEdit => ({ state, note });
-const FIXED = 'The judge prompt is fixed once the test cases are finalized. Use "Reopen test cases" to change it.';
+const FIXED = 'The test run has started, so the prompt is fixed.';
 
 function withJudgeSet(state: AppState, change: (set: JudgeSet) => JudgeSet): AppState {
   return edit(state, (e) => ({ ...e, judge_set: change(e.judge_set) }));
@@ -27,7 +27,7 @@ function recognized(set: JudgeSet): RecognizedFields | null {
 
 export function setPrompt(state: AppState, prompt: string): JudgeEdit {
   if (promptLocked(state)) return refuse(state, FIXED);
-  const set = state.evaluation.judge_set;
+  const set = state.project.judge_set;
   const proposal = proposeJudgedText(findVariables(prompt), set.judged_text);
   const next = withJudgeSet(state, (s) => {
     const { judged_text: _old, ...rest } = s;
@@ -38,7 +38,7 @@ export function setPrompt(state: AppState, prompt: string): JudgeEdit {
 
 export function setJudgedText(state: AppState, name: string): JudgeEdit {
   if (promptLocked(state)) return refuse(state, FIXED);
-  if (!findVariables(state.evaluation.judge_set.prompt).includes(name)) {
+  if (!findVariables(state.project.judge_set.prompt).includes(name)) {
     return refuse(state, `"${name}" is not a variable of the prompt.`);
   }
   return { state: withJudgeSet(state, (s) => ({ ...s, judged_text: name })) };
@@ -80,7 +80,7 @@ export function setSampleReply(state: AppState, text: string): JudgeEdit {
  * choosing it again removes the rule's own field.
  */
 export function setRuleWhere(state: AppState, ruleIndex: number, field: string): JudgeEdit {
-  const set = state.evaluation.judge_set;
+  const set = state.project.judge_set;
   const rule = set.error_rules[ruleIndex];
   const list = rule ? ruleList(rule) : undefined;
   const fields = recognized(set);
@@ -104,11 +104,11 @@ function newRuleName(rules: readonly ErrorRule[]): string {
 }
 
 export function addRule(state: AppState): JudgeEdit {
-  const fields = recognized(state.evaluation.judge_set);
+  const fields = recognized(state.project.judge_set);
   const first = fields?.fields[0];
   if (!fields || !first) return refuse(state, NO_SAMPLE);
   const rule: ErrorRule = {
-    name: newRuleName(state.evaluation.judge_set.error_rules),
+    name: newRuleName(state.project.judge_set.error_rules),
     match: 'any',
     conditions: [{ field: first.path, comparison: 'equals', value: '' }],
   };
@@ -128,7 +128,7 @@ export function removeRule(state: AppState, index: number): JudgeEdit {
 }
 
 export function addCondition(state: AppState, ruleIndex: number): JudgeEdit {
-  const fields = recognized(state.evaluation.judge_set);
+  const fields = recognized(state.project.judge_set);
   const first = fields?.fields[0];
   if (!fields || !first) return refuse(state, NO_SAMPLE);
   return { state: changeRule(state, ruleIndex, (r) => ({ ...r, conditions: [...r.conditions, { field: first.path, comparison: 'equals', value: '' }] })) };
@@ -136,12 +136,12 @@ export function addCondition(state: AppState, ruleIndex: number): JudgeEdit {
 
 export function updateCondition(state: AppState, ruleIndex: number, conditionIndex: number, patch: Partial<Condition>): JudgeEdit {
   if (patch.field !== undefined) {
-    const fields = recognized(state.evaluation.judge_set);
+    const fields = recognized(state.project.judge_set);
     if (!fields || !fields.fields.some((f) => f.path === patch.field)) {
       return refuse(state, `The sample reply has no field ${patch.field}. Only fields of the sample reply can be used.`);
     }
   }
-  const fieldsNow = recognized(state.evaluation.judge_set);
+  const fieldsNow = recognized(state.project.judge_set);
   return {
     state: changeRule(state, ruleIndex, (r) => {
       const changed = {

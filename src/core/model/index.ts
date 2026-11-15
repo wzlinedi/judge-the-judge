@@ -87,11 +87,10 @@ export interface TestCase {
   expected_errors: ExpectedError[];
 }
 
-/** The test cases of a project; stored under the key `dataset` in both files. */
+/** The test cases of a project; stored under the key `dataset` of the test project file. */
 export interface TestCases {
   name: string;
   version?: string;
-  finalized: boolean;
   cases: TestCase[];
 }
 
@@ -190,25 +189,28 @@ export interface CaseJsonCheckContext {
   name?: string;
 }
 
-/** The working session of one run (data-model.md, Evaluation). Save files are not part of it. */
-export interface Evaluation {
-  judge_set: JudgeSet;
-  dataset: TestCases;
-  metric: MetricRef;
-  checks: CheckConfiguration;
-  model_note: string;
+/**
+ * The replies of one judge version to the test cases, with every decision and the model details (data-model.md, TestRun).
+ * It exists once "Start test run" was pressed, also before the first reply; its saved form is the `test_run` section.
+ */
+export interface TestRun {
   replies: Record<string, Reply>;
   decisions: Record<string, CaseDecisions>;
+  model_note: string;
   reply_judge_version?: string;
   /** The way of counting when the first reply arrived, to name a switch caused by a later correction of the rules (FR-075). */
   reply_counted_per?: 'expected_error' | 'case';
   rules_corrected_after_replies?: boolean;
 }
 
-/** A test project: the same test for every run, with no replies (FR-020). */
+/**
+ * The working session (data-model.md, TestProject): the judge set with the error catalog, the test cases, the metric, the
+ * thresholds and, once the test run has started, the test run. "Started" means `testRun` is present. Save files are not part of it.
+ */
 export interface TestProject {
   judge_set: JudgeSet;
   dataset: TestCases;
   metric: MetricRef;
   checks: CheckConfiguration;
+  testRun?: TestRun;
 }

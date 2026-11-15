@@ -1,12 +1,12 @@
 // quickstart.md V12 step 4: a judge that gives one verdict for the whole text is evaluated per case (User Story 14, part 2).
-// The finalized test project is written by the test, because "Finalize test cases" belongs to User Story 11.
+// The test project is written by the test with no test run, and the test starts it, because "Start test run" belongs to User Story 11.
 import { readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { testCasesVersion } from '../../src/core/cases/version';
-import { writeTestProject } from '../../src/core/io/test-project-file';
 import type { TestCase } from '../../src/core/model';
 import { installMemoryFiles } from '../helpers/memory-files';
+import { loadTestProject, startTestRun, TEST_RUN_STEP } from '../helpers/test-run-flow';
 
 const metricText = readFileSync('examples/metrics/bias-verdict-example.json', 'utf8');
 const metric = JSON.parse(metricText);
@@ -26,9 +26,18 @@ const cases = [
 ];
 
 async function projectFile(): Promise<string> {
-  return writeTestProject(
-    { judge_set: judgeSet, dataset: { name: 'Bias texts', finalized: true, cases }, metric: { id: metric.id, parameters: {}, definition: definition as never }, checks: JSON.parse(readFileSync('src/core/metrics/builtin/checks.default.json', 'utf8')) },
-    { toolVersion: 'test', testCasesVersion: await testCasesVersion(cases) },
+  return JSON.stringify(
+    {
+      format: 'judge-the-judge-test-project',
+      schema_version: 2,
+      tool_version: 'test',
+      judge_set: judgeSet,
+      dataset: { name: 'Bias texts', version: await testCasesVersion(cases), cases },
+      metric: { id: metric.id, parameters: {}, definition },
+      checks: JSON.parse(readFileSync('src/core/metrics/builtin/checks.default.json', 'utf8')),
+    },
+    null,
+    2,
   );
 }
 
@@ -48,16 +57,17 @@ test('a verdict judge: the Judge step says so, replies decide whole cases, the S
   memory.files.set('bias-texts.json', await projectFile());
   await page.goto('/');
 
-  // the test project with its cases and its metric is loaded and opens on Run
-  memory.chooseOpenName('bias-texts.json');
-  await page.getByRole('button', { name: 'More', exact: true }).click();
-  await page.getByRole('menuitem', { name: 'Load test project…' }).click();
-  await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
+  // the test project with its cases and its metric is loaded (no test run in it) and opens on Test cases; the test run is then started
+  await loadTestProject(page, memory, 'bias-texts.json');
+  await expect(page.getByRole('button', { name: /2\s*Test cases/ })).toHaveAttribute('aria-current', 'step');
+  await startTestRun(page);
+  await page.getByRole('button', { name: TEST_RUN_STEP }).click();
+  await expect(page.getByRole('button', { name: TEST_RUN_STEP })).toHaveAttribute('aria-current', 'step');
 
   // the file carried its metric: the Judge step says how it is counted, with no other step
   await page.getByRole('button', { name: /1\s*Judge/ }).click();
   await expect(page.getByRole('status', { name: 'Way of counting' })).toContainText('evaluated per case');
-  await page.getByRole('button', { name: /3\s*Run/ }).click();
+  await page.getByRole('button', { name: /3\s*Test run/ }).click();
   await next(page).getByRole('button', { name: 'Continue' }).click();
   const win = caseWindow(page);
 

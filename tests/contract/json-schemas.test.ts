@@ -14,7 +14,6 @@ describe('docs/schemas', () => {
     expect(Object.keys(generated).sort()).toEqual([
       'case.schema.json',
       'checks.schema.json',
-      'evaluation.schema.json',
       'metric.schema.json',
       'test-cases.schema.json',
       'test-project.schema.json',
@@ -35,23 +34,39 @@ describe('docs/schemas', () => {
   });
 
   it.each([
-    ['evaluation.schema.json', 'judge-the-judge-evaluation'],
-    ['test-project.schema.json', 'judge-the-judge-test-project'],
-    ['test-cases.schema.json', 'judge-the-judge-test-cases'],
-    ['metric.schema.json', 'judge-the-judge-metric'],
-    ['checks.schema.json', 'judge-the-judge-checks'],
-  ])('%s requires format "%s" and schema_version 1, which the readers check', (name, format) => {
+    ['test-project.schema.json', 'judge-the-judge-test-project', 2],
+    ['test-cases.schema.json', 'judge-the-judge-test-cases', 1],
+    ['metric.schema.json', 'judge-the-judge-metric', 1],
+    ['checks.schema.json', 'judge-the-judge-checks', 1],
+  ])('%s requires format "%s" and schema_version %i, which the readers check', (name, format, version) => {
     const schema = JSON.parse(published(name)) as Schema;
     expect(schema.properties?.['format']?.const).toBe(format);
-    expect(schema.properties?.['schema_version']?.const).toBe(1);
+    expect(schema.properties?.['schema_version']?.const).toBe(version);
     expect(schema.required).toEqual(expect.arrayContaining(['format', 'schema_version']));
   });
 
-  it('the test project schema holds the judge set, the test cases, the metric and the checks, and no replies or decisions', () => {
+  it('the evaluation format is gone: no schema, no export of it (T289)', () => {
+    expect(existsSync(`${SCHEMA_DIRECTORY}/evaluation.schema.json`)).toBe(false);
+    expect(Object.keys(generated)).not.toContain('evaluation.schema.json');
+  });
+
+  it('the test project schema holds the judge set, the test cases, the metric and the checks, and the optional test run section (j)', () => {
     const schema = JSON.parse(published('test-project.schema.json')) as Schema;
-    expect(Object.keys(schema.properties ?? {})).toEqual(expect.arrayContaining(['judge_set', 'dataset', 'metric', 'checks']));
+    expect(Object.keys(schema.properties ?? {})).toEqual(expect.arrayContaining(['judge_set', 'dataset', 'metric', 'checks', 'test_run']));
+    expect(schema.required).not.toContain('test_run');
+    const run = schema.properties?.['test_run'] as { properties?: Record<string, unknown>; required?: string[] };
+    expect(Object.keys(run.properties ?? {}).sort()).toEqual([
+      'decisions', 'judge_version', 'minimum_sample', 'model_note', 'replies', 'reply_counted_per', 'reply_judge_version', 'results', 'rules_corrected_after_replies', 'saved',
+    ]);
+    expect(run.required ?? []).toEqual([]);
+  });
+
+  it('the test project schema keeps replies and decisions inside test_run, not at the top', () => {
+    const schema = JSON.parse(published('test-project.schema.json')) as Schema;
     expect(Object.keys(schema.properties ?? {})).not.toContain('replies');
     expect(Object.keys(schema.properties ?? {})).not.toContain('decisions');
+    const dataset = schema.properties?.['dataset'] as { properties?: Record<string, unknown> };
+    expect(Object.keys(dataset.properties ?? {})).not.toContain('finalized');
   });
 
   it('the case schema is the case JSON: a name, fields and expected errors, with no identifier and no format', () => {
@@ -65,7 +80,6 @@ describe('docs/schemas', () => {
 
   it('the example files carry the format of their schema and every key the schema requires', () => {
     const examples: Array<[string, string]> = [
-      ['examples/demo/evaluation.json', 'evaluation.schema.json'],
       ['examples/demo/test-project.json', 'test-project.schema.json'],
       ['examples/files/test-cases-example.json', 'test-cases.schema.json'],
       ['examples/files/case-example.json', 'case.schema.json'],

@@ -23,7 +23,7 @@ const DIFFICULTIES: ReadonlyArray<{ value: PreparedDifficulty; label: string }> 
 
 /** One row of the table "Errors to prepare" (T249): Category, Difficulty, Description, and Remove. */
 function Row({ row, number, state, onChange, onRemove }: { row: ErrorRow; number: number; state: AppState; onChange: (patch: Partial<Omit<ErrorRow, 'id'>>) => void; onRemove: () => void }) {
-  const catalog = state.evaluation.judge_set.error_catalog;
+  const catalog = state.project.judge_set.error_catalog;
   const hint = row.isNew ? undefined : catalog.find((c) => c.name === row.category);
   return (
     <tr aria-label={`Error ${number}`}>
@@ -78,7 +78,7 @@ const withoutPrompt = ({ prompt: _edit, ...rest }: InjectDraft): InjectDraft => 
 /** Parts 1 to 3 of a case with injected errors (FR-040): the base, the errors to prepare, and the prompt for the user's LLM. */
 export function InjectParts({ state, draft, onDraft, nameField }: InjectPartsProps) {
   const { clean, withErrors } = baseCasesOf(state);
-  const cases = state.evaluation.dataset.cases;
+  const cases = state.project.dataset.cases;
   const base = draft.base === '' ? undefined : cases.find((c) => c.id === draft.base);
   const from = draft.from === '' ? undefined : cases.find((c) => c.id === draft.from);
   const nameOf = (c: { id: string; name: string }) => c.name || `Case ${c.id}`;

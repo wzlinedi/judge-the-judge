@@ -5,7 +5,7 @@ export function SaveReminder({ repliesSinceSave }: { repliesSinceSave: number })
   if (!reminderDue(repliesSinceSave)) return null;
   return (
     <p role="alert" class="save-reminder">
-      {`${repliesSinceSave} replies are not saved to a file. Press Save evaluation now, so that a closed page does not lose them.`}
+      {`${repliesSinceSave} replies are not saved to a file. Press Save test project now, so that a closed page does not lose them.`}
     </p>
   );
 }

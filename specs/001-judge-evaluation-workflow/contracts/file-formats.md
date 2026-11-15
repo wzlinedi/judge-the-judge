@@ -317,6 +317,7 @@ project" writes it whole. It is never written to a file of its own.
   "saved": "2026-11-13T10:15:00Z",
   "judge_version": "9b1e77a0c4d2",
   "reply_judge_version": "9b1e77a0c4d2",
+  "reply_counted_per": "expected_error",
   "rules_corrected_after_replies": false,
   "model_note": "model X\ntemperature 0\nmax tokens 4000",
   "replies": {
@@ -379,6 +380,10 @@ project" writes it whole. It is never written to a file of its own.
   findings without them (FR-070).
 - `rules_corrected_after_replies` is true when `judge_version` differs from `reply_judge_version`
   (FR-075).
+- `reply_counted_per` (`expected_error` or `case`) is the way of counting when the first reply
+  arrived. It is written once there is a reply and read back, so that a later correction of the rules
+  that switches the way of counting is named as such (`counted_per_before_correction`, FR-075) and a
+  reload recomputes the same result. It is absent while there is no reply.
 - The `metric` and `checks` at the top level of the file are the ones the results were computed
   with; on load they are used for recomputing, so the same file always gives the same numbers
   (Principle V). One file is enough to see the result and generate the report (FR-073).

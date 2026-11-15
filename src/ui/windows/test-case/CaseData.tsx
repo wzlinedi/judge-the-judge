@@ -9,7 +9,7 @@ import { showTargetOf, type ShowTarget } from '../case-window/useShowIssue';
 /** The name of the case another case was made from, for "Base: 4 (Anna)". */
 export function baseNameOf(state: AppState, base: string | undefined): string | undefined {
   if (base === undefined) return undefined;
-  const found = state.evaluation.dataset.cases.find((c) => c.id === base);
+  const found = state.project.dataset.cases.find((c) => c.id === base);
   return found && found.name.trim() !== '' ? found.name : undefined;
 }
 

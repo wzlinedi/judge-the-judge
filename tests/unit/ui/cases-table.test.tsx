@@ -5,12 +5,13 @@ import { App } from '../../../src/ui/App';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
 import { nextAction } from '../../../src/app/selectors';
-import { sampleEvaluation } from '../../helpers/fixtures';
+import { sampleProject, withRun } from '../../helpers/fixtures';
+import { withoutTestRun } from '../../../src/core/cases/test-run';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 const stateOf = (finalized = false, replies = false): AppState => {
-  const e = sampleEvaluation();
-  return { ...createState(), step: 'cases', evaluation: { ...e, dataset: { ...e.dataset, finalized }, replies: replies ? { '2': e.replies['2']! } : {}, decisions: {} } };
+  const e = sampleProject();
+  return { ...createState(), step: 'cases', project: finalized ? withRun(e, { replies: replies ? { '2': e.testRun!.replies['2']! } : {}, decisions: {} }) : { ...withoutTestRun(e), dataset: e.dataset } };
 };
 const show = (state = stateOf()) => render(<App ports={createFakePorts()} env={env} initialState={state} />);
 const rowOf = (name: string) => screen.getAllByRole('row').find((r) => within(r).queryByText(name, { exact: false })) as HTMLElement;
@@ -45,8 +46,8 @@ describe('the table', () => {
 
   it('shows a base case in its row', () => {
     const s = stateOf();
-    const cases = s.evaluation.dataset.cases.map((c) => (c.id === '2' ? { ...c, base: '1' } : c));
-    show({ ...s, evaluation: { ...s.evaluation, dataset: { ...s.evaluation.dataset, cases } } });
+    const cases = s.project.dataset.cases.map((c) => (c.id === '2' ? { ...c, base: '1' } : c));
+    show({ ...s, project: { ...s.project, dataset: { ...s.project.dataset, cases } } });
     expect(rowOf('Anna + 2 errors').textContent).toContain('Anna');
   });
 });
@@ -98,8 +99,8 @@ describe('Open, Rename and Remove', () => {
 
   it('Remove of a base case in use asks as for any case and does not refuse (T283)', () => {
     const s = stateOf();
-    const cases = s.evaluation.dataset.cases.map((c) => (c.id === '2' ? { ...c, base: '1' } : c));
-    show({ ...s, evaluation: { ...s.evaluation, dataset: { ...s.evaluation.dataset, cases } } });
+    const cases = s.project.dataset.cases.map((c) => (c.id === '2' ? { ...c, base: '1' } : c));
+    show({ ...s, project: { ...s.project, dataset: { ...s.project.dataset, cases } } });
     fireEvent.click(within(rowOf('Anna')).getAllByRole('button', { name: 'Remove' })[0]!);
     const dialog = screen.getByRole('dialog', { name: 'Remove test case' });
     expect(screen.getByRole('status', { name: 'Message' }).textContent).toBe('');
@@ -123,9 +124,9 @@ describe('after finalizing (FR-053)', () => {
 describe('the "what next" line', () => {
   it('offers a disabled Finalize test cases with no cases (Add test case is above the list, T228), and Finalize test cases otherwise', () => {
     const empty = { ...createState(), step: 'cases' as const };
-    expect(nextAction(empty, 'cases').action).toMatchObject({ label: 'Finalize test cases…', disabled: true });
+    expect(nextAction(empty, 'cases').action).toMatchObject({ label: 'Start test run', disabled: true });
     expect(nextAction(empty, 'cases').sentence).toMatch(/button below/);
-    expect(nextAction(stateOf(), 'cases').action.label).toBe('Finalize test cases…');
+    expect(nextAction(stateOf(), 'cases').action.label).toBe('Start test run');
   });
 
   it('shows an empty state with Add test case available when there are no cases', () => {

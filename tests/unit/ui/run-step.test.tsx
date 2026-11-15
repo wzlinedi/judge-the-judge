@@ -6,20 +6,21 @@ import { RunStep } from '../../../src/ui/steps/run/RunStep';
 import { createFakeClipboard, createFakePorts, type FakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
 import { reviewEvaluation } from '../../../src/core/evaluation/results';
-import type { Evaluation } from '../../../src/core/model';
-import { accuracyMetric, sampleEvaluation } from '../../helpers/fixtures';
+import type { TestProject } from '../../../src/core/model';
+import { withoutTestRun } from '../../../src/core/cases/test-run';
+import { accuracyMetric, sampleProject, withRun } from '../../helpers/fixtures';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 const fileEnv = { now: () => '2026-01-01T00:00:00.000Z', toolVersion: 'test' };
-const noReplies = (): Evaluation => ({ ...sampleEvaluation(), replies: {}, decisions: {}, reply_judge_version: undefined });
-const stateOn = (evaluation: Evaluation, extra: Partial<AppState> = {}): AppState => ({ ...createState(), step: 'run', evaluation, ...extra });
+const noReplies = (): TestProject => withRun(sampleProject(), { replies: {}, decisions: {}, reply_judge_version: undefined });
+const stateOn = (evaluation: TestProject, extra: Partial<AppState> = {}): AppState => ({ ...createState(), step: 'run', project: evaluation, ...extra });
 const renderApp = (ports: FakePorts, state: AppState) => render(<App ports={ports} env={env} fileEnv={fileEnv} initialState={state} />);
 const windowOf = () => screen.getByRole('dialog', { name: /^Case / });
 const replyBox = () => within(windowOf()).getByRole('textbox', { name: 'Judge reply' }) as HTMLTextAreaElement;
 const reply = '{"claims":[{"text":"Anna is a baker.","verdict":"supported","reason":"x"}]}';
 
 describe('the Run step', () => {
-  const evaluation = sampleEvaluation();
+  const evaluation = sampleProject();
   const props = {
     evaluation,
     reviewed: reviewEvaluation(evaluation, accuracyMetric),
@@ -69,7 +70,7 @@ describe('the Run step', () => {
     rerender(<RunStep {...props} repliesSinceSave={25} />);
     const reminder = screen.getByRole('alert');
     expect(reminder.textContent).toMatch(/25 replies/);
-    expect(reminder.textContent).toContain('Save evaluation');
+    expect(reminder.textContent).toContain('Save test project');
   });
 
   // T263: four counts per case (FR-054), all 0 before the reply
@@ -89,9 +90,9 @@ describe('the Run step', () => {
   });
 
   it('shows 0 in all counts of a case that has no reply yet, and counts hand-added findings apart from the judge\'s', () => {
-    const base = sampleEvaluation();
+    const base = sampleProject();
     const firstId = base.dataset.cases[0]!.id;
-    const none: Evaluation = { ...base, replies: {}, decisions: {}, reply_judge_version: undefined };
+    const none: TestProject = withRun(base, { replies: {}, decisions: {}, reply_judge_version: undefined });
     render(<RunStep {...props} evaluation={none} reviewed={reviewEvaluation(none, accuracyMetric)} />);
     const row = within(screen.getByRole('table')).getAllByRole('row')[1]!;
     const cells = within(row).getAllByRole('cell').map((c) => c.textContent);
@@ -115,11 +116,10 @@ describe('the "what next" line on Run', () => {
   });
 });
 
-describe('a test project that is not finalized', () => {
+describe('a test run that has not started', () => {
   it('has no Run step: it says what to do first', () => {
-    const e = noReplies();
-    renderApp(createFakePorts(), stateOn({ ...e, dataset: { ...e.dataset, finalized: false } }));
-    expect(screen.getByText(/Run needs finalized test cases/)).toBeTruthy();
+    renderApp(createFakePorts(), stateOn(withoutTestRun(noReplies())));
+    expect(screen.getByText(/Run needs a started test run/)).toBeTruthy();
     expect(screen.queryByLabelText('Model details')).toBeNull();
   });
 });
@@ -208,7 +208,7 @@ describe('the case window of Run, without a reply', () => {
 });
 
 describe('changing a saved reply (T261, T293)', () => {
-  const open = (caseId: string, ports = createFakePorts()) => renderApp(ports, stateOn(sampleEvaluation(), { openCase: caseId }));
+  const open = (caseId: string, ports = createFakePorts()) => renderApp(ports, stateOn(sampleProject(), { openCase: caseId }));
   const question = () => screen.findByRole('dialog', { name: 'Change the judge’s reply?' });
   const readOnly = () => windowOf().querySelector('.reply-read') as HTMLElement;
   const change = () => fireEvent.click(within(windowOf().querySelector('.reply-pane') as HTMLElement).getByRole('button', { name: 'Change reply' }));
@@ -321,10 +321,10 @@ describe('moving or closing with a reply that was typed and not saved', () => {
 });
 
 describe('the reminder in the case window', () => {
-  it('shows the count and, from 25, a reminder that names Save evaluation', () => {
-    renderApp(createFakePorts(), stateOn(sampleEvaluation(), { openCase: '1', repliesSinceSave: 25 }));
+  it('shows the count and, from 25, a reminder that names Save test project', () => {
+    renderApp(createFakePorts(), stateOn(sampleProject(), { openCase: '1', repliesSinceSave: 25 }));
     const win = windowOf();
     expect(within(win).getByText('25 not saved')).toBeTruthy();
-    expect(within(win).getByRole('alert').textContent).toContain('Save evaluation');
+    expect(within(win).getByRole('alert').textContent).toContain('Save test project');
   });
 });

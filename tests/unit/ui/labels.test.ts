@@ -2,15 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { labels } from '../../../src/ui/labels';
 
 const required = [
-  'Load test project…', 'Save test project', 'Save test project as…', 'Save evaluation', 'Save evaluation as…',
-  'Save evaluation first', 'Discard', 'Import test cases…', 'Export test cases…', 'Load demo…',
+  'Load test project…', 'Save test project', 'Save test project as…', 'Save test project first', 'Discard', 'Import test cases…', 'Export test cases…', 'Load demo…',
   'Load metric definition…', 'Reopen test cases', 'Continue', 'Explain', 'More', 'Add test case…', 'From JSON',
   'Clean case', 'Case with errors', 'Save case', 'Close without saving', 'Open',
   'Rename', 'Show JSON', 'Rebuild prompt', 'Add category', 'Show the issue', 'Edit expected errors',
   'Paste reply', 'Save reply', 'Add finding…', 'Second opinion…', 'Apply opinion', 'Approve',
   // the rest of FR-008
-  'Load evaluation…', 'New evaluation', 'Add rule', 'Add condition', 'Remove', 'Add categories',
-  'Finalize test cases…', 'Download example file', 'Next', 'Copy prompt', 'Add error', 'Previous case',
+  'New evaluation', 'Add rule', 'Add condition', 'Remove', 'Add categories',
+  'Start test run', 'Download example file', 'Next', 'Copy prompt', 'Add error', 'Previous case',
   'Next case', 'Found', 'Not found', 'False positive', 'Genuine error', 'Ignored', 'Cancel',
   'Summary', 'Error analysis', 'Test case list', 'Export HTML report…', 'Load check settings…',
   'Run again with a new judge…', 'Help',

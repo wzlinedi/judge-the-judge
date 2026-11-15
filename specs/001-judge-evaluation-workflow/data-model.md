@@ -216,6 +216,11 @@ type that was called `Evaluation` is renamed to match (T289).
 
 ## TestRun (optional part of the TestProject)
 
+In the code the test run is the optional part `testRun` of the `TestProject` (`src/core/model`); "started"
+is `testRun !== undefined` (`isStarted`), so a test project with replies and no test run cannot exist. The
+helpers are in `src/core/cases/test-run.ts` (`emptyTestRun`, `repliesOf`, `decisionsOf`, `updateTestRun`,
+`withoutReply`, `withoutTestRun`).
+
 The replies of one judge version to the test cases, with every decision, the model details and the
 results (spec glossary, T289). Created empty by "Start test run"; saved as the `test_run` section
 of the test project file (contracts/file-formats.md, section 5).
@@ -226,6 +231,7 @@ of the test project file (contracts/file-formats.md, section 5).
 | `decisions` | case id → CaseDecisions | Only for cases with a reply. |
 | `model_note` | text | Optional multi-line free text, shown as "Model details": the model and the settings that ran the judge, in any form; never read or checked (FR-058). |
 | `reply_judge_version` | text | The judge version when the first reply was saved (research.md, section 14). |
+| `reply_counted_per` | `expected_error` or `case` | The way of counting when the first reply was saved, to name a switch caused by a later correction of the rules (FR-075). Absent while there is no reply. |
 
 **Reply**: `prompt` (the composed judge prompt at the moment the reply was saved) and `reply` (text
 of any format, never rejected for its format, not empty) (FR-056, FR-057). It arrives from

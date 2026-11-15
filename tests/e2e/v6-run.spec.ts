@@ -3,10 +3,11 @@ import { readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { installMemoryFiles } from '../helpers/memory-files';
+import { loadTestProject, saveButton, startTestRun, TEST_RUN_STEP } from '../helpers/test-run-flow';
 
-const demo = JSON.parse(readFileSync('examples/demo/evaluation.json', 'utf8')) as { dataset: { cases: Array<{ id: string }> }; replies: Record<string, { reply: string }> };
 const testProject = readFileSync('examples/demo/test-project.json', 'utf8');
-const replyOf = (id: string) => demo.replies[id]!.reply;
+const demo = JSON.parse(testProject) as { dataset: { cases: Array<{ id: string }> }; test_run: { replies: Record<string, { reply: string }> } };
+const replyOf = (id: string) => demo.test_run.replies[id]!.reply;
 const ids = demo.dataset.cases.map((c) => c.id);
 
 const next = (page: Page) => page.getByRole('region', { name: 'What next' });
@@ -18,14 +19,16 @@ const changeReply = (page: Page) => caseWindow(page).locator('.reply-pane').getB
 const saveReply = (page: Page) => caseWindow(page).locator('.reply-pane').getByRole('button', { name: 'Save reply' }).click();
 const clip = (page: Page, text: string) => page.evaluate((t) => navigator.clipboard.writeText(t), text);
 
+/** The demo test cases with the test run started and no reply: "Load the test project only", then "Start test run" (T289). */
 async function openRunWithoutReplies(page: Page) {
   const memory = await installMemoryFiles(page);
   memory.files.set('books.json', testProject);
-  memory.chooseOpenName('books.json');
   await page.goto('/');
-  await page.getByRole('button', { name: 'More', exact: true }).click();
-  await page.getByRole('menuitem', { name: 'Load test project…' }).click();
-  await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
+  await loadTestProject(page, memory, 'books.json', 'only');
+  await expect(page.getByRole('button', { name: /2\s*Test cases/ })).toHaveAttribute('aria-current', 'step'); // the test run has not started
+  await startTestRun(page);
+  await page.getByRole('button', { name: TEST_RUN_STEP }).click();
+  await expect(page.getByRole('button', { name: TEST_RUN_STEP })).toHaveAttribute('aria-current', 'step');
   return memory;
 }
 
@@ -58,7 +61,7 @@ test('T263/T264: the table has four counts, and a case with errors and no reply 
   await expect(win).toContainText('The judge’s findings and the marks appear when its reply is saved.');
 });
 
-test('the Run step shows the judge on one line, the model details and the evaluation file, and the case window runs a case in three actions', async ({ page }) => {
+test('the Test run step shows the judge on one line and the model details, and the case window runs a case in three actions', async ({ page }) => {
   await openRunWithoutReplies(page);
 
   const summary = page.getByRole('region', { name: 'Judge being run' });
@@ -69,9 +72,10 @@ test('the Run step shows the judge on one line, the model details and the evalua
   await expect(summary).not.toContainText('SUMMARY');
   // T242: saving is in the page header only, each button with its file name under it
   await expect(page.getByRole('region', { name: 'Evaluation file' })).toHaveCount(0);
-  await expect(page.getByRole('banner').getByRole('button', { name: 'Save evaluation', exact: true })).toBeVisible();
-  await expect(page.getByRole('banner').getByRole('button', { name: 'Save test project', exact: true })).toBeVisible();
-  await expect(page.getByRole('banner').locator('.file-name').filter({ hasText: 'books.json' })).toBeVisible();
+  await expect(page.getByRole('banner').getByRole('button', { name: 'Save evaluation' })).toHaveCount(0); // one save button (T289)
+  await expect(saveButton(page)).toBeVisible();
+  // "Load the test project only" does not remember the loaded file: the first save asks for a new one (FR-076)
+  await expect(page.getByRole('banner').locator('.file-name').filter({ hasText: 'no file yet' })).toBeVisible();
   await expect(next(page)).toContainText('new conversation');
 
   const details = page.getByLabel('Model details');
@@ -233,18 +237,18 @@ test('a reply that was typed and not saved is not lost by moving; and the remind
     if (i < 4) await expect(win.getByRole('alert')).toHaveCount(0);
   }
   await expect(win).toContainText('25 not saved');
-  await expect(win.getByRole('alert')).toContainText('25 replies are not saved to a file. Close the window and press Save evaluation at the top.');
-  await expect(win.getByRole('button', { name: /Save evaluation/ })).toHaveCount(0);
+  await expect(win.getByRole('alert')).toContainText('25 replies are not saved to a file. Close the window and press Save test project at the top.');
+  await expect(win.getByRole('button', { name: /Save test project/ })).toHaveCount(0);
 
-  // the window closes, Save evaluation at the top clears the count and the reminder
+  // the window closes, Save test project at the top clears the count and the reminder
   await win.getByRole('button', { name: 'Close' }).click();
   await expect(page.getByText('25 replies are not saved to a file.', { exact: false }).first()).toBeVisible();
-  await page.getByRole('button', { name: 'Save evaluation', exact: true }).click();
+  await saveButton(page).click();
   await expect(page.getByText('0 replies not saved to a file')).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });
 
-test('the case window of Run is one page: the fields, the actions row, then the judge reply and the errors side by side (T230)', async ({ page }) => {
+test('the case window of Test run is one page: the fields, the actions row, then the judge reply and the errors side by side (T230)', async ({ page }) => {
   await openRunWithoutReplies(page);
   await next(page).getByRole('button', { name: 'Continue' }).click();
   const win = caseWindow(page);

@@ -5,12 +5,13 @@ import { App } from '../../../src/ui/App';
 import { InjectWindow } from '../../../src/ui/windows/test-case/InjectWindow';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
-import { sampleEvaluation } from '../../helpers/fixtures';
+import { sampleProject } from '../../helpers/fixtures';
+import { withoutTestRun } from '../../../src/core/cases/test-run';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 export const draftState = (): AppState => {
-  const e = sampleEvaluation();
-  return { ...createState(), step: 'cases', evaluation: { ...e, dataset: { ...e.dataset, finalized: false }, replies: {}, decisions: {} } };
+  const e = sampleProject();
+  return { ...createState(), step: 'cases', project: withoutTestRun(e) };
 };
 const show = (state: AppState = draftState()) => render(<App ports={createFakePorts()} env={env} initialState={state} />);
 const win = () => screen.getByRole('dialog', { name: 'Test case' });
@@ -88,7 +89,7 @@ describe('parts 1 to 3: the base, the errors to prepare, the prompt', () => {
     fireEvent.input(within(own).getByLabelText('Case JSON'), { target: { value: answer() } });
     fireEvent.click(within(own).getByRole('button', { name: 'Save case' }));
     const edit = onApply.mock.calls[0]?.[0] as { state: AppState };
-    expect(edit.state.evaluation.dataset.cases.find((c) => c.name === 'Anna with errors')?.generation_prompt).toBe('my own prompt');
+    expect(edit.state.project.dataset.cases.find((c) => c.name === 'Anna with errors')?.generation_prompt).toBe('my own prompt');
   });
 
   it('Add error and Remove change the rows, and the prompt is rebuilt each time', () => {

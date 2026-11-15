@@ -5,12 +5,12 @@ import { correctRules } from '../../src/app/actions/decide';
 import { removeRule, updateRule } from '../../src/app/actions/judge';
 import { createState, type AppState } from '../../src/app/store';
 import { reviewEvaluation } from '../../src/core/evaluation/results';
-import { readEvaluation } from '../../src/core/io/evaluation-file';
+import { readTestProject } from '../../src/core/io/test-project-file';
 import { judgeVersion } from '../../src/core/judge/version';
 import type { CaseDecisions } from '../../src/core/model';
-import { accuracyMetric } from '../helpers/fixtures';
+import { accuracyMetric, withRun } from '../helpers/fixtures';
 
-const loaded = readEvaluation(readFileSync('examples/demo/evaluation.json', 'utf8'));
+const loaded = readTestProject(readFileSync('examples/demo/test-project.json', 'utf8'));
 if (!loaded.ok) throw new Error('demo not readable');
 const expectedResults = JSON.parse(readFileSync('examples/demo/expected-results.json', 'utf8')) as { decisions_after: Record<string, CaseDecisions> };
 
@@ -18,21 +18,21 @@ const expectedResults = JSON.parse(readFileSync('examples/demo/expected-results.
 const decided = (): AppState => ({
   ...createState(),
   step: 'judge',
-  evaluation: { ...structuredClone(loaded.value.evaluation), decisions: structuredClone(expectedResults.decisions_after) },
+  project: withRun(structuredClone(loaded.value.project), { decisions: structuredClone(expectedResults.decisions_after) }),
 });
 
 describe('correcting a rule after replies', () => {
   it('recomputes the automatic decisions, keeps those made by hand and changes the judge version, but not reply_judge_version', async () => {
     const before = decided();
-    const versionBefore = await judgeVersion(before.evaluation.judge_set);
-    expect(before.evaluation.reply_judge_version).toBe(versionBefore);
+    const versionBefore = await judgeVersion(before.project.judge_set);
+    expect(before.project.testRun!.reply_judge_version).toBe(versionBefore);
 
     const edit = correctRules(before, removeRule(before, 0), accuracyMetric);
-    expect(edit.state.evaluation.decisions).toEqual(before.evaluation.decisions);
-    expect(edit.state.evaluation.reply_judge_version).toBe(versionBefore);
-    expect(await judgeVersion(edit.state.evaluation.judge_set)).not.toBe(versionBefore);
+    expect(edit.state.project.testRun!.decisions).toEqual(before.project.testRun!.decisions);
+    expect(edit.state.project.testRun!.reply_judge_version).toBe(versionBefore);
+    expect(await judgeVersion(edit.state.project.judge_set)).not.toBe(versionBefore);
 
-    const statuses = (s: AppState) => reviewEvaluation(s.evaluation, accuracyMetric).map((r) => r.status);
+    const statuses = (s: AppState) => reviewEvaluation(s.project, accuracyMetric).map((r) => r.status);
     expect(statuses(edit.state)).not.toEqual(statuses(before));
   });
 
@@ -48,11 +48,11 @@ describe('correcting a rule after replies', () => {
     const before = decided();
     const edit = correctRules(before, updateRule(before, 0, { name: 'Another name' }), accuracyMetric);
     expect(edit.note ?? '').not.toMatch(/decisions/);
-    expect(edit.state.evaluation.judge_set.error_rules[0]?.name).toBe('Another name');
+    expect(edit.state.project.judge_set.error_rules[0]?.name).toBe('Another name');
   });
 
   it('keeps the note of the edit itself and does nothing before replies exist', () => {
-    const empty = { ...decided(), evaluation: { ...decided().evaluation, replies: {}, decisions: {} } };
+    const empty = { ...decided(), project: withRun(decided().project, { replies: {}, decisions: {} }) };
     const edit = correctRules(empty, { state: empty, note: 'Paste a sample reply first.' }, accuracyMetric);
     expect(edit.note).toBe('Paste a sample reply first.');
   });

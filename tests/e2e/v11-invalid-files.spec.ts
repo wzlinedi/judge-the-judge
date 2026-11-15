@@ -1,12 +1,13 @@
 // quickstart.md V11: invalid and unsupported files (SC-004, SC-016, SC-017). Each one is rejected with a message that says what to fix,
-// and the data already loaded is unchanged every time.
+// and the data already loaded is unchanged every time. There is one test project file (T289): the evaluation format is gone, and a
+// file with an invalid test run is refused before the load question is asked.
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { installMemoryFiles, type MemoryFiles } from '../helpers/memory-files';
 import { accuracyStarterProject, startFromAccuracy } from '../helpers/start-project';
+import { loadQuestion, loadTestProject, TEST_RUN_STEP } from '../helpers/test-run-flow';
 
 const demoProject = readFileSync('examples/demo/test-project.json', 'utf8');
-const demoEvaluation = readFileSync('examples/demo/evaluation.json', 'utf8');
 const biasMetric = JSON.parse(readFileSync('examples/metrics/bias-example.json', 'utf8')) as { measures: Array<Record<string, unknown>> };
 
 const project = JSON.parse(demoProject) as Record<string, unknown> & { judge_set: Record<string, unknown> };
@@ -26,54 +27,76 @@ const menu = async (page: Page, item: string) => {
 async function openDemo(page: Page): Promise<MemoryFiles> {
   const memory = await installMemoryFiles(page);
   memory.files.set('books.json', demoProject);
-  memory.chooseOpenName('books.json');
   await page.goto('/');
-  await menu(page, 'Load test project…');
-  await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
+  await loadTestProject(page, memory, 'books.json', 'with');
+  await expect(page.getByRole('button', { name: TEST_RUN_STEP })).toHaveAttribute('aria-current', 'step');
   return memory;
 }
 
-/** Offers a file to a loader of the File menu and returns what the page says about it. */
-async function refusedBy(page: Page, memory: MemoryFiles, loader: 'Load evaluation…' | 'Load test project…', name: string, text: string): Promise<string> {
+/** Offers a file to "Load test project…" and returns what the page says about it. */
+async function refusedBy(page: Page, memory: MemoryFiles, name: string, text: string): Promise<string> {
   memory.files.set(name, text);
   memory.chooseOpenName(name);
-  await menu(page, loader);
+  await menu(page, 'Load test project…');
   const alert = page.getByRole('alert').filter({ hasText: 'The file was not loaded. Nothing has changed.' });
   await expect(alert).toBeVisible();
   return alert.innerText();
 }
 
-test('a broken JSON file, a newer schema version, a test project without a prompt, a file of another format and a retired catalog file are refused by the loaders, with what to fix', async ({ page }) => {
+test('a broken JSON file, a newer schema version, a test project without a prompt, a file of another format and a retired catalog file are refused, with what to fix', async ({ page }) => {
   const memory = await openDemo(page);
   const before = await snapshot(page);
 
-  expect(await refusedBy(page, memory, 'Load evaluation…', 'broken.json', '{ "format": "judge-the-judge-evaluation", ')).toMatch(/not readable JSON.*line \d+, column \d+/s);
+  expect(await refusedBy(page, memory, 'broken.json', '{ "format": "judge-the-judge-test-project", ')).toMatch(/not readable JSON.*line \d+, column \d+/s);
   expect(await snapshot(page)).toEqual(before);
 
-  expect(await refusedBy(page, memory, 'Load test project…', 'newer.json', JSON.stringify({ ...project, schema_version: 2 }))).toMatch(/schema version 2, which is newer than this tool knows.*up to 1/s);
+  expect(await refusedBy(page, memory, 'newer.json', JSON.stringify({ ...project, schema_version: 3 }))).toMatch(/schema version 3, which is newer than this tool knows.*up to 2/s);
   expect(await snapshot(page)).toEqual(before);
 
-  expect(await refusedBy(page, memory, 'Load test project…', 'no-prompt.json', JSON.stringify({ ...project, judge_set: judgeWithoutPrompt }))).toMatch(/prompt/);
+  expect(await refusedBy(page, memory, 'no-prompt.json', JSON.stringify({ ...project, judge_set: judgeWithoutPrompt }))).toMatch(/prompt/);
   expect(await snapshot(page)).toEqual(before);
 
-  expect(await refusedBy(page, memory, 'Load evaluation…', 'other.json', JSON.stringify({ format: 'judge-the-judge-something-else', schema_version: 1 }))).toMatch(/format "judge-the-judge-something-else".*reads "judge-the-judge-evaluation"/s);
+  expect(await refusedBy(page, memory, 'other.json', JSON.stringify({ format: 'judge-the-judge-something-else', schema_version: 1 }))).toMatch(/format "judge-the-judge-something-else".*reads "judge-the-judge-test-project"/s);
   expect(await snapshot(page)).toEqual(before);
 
-  expect(await refusedBy(page, memory, 'Load test project…', 'catalog.json', JSON.stringify({ format: 'judge-the-judge-error-catalog', schema_version: 1, categories: [] }))).toMatch(
+  expect(await refusedBy(page, memory, 'catalog.json', JSON.stringify({ format: 'judge-the-judge-error-catalog', schema_version: 1, categories: [] }))).toMatch(
     /format "judge-the-judge-error-catalog".*reads "judge-the-judge-test-project"/s,
   );
   expect(await snapshot(page)).toEqual(before);
 });
 
-test('a test project given to Load evaluation, and an evaluation given to Load test project, are refused and name the right command', async ({ page }) => {
+test('a file of the evaluation format of earlier builds gets the message for an unknown format, and names no other command (T289)', async ({ page }) => {
   const memory = await openDemo(page);
   const before = await snapshot(page);
-
-  expect(await refusedBy(page, memory, 'Load evaluation…', 'project.json', demoProject)).toContain('Use "Load test project…" to open it.');
+  const message = await refusedBy(page, memory, 'evaluation.json', JSON.stringify({ ...project, format: 'judge-the-judge-evaluation', schema_version: 1 }));
+  expect(message).toMatch(/format "judge-the-judge-evaluation".*reads "judge-the-judge-test-project"/s);
+  expect(message).not.toContain('Load evaluation');
   expect(await snapshot(page)).toEqual(before);
+});
 
-  expect(await refusedBy(page, memory, 'Load test project…', 'evaluation.json', demoEvaluation)).toContain('Use "Load evaluation…" to open it.');
+test('an invalid test run is refused with its field path before the load question is asked, and nothing changes', async ({ page }) => {
+  const memory = await openDemo(page);
+  const before = await snapshot(page);
+  const broken = JSON.parse(demoProject);
+  broken.test_run.replies['1'].reply = '';
+  expect(await refusedBy(page, memory, 'broken-run.json', JSON.stringify(broken))).toContain('test_run.replies.1.reply');
+  await expect(loadQuestion(page)).toHaveCount(0);
   expect(await snapshot(page)).toEqual(before);
+});
+
+test('a version 1 file of earlier builds is upgraded with a note and loads with the test run not started (T289)', async ({ page }) => {
+  const memory = await installMemoryFiles(page);
+  const old = JSON.parse(demoProject);
+  delete old.test_run;
+  old.schema_version = 1;
+  old.dataset.finalized = true;
+  memory.files.set('old.json', JSON.stringify(old));
+  await page.goto('/');
+  await loadTestProject(page, memory, 'old.json'); // a version 1 file never holds a test run, so there is no question
+  await expect(loadQuestion(page)).toHaveCount(0);
+  await expect(page.getByRole('status', { name: 'Message' })).toContainText('schema version 1');
+  await expect(page.getByRole('button', { name: /2\s*Test cases/ })).toHaveAttribute('aria-current', 'step');
+  await expect(page.getByRole('region', { name: 'What next' }).getByRole('button', { name: 'Start test run' })).toBeVisible();
 });
 
 test('a test-case file that would make 501 cases, and a case with a field of 100,001 characters, import nothing and say why', async ({ page }) => {
@@ -109,7 +132,7 @@ test('a metric definition with an unknown operation, inside a test project, is r
   const before = await snapshot(page);
   const file = JSON.parse(accuracyStarterProject());
   file.metric = { id: 'bias', parameters: {}, definition: { ...biasMetric, measures: biasMetric.measures.map((m, i) => (i === 0 ? { ...m, operation: 'median' } : m)) } };
-  const message = await refusedBy(page, memory, 'Load test project…', 'bad-metric.json', JSON.stringify(file));
+  const message = await refusedBy(page, memory, 'bad-metric.json', JSON.stringify(file));
   expect(message).toMatch(/median/);
   expect(message).toMatch(/metric\.definition\.measures\[0\]\.operation/);
   expect(await snapshot(page)).toEqual(before);

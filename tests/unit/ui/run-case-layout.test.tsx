@@ -4,17 +4,17 @@ import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { reviewEvaluation } from '../../../src/core/evaluation/results';
 import { markProgress } from '../../../src/core/evaluation/mark-progress';
-import { readEvaluation } from '../../../src/core/io/evaluation-file';
-import type { Evaluation } from '../../../src/core/model';
+import { readTestProject } from '../../../src/core/io/test-project-file';
+import type { TestProject } from '../../../src/core/model';
 import { CaseWindowHarness } from '../../helpers/case-window-harness';
 import { accuracyMetric } from '../../helpers/fixtures';
 
-const loaded = readEvaluation(readFileSync('examples/demo/evaluation.json', 'utf8'));
+const loaded = readTestProject(readFileSync('examples/demo/test-project.json', 'utf8'));
 if (!loaded.ok) throw new Error('demo not readable');
-const demo = loaded.value.evaluation;
+const demo = loaded.value.project;
 
-const open = (caseId: string, start: Evaluation = demo) => {
-  const seen: Evaluation[] = [];
+const open = (caseId: string, start: TestProject = demo) => {
+  const seen: TestProject[] = [];
   render(<CaseWindowHarness start={start} caseId={caseId} seen={(e) => seen.push(e)} />);
   return seen;
 };
@@ -114,8 +114,8 @@ describe('the case window of Run: three parts from top to bottom', () => {
 
   it('before a reply is saved, marking is disabled with the reason (T290), the case says so, and its expected errors are already listed with no marks (T264)', () => {
     const e = structuredClone(demo);
-    delete e.replies['11'];
-    delete e.decisions['11'];
+    delete e.testRun!.replies['11'];
+    delete e.testRun!.decisions['11'];
     open('11', e);
     expect((within(part(2)).getByRole('button', { name: 'Add finding…' }) as HTMLButtonElement).disabled).toBe(true);
     expect(within(part(2)).getByText('Paste the judge’s reply first')).toBeTruthy();
@@ -134,8 +134,8 @@ describe('the case window of Run: three parts from top to bottom', () => {
 
   it('a clean case without a reply says it has no expected errors (T264)', () => {
     const e = structuredClone(demo);
-    delete e.replies['3'];
-    delete e.decisions['3'];
+    delete e.testRun!.replies['3'];
+    delete e.testRun!.decisions['3'];
     open('3', e);
     expect(within(part(3)).getByText('No expected errors.')).toBeTruthy();
     expect(within(part(3)).queryByRole('list', { name: 'Expected errors' })).toBeNull();
@@ -219,7 +219,7 @@ describe('a reply that cannot be read', () => {
     expect(button.classList.contains('primary')).toBe(true);
     expect(within(part(2)).getByText(/Awaiting verification/)).toBeTruthy();
     fireEvent.click(button);
-    expect(seen.at(-1)?.decisions['10']?.approved).toBe(true);
+    expect(seen.at(-1)?.testRun!.decisions['10']?.approved).toBe(true);
     expect(within(part(2)).getByText(/Pass/)).toBeTruthy();
     expect(within(win()).getByRole('button', { name: 'No more findings' }).getAttribute('aria-pressed')).toBe('true');
   });

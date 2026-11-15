@@ -5,29 +5,30 @@ import { App } from '../../../src/ui/App';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { saveCaseFromJson } from '../../../src/app/actions/cases';
 import { createState, type AppState } from '../../../src/app/store';
-import type { Evaluation, TestCase } from '../../../src/core/model';
+import type { TestProject, TestCase } from '../../../src/core/model';
 import { CasesStep } from '../../../src/ui/steps/cases/CasesStep';
 import { TestProjectCard } from '../../../src/ui/steps/cases/TestProjectCard';
-import { sampleEvaluation, verdictEvaluation } from '../../helpers/fixtures';
+import { withoutTestRun } from '../../../src/core/cases/test-run';
+import { sampleProject, verdictProject } from '../../helpers/fixtures';
 
-const stateOf = (evaluation: Evaluation): AppState => ({ ...createState(), step: 'cases', evaluation });
-const draft = (over: Partial<Evaluation> = {}): Evaluation => {
-  const e = sampleEvaluation();
-  return { ...e, dataset: { ...e.dataset, finalized: false }, replies: {}, decisions: {}, ...over };
+const stateOf = (evaluation: TestProject): AppState => ({ ...createState(), step: 'cases', project: evaluation });
+const draft = (over: Partial<TestProject> = {}): TestProject => {
+  const e = sampleProject();
+  return { ...withoutTestRun(e), ...over };
 };
 const clean = (id: string, text = `clean ${id}`): TestCase => ({ id, name: `c${id}`, fields: { source_text: text, summary: text }, expected_errors: [] });
 const card = () => screen.getByRole('region', { name: 'Test project' });
 
 describe('the test project card', () => {
   it('shows the name, the test cases version and the counts', async () => {
-    render(<TestProjectCard state={stateOf(sampleEvaluation())} />);
+    render(<TestProjectCard state={stateOf(sampleProject())} />);
     expect(card().textContent).toContain('Book summaries');
     await waitFor(() => expect(card().textContent).toMatch(/Test cases version [0-9a-f]{12}/));
     for (const text of ['2 test cases', '1 with injected errors', '1 clean', '2 with a reply']) expect(card().textContent).toContain(text);
   });
 
   it('shows the test-size summary: totals against the minimums, the groups, and the sentence', () => {
-    render(<TestProjectCard state={stateOf(sampleEvaluation())} />);
+    render(<TestProjectCard state={stateOf(sampleProject())} />);
     const size = within(card()).getByRole('group', { name: 'Test size' });
     expect(size.textContent).toContain('Injected errors: 2 of 30 (28 missing)');
     expect(size.textContent).toContain('Clean cases: 1 of 10 (9 missing)');
@@ -37,7 +38,7 @@ describe('the test project card', () => {
 
   it('says "met" for a total that reaches its minimum', () => {
     const cases = [...Array.from({ length: 10 }, (_, i): TestCase => ({ id: `e${i}`, name: `e${i}`, fields: { source_text: `s${i}`, summary: `m${i}` }, expected_errors: [1, 2, 3].map((n) => ({ id: `e${n}`, description: 'd', difficulty: 'subtle' as const })) })), ...Array.from({ length: 10 }, (_, i) => clean(`c${i}`))];
-    render(<TestProjectCard state={stateOf(draft({ dataset: { name: 'p', finalized: false, cases } }))} />);
+    render(<TestProjectCard state={stateOf(draft({ dataset: { name: 'p', cases } }))} />);
     const size = within(card()).getByRole('group', { name: 'Test size' });
     expect(size.textContent).toContain('Injected errors: 30 of 30 (met)');
     expect(size.textContent).toContain('Clean cases: 10 of 10 (met)');
@@ -45,21 +46,21 @@ describe('the test project card', () => {
   });
 
   it('counts cases with expected errors for a judge evaluated per case', () => {
-    render(<TestProjectCard state={stateOf(verdictEvaluation())} />);
+    render(<TestProjectCard state={stateOf(verdictProject())} />);
     const size = within(card()).getByRole('group', { name: 'Test size' });
     expect(size.textContent).toContain('Cases with expected errors: 3 of 30 (27 missing)');
     expect(size.textContent).toContain('at least 30 cases with expected errors and 10 clean cases');
   });
 
   it('warns about one kind of case only, saying why both are needed', () => {
-    render(<TestProjectCard state={stateOf(draft({ dataset: { name: 'p', finalized: false, cases: [clean('1'), clean('2')] } }))} />);
+    render(<TestProjectCard state={stateOf(draft({ dataset: { name: 'p', cases: [clean('1'), clean('2')] } }))} />);
     const warnings = within(card()).getByRole('list', { name: 'Warnings' });
     expect(warnings.textContent).toMatch(/no cases with injected errors/i);
     expect(warnings.textContent).toMatch(/detection rate cannot be computed/i);
   });
 
   it('flags duplicate texts', () => {
-    render(<TestProjectCard state={stateOf(draft({ dataset: { name: 'p', finalized: false, cases: [clean('1', 'same'), clean('2', 'same')] } }))} />);
+    render(<TestProjectCard state={stateOf(draft({ dataset: { name: 'p', cases: [clean('1', 'same'), clean('2', 'same')] } }))} />);
     expect(within(card()).getByRole('list', { name: 'Warnings' }).textContent).toMatch(/cases 1 and 2 have identical fields/i);
   });
 
@@ -71,17 +72,17 @@ describe('the test project card', () => {
   });
 
   it('shows no list of warnings when there is nothing to warn about', () => {
-    render(<TestProjectCard state={stateOf(sampleEvaluation())} />);
+    render(<TestProjectCard state={stateOf(sampleProject())} />);
     expect(within(card()).queryByRole('list', { name: 'Warnings' })).toBeNull();
   });
 
   it('shows the remaining capacity up to 500 cases', () => {
-    render(<TestProjectCard state={stateOf(sampleEvaluation())} />);
+    render(<TestProjectCard state={stateOf(sampleProject())} />);
     expect(card().textContent).toContain('498 more test cases can be added (500 at most).');
   });
 
   it('has no unsaved indicator of its own: the header has the one', () => {
-    render(<TestProjectCard state={{ ...stateOf(sampleEvaluation()), unsaved: true }} />);
+    render(<TestProjectCard state={{ ...stateOf(sampleProject()), unsaved: true }} />);
     expect(card().textContent).not.toMatch(/unsaved|saved/i);
   });
 });
@@ -100,7 +101,7 @@ describe('the Test cases step', () => {
 
   it('refuses to add beyond 500 cases: the button is disabled and the reason is beside it', () => {
     const many = Array.from({ length: 500 }, (_, i) => clean(String(i), `t${i}`));
-    step(stateOf(draft({ dataset: { name: 'p', finalized: false, cases: many } })));
+    step(stateOf(draft({ dataset: { name: 'p', cases: many } })));
     expect((screen.getByRole('button', { name: 'Add test case…' }) as HTMLButtonElement).disabled).toBe(true);
     expect(card().textContent).toContain('The limit of 500 test cases is reached. Remove a case before adding another.');
   });
@@ -108,7 +109,7 @@ describe('the Test cases step', () => {
 
 describe('duplicates in the table', () => {
   it('flags each of two cases with identical fields in its Warnings cell', () => {
-    step(stateOf(draft({ dataset: { name: 'p', finalized: false, cases: [clean('1', 'same'), clean('2', 'same'), clean('3', 'other')] } })));
+    step(stateOf(draft({ dataset: { name: 'p', cases: [clean('1', 'same'), clean('2', 'same'), clean('3', 'other')] } })));
     const rows = within(screen.getByRole('table', { name: 'Test cases' })).getAllByRole('row').slice(1);
     expect(rows[0]!.textContent).toContain('Identical fields to case 2');
     expect(rows[1]!.textContent).toContain('Identical fields to case 1');
@@ -119,7 +120,7 @@ describe('duplicates in the table', () => {
 describe('adding beyond the limit', () => {
   it('is refused by the action with a clear message, and changes nothing', () => {
     const many = Array.from({ length: 500 }, (_, i) => clean(String(i), `t${i}`));
-    const state = stateOf(draft({ dataset: { name: 'p', finalized: false, cases: many } }));
+    const state = stateOf(draft({ dataset: { name: 'p', cases: many } }));
     const json = JSON.stringify({ name: 'One more', fields: { source_text: 'x', summary: 'y' }, expected_errors: [] });
     const edit = saveCaseFromJson(state, json, { mode: 'clean' });
     expect(edit.state).toBe(state);

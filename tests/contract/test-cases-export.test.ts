@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { testCasesVersion } from '../../src/core/cases/version';
 import { planImport } from '../../src/core/cases/validate-test-cases';
 import { readTestCasesJson, writeTestCases } from '../../src/core/io/test-cases-json';
-import { sampleEvaluation } from '../helpers/fixtures';
+import { sampleProject } from '../helpers/fixtures';
 
-const e = sampleEvaluation();
+const e = sampleProject();
 
 describe('writeTestCases', () => {
   const text = writeTestCases({ name: e.dataset.name, cases: e.dataset.cases }, { toolVersion: '1.0.0' });

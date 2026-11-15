@@ -28,7 +28,7 @@ export function ErrorCategoriesSection({ state, open, onToggle, onEdit }: ErrorC
   const [removing, setRemoving] = useState<string | null>(null);
   /** The new row that "Add category" appends; it joins the catalog with "Add". */
   const [draft, setDraft] = useState<{ name: string; description: string; problem: string } | null>(null);
-  const { judge_set, dataset } = state.evaluation;
+  const { judge_set, dataset } = state.project;
   const catalog = judge_set.error_catalog;
   const count = `${catalog.length} ${catalog.length === 1 ? 'category' : 'categories'}`;
 

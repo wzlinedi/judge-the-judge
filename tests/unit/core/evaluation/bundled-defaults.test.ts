@@ -17,8 +17,8 @@ describe('the bundled checks file', () => {
   });
 
   it('gives the default rules of a new test project', async () => {
-    const { DEFAULT_CHECKS, emptyEvaluation } = await import('../../../../src/app/store');
+    const { DEFAULT_CHECKS, emptyTestProject } = await import('../../../../src/app/store');
     expect(DEFAULT_CHECKS.rules).toEqual([{ measure: 'detection_rate', comparison: 'at_least', value: 0.55 }]);
-    expect(emptyEvaluation().checks).toEqual(DEFAULT_CHECKS);
+    expect(emptyTestProject().checks).toEqual(DEFAULT_CHECKS);
   });
 });

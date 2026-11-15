@@ -1,9 +1,9 @@
 // Counting cases for a judge that gives one verdict for the whole text (FR-066 to FR-068, FR-070; T162).
 import { describe, expect, it } from 'vitest';
 import { computeResults, MINIMUM_SAMPLE, reviewEvaluation } from '../../../../src/core/evaluation/results';
-import { biasVerdictMetric, verdictEvaluation } from '../../../helpers/fixtures';
+import { biasVerdictMetric, verdictProject } from '../../../helpers/fixtures';
 
-const results = () => computeResults(verdictEvaluation(), biasVerdictMetric);
+const results = () => computeResults(verdictProject(), biasVerdictMetric);
 
 describe('counters per case', () => {
   it('counts the decided cases with errors that were flagged, and the decided clean cases that were flagged wrongly', () => {
@@ -40,15 +40,15 @@ describe('counters per case', () => {
   });
 
   it('counts a case once for a category its errors share', () => {
-    const e = verdictEvaluation();
+    const e = verdictProject();
     e.dataset.cases[0]!.expected_errors[1]!.category = 'gender-bias';
     expect(computeResults(e, biasVerdictMetric).counters.case_per_category['gender-bias']).toEqual({ cases: 1, flagged: 1 });
   });
 
   it('applies only the check rules of the two case-level measures, with no rule mapped onto another', () => {
-    const e = verdictEvaluation();
+    const e = verdictProject();
     e.checks = { rules: [{ measure: 'detection_rate', comparison: 'at_least', value: 0.01 }, { measure: 'case_detection_rate', comparison: 'at_least', value: 0.9 }, { measure: 'clean_case_false_positive_rate', comparison: 'at_most', value: 0.9 }] };
-    e.decisions['4'] = { expected: {}, additional: { reply: { state: 'real_error', source: 'manual' } }, added_findings: [], approved: false, note: '' };
+    e.testRun!.decisions['4'] = { expected: {}, additional: { reply: { state: 'real_error', source: 'manual' } }, added_findings: [], approved: false, note: '' };
     const r = computeResults(e, biasVerdictMetric, { expected_errors: 1, clean_cases: 1 });
     expect(r.overall.result).toBe('Does not work');
     expect(r.overall.reasons.join(' ')).toMatch(/Case detection rate is 50%/);
@@ -65,7 +65,7 @@ describe('counters per case', () => {
   });
 
   it('shows a flagged clean case as an additional finding the user decides, and its status awaits', () => {
-    const reviewed = reviewEvaluation(verdictEvaluation(), biasVerdictMetric);
+    const reviewed = reviewEvaluation(verdictProject(), biasVerdictMetric);
     expect(reviewed.find((r) => r.testCase.id === '4')!.status).toBe('awaiting');
     expect(reviewed.find((r) => r.testCase.id === '1')!.status).toBe('pass');
     expect(reviewed.find((r) => r.testCase.id === '2')!.status).toBe('fail');

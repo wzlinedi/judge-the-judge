@@ -2,9 +2,9 @@
 import { describe, expect, it } from 'vitest';
 import { planImport, type ImportContext } from '../../../../src/core/cases/validate-test-cases';
 import type { DraftCase } from '../../../../src/core/io/test-cases-json';
-import { sampleEvaluation } from '../../../helpers/fixtures';
+import { sampleProject } from '../../../helpers/fixtures';
 
-const e = sampleEvaluation();
+const e = sampleProject();
 const context = (over: Partial<ImportContext> = {}): ImportContext => ({ variables: ['source_text', 'summary'], judgedText: 'summary', catalog: e.judge_set.error_catalog, existing: [], ...over });
 const draft = (over: Partial<DraftCase> = {}): DraftCase => ({ name: 'N', fields: { source_text: 'S', summary: 'T' }, expected_errors: [], ...over });
 const rows = (...drafts: DraftCase[]) => drafts.map((d, i) => ({ position: i + 1, draft: d }));

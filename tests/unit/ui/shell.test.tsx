@@ -4,6 +4,7 @@ import { App } from '../../../src/ui/App';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, edit } from '../../../src/app/store';
 import { labels } from '../../../src/ui/labels';
+import { withRun } from '../../helpers/fixtures';
 
 const supportedEnv = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 
@@ -20,7 +21,7 @@ describe('header', () => {
     expect(steps.map((s) => s.textContent)).toEqual(['1Judge', '2Test cases', '3Run', '4Results']);
     expect(steps[0]?.getAttribute('aria-current')).toBe('step');
     const actions = header.querySelector('.header-actions') as HTMLElement;
-    expect(within(actions).getAllByRole('button').map((b) => b.textContent)).toEqual(['Save test project', 'Save evaluation', 'More', 'Help']);
+    expect(within(actions).getAllByRole('button').map((b) => b.textContent)).toEqual(['Save test project', 'More', 'Help']);
     expect(screen.queryByRole('button', { name: 'File' })).toBeNull();
     fireEvent.click(within(actions).getByRole('button', { name: 'Help' }));
     expect(within(actions).getByRole('button', { name: 'Help' }).getAttribute('aria-current')).toBe('page');
@@ -32,12 +33,12 @@ describe('header', () => {
     expect(screen.getByText('Nothing to save yet')).toBeTruthy();
     unmount();
 
-    renderApp({ initialState: edit(createState(), (e) => ({ ...e, model_note: 'x' })) });
+    renderApp({ initialState: edit(createState(), (e) => withRun(e, { model_note: 'x' })) });
     expect(screen.getByText('Unsaved changes')).toBeTruthy();
   });
 
   it('says "All changes saved" with the file name', () => {
-    renderApp({ initialState: { ...createState(), hasFile: true, evaluationFile: 'run-1.json' } });
+    renderApp({ initialState: { ...createState(), hasFile: true, testProjectFile: 'run-1.json' } });
     expect(screen.getByText(/All changes saved/)).toBeTruthy();
     expect(screen.getAllByText(/run-1\.json/).length).toBeGreaterThan(0);
   });
@@ -49,17 +50,17 @@ describe('header', () => {
     fireEvent.click(button);
     const items = screen.getAllByRole('menuitem').map((i) => i.textContent);
     expect(items).toEqual([
-      'Load evaluation…', 'Load test project…', 'Save test project as…', 'Save evaluation as…',
+      'Load test project…', 'Save test project as…',
       'Import test cases…', 'Export test cases…', 'Load demo…', 'New evaluation',
     ]);
     expect(screen.getByRole('button', { name: 'Save test project' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Save evaluation' })).toBeTruthy();
-    expect(screen.queryByRole('menuitem', { name: 'Save evaluation' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Save evaluation/ })).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: 'Save test project' })).toBeNull();
   });
 
   it('shows the remembered test project file under its button, or "no file yet"', () => {
     const { unmount } = renderApp();
-    expect(screen.getAllByText(/no file yet/).length).toBe(2);
+    expect(screen.getAllByText(/no file yet/).length).toBe(1);
     unmount();
     renderApp({ initialState: { ...createState(), testProjectFile: 'books.json' } });
     expect(screen.getByText(/books\.json/)).toBeTruthy();
@@ -104,7 +105,7 @@ describe('the "what next" line', () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: /3\s*Run/ }));
     const gate = screen.getByRole('region', { name: 'Not available yet' });
-    expect(within(gate).getByText(/finalized/i)).toBeTruthy();
+    expect(within(gate).getByText(/started test run/i)).toBeTruthy();
     const buttons = within(gate).getAllByRole('button');
     expect(buttons).toHaveLength(1);
     fireEvent.click(buttons[0] as Element);

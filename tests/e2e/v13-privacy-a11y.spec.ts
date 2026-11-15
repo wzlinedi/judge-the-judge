@@ -4,6 +4,7 @@ import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { contrastFailures } from '../helpers/contrast';
 import { installMemoryFiles } from '../helpers/memory-files';
+import { loadTestProject, saveButton } from '../helpers/test-run-flow';
 
 const demoProject = readFileSync('examples/demo/test-project.json', 'utf8');
 /** The confirming buttons of a window the user opened and must answer (ui-flow.md, Rules for every screen). */
@@ -40,8 +41,8 @@ const luminance = ([r, g, b]: Rgb) => {
 async function loadDemo(page: Page) {
   await menu(page, 'Load demo…');
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step');
-  await page.getByRole('button', { name: /3\s*Run/ }).click();
-  await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
+  await page.getByRole('button', { name: /3\s*Test run/ }).click();
+  await expect(page.getByRole('button', { name: /3\s*Test run/ })).toHaveAttribute('aria-current', 'step');
 }
 
 for (const scheme of ['light', 'dark'] as const) {
@@ -81,7 +82,7 @@ for (const scheme of ['light', 'dark'] as const) {
     await step(page, /1\s*Judge/);
 
     await loadDemo(page);
-    await check('Run');
+    await check('Test run');
 
     await step(page, /1\s*Judge/);
     await check('Judge (demo)');
@@ -100,7 +101,7 @@ for (const scheme of ['light', 'dark'] as const) {
     await check('Import window');
     await page.getByRole('dialog', { name: 'Import test cases…' }).getByRole('button', { name: 'Cancel' }).click();
 
-    await step(page, /3\s*Run/);
+    await step(page, /3\s*Test run/);
     await next(page).getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByRole('dialog', { name: /^Case \d+ / })).toBeVisible();
     await check('Case window');
@@ -124,7 +125,7 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.goto('/');
     await loadDemo(page);
     const { page: background, text, accent } = await colors(page);
-    expect(accent, 'the Run step has a primary action').not.toBeNull();
+    expect(accent, 'the Test run step has a primary action').not.toBeNull();
     const [r, g, b] = accent as Rgb;
     expect(r).toBeGreaterThanOrEqual(180);
     expect(r).toBeGreaterThan(2 * g);
@@ -163,21 +164,20 @@ test('no request leaves the page or carries user data while the demo is loaded, 
   const origin = new URL(test.info().project.use.baseURL ?? 'http://localhost:4173').origin;
   const memory = await installMemoryFiles(page);
   memory.files.set('books.json', demoProject);
-  memory.chooseOpenName('books.json');
   const requests: Array<{ url: string; method: string; body: string | null }> = [];
   page.on('request', (request) => requests.push({ url: request.url(), method: request.method(), body: request.postData() }));
 
   await page.goto('/');
-  await menu(page, 'Load test project…');
-  await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
+  await loadTestProject(page, memory, 'books.json', 'with');
+  await expect(page.getByRole('button', { name: /3\s*Test run/ })).toHaveAttribute('aria-current', 'step');
   await next(page).getByRole('button', { name: 'Continue' }).click();
   const caseWindow = page.getByRole('dialog', { name: /^Case \d+ / });
   await caseWindow.getByRole('button', { name: 'Copy prompt' }).click();
   await page.evaluate(() => navigator.clipboard.writeText('{"claims": []}'));
   await caseWindow.getByRole('button', { name: 'Paste reply' }).click();
   await caseWindow.getByRole('button', { name: 'Close' }).click();
-  await page.getByRole('button', { name: 'Save evaluation', exact: true }).click();
-  await expect.poll(() => memory.files.size).toBeGreaterThan(1);
+  await saveButton(page).click();
+  await expect.poll(() => memory.files.get('books.json')).not.toBe(demoProject); // the loaded file is remembered, so the save overwrites it
 
   const outside = requests.filter((r) => !r.url.startsWith(origin) && !r.url.startsWith('data:') && !r.url.startsWith('blob:'));
   expect(outside.map((r) => r.url)).toEqual([]);
@@ -216,9 +216,9 @@ test('every action is reachable with the keyboard alone: the File menu, a dialog
   await page.keyboard.press('Enter');
   // the demo needs no window: it opens on the Judge step, and the step bar goes on to Run by keyboard
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step');
-  await page.getByRole('button', { name: /3\s*Run/ }).focus();
+  await page.getByRole('button', { name: /3\s*Test run/ }).focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
+  await expect(page.getByRole('button', { name: /3\s*Test run/ })).toHaveAttribute('aria-current', 'step');
 
   // the primary action of the step with Enter, then Escape closes the window and returns the focus
   await next(page).getByRole('button', { name: 'Continue' }).focus();
@@ -270,7 +270,7 @@ test.describe('at 360 px wide', () => {
     };
     await measure('Judge');
     await loadDemo(page);
-    await measure('Run');
+    await measure('Test run');
     await step(page, /1\s*Judge/);
     await measure('Judge (demo)');
     await step(page, /2\s*Test cases/);
@@ -282,7 +282,7 @@ test.describe('at 360 px wide', () => {
     await measure('Results');
     await page.getByRole('button', { name: 'Help', exact: true }).click();
     await measure('Help');
-    await step(page, /3\s*Run/);
+    await step(page, /3\s*Test run/);
     await next(page).getByRole('button', { name: 'Continue' }).click();
     const caseWindow = page.getByRole('dialog', { name: /^Case \d+ / });
     await expect(caseWindow).toBeVisible();

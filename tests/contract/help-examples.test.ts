@@ -6,7 +6,6 @@ import { describe, expect, it } from 'vitest';
 import { checkCaseJson } from '../../src/core/cases/case-json';
 import { planImport } from '../../src/core/cases/validate-test-cases';
 import { readChecks } from '../../src/core/io/checks-file';
-import { readEvaluation } from '../../src/core/io/evaluation-file';
 import { readMetric } from '../../src/core/io/metric-file';
 import { readOpinion } from '../../src/core/io/opinions';
 import { readTestCasesCsv } from '../../src/core/io/test-cases-csv';
@@ -33,7 +32,6 @@ interface Outcome {
  * cannot be added without a check. `allowedNotes` is what the reader may say about the file, and nothing else.
  */
 const readers: Record<string, { read: (path: string) => Outcome; allowedNotes?: RegExp }> = {
-  'examples/demo/evaluation.json': { read: (p) => readEvaluation(text(p)) },
   'examples/demo/test-project.json': { read: (p) => readTestProject(text(p)) },
   'examples/files/test-cases-example.json': {
     read: (p) => {

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { caseRows, countText, DEFAULT_VIEW, filterCases, nextSort, type CaseRow, type CaseView } from '../../../src/app/case-filter';
 import { createState, type AppState } from '../../../src/app/store';
 import type { TestCase } from '../../../src/core/model';
-import { sampleEvaluation } from '../../helpers/fixtures';
+import { sampleProject, withRun } from '../../helpers/fixtures';
 
 const error = { id: 'e1', description: 'A change', category: 'factual-error', fragment: 'Summary' };
 const make = (id: string, name: string, over: Partial<TestCase> = {}): TestCase => ({
@@ -15,9 +15,9 @@ const make = (id: string, name: string, over: Partial<TestCase> = {}): TestCase 
 });
 
 function stateWith(cases: TestCase[], replied: string[] = []): AppState {
-  const base = sampleEvaluation();
+  const base = sampleProject();
   const replies = Object.fromEntries(replied.map((id) => [id, { reply: 'r', received: '2026-11-14T10:00:00Z' }]));
-  return { ...createState(), evaluation: { ...base, replies: replies as never, decisions: {}, dataset: { ...base.dataset, cases } } };
+  return { ...createState(), project: { ...withRun(base, { replies: replies as never, decisions: {} }), dataset: { ...base.dataset, cases } } };
 }
 
 const sample = (): AppState =>

@@ -1,6 +1,7 @@
 // Importing and exporting test cases, and the example file (FR-027 to FR-030, FR-032, FR-050, FR-053).
 // Nothing changes until `applyImport`: a cancelled or failed import leaves the test project as it was.
 import { markLate } from '../../core/cases/case-actions';
+import { replyCount } from '../../core/cases/test-run';
 import { planImport, type ImportPlan } from '../../core/cases/validate-test-cases';
 import { decodeBytes } from '../../core/io/decode';
 import { exampleCsv } from '../../core/io/example-csv';
@@ -34,7 +35,7 @@ export async function prepareImport(state: AppState, ports: Ports): Promise<Prep
   const picked = await ports.opener.open('import');
   if (!picked) return { outcome: 'cancelled' };
   const decoded = picked.bytes ? decodeBytes(picked.bytes) : { text: picked.text, encoding: 'utf-8' as const };
-  const { judge_set, dataset } = state.evaluation;
+  const { judge_set, dataset } = state.project;
   const variables = findVariables(judge_set.prompt);
 
   const asJson = /^[\s﻿]*[{[]/.test(decoded.text);
@@ -71,10 +72,10 @@ export async function prepareImport(state: AppState, ports: Ports): Promise<Prep
 /** Adds the valid cases, also after finalizing; categories the user was told about join the catalog (FR-029, FR-053). */
 export function applyImport(state: AppState, plan: ImportPlan): CaseEdit {
   if (plan.cases.length === 0) return { state, note: 'There was no valid test case to import.' };
-  const hasReplies = Object.keys(state.evaluation.replies).length > 0;
+  const hasReplies = replyCount(state.project) > 0;
   const added: TestCase[] = plan.cases.map((c) => markLate(c, hasReplies, 'added'));
-  const catalog = [...state.evaluation.judge_set.error_catalog, ...plan.missingCategories.map((name) => ({ name }))];
-  const next = withCases(state, [...state.evaluation.dataset.cases, ...added], plan.missingCategories.length > 0 ? catalog : undefined);
+  const catalog = [...state.project.judge_set.error_catalog, ...plan.missingCategories.map((name) => ({ name }))];
+  const next = withCases(state, [...state.project.dataset.cases, ...added], plan.missingCategories.length > 0 ? catalog : undefined);
   const count = `${added.length} test ${added.length === 1 ? 'case was' : 'cases were'} imported.`;
   const skipped = plan.invalid.length > 0 ? ` ${plan.invalid.length} invalid ${plan.invalid.length === 1 ? 'row was' : 'rows were'} skipped.` : '';
   const categories = plan.missingCategories.length > 0 ? ` Added to the catalog: ${plan.missingCategories.join(', ')}.` : '';
@@ -89,7 +90,7 @@ export interface ExportResult {
 
 /** Writes every case to a file the user names each time; nothing is remembered and the unsaved flag stays as it is (FR-050). */
 export async function exportTestCases(state: AppState, ports: Ports, env: FileEnv): Promise<ExportResult> {
-  const { dataset } = state.evaluation;
+  const { dataset } = state.project;
   const text = writeTestCases({ name: dataset.name, cases: dataset.cases }, { toolVersion: env.toolVersion });
   const result = await ports.exportTarget.saveAs(text);
   ports.exportTarget.forget();
@@ -100,6 +101,6 @@ export async function exportTestCases(state: AppState, ports: Ports, env: FileEn
 
 /** The example CSV of the import window, with the variables of the current judge prompt (FR-030). */
 export function downloadExample(state: AppState): { fileName: string; text: string; note?: string } {
-  const example = exampleCsv(findVariables(state.evaluation.judge_set.prompt));
+  const example = exampleCsv(findVariables(state.project.judge_set.prompt));
   return { fileName: 'test-cases-example.csv', ...example };
 }

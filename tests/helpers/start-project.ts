@@ -2,7 +2,6 @@
 // "Load test project…" from an in-memory file (the app itself no longer offers a starter, T243).
 import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
-import { writeTestProject } from '../../src/core/io/test-project-file';
 import type { TestCase } from '../../src/core/model';
 import { installMemoryFiles, type MemoryFiles } from './memory-files';
 
@@ -16,18 +15,23 @@ export function starterProject(metric: MetricFile, embed: boolean): string {
   const { clean_base_cases: clean, ...judgeSet } = metric.judge_set;
   const cases: TestCase[] = clean.map((c, i) => ({ id: String(i + 1), name: c.name, fields: c.fields, expected_errors: [] }));
   const { name, description, limitations, output_format, parameters, measures } = metric;
-  return writeTestProject(
+  // written by hand, as plain JSON of the file layout: the e2e tests do not run the code of the tool (a test project without a test run)
+  return JSON.stringify(
     {
-      judge_set: judgeSet as never,
-      dataset: { name: 'Untitled test cases', finalized: false, cases },
+      format: 'judge-the-judge-test-project',
+      schema_version: 2,
+      tool_version: 'test',
+      judge_set: judgeSet,
+      dataset: { name: 'Untitled test cases', version: 'starter', cases },
       metric: {
         id: metric.id,
         parameters: Object.fromEntries(Object.entries(metric.parameters).map(([k, v]) => [k, v.default])),
-        ...(embed ? { definition: { name, description, limitations, output_format, parameters, measures } as never } : {}),
+        ...(embed ? { definition: { name, description, limitations, output_format, parameters, measures } } : {}),
       },
       checks,
     },
-    { toolVersion: 'test', testCasesVersion: 'starter' },
+    null,
+    2,
   );
 }
 

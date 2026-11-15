@@ -143,9 +143,11 @@ Compare step and no result shelf.
   that match no variable, variables with no field, categories missing from the catalog with a
   choice to add them; then **Import test cases** (adds the cases to those already here, also after
   the start) or **Cancel** (FR-027 to FR-030, FR-053).
-- **Start test run** (FR-052, T288): a summary dialog (counts, balance, test size, all warnings)
-  and a confirmation that says the judge prompt and the judged text are then fixed, with no way
-  back.
+- **Start test run** (FR-052, T288): a summary dialog named "Start the test run?" (counts, balance,
+  test size, all warnings) and a confirmation in it that says the judge prompt and the judged text
+  are then fixed, with no way back; its buttons are **Cancel** and **Start test run**. After the
+  start, the test project card says "The test run has started: the judge prompt and the fields of
+  every case are fixed."
 - **States**: no cases yet (points to **Add test case**, the More menu and the Judge step); 500-case
   limit reached; text too long; identifier collision on import (new identifiers, said in the
   summary); name used twice (both cases show the warning); test run started (**Add test case**

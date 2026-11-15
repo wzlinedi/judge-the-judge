@@ -3,19 +3,19 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { computeResults, reviewEvaluation } from '../../src/core/evaluation/results';
 import { buildHtmlReport } from '../../src/core/io/html-report';
-import { readEvaluation } from '../../src/core/io/evaluation-file';
-import type { Evaluation } from '../../src/core/model';
-import { accuracyMetric, sampleEvaluation } from '../helpers/fixtures';
+import { readTestProject } from '../../src/core/io/test-project-file';
+import type { TestProject } from '../../src/core/model';
+import { accuracyMetric, sampleProject } from '../helpers/fixtures';
 
-const loaded = readEvaluation(readFileSync('examples/demo/evaluation.json', 'utf8'));
+const loaded = readTestProject(readFileSync('examples/demo/test-project.json', 'utf8'));
 if (!loaded.ok) throw new Error('demo not readable');
-const demo = loaded.value.evaluation;
-const decisionsAfter = (JSON.parse(readFileSync('examples/demo/expected-results.json', 'utf8')) as { decisions_after: Evaluation['decisions'] }).decisions_after;
+const demo = loaded.value.project;
+const decisionsAfter = (JSON.parse(readFileSync('examples/demo/expected-results.json', 'utf8')) as { decisions_after: NonNullable<TestProject['testRun']>['decisions'] }).decisions_after;
 const meta = { now: '2026-11-14T10:00:00Z', toolVersion: '1.2.3', judgeVersion: 'jjjjjjjjjjjj', testCasesVersion: 'cccccccccccc' };
 
-const report = (e: Evaluation, over: Partial<typeof meta> = {}) => buildHtmlReport(e, computeResults(e, accuracyMetric), reviewEvaluation(e, accuracyMetric), { ...meta, ...over });
-const provisional = report(demo, { judgeVersion: demo.reply_judge_version! });
-const final = report({ ...demo, decisions: decisionsAfter }, { judgeVersion: demo.reply_judge_version! });
+const report = (e: TestProject, over: Partial<typeof meta> = {}) => buildHtmlReport(e, computeResults(e, accuracyMetric), reviewEvaluation(e, accuracyMetric), { ...meta, ...over });
+const provisional = report(demo, { judgeVersion: demo.testRun!.reply_judge_version! });
+const final = report({ ...demo, testRun: { ...demo.testRun!, decisions: decisionsAfter } }, { judgeVersion: demo.testRun!.reply_judge_version! });
 const at = (html: string, text: string) => {
   const i = html.indexOf(text);
   expect(i, text).toBeGreaterThanOrEqual(0);
@@ -34,9 +34,9 @@ describe('the HTML report is self-contained', () => {
   });
 
   it('escapes every value: a script in a name, a field or the model details stays text', () => {
-    const e = sampleEvaluation();
+    const e = sampleProject();
     e.dataset.name = '<script>alert(1)</script>';
-    e.model_note = '<img src=x onerror=alert(2)>\nline two';
+    e.testRun!.model_note = '<img src=x onerror=alert(2)>\nline two';
     e.dataset.cases[0]!.fields['summary'] = 'a "quoted" <b>bold</b> & more';
     const html = report(e);
     expect(html).not.toContain('<script>alert(1)');
@@ -49,28 +49,28 @@ describe('the HTML report is self-contained', () => {
 
 describe('the order of the report', () => {
   it('goes from the title and versions to the three views and the judge set', () => {
-    const html = report(sampleEvaluation());
+    const html = report(sampleProject());
     const order = ['Book summaries', 'Test cases version', 'Judge version', 'Model details', 'Tool version', 'id="summary"', 'id="error-analysis"', 'id="test-case-list"', 'id="judge-set"'].map((t) => at(html, t));
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 
   it('shows the versions, the tool version, the date and the model details with their lines', () => {
-    const html = report(sampleEvaluation());
+    const html = report(sampleProject());
     for (const text of ['jjjjjjjjjjjj', 'cccccccccccc', '1.2.3', '2026-11-14']) expect(html).toContain(text);
     expect(html).toMatch(/<pre[^>]*>model X\ntemperature 0<\/pre>/);
   });
 
   it('names the cases added or corrected after the first reply', () => {
-    const html = report(sampleEvaluation());
+    const html = report(sampleProject());
     expect(html).toMatch(/added after the first reply[^<]*[^]*Anna \+ 2 errors/);
   });
 
   it('notes that the rules were corrected after the replies, naming the version in force then', () => {
-    const e = sampleEvaluation();
+    const e = sampleProject();
     const html = report(e, { judgeVersion: 'bbbbbbbbbbbb' });
     expect(html).toMatch(/rules were corrected after the replies/i);
-    expect(html).toContain(e.reply_judge_version!);
-    expect(report(e, { judgeVersion: e.reply_judge_version! })).not.toMatch(/rules were corrected after the replies/i);
+    expect(html).toContain(e.testRun!.reply_judge_version!);
+    expect(report(e, { judgeVersion: e.testRun!.reply_judge_version! })).not.toMatch(/rules were corrected after the replies/i);
   });
 });
 
@@ -94,18 +94,18 @@ describe('the three views', () => {
   });
 
   it('has the Error analysis: per category, per difficulty, per rule and additional findings per category and per difficulty', () => {
-    const html = report(sampleEvaluation());
+    const html = report(sampleProject());
     const analysis = html.slice(at(html, 'id="error-analysis"'), at(html, 'id="test-case-list"'));
     for (const text of ['By category', 'By difficulty', 'Additional findings per rule', 'Additional findings per category', 'Additional findings per difficulty', '(no category)', '(not set)', 'factual-error', 'A rate of a small group says little']) expect(analysis).toContain(text);
     expect(analysis).not.toContain('counts only');
   });
 
   it('has the Test case list with every prompt, expected error, reply and decision with its source', () => {
-    const e = sampleEvaluation();
+    const e = sampleProject();
     const html = report(e);
     const list = html.slice(at(html, 'id="test-case-list"'), at(html, 'id="judge-set"'));
     for (const id of ['1', '2']) {
-      expect(list).toContain(escape(e.replies[id]!.prompt));
+      expect(list).toContain(escape(e.testRun!.replies[id]!.prompt));
     }
     for (const text of ['Anna is a doctor', 'second oven in 2005', 'Profession changed.']) expect(list).toContain(text);
     expect(list).toContain('Anna is a baker.');
@@ -115,14 +115,14 @@ describe('the three views', () => {
   });
 
   it('holds the complete prompt of every case of the demo, as sent to the judge', () => {
-    for (const id of ['1', '14', '19']) expect(final).toContain(escape(demo.replies[id]!.prompt));
-    expect(final).toContain(escape(demo.replies['10']!.reply));
+    for (const id of ['1', '14', '19']) expect(final).toContain(escape(demo.testRun!.replies[id]!.prompt));
+    expect(final).toContain(escape(demo.testRun!.replies['10']!.reply));
   });
 
   it('shows the category and difficulty of added findings and lists ignored items as ignored', () => {
-    const e = sampleEvaluation();
-    e.decisions['2']!.added_findings[1]!.state = 'ignored';
-    e.decisions['2']!.expected['e2'] = { state: 'ignored', source: 'manual' };
+    const e = sampleProject();
+    e.testRun!.decisions['2']!.added_findings[1]!.state = 'ignored';
+    e.testRun!.decisions['2']!.expected['e2'] = { state: 'ignored', source: 'manual' };
     const html = report(e);
     const list = html.slice(at(html, 'id="test-case-list"'));
     expect(list).toContain('The oven was never bought');
@@ -132,7 +132,7 @@ describe('the three views', () => {
   });
 
   it('ends with the judge set: prompt, judged text, rules, finding text and catalog', () => {
-    const e = sampleEvaluation();
+    const e = sampleProject();
     const set = report(e).slice(at(report(e), 'id="judge-set"'));
     expect(set).toContain(e.judge_set.error_rules[0]!.name);
     expect(set).toContain(e.judge_set.judged_text!);

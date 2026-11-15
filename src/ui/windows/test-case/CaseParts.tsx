@@ -8,7 +8,7 @@ import { useShowIssue } from '../case-window/useShowIssue';
 import { baseNameOf, CaseData, ErrorList } from './CaseData';
 
 export function contextOf(state: AppState) {
-  const { judge_set, dataset } = state.evaluation;
+  const { judge_set, dataset } = state.project;
   return { variables: findVariables(judge_set.prompt), judgedText: judge_set.judged_text, catalog: judge_set.error_catalog, existingCases: dataset.cases };
 }
 
@@ -46,7 +46,7 @@ export const typedNameOf = (typed: TypedName): string | undefined => (typed !== 
 
 /** "Test case name" at the top of part 1: "Case N" (N the identifier the case will get), the name in the pasted JSON while the user has not typed, or what the user typed. */
 export function NameField({ state, check, typed, onTyped }: { state: AppState; check: CaseJsonCheck | undefined; typed: TypedName; onTyped: (name: string) => void }) {
-  const automatic = check?.case?.name ?? defaultCaseName(state.evaluation.dataset.cases);
+  const automatic = check?.case?.name ?? defaultCaseName(state.project.dataset.cases);
   return (
     <>
       <label class="field-label" for="case-name">
@@ -88,8 +88,8 @@ export function ExpectedErrorsPart({ state, text, check }: { state: AppState; te
   if (!made) return <p class="muted">The JSON is not valid yet, so there is no list to show.</p>;
   return (
     <>
-      <CaseData testCase={made} judged={state.evaluation.judge_set.judged_text} strong={strong} shown={spots} rootRef={textRef} baseName={baseNameOf(state, made.base)} />
-      {made.expected_errors.length === 0 ? <p>No expected errors: this will be saved as a clean case.</p> : <ErrorList testCase={made} judged={state.evaluation.judge_set.judged_text} onShow={show} />}
+      <CaseData testCase={made} judged={state.project.judge_set.judged_text} strong={strong} shown={spots} rootRef={textRef} baseName={baseNameOf(state, made.base)} />
+      {made.expected_errors.length === 0 ? <p>No expected errors: this will be saved as a clean case.</p> : <ErrorList testCase={made} judged={state.project.judge_set.judged_text} onShow={show} />}
     </>
   );
 }

@@ -4,12 +4,13 @@ import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
-import { sampleEvaluation } from '../../helpers/fixtures';
+import { sampleProject } from '../../helpers/fixtures';
+import { withoutTestRun } from '../../../src/core/cases/test-run';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 const draftState = (): AppState => {
-  const e = sampleEvaluation();
-  return { ...createState(), step: 'cases', evaluation: { ...e, dataset: { ...e.dataset, finalized: false }, replies: {}, decisions: {} } };
+  const e = sampleProject();
+  return { ...createState(), step: 'cases', project: withoutTestRun(e) };
 };
 const win = () => screen.getByRole('dialog', { name: 'Test case' });
 const button = (name: string) => within(win()).getByRole('button', { name }) as HTMLButtonElement;
@@ -133,7 +134,7 @@ describe('the page says where the user is and what to do (T223, T229)', () => {
   it('names the base case, not only its number', () => {
     open();
     toCaseView(json('Anna is a doctor. She bought a second oven in 1998.', [doctor], { base: '1' }));
-    const baseName = sampleEvaluation().dataset.cases.find((c) => c.id === '1')!.name;
+    const baseName = sampleProject().dataset.cases.find((c) => c.id === '1')!.name;
     expect(within(win()).getByText(new RegExp(`Base: 1 \\(${baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\)`))).toBeTruthy();
   });
 });

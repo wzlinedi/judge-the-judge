@@ -4,19 +4,19 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/pre
 import { App } from '../../../src/ui/App';
 import { createFakeClipboard, createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
-import type { Evaluation } from '../../../src/core/model';
-import { sampleEvaluation } from '../../helpers/fixtures';
+import type { TestProject } from '../../../src/core/model';
+import { sampleProject, withRun } from '../../helpers/fixtures';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 const fileEnv = { now: () => '2026-01-01T00:00:00.000Z', toolVersion: 'test' };
 const pretty = (value: unknown) => JSON.stringify(value, null, 2);
-const withReplies = (): Evaluation => {
-  const e = sampleEvaluation();
+const withReplies = (): TestProject => {
+  const e = sampleProject();
   const claims = [{ text: 'Anna is a doctor.', verdict: 'contradicted', reason: 'x' }, { text: 'Anna is a baker.', verdict: 'supported', reason: 'y' }, { text: 'She bought a second oven in 2005.', verdict: 'unsupported', reason: 'z' }];
-  return { ...e, replies: { ...e.replies, '2': { prompt: 'p2', reply: pretty({ claims }) }, '1': { prompt: 'p1', reply: 'plain text, not JSON' } }, decisions: {} };
+  return withRun(e, { replies: { ...e.testRun!.replies, '2': { prompt: 'p2', reply: pretty({ claims }) }, '1': { prompt: 'p1', reply: 'plain text, not JSON' } }, decisions: {} });
 };
-const open = (caseId: string, evaluation: Evaluation = withReplies(), ports = createFakePorts()) =>
-  render(<App ports={ports} env={env} fileEnv={fileEnv} initialState={{ ...createState(), step: 'run', evaluation, openCase: caseId } as AppState} />);
+const open = (caseId: string, evaluation: TestProject = withReplies(), ports = createFakePorts()) =>
+  render(<App ports={ports} env={env} fileEnv={fileEnv} initialState={{ ...createState(), step: 'run', project: evaluation, openCase: caseId } as AppState} />);
 const win = () => screen.getByRole('dialog', { name: /^Case / });
 const left = () => win().querySelector('.reply-pane') as HTMLElement;
 const right = () => win().querySelector('.decide-pane') as HTMLElement;
@@ -79,7 +79,7 @@ describe('Change reply, Save reply and Cancel', () => {
   it('opens the box with the saved text, Save reply and Cancel; typing saves nothing', () => {
     open('2');
     change();
-    expect(textbox()!.value).toBe(pretty({ claims: JSON.parse(withReplies().replies['2']!.reply).claims }));
+    expect(textbox()!.value).toBe(pretty({ claims: JSON.parse(withReplies().testRun!.replies['2']!.reply).claims }));
     expect(within(left()).getByRole('button', { name: 'Save reply' })).toBeTruthy();
     fireEvent.input(textbox()!, { target: { value: '{"claims": []}' } });
     expect(screen.queryByRole('dialog', { name: 'Change the judge’s reply?' })).toBeNull();
@@ -99,7 +99,7 @@ describe('Change reply, Save reply and Cancel', () => {
 
   it('Save reply asks first, names the marks that are lost, and after Change reply saves and returns to the read-only view', async () => {
     const e = withReplies();
-    e.decisions = { '2': { expected: { e1: { state: 'found', source: 'manual' } }, additional: {}, added_findings: [], approved: false, note: '' } } as Evaluation['decisions'];
+    e.testRun!.decisions = { '2': { expected: { e1: { state: 'found', source: 'manual' } }, additional: {}, added_findings: [], approved: false, note: '' } } as NonNullable<TestProject['testRun']>['decisions'];
     open('2', e);
     change();
     fireEvent.input(textbox()!, { target: { value: '{"claims":[{"text":"x","verdict":"unsupported","reason":"r"}]}' } });
@@ -150,7 +150,7 @@ describe('Change reply, Save reply and Cancel', () => {
 describe('a case without a reply', () => {
   it('keeps the box, saves a readable JSON as soon as it is in the box, and then shows the read-only view', async () => {
     const e = withReplies();
-    delete e.replies['2'];
+    delete e.testRun!.replies['2'];
     open('2', e);
     expect(textbox()).not.toBeNull();
     expect(within(left()).queryByRole('button', { name: 'Change reply' })).toBeNull();

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import demoEvaluation from '../../examples/demo/evaluation.json?raw';
-import { loadExample } from '../app/actions/evaluation';
+import demoProject from '../../examples/demo/test-project.json?raw';
+import { loadExample } from '../app/actions/demo';
 import { changeThreshold } from '../app/actions/checks';
 import { correctRules } from '../app/actions/decide';
 import { exportReport } from '../app/actions/export';
@@ -8,18 +8,17 @@ import { modelDetailsEdit, pasteReplyFromClipboard, saveReply, type ReplyOutcome
 import type { CaseEdit } from '../app/actions/cases';
 import type { CatalogEdit } from '../app/actions/catalog';
 import type { JudgeEdit } from '../app/actions/judge';
-import { loadEvaluation, loadTestProject, saveEvaluation, saveEvaluationAs, saveTestProject, saveTestProjectAs, type FileEnv } from '../app/actions/files';
+import { finishLoad, loadTestProject, saveTestProject, saveTestProjectAs, type FileEnv, type PendingLoad } from '../app/actions/files';
 import { guardFor, installBeforeUnload, type GuardedAction } from '../app/guard';
 import { metricFor } from '../app/metrics';
 import { browserSupported, type BrowserEnv } from '../app/ports/browser';
 import { createBrowserPorts } from '../app/ports';
 import type { Ports } from '../app/ports/types';
 import { nextAction, stepGate, type NextIntent } from '../app/selectors';
-import { editJudgeAndRunAgain } from '../app/actions/rerun';
-import { editTestCases, finalize } from '../app/actions/finalize';
-import { createState, goToStep, recomputeDifferences, startNewEvaluation, type AppState, type StepId } from '../app/store';
+import { startTestRun } from '../app/actions/start';
+import { createState, goToStep, recomputeDifferences, startNewTestProject, type AppState, type StepId } from '../app/store';
 import { computeResults, reviewEvaluation } from '../core/evaluation/results';
-import type { Evaluation, Problem } from '../core/model';
+import type { TestProject, Problem } from '../core/model';
 import { Dialog } from './components/Dialog';
 import { ErrorMessage } from './components/ErrorMessage';
 import type { FileAction } from './components/shell/FileMenu';
@@ -57,7 +56,7 @@ const REAL_FILE_ENV: FileEnv = { now: () => new Date().toISOString(), toolVersio
 export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileAction }: AppProps) {
   const browser = env ?? (globalThis as unknown as BrowserEnv);
   const [state, setState] = useState<AppState>(initialState ?? createState());
-  const [pending, setPending] = useState<FileAction | 'edit-judge-and-run-again' | null>(null);
+  const [pending, setPending] = useState<FileAction | null>(null);
   const [onlyAwaiting, setOnlyAwaiting] = useState(false);
   const [notice, setNotice] = useState('');
   /** True when the message says that something was not done: it is shown as a refusal, with a word and a sign. */
@@ -67,8 +66,10 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const [testWindow, setTestWindow] = useState<TestWindowView | null>(null);
   const [importing, setImporting] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
+  /** A file that holds a test run, waiting for the choice "Load with the test run" or "Load the test project only". */
+  const [loadQuestion, setLoadQuestion] = useState<PendingLoad | null>(null);
   const [viewCase, setViewCase] = useState<string | null>(null);
-  const portsRef = useRef<Ports>(ports ?? createBrowserPorts(browser, () => stateRef.current.evaluation.dataset.name));
+  const portsRef = useRef<Ports>(ports ?? createBrowserPorts(browser, () => stateRef.current.project.dataset.name));
   const stateRef = useRef(state);
   stateRef.current = state;
 
@@ -77,12 +78,12 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     return installBeforeUnload(window, () => stateRef.current);
   }, []);
 
-  const metric = metricFor(state.evaluation.metric.id);
-  const reviewed = useMemo(() => reviewEvaluation(state.evaluation, metric), [state.evaluation, metric]);
-  const results = useMemo(() => computeResults(state.evaluation, metric), [state.evaluation, metric]);
+  const metric = metricFor(state.project.metric.id);
+  const reviewed = useMemo(() => reviewEvaluation(state.project, metric), [state.project, metric]);
+  const results = useMemo(() => computeResults(state.project, metric), [state.project, metric]);
 
   const go = (step: StepId) => setState((s) => goToStep(s, step));
-  const change = (next: Evaluation) => setState((s) => ({ ...s, evaluation: next, unsaved: true }));
+  const change = (next: TestProject) => setState((s) => ({ ...s, project: next, unsaved: true }));
 
   const say = (message: string | undefined, refusal = false) => {
     setProblems([]);
@@ -90,22 +91,29 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     setRefused(refusal && message !== undefined);
   };
 
-  const save = async (as: boolean, project = false): Promise<boolean> => {
-    const action = project ? (as ? saveTestProjectAs : saveTestProject) : as ? saveEvaluationAs : saveEvaluation;
+  const save = async (as: boolean): Promise<boolean> => {
+    const action = as ? saveTestProjectAs : saveTestProject;
     const result = await action(stateRef.current, portsRef.current, fileEnv);
     setState(result.state);
-    const done = project ? 'The test project was saved.' : 'The evaluation was saved.';
-    say(result.message ?? (result.outcome === 'saved' ? done : result.outcome === 'cancelled' ? 'Nothing was saved.' : undefined));
+    say(result.message ?? (result.outcome === 'saved' ? 'The test project was saved.' : result.outcome === 'cancelled' ? 'Nothing was saved.' : undefined));
     return result.outcome === 'saved';
   };
 
-  const load = async (kind: 'evaluation' | 'project') => {
-    const result = await (kind === 'evaluation' ? loadEvaluation : loadTestProject)(stateRef.current, portsRef.current, fileEnv);
+  const show = (result: Awaited<ReturnType<typeof loadTestProject>>) => {
     setState(result.state);
     if (result.outcome === 'invalid') {
       setNotice('');
       setProblems(result.problems ?? []);
     } else if (result.outcome === 'loaded') say(result.message);
+    else if (result.outcome === 'needs_choice') setLoadQuestion(result.pending ?? null);
+  };
+
+  const load = async () => show(await loadTestProject(stateRef.current, portsRef.current, fileEnv));
+
+  const answerLoad = async (choice: 'with' | 'only') => {
+    const pending = loadQuestion;
+    setLoadQuestion(null);
+    if (pending) show(await finishLoad(stateRef.current, portsRef.current, pending, choice));
   };
 
   const applyCase = (edit: CaseEdit) => {
@@ -136,7 +144,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   };
 
   const exportHtml = async () => {
-    const report = await exportReport(stateRef.current, fileEnv, metricFor(stateRef.current.evaluation.metric.id));
+    const report = await exportReport(stateRef.current, fileEnv, metricFor(stateRef.current.project.metric.id));
     download(report.fileName, report.html, 'text/html');
     say(report.message);
   };
@@ -146,24 +154,14 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     say(result.message);
   };
 
-  const rerun = () => {
-    const result = editJudgeAndRunAgain(stateRef.current, portsRef.current);
-    setState(result.state);
-    say(result.note);
-  };
-
-  const perform = (action: FileAction | 'edit-judge-and-run-again') => {
-    if (action === 'edit-judge-and-run-again') rerun();
-    else if (action === 'load-example') loadDemo();
+  const perform = (action: FileAction) => {
+    if (action === 'load-example') loadDemo();
     else if (action === 'start-new-evaluation') {
-      setState((s) => startNewEvaluation(s, portsRef.current));
+      setState((s) => startNewTestProject(s, portsRef.current));
       say('Started a new evaluation.');
-    } else if (action === 'load-evaluation') void load('evaluation');
-    else if (action === 'load-test-project') void load('project');
-    else if (action === 'save-test-project') void save(false, true);
-    else if (action === 'save-test-project-as') void save(true, true);
-    else if (action === 'save-evaluation') void save(false);
-    else if (action === 'save-evaluation-as') void save(true);
+    } else if (action === 'load-test-project') void load();
+    else if (action === 'save-test-project') void save(false);
+    else if (action === 'save-test-project-as') void save(true);
     else if (action === 'import-test-cases') setImporting(true);
     else if (action === 'export-test-cases') void exportCases();
     else onFileAction?.(action, stateRef.current);
@@ -176,7 +174,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   };
 
   const loadDemo = () => {
-    setState((s) => loadExample(s, demoEvaluation, portsRef.current));
+    setState((s) => loadExample(s, demoProject, portsRef.current));
     say('The demo was loaded. It opens on the Judge step.');
   };
 
@@ -184,12 +182,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const gate = stepGate(state, state.step);
   const next = nextAction(state, state.step, reviewed);
   const doIntent = (intent: NextIntent | undefined) => {
-    if (intent === 'finalize') setFinalizing(true);
-    else if (intent === 'edit-cases') {
-      const result = editTestCases(stateRef.current);
-      setState(result.state);
-      say(result.note);
-    }
+    if (intent === 'start') setFinalizing(true);
   };
   const runAction = () => {
     if (next.action.openCase) setState((s) => ({ ...s, openCase: next.action.openCase ?? null }));
@@ -198,13 +191,9 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   };
   const confirmFinalize = () => {
     setFinalizing(false);
-    const result = finalize(stateRef.current);
+    const result = startTestRun(stateRef.current);
     setState(result.state);
     say(result.note);
-  };
-  const onRerun = () => {
-    if (guardFor(state, 'edit-judge-and-run-again')) setPending('edit-judge-and-run-again');
-    else rerun();
   };
 
   return (
@@ -230,9 +219,8 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
         ) : state.step === 'results' ? (
           <ResultsStep
             results={results}
-            evaluation={state.evaluation}
+            evaluation={state.project}
             reviewed={reviewed}
-            onRerun={onRerun}
             onExport={() => void exportHtml()}
             onThreshold={(measure, value) => setState((s) => changeThreshold(s, measure, value))}
             onOpenCase={setViewCase}
@@ -240,10 +228,10 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           />
         ) : (
           <>
-            <NextBar sentence={next.sentence} detail={next.detail} note={next.note} action={{ label: next.action.label, disabled: next.action.disabled, onClick: runAction }} others={(next.others ?? []).map((o) => ({ label: o.label, disabled: o.disabled, onClick: () => doIntent(o.intent) }))} />
+            <NextBar sentence={next.sentence} detail={next.detail} note={next.note} action={{ label: next.action.label, disabled: next.action.disabled, onClick: runAction }} />
             {state.step === 'run' ? (
               <RunStep
-                evaluation={state.evaluation}
+                evaluation={state.project}
                 reviewed={reviewed}
                 repliesSinceSave={state.repliesSinceSave}
                 onOpen={(id) => setState((s) => ({ ...s, openCase: id }))}
@@ -255,8 +243,8 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
             ) : state.step === 'cases' ? (
               <CasesStep
                 state={state}
-                categoriesOpen={categoriesOpen ?? state.evaluation.dataset.cases.length === 0}
-                onToggleCategories={() => setCategoriesOpen(!(categoriesOpen ?? state.evaluation.dataset.cases.length === 0))}
+                categoriesOpen={categoriesOpen ?? state.project.dataset.cases.length === 0}
+                onToggleCategories={() => setCategoriesOpen(!(categoriesOpen ?? state.project.dataset.cases.length === 0))}
                 onCatalogEdit={applyCatalog}
                 onAdd={() => setTestWindow({ view: 'choice' })}
                 onOpen={(id) => setTestWindow({ view: 'open', id })}
@@ -272,7 +260,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
       </div>
       {windowOpen && state.openCase ? (
         <CaseWindow
-          evaluation={state.evaluation}
+          evaluation={state.project}
           reviewed={reviewed}
           caseId={state.openCase}
           onChange={change}
@@ -286,7 +274,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
       ) : null}
       {state.step === 'results' && viewCase ? (
         <ReadOnlyCaseView
-          evaluation={state.evaluation}
+          evaluation={state.project}
           reviewed={reviewed}
           caseId={viewCase}
           onNavigate={setViewCase}
@@ -315,6 +303,26 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           onClose={() => setImporting(false)}
         />
       ) : null}
+      <Dialog
+        open={loadQuestion !== null}
+        title="Load test project"
+        onClose={() => setLoadQuestion(null)}
+        actions={
+          <>
+            <button type="button" onClick={() => setLoadQuestion(null)}>
+              {labels.cancel}
+            </button>
+            <button type="button" onClick={() => void answerLoad('only')}>
+              {labels.loadTestProjectOnly}
+            </button>
+            <button type="button" class="primary" onClick={() => void answerLoad('with')}>
+              {labels.loadWithTestRun}
+            </button>
+          </>
+        }
+      >
+        <p>{`${loadQuestion?.fileName ?? 'This file'} holds a test run. Load it with the test run, or load the test project only: the same test cases and judge for a new test run?`}</p>
+      </Dialog>
       <Dialog
         open={pending !== null}
         title="Unsaved changes"
@@ -345,7 +353,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
                 }
               }}
             >
-              {labels.saveEvaluationFirst}
+              {labels.saveTestProjectFirst}
             </button>
           </>
         }

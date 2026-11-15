@@ -4,14 +4,14 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/pre
 import { App } from '../../../src/ui/App';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
-import type { Evaluation } from '../../../src/core/model';
-import { sampleEvaluation } from '../../helpers/fixtures';
+import type { TestProject } from '../../../src/core/model';
+import { sampleProject, withRun } from '../../helpers/fixtures';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 const fileEnv = { now: () => '2026-01-01T00:00:00.000Z', toolVersion: 'test' };
-const noReplies = (): Evaluation => ({ ...sampleEvaluation(), replies: {}, decisions: {}, reply_judge_version: undefined });
-const open = (evaluation: Evaluation, caseId = '1') =>
-  render(<App ports={createFakePorts()} env={env} fileEnv={fileEnv} initialState={{ ...createState(), step: 'run', evaluation, openCase: caseId } as AppState} />);
+const noReplies = (): TestProject => withRun(sampleProject(), { replies: {}, decisions: {}, reply_judge_version: undefined });
+const open = (evaluation: TestProject, caseId = '1') =>
+  render(<App ports={createFakePorts()} env={env} fileEnv={fileEnv} initialState={{ ...createState(), step: 'run', project: evaluation, openCase: caseId } as AppState} />);
 const win = () => screen.getByRole('dialog', { name: /^Case / });
 const box = () => within(win()).getByRole('textbox', { name: 'Judge reply' }) as HTMLTextAreaElement;
 const type = (text: string) => fireEvent.input(box(), { target: { value: text } });
@@ -24,7 +24,7 @@ describe('the reply box', () => {
     expect(box().value).toBe('');
     expect(box().closest('details')).toBeNull();
     view.unmount();
-    open(sampleEvaluation(), '2');
+    open(sampleProject(), '2');
     // a saved reply is read-only (T293), never behind a collapsed section
     expect(within(win()).queryByRole('textbox', { name: 'Judge reply' })).toBeNull();
     expect(win().querySelector('.reply-read')?.textContent).toContain('Anna is a doctor.');

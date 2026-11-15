@@ -2,13 +2,11 @@
 // reads them, so extra keys stay allowed and a key with a default is optional.
 import { z } from 'zod';
 import { importCase } from '../src/core/io/test-cases-json';
-import { checksSchema, EVALUATION_FORMAT, evaluationSchema } from '../src/core/schemas/evaluation';
 import { CHECKS_FORMAT, CHECKS_SCHEMA_VERSION } from '../src/core/schemas/checks';
 import { METRIC_FORMAT, METRIC_SCHEMA_VERSION, metricSchema } from '../src/core/schemas/metric';
 import { testCaseSchema } from '../src/core/schemas/test-case';
 import { TEST_CASES_FORMAT, TEST_CASES_SCHEMA_VERSION } from '../src/core/schemas/test-cases';
-import { TEST_PROJECT_FORMAT, TEST_PROJECT_SCHEMA_VERSION, testProjectSchema } from '../src/core/schemas/test-project';
-import { EVALUATION_SCHEMA_VERSION } from '../src/core/schemas/evaluation';
+import { checksSchema, TEST_PROJECT_FORMAT, TEST_PROJECT_SCHEMA_VERSION, testProjectSchema } from '../src/core/schemas/test-project';
 
 export const SCHEMA_DIRECTORY = 'docs/schemas';
 
@@ -33,11 +31,6 @@ const sources: Record<string, { title: string; description: string; schema: z.Zo
     description: 'The thresholds of the checks (metric-and-checks.md, section 2). `minimum_sample` is read and ignored: the minimum test size is fixed.',
     schema: z.object({ ...envelope(CHECKS_FORMAT, CHECKS_SCHEMA_VERSION), rules: checksSchema.shape.rules.min(1), minimum_sample: z.unknown().optional() }),
   },
-  'evaluation.schema.json': {
-    title: 'Judge the Judge: evaluation file',
-    description: 'The whole work of one run and its results (file-formats.md, section 5).',
-    schema: z.object({ ...envelope(EVALUATION_FORMAT, EVALUATION_SCHEMA_VERSION), ...evaluationSchema.shape }),
-  },
   'metric.schema.json': {
     title: 'Judge the Judge: metric definition',
     description: 'A metric defined as data (metric-and-checks.md, section 1).',
@@ -55,7 +48,7 @@ const sources: Record<string, { title: string; description: string; schema: z.Zo
   },
   'test-project.schema.json': {
     title: 'Judge the Judge: test project file',
-    description: 'The judge set, the error catalog, the test cases, the metric and the thresholds: one test, used for every run (file-formats.md, section 1).',
+    description: 'The judge set, the error catalog, the test cases, the metric and the thresholds and, once the test run has started, the test_run section with the replies, decisions and results (file-formats.md, sections 1 and 5).',
     schema: z.object({ ...envelope(TEST_PROJECT_FORMAT, TEST_PROJECT_SCHEMA_VERSION), ...testProjectSchema.shape }),
   },
 };

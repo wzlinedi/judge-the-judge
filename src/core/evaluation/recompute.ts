@@ -1,6 +1,6 @@
 // Reproduce and audit (FR-075, SC-003): the results recomputed from a loaded evaluation file, and any
 // difference from the stored ones. Pure: the versions are passed in, because hashing them is asynchronous.
-import type { LoadedEvaluation } from '../io/evaluation-file';
+import type { LoadedTestProject } from '../io/test-project-file';
 import type { MetricDefinition } from '../metrics/types';
 import { computeResults, type Results } from './results';
 
@@ -21,7 +21,7 @@ export function rulesCorrectedAfterReplies(replyJudgeVersion: string | undefined
   return replyJudgeVersion !== undefined && replyJudgeVersion !== currentJudgeVersion;
 }
 
-/** The results as the evaluation file stores them; empty until a case is decided. */
+/** The results as the `test_run` section stores them; empty until a case is decided. */
 export function resultsForFile(results: Results | null): Record<string, unknown> {
   if (!results || results.counters.cases_decided === 0) return {};
   const measures = Object.fromEntries(
@@ -88,19 +88,22 @@ function compareResults(stored: Record<string, unknown>, recomputed: Record<stri
 }
 
 /**
- * Recalculates the results of a loaded file from its judge set, cases, replies and decisions, with the
- * metric parameters and thresholds it stores, and lists what differs from what it says (SC-003).
+ * Recalculates the results of a loaded test project from its judge set, cases, replies and decisions, with the
+ * metric parameters and thresholds it stores, and lists what differs from what its test run says (SC-003).
+ * A file without a test run stored no numbers, so nothing differs.
  */
-export function recompute(loaded: LoadedEvaluation, metric: MetricDefinition, versions: { judgeVersion: string; testCasesVersion: string }): Recomputed {
-  const results = computeResults(loaded.evaluation, metric, loaded.minimumSample);
+export function recompute(loaded: LoadedTestProject, metric: MetricDefinition, versions: { judgeVersion: string; testCasesVersion: string }): Recomputed {
+  const { stored } = loaded;
+  const results = computeResults(loaded.project, metric, stored?.minimumSample);
+  if (stored === undefined) return { results, differences: [] };
   const differences: Difference[] = [];
-  if (loaded.judgeVersion !== undefined && loaded.judgeVersion !== versions.judgeVersion) {
-    differences.push({ what: 'judge version', stored: loaded.judgeVersion, recomputed: versions.judgeVersion });
+  if (stored.judgeVersion !== undefined && stored.judgeVersion !== versions.judgeVersion) {
+    differences.push({ what: 'judge version', stored: stored.judgeVersion, recomputed: versions.judgeVersion });
   }
   if (loaded.testCasesVersion !== undefined && loaded.testCasesVersion !== versions.testCasesVersion) {
     differences.push({ what: 'test cases version', stored: loaded.testCasesVersion, recomputed: versions.testCasesVersion });
   }
   const recomputed = JSON.parse(JSON.stringify(resultsForFile(results))) as Record<string, unknown>;
-  differences.push(...compareResults(loaded.storedResults, recomputed));
+  differences.push(...compareResults(stored.results, recomputed));
   return { results, differences };
 }

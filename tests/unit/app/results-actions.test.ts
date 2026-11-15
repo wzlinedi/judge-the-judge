@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { changeThreshold } from '../../../src/app/actions/checks';
 import { exportReport } from '../../../src/app/actions/export';
 import { createState, type AppState } from '../../../src/app/store';
-import { accuracyMetric, sampleEvaluation } from '../../helpers/fixtures';
+import { accuracyMetric, sampleProject, withRun } from '../../helpers/fixtures';
 
-const state = (): AppState => ({ ...createState(), step: 'results', evaluation: sampleEvaluation() });
-const rule = (s: AppState, measure: string) => s.evaluation.checks.rules.find((r) => r.measure === measure)!;
+const state = (): AppState => ({ ...createState(), step: 'results', project: sampleProject() });
+const rule = (s: AppState, measure: string) => s.project.checks.rules.find((r) => r.measure === measure)!;
 
 describe('changeThreshold', () => {
   it('changes the value of one rule and marks the work unsaved', () => {
@@ -38,9 +38,8 @@ describe('exportReport', () => {
   });
 
   it('does not call a report provisional: the name is the same, and the message says how many cases are not decided yet (T267)', async () => {
-    const e = sampleEvaluation();
-    e.replies = {};
-    const report = await exportReport({ ...state(), evaluation: e }, env, accuracyMetric);
+    const e = withRun(sampleProject(), { replies: {}, decisions: {} });
+    const report = await exportReport({ ...state(), project: e }, env, accuracyMetric);
     expect(report.fileName).toBe('Book summaries - report.html');
     expect(report.message).toMatch(/2 cases are not decided yet/);
     expect(report.message).not.toMatch(/provisional/i);

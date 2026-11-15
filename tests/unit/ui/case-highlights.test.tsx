@@ -7,7 +7,7 @@ import type { TestCase } from '../../../src/core/model';
 import { reviewEvaluation } from '../../../src/core/evaluation/results';
 import { markFindings } from '../../../src/core/evaluation/finding-marks';
 import { ErrorsPane } from '../../../src/ui/windows/case-window/DecidePane';
-import { accuracyMetric, sampleEvaluation } from '../../helpers/fixtures';
+import { accuracyMetric, sampleProject, withRun } from '../../helpers/fixtures';
 
 const text = 'One two. Three four. Five six. Seven eight. Nine ten.';
 const five: TestCase = {
@@ -64,7 +64,7 @@ describe('after a reply', () => {
 
 describe('findings in the reply', () => {
   it('are marked matching, partly matching or matching no expected error', () => {
-    const e = sampleEvaluation();
+    const e = sampleProject();
     const reviewed = reviewEvaluation(e, accuracyMetric);
     const second = reviewed.find((r) => r.testCase.id === '2')!;
     const marks = markFindings(second);
@@ -75,8 +75,8 @@ describe('findings in the reply', () => {
   });
 
   it('says so in one line when the reply cannot be read or the judge is evaluated per case', () => {
-    const e = sampleEvaluation();
-    const bad = { ...e, replies: { ...e.replies, '2': { prompt: 'p', reply: 'I think it is fine.' } } };
+    const e = sampleProject();
+    const bad = withRun(e, { replies: { ...e.testRun!.replies, '2': { prompt: 'p', reply: 'I think it is fine.' } } });
     const reviewed = reviewEvaluation(bad, accuracyMetric).find((r) => r.testCase.id === '2')!;
     expect(markFindings(reviewed)).toEqual([]);
   });
@@ -84,7 +84,7 @@ describe('findings in the reply', () => {
 
 describe('the case window of Run', () => {
   it('each expected error says which words of the judge match it, and there is no list of the findings in the reply (T258)', () => {
-    const e = sampleEvaluation();
+    const e = sampleProject();
     const reviewed = reviewEvaluation(e, accuracyMetric).find((r) => r.testCase.id === '2')!;
     const noop = () => undefined;
     const { container, queryByRole } = render(<ErrorsPane reviewed={reviewed} effective={reviewed.effective!} onExpected={noop} onAdditional={noop} onApprove={noop} onShowInText={noop} judged={undefined} onRemove={noop} />);

@@ -1,8 +1,10 @@
-// quickstart.md V5: import and export test cases (SC-015 to SC-020, User Story 5). Steps 5 belongs to User Stories 9 and 11.
+// quickstart.md V5: import and export test cases (SC-015 to SC-020, User Story 5). Step 5 belongs to User Stories 9 and 11.
+// The one test project file, its test run and the load question (T289): FR-020, FR-052, FR-053, FR-076.
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { installMemoryFiles, type MemoryFiles } from '../helpers/memory-files';
 import { startFromAccuracy } from '../helpers/start-project';
+import { loadTestProject, saveButton, startTestRun, TEST_RUN_STEP } from '../helpers/test-run-flow';
 
 const importWindow = (page: Page) => page.getByRole('dialog', { name: 'Import test cases…' });
 const rows = (page: Page) => page.getByRole('row');
@@ -46,7 +48,7 @@ test('the example file, a CSV with an invalid row and Polish characters, and a J
   await expect(page.getByRole('button', { name: /Error categories.*6/ })).toBeVisible();
 });
 
-test('Export test cases, a new evaluation, Import test cases; and the test project reloads identical', async ({ page }) => {
+test('Export test cases, a new test project, Import test cases; and the test project reloads identical', async ({ page }) => {
   const memory = await installMemoryFiles(page);
   await startAccuracy(page, memory);
 
@@ -59,7 +61,7 @@ test('Export test cases, a new evaluation, Import test cases; and the test proje
   expect(exported.cases).toHaveLength(3);
   expect(exported).not.toHaveProperty('finalized');
 
-  await menu(page, 'New evaluation');
+  await menu(page, 'New test project');
   // nothing is unsaved after loading an example and exporting, so there is no question to answer
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
   memory.chooseOpenName('exported.json');
@@ -76,13 +78,25 @@ test('Export test cases, a new evaluation, Import test cases; and the test proje
 
   // Save test project, reload, Load test project
   memory.chooseSaveName('project.json');
-  await page.getByRole('button', { name: 'Save test project', exact: true }).click();
+  await saveButton(page).click();
   await expect.poll(() => memory.files.has('project.json')).toBe(true);
+  expect(JSON.parse(memory.files.get('project.json')!)).not.toHaveProperty('test_run'); // not started: no test run section
   await page.reload();
-  memory.chooseOpenName('project.json');
-  await menu(page, 'Load test project…');
+  await loadTestProject(page, memory, 'project.json'); // no test run in the file, so no question
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
   await expect(rows(page)).toHaveCount(4);
+  await expect(page.getByRole('dialog', { name: 'Load test project' })).toHaveCount(0);
+
+  // "Start test run" in place of finalizing: the one file now holds an empty test run, and loading it asks the question
+  await startTestRun(page);
+  await saveButton(page).click(); // the remembered file is overwritten, with no picker
+  await expect.poll(() => JSON.parse(memory.files.get('project.json') ?? '{}').test_run !== undefined).toBe(true);
+  expect(JSON.parse(memory.files.get('project.json')!).test_run).toMatchObject({ replies: {}, decisions: {}, results: {} });
+  expect(memory.asked()).toBe(3); // exported.json, again.json and project.json asked once each; this save did not ask again
+  await page.reload();
+  await loadTestProject(page, memory, 'project.json', 'with');
+  await expect(page.getByRole('button', { name: TEST_RUN_STEP })).toHaveAttribute('aria-current', 'step');
+  await expect(page.getByRole('button', { name: /Reopen test cases/ })).toHaveCount(0);
 });
 
 test('one more case after the first reply starts as Not run, and 100 cases are summarized within 5 seconds', async ({ page }) => {
@@ -90,7 +104,7 @@ test('one more case after the first reply starts as Not run, and 100 cases are s
   await page.goto('/');
   await menu(page, 'Load demo…');
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
-  await page.getByRole('button', { name: /3\s*Run/ }).click();
+  await page.getByRole('button', { name: /3\s*Test run/ }).click();
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
   const before = await rows(page).count();
 
@@ -101,7 +115,7 @@ test('one more case after the first reply starts as Not run, and 100 cases are s
   await importWindow(page).getByRole('button', { name: 'Import test cases…' }).click();
   await expect(rows(page)).toHaveCount(before + 1);
   await expect(page.getByRole('row').filter({ hasText: 'Late' })).toContainText('added after first reply');
-  await page.getByRole('button', { name: /3\s*Run/ }).click();
+  await page.getByRole('button', { name: /3\s*Test run/ }).click();
   await expect(page.getByRole('row').filter({ hasText: 'Late' })).toContainText('Not run');
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
 

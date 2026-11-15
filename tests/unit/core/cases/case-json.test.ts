@@ -2,9 +2,9 @@
 import { describe, expect, it } from 'vitest';
 import { checkCaseJson, caseToJson } from '../../../../src/core/cases/case-json';
 import type { CaseJsonCheckContext } from '../../../../src/core/model';
-import { sampleEvaluation } from '../../../helpers/fixtures';
+import { sampleProject } from '../../../helpers/fixtures';
 
-const e = sampleEvaluation();
+const e = sampleProject();
 const ctx = (over: Partial<CaseJsonCheckContext> = {}): CaseJsonCheckContext => ({
   mode: 'paste', variables: ['source_text', 'summary'], judgedText: 'summary', catalog: e.judge_set.error_catalog, existingCases: e.dataset.cases, ...over,
 });

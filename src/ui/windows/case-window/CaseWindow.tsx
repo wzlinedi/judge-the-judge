@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { addFinding, applyOpinionTo, removeFinding } from '../../../app/actions/decide';
 import { approveCase, setAddedMark, setAdditionalMark, setExpectedMark } from '../../../app/actions/decisions';
 import { reminderDue, removeReply, replaceNeedsQuestion, type ReplyOutcome } from '../../../app/actions/replies';
+import { repliesOf } from '../../../core/cases/test-run';
 import type { ReviewedCase } from '../../../core/evaluation/results';
 import { composePrompt } from '../../../core/judge/compose';
 import { extractJson } from '../../../core/judge/extract-json';
-import type { Evaluation } from '../../../core/model';
+import type { TestProject } from '../../../core/model';
 import { CaseWindowFrame } from '../../components/CaseWindowFrame';
 import { Dialog } from '../../components/Dialog';
 import { Part } from '../../components/CasePart';
@@ -25,10 +26,10 @@ export interface ReplyActions {
 }
 
 export interface CaseWindowProps {
-  evaluation: Evaluation;
+  evaluation: TestProject;
   reviewed: ReviewedCase[];
   caseId: string;
-  onChange: (next: Evaluation) => void;
+  onChange: (next: TestProject) => void;
   onNavigate: (caseId: string) => void;
   onClose: () => void;
   onlyAwaiting: boolean;
@@ -74,7 +75,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   const positionLabel = inList >= 0 ? `${inList + 1} of ${list.length}` : `${position + 1} of ${reviewed.length}`;
 
   const { testCase, effective } = current;
-  const reply = evaluation.replies[caseId];
+  const reply = repliesOf(evaluation)[caseId];
   const judged = evaluation.judge_set.judged_text;
   const prompt = reply?.prompt ?? composePrompt(evaluation.judge_set.prompt, testCase).text;
   const base = testCase.base ? reviewed.find((r) => r.testCase.id === testCase.base)?.testCase : undefined;
@@ -250,7 +251,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
           <span class="muted">{`${repliesSinceSave} not saved`}</span>
           {reminderDue(repliesSinceSave) ? (
             <span role="alert" class="save-reminder">
-              {`${repliesSinceSave} replies are not saved to a file. Close the window and press ${labels.saveEvaluation} at the top.`}
+              {`${repliesSinceSave} replies are not saved to a file. Close the window and press ${labels.saveTestProject} at the top.`}
             </span>
           ) : null}
         </>

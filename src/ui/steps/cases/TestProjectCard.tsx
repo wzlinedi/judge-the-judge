@@ -1,4 +1,5 @@
 import { testProjectFeedback } from '../../../core/cases/feedback';
+import { isStarted } from '../../../core/cases/test-run';
 import { readabilityWarnings } from '../../../core/judge/readability';
 import type { AppState } from '../../../app/store';
 import { useVersions } from '../run/useVersions';
@@ -6,7 +7,7 @@ import { plural, TestSize } from './TestSize';
 
 /** The test project card (FR-045, FR-046): what is built so far, whether it is big enough, and what to fix. It has no unsaved indicator: the header has the one. */
 export function TestProjectCard({ state }: { state: AppState }) {
-  const { evaluation } = state;
+  const { project: evaluation } = state;
   const versions = useVersions(evaluation);
   const f = testProjectFeedback(evaluation);
   const warnings = [...f.warnings, ...readabilityWarnings(evaluation.judge_set)];
@@ -18,7 +19,7 @@ export function TestProjectCard({ state }: { state: AppState }) {
         <strong>{evaluation.dataset.name}</strong>
         {versions.cases ? <span class="muted">{` · Test cases version ${versions.cases}`}</span> : null}
       </p>
-      {evaluation.dataset.finalized ? <p class="muted">The test cases are finalized: the judge prompt and the fields of every case are fixed.</p> : null}
+      {isStarted(evaluation) ? <p class="muted">The test run has started: the judge prompt and the fields of every case are fixed.</p> : null}
       <p>{`${plural(f.total, 'test case', 'test cases')}: ${f.withErrors} with injected errors, ${f.clean} clean, ${f.withReply} with a reply.`}</p>
 
       <TestSize feedback={f} />

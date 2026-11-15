@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { applyOpinion, NO_ANSWER, opinionPlan } from '../../../../src/core/evaluation/opinions';
 import { reviewEvaluation } from '../../../../src/core/evaluation/results';
 import type { VerificationOpinion } from '../../../../src/core/model';
-import { accuracyMetric, sampleEvaluation } from '../../../helpers/fixtures';
+import { accuracyMetric, sampleProject } from '../../../helpers/fixtures';
 
 /** Case 2 of the sample: E1 and E2 found automatically, A1 a real error set by hand, A2 a false positive from an earlier opinion. */
-const evaluation = sampleEvaluation();
+const evaluation = sampleProject();
 const reviewed = reviewEvaluation(evaluation, accuracyMetric).find((r) => r.testCase.id === '2')!;
 const opinion = (over: Partial<VerificationOpinion>): VerificationOpinion => ({ id: '2', expected: [], additional: [], new: [], ...over });
 const plan = (o: VerificationOpinion) => opinionPlan(reviewed.testCase, reviewed.effective!, o);
@@ -75,7 +75,7 @@ describe('opinionPlan', () => {
 });
 
 describe('applyOpinion', () => {
-  const decisions = evaluation.decisions['2']!;
+  const decisions = evaluation.testRun!.decisions['2']!;
 
   it('sets every answered item, hand-set ones included, with the source llm-approved, and approves the case', () => {
     const p = plan(opinion({ expected: [{ index: 1, found: true }, { index: 2, found: false }], additional: [{ index: 1, real: false }, { index: 2, real: false }] }));

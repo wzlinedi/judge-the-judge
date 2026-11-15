@@ -4,13 +4,14 @@ import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
-import { sampleEvaluation } from '../../helpers/fixtures';
+import { sampleProject, withRun } from '../../helpers/fixtures';
+import { withoutTestRun } from '../../../src/core/cases/test-run';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 /** Finalized; the clean case has a reply, the case with errors has none. */
 const finalized = (): AppState => {
-  const e = sampleEvaluation();
-  return { ...createState(), step: 'cases', evaluation: { ...e, replies: { '1': e.replies['1']! }, decisions: {} } };
+  const e = sampleProject();
+  return { ...createState(), step: 'cases', project: withRun(e, { replies: { '1': e.testRun!.replies['1']! }, decisions: {} }) };
 };
 const show = (state = finalized()) => render(<App ports={createFakePorts()} env={env} initialState={state} />);
 const open = (name: string) => fireEvent.click(within(screen.getAllByRole('row').find((r) => r.textContent?.includes(name)) as HTMLElement).getByRole('button', { name: 'Open' }));
@@ -28,8 +29,8 @@ describe('Edit expected errors', () => {
     open('Anna');
     expect(screen.getByRole('button', { name: 'Edit expected errors' })).toBeTruthy();
     expect(screen.queryByText(/has a reply/)).toBeNull();
-    const e = sampleEvaluation();
-    const draft: AppState = { ...createState(), step: 'cases', evaluation: { ...e, dataset: { ...e.dataset, finalized: false }, replies: {}, decisions: {} } };
+    const e = sampleProject();
+    const draft: AppState = { ...createState(), step: 'cases', project: withoutTestRun(e) };
     show(draft);
   });
 
@@ -77,9 +78,9 @@ describe('Edit expected errors', () => {
   });
 
   const withReplyAndMarks = (marks: string[]): AppState => {
-    const e = sampleEvaluation();
+    const e = sampleProject();
     const expected = Object.fromEntries(marks.map((id) => [id, { state: 'found', source: 'manual' }]));
-    return { ...createState(), step: 'cases', evaluation: { ...e, decisions: { '2': { expected, additional: {}, added_findings: [], approved: false, note: '' } } } } as AppState;
+    return { ...createState(), step: 'cases', project: withRun(e, { decisions: { '2': { expected: expected as never, additional: {}, added_findings: [], approved: false, note: '' } } }) } as AppState;
   };
   const flipDifficulties = (count: number) => {
     const items = JSON.parse(box().value);
@@ -105,8 +106,8 @@ describe('Edit expected errors', () => {
   });
 
   it('for a case with a reply Save asks first: the marks of changed and removed errors are dropped, and Cancel keeps everything', () => {
-    const e = sampleEvaluation();
-    const withReply: AppState = { ...createState(), step: 'cases', evaluation: { ...e, decisions: { '2': { expected: { e1: { state: 'found', source: 'manual' } }, additional: {}, added_findings: [], approved: false, note: '' } } } };
+    const e = sampleProject();
+    const withReply: AppState = { ...createState(), step: 'cases', project: withRun(e, { decisions: { '2': { expected: { e1: { state: 'found', source: 'manual' } }, additional: {}, added_findings: [], approved: false, note: '' } } }) };
     show(withReply);
     open('Anna + 2 errors');
     edit();

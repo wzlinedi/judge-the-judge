@@ -12,7 +12,7 @@ async function loadDemo(page: Page) {
   await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
-  await page.getByRole('button', { name: /3\s*Run/ }).click();
+  await page.getByRole('button', { name: /3\s*Test run/ }).click();
 }
 
 const goToResults = (page: Page) => page.getByRole('button', { name: /4\s*Results/ }).click();
@@ -87,8 +87,8 @@ test('three views, the read-only case view and the thresholds in Details', async
   await expect(view).toContainText('Case 4 ');
   await page.keyboard.press('Alt+ArrowLeft');
   await expect(view).toContainText('Case 3 ');
-  await view.getByRole('button', { name: 'Open on Run' }).click();
-  await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
+  await view.getByRole('button', { name: 'Open on Test run' }).click();
+  await expect(page.getByRole('button', { name: /3\s*Test run/ })).toHaveAttribute('aria-current', 'step');
   await expect(caseWindow(page)).toContainText('Case 3 ');
   await expect(caseWindow(page).getByRole('button', { name: 'Second opinion…' })).toBeVisible();
 });
@@ -107,7 +107,7 @@ test('the report is exported while cases are undecided and again when all are de
   expect(undecidedHtml).toContain('5 cases are not decided yet');
   await expect(page.getByRole('status', { name: 'Message' })).toContainText('5 cases are not decided yet');
 
-  await page.getByRole('button', { name: /3\s*Run/ }).click();
+  await page.getByRole('button', { name: /3\s*Test run/ }).click();
   await decideEverything(page);
   await goToResults(page);
   const [final] = await Promise.all([page.waitForEvent('download'), next(page).getByRole('button', { name: 'Export HTML report…' }).click()]);

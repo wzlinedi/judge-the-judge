@@ -4,19 +4,19 @@ import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { reviewEvaluation } from '../../../src/core/evaluation/results';
 import { verificationPrompt } from '../../../src/core/generation/verification-prompt';
-import { readEvaluation } from '../../../src/core/io/evaluation-file';
-import type { Evaluation } from '../../../src/core/model';
+import { readTestProject } from '../../../src/core/io/test-project-file';
+import type { TestProject } from '../../../src/core/model';
 import { CaseWindowHarness } from '../../helpers/case-window-harness';
 import { accuracyMetric } from '../../helpers/fixtures';
 
-const loaded = readEvaluation(readFileSync('examples/demo/evaluation.json', 'utf8'));
+const loaded = readTestProject(readFileSync('examples/demo/test-project.json', 'utf8'));
 if (!loaded.ok) throw new Error('demo not readable');
-const demo = loaded.value.evaluation;
+const demo = loaded.value.project;
 const opinions = JSON.parse(readFileSync('examples/demo/opinions.json', 'utf8')) as Record<string, { opinion: unknown }>;
 const opinionText = (id: string) => JSON.stringify(opinions[id]);
 
-const openWindow = (caseId: string, start: Evaluation = demo) => {
-  const seen: Evaluation[] = [];
+const openWindow = (caseId: string, start: TestProject = demo) => {
+  const seen: TestProject[] = [];
   render(<CaseWindowHarness start={start} caseId={caseId} seen={(e) => seen.push(e)} />);
   fireEvent.click(within(screen.getByRole('dialog', { name: /^Case / })).getByRole('button', { name: 'Second opinion…' }));
   return seen;
@@ -76,7 +76,7 @@ describe('the second-opinion window', () => {
 
   it('names a change that replaces a mark set by hand', () => {
     const e = structuredClone(demo);
-    e.decisions['17'] = { expected: { e2: { state: 'found', source: 'manual' } }, additional: {}, added_findings: [], approved: false, note: '' };
+    e.testRun!.decisions['17'] = { expected: { e2: { state: 'found', source: 'manual' } }, additional: {}, added_findings: [], approved: false, note: '' };
     openWindow('17', e);
     paste(opinionText('17'));
     const preview = within(dialog()).getByRole('list', { name: 'What will change' }).textContent ?? '';
@@ -86,7 +86,7 @@ describe('the second-opinion window', () => {
 
   it('shows an answer that agrees as "no change" and a new finding as "+ new finding"', () => {
     const e = structuredClone(demo);
-    e.decisions['17'] = { expected: { e2: { state: 'missed', source: 'manual' } }, additional: {}, added_findings: [], approved: false, note: '' };
+    e.testRun!.decisions['17'] = { expected: { e2: { state: 'missed', source: 'manual' } }, additional: {}, added_findings: [], approved: false, note: '' };
     openWindow('17', e);
     paste(JSON.stringify({ opinion: { id: '17', expected: [{ index: 2, found: false }], additional: [], new: [{ text: 'Bilbo is a hobbit', real: true, category: 'factual-error', difficulty: 'subtle' }] } }));
     const preview = within(dialog()).getByRole('list', { name: 'What will change' }).textContent ?? '';
@@ -101,8 +101,8 @@ describe('the second-opinion window', () => {
     fireEvent.click(apply());
     expect(screen.queryByRole('dialog', { name: 'Second opinion' })).toBeNull();
     const last = seen.at(-1)!;
-    expect(last.decisions['17']?.expected['e2']).toEqual({ state: 'missed', source: 'llm-approved' });
-    expect(last.decisions['17']?.approved).toBe(true);
+    expect(last.testRun!.decisions['17']?.expected['e2']).toEqual({ state: 'missed', source: 'llm-approved' });
+    expect(last.testRun!.decisions['17']?.approved).toBe(true);
     const e2 = caseWindow().querySelector('[data-expected="e2"]') as HTMLElement;
     expect(e2.textContent).toContain('LLM opinion, approved by the user');
   });

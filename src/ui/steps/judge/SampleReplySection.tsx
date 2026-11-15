@@ -9,7 +9,7 @@ import { TableScroll } from '../../components/TableScroll';
 /** The sample reply is read as soon as it changes; the fields of the last readable one stay while the text is broken (FR-011, SC-037). */
 export function SampleReplySection({ state, onEdit }: SectionProps) {
   const id = useId();
-  const set = state.evaluation.judge_set;
+  const set = state.project.judge_set;
   const sample = set.sample_reply ?? '';
   const last = useRef<RecognizedFields | null>(null);
   const read = sample.trim() === '' ? null : recognizeFields(sample);

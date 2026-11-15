@@ -4,18 +4,16 @@ import { testCasesVersion } from '../../core/cases/version';
 import { computeResults } from '../../core/evaluation/results';
 import { differenceNote, recompute } from '../../core/evaluation/recompute';
 import { resumePoint } from '../../core/evaluation/resume';
-import { readEvaluation, writeEvaluation } from '../../core/io/evaluation-file';
-import { readTestProject, writeTestProject } from '../../core/io/test-project-file';
+import { readTestProject, writeTestProject, type LoadedTestProject, type TestProjectMeta } from '../../core/io/test-project-file';
 import { judgeVersion } from '../../core/judge/version';
 import type { Problem } from '../../core/model';
 import { metricFor, registerEmbeddedMetric, sessionRegistry } from '../metrics';
 import { findMetric } from '../../core/metrics/registry';
-import type { Ports } from '../ports/types';
+import type { FileHandleLike, Ports } from '../ports/types';
 import {
-  applyLoadedEvaluation, applyLoadedTestProject,
-  saveEvaluation as storeSaveEvaluation, saveEvaluationAs as storeSaveEvaluationAs,
+  applyLoadedTestProject,
   saveTestProject as storeSaveTestProject, saveTestProjectAs as storeSaveTestProjectAs,
-  type ActionResult, type AppState,
+  type ActionResult, type AppState, type LoadMode,
 } from '../store';
 
 /** What the actions need from the page: the clock and the tool version (the core has neither). */
@@ -26,29 +24,29 @@ export interface FileEnv {
 
 export interface LoadResult {
   state: AppState;
-  outcome: 'loaded' | 'cancelled' | 'invalid';
+  outcome: 'loaded' | 'cancelled' | 'invalid' | 'needs_choice';
   /** Said to the user: what is wrong, or the notes of a file that loaded. */
   message?: string;
   /** The problems of an invalid file, each with its place. */
   problems?: Problem[];
   notes: string[];
+  /** Set with 'needs_choice': the file waits for "Load with the test run" or "Load the test project only". */
+  pending?: PendingLoad;
 }
 
-const serializeEvaluation = (env: FileEnv) => async (state: AppState): Promise<string> =>
-  writeEvaluation(state.evaluation, computeResults(state.evaluation, metricFor(state.evaluation.metric.id)), {
-    now: env.now(),
-    toolVersion: env.toolVersion,
-    judgeVersion: await judgeVersion(state.evaluation.judge_set),
-    testCasesVersion: await testCasesVersion(state.evaluation.dataset.cases),
-  });
+const metaOf = async (env: FileEnv, state: AppState): Promise<TestProjectMeta> => ({
+  now: env.now(),
+  toolVersion: env.toolVersion,
+  judgeVersion: await judgeVersion(state.project.judge_set),
+  testCasesVersion: await testCasesVersion(state.project.dataset.cases),
+});
 
-const serializeTestProject = (env: FileEnv) => async (state: AppState): Promise<string> =>
-  writeTestProject(state.evaluation, { toolVersion: env.toolVersion, testCasesVersion: await testCasesVersion(state.evaluation.dataset.cases) });
+/** The whole test project, with its test run and its results when the test run has started: one file (FR-020). */
+const serialize = (env: FileEnv) => async (state: AppState): Promise<string> =>
+  writeTestProject(state.project, state.project.testRun ? computeResults(state.project, metricFor(state.project.metric.id)) : null, await metaOf(env, state));
 
-export const saveEvaluation = (state: AppState, ports: Ports, env: FileEnv): Promise<ActionResult> => storeSaveEvaluation(state, ports, serializeEvaluation(env));
-export const saveEvaluationAs = (state: AppState, ports: Ports, env: FileEnv): Promise<ActionResult> => storeSaveEvaluationAs(state, ports, serializeEvaluation(env));
-export const saveTestProject = (state: AppState, ports: Ports, env: FileEnv): Promise<ActionResult> => storeSaveTestProject(state, ports, serializeTestProject(env));
-export const saveTestProjectAs = (state: AppState, ports: Ports, env: FileEnv): Promise<ActionResult> => storeSaveTestProjectAs(state, ports, serializeTestProject(env));
+export const saveTestProject = (state: AppState, ports: Ports, env: FileEnv): Promise<ActionResult> => storeSaveTestProject(state, ports, serialize(env));
+export const saveTestProjectAs = (state: AppState, ports: Ports, env: FileEnv): Promise<ActionResult> => storeSaveTestProjectAs(state, ports, serialize(env));
 
 function describeProblems(problems: readonly Problem[]): string {
   return problems
@@ -62,45 +60,66 @@ function joinNotes(notes: readonly string[], lead: string): string | undefined {
 
 /** Where the loaded work continues: the first step with unfinished work (FR-073). The case window opens only on Continue. */
 function atResumePoint(state: AppState): AppState {
-  const point = resumePoint(state.evaluation, metricFor(state.evaluation.metric.id));
+  const point = resumePoint(state.project, metricFor(state.project.metric.id));
   return { ...state, step: point.step, openCase: null };
 }
 
-export async function loadEvaluation(state: AppState, ports: Ports, _env?: FileEnv): Promise<LoadResult> {
-  const picked = await ports.opener.open();
-  if (!picked) return { state, outcome: 'cancelled', notes: [] };
-  const read = readEvaluation(picked.text);
-  if (!read.ok) return { state, outcome: 'invalid', message: describeProblems(read.problems), problems: read.problems, notes: [] };
-  const metricId = read.value.evaluation.metric.id;
-  if (findMetric(sessionRegistry(), metricId) === undefined) {
-    const message = `This evaluation uses the metric "${metricId}", which is not loaded. Load the test project or the metric file that has it, then load the evaluation again.`;
-    return { state, outcome: 'invalid', message, problems: [{ message }], notes: [] };
-  }
-  ports.evaluationTarget.useLoaded(picked.handle);
-  // Recomputing is how a file is audited: the numbers it stored must follow from what it holds (SC-003).
-  const { evaluation } = read.value;
-  const checked = recompute(read.value, metricFor(evaluation.metric.id), {
-    judgeVersion: await judgeVersion(evaluation.judge_set),
-    testCasesVersion: await testCasesVersion(evaluation.dataset.cases),
-  });
-  const next = atResumePoint(applyLoadedEvaluation(state, evaluation, ports, checked.differences));
-  const warning = differenceNote(checked.differences);
-  const notes = warning === null ? read.notes : [...read.notes, warning];
-  return { state: next, outcome: 'loaded', message: joinNotes(notes, 'The evaluation was loaded.'), notes };
+/** A file that holds a test run waits here until the user chooses how to load it; nothing is applied before (FR-076). */
+export interface PendingLoad {
+  read: LoadedTestProject;
+  /** What the reader said about the file (for example an upgrade from version 1). */
+  notes: string[];
+  /** The handle of a file from the picker; a dropped file has none and is never remembered. */
+  handle?: FileHandleLike;
+  fileName: string;
 }
 
-export async function loadTestProject(state: AppState, ports: Ports, _env?: FileEnv): Promise<LoadResult> {
-  const picked = await ports.opener.open();
-  if (!picked) return { state, outcome: 'cancelled', notes: [] };
-  const read = readTestProject(picked.text, (id) => findMetric(sessionRegistry(), id) !== undefined);
+export type LoadChoice = LoadMode;
+
+/** A file the user dropped on the page: its name and its text. */
+export interface DroppedFile {
+  name: string;
+  text: string;
+}
+
+/**
+ * The order is: the picker (or the dropped file), validation of the whole file, then the question when the file holds a test run.
+ * The unsaved-work question comes before this call. An invalid file changes nothing and is explained here, before any question.
+ */
+export async function loadTestProject(state: AppState, ports: Ports, _env?: FileEnv, dropped?: DroppedFile): Promise<LoadResult> {
+  const picked = dropped ? null : await ports.opener.open();
+  if (!dropped && !picked) return { state, outcome: 'cancelled', notes: [] };
+  const text = dropped ? dropped.text : picked!.text;
+  const read = readTestProject(text, (id) => findMetric(sessionRegistry(), id) !== undefined);
   if (!read.ok) return { state, outcome: 'invalid', message: describeProblems(read.problems), problems: read.problems, notes: [] };
-  const metric = read.value.evaluation.metric;
+  const metric = read.value.project.metric;
   registerEmbeddedMetric(metric);
   if (findMetric(sessionRegistry(), metric.id) === undefined) {
     const message = `This test project uses the metric "${metric.id}", which is not loaded, and the file has no definition of it.`;
     return { state, outcome: 'invalid', message, problems: [{ message }], notes: [] };
   }
-  ports.testProjectTarget.useLoaded(picked.handle);
-  const next = atResumePoint(applyLoadedTestProject(state, read.value.evaluation, ports));
-  return { state: next, outcome: 'loaded', message: joinNotes(read.notes, 'The test project was loaded.'), notes: read.notes };
+  const pending: PendingLoad = { read: read.value, notes: read.notes, handle: picked?.handle, fileName: dropped ? dropped.name : picked!.handle.name };
+  if (read.value.hasTestRun) return { state, outcome: 'needs_choice', pending, notes: read.notes };
+  return finishLoad(state, ports, pending, 'with');
+}
+
+/** Applies a file after the choice. A file with no test run is loaded as it is and its file is remembered. */
+export async function finishLoad(state: AppState, ports: Ports, pending: PendingLoad, choice: LoadChoice): Promise<LoadResult> {
+  const project = pending.read.project;
+  // A file with no test run is loaded as it is. A file with one is 'with' or 'only', as chosen: 'only' forgets the file.
+  const mode: LoadMode = !pending.read.hasTestRun || choice === 'with' ? 'with' : 'only';
+  if (pending.handle !== undefined && mode === 'with') ports.testProjectTarget.useLoaded(pending.handle);
+  else ports.testProjectTarget.forget();
+  // Recomputing is how a file is audited: the numbers it stored must follow from what it holds (SC-003).
+  const checked = mode === 'with' && pending.read.hasTestRun
+    ? recompute(pending.read, metricFor(project.metric.id), {
+        judgeVersion: await judgeVersion(project.judge_set),
+        testCasesVersion: await testCasesVersion(project.dataset.cases),
+      })
+    : null;
+  const differences = checked?.differences ?? [];
+  const next = atResumePoint(applyLoadedTestProject(state, project, ports, mode, differences));
+  const warning = differenceNote(differences);
+  const notes = warning === null ? pending.notes : [...pending.notes, warning];
+  return { state: next, outcome: 'loaded', message: joinNotes(notes, 'The test project was loaded.'), notes };
 }

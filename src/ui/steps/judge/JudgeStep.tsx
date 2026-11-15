@@ -13,7 +13,7 @@ export interface JudgeStepProps {
 
 /** One judge set: prompt, sample reply and rules. No welcome section and no buttons besides the rule ones (FR-088). */
 export function JudgeStep({ state, onEdit }: JudgeStepProps) {
-  const warnings = readabilityWarnings(state.evaluation.judge_set);
+  const warnings = readabilityWarnings(state.project.judge_set);
   return (
     <div class="judge-step">
       {warnings.length > 0 ? (
@@ -28,7 +28,7 @@ export function JudgeStep({ state, onEdit }: JudgeStepProps) {
       <PromptSection state={state} onEdit={onEdit} />
       <SampleReplySection state={state} onEdit={onEdit} />
       <RulesSection state={state} onEdit={onEdit} />
-      {countingModeOf(state.evaluation.judge_set) === 'per_case' ? (
+      {countingModeOf(state.project.judge_set) === 'per_case' ? (
         <p class="notice" role="status" aria-label="Way of counting">
           This judge is evaluated per case: every rule uses only fields outside any list, so it gives one verdict for the whole text. A flagged reply makes every expected error of the case found, and the Summary counts cases.
         </p>

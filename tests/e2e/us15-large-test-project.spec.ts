@@ -1,6 +1,7 @@
 // User Story 15: browse a large test project (FR-025, FR-036, SC-018; quickstart "Performance checks").
 import { expect, test, type Page } from '@playwright/test';
 import { installMemoryFiles } from '../helpers/memory-files';
+import { loadTestProject, TEST_RUN_STEP } from '../helpers/test-run-flow';
 import { CASE_COUNT, make500Cases } from './fixtures/make-500-cases';
 
 const SECOND = 2000;
@@ -23,14 +24,10 @@ async function within(action: () => Promise<unknown>, shown: () => Promise<unkno
 async function openLarge(page: Page): Promise<number> {
   const memory = await installMemoryFiles(page);
   memory.files.set('large.json', large.text);
-  memory.chooseOpenName('large.json');
   await page.goto('/');
   const took = await within(
-    async () => {
-      await page.getByRole('button', { name: 'More', exact: true }).click();
-      await page.getByRole('menuitem', { name: 'Load evaluation…' }).click();
-    },
-    () => expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step'),
+    () => loadTestProject(page, memory, 'large.json', 'with'),
+    () => expect(page.getByRole('button', { name: TEST_RUN_STEP })).toHaveAttribute('aria-current', 'step'),
   );
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
   return took;

@@ -3,33 +3,33 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/preact';
 import { createState } from '../../../src/app/store';
 import { computeResults, reviewEvaluation } from '../../../src/core/evaluation/results';
-import type { Evaluation } from '../../../src/core/model';
+import type { TestProject } from '../../../src/core/model';
 import { JudgeStep } from '../../../src/ui/steps/judge/JudgeStep';
 import { ResultsStep } from '../../../src/ui/steps/results/ResultsStep';
 import { CaseWindowHarness } from '../../helpers/case-window-harness';
-import { accuracyJudgeSet, accuracyMetric, biasVerdictMetric, verdictEvaluation } from '../../helpers/fixtures';
+import { accuracyJudgeSet, accuracyMetric, biasVerdictMetric, verdictProject, withRun } from '../../helpers/fixtures';
 
-const show = (e: Evaluation, metric = biasVerdictMetric) =>
-  render(<ResultsStep results={computeResults(e, metric)} evaluation={e} reviewed={reviewEvaluation(e, metric)} onRerun={vi.fn()} onExport={vi.fn()} onThreshold={vi.fn()} onOpenCase={vi.fn()} />);
+const show = (e: TestProject, metric = biasVerdictMetric) =>
+  render(<ResultsStep results={computeResults(e, metric)} evaluation={e} reviewed={reviewEvaluation(e, metric)} onExport={vi.fn()} onThreshold={vi.fn()} onOpenCase={vi.fn()} />);
 const tab = (name: string) => fireEvent.click(screen.getByRole('tab', { name }));
 const win = () => screen.getByRole('dialog', { name: /^Case / });
 
 describe('the Judge step', () => {
   it('says the judge is evaluated per case when every rule uses only fields outside any list', () => {
-    render(<JudgeStep state={{ ...createState(), evaluation: verdictEvaluation() }} onEdit={() => {}} />);
+    render(<JudgeStep state={{ ...createState(), project: verdictProject() }} onEdit={() => {}} />);
     expect(screen.getByText(/evaluated per case/i)).toBeTruthy();
     expect(screen.getByText(/one verdict for the whole text/i)).toBeTruthy();
   });
 
   it('says nothing of the kind for a judge that lists its findings', () => {
-    const e = { ...verdictEvaluation(), judge_set: accuracyJudgeSet() };
-    render(<JudgeStep state={{ ...createState(), evaluation: e }} onEdit={() => {}} />);
+    const e = { ...verdictProject(), judge_set: accuracyJudgeSet() };
+    render(<JudgeStep state={{ ...createState(), project: e }} onEdit={() => {}} />);
     expect(screen.queryByText(/evaluated per case/i)).toBeNull();
   });
 });
 
 describe('the case window of Run', () => {
-  const open = (caseId: string) => render(<CaseWindowHarness start={verdictEvaluation()} caseId={caseId} />);
+  const open = (caseId: string) => render(<CaseWindowHarness start={verdictProject()} caseId={caseId} />);
 
   it('says the judge is evaluated per case, and whether the text was flagged', () => {
     open('1');
@@ -63,20 +63,20 @@ describe('the case window of Run', () => {
   });
 
   it('says nothing about per case for a judge that lists its findings', () => {
-    render(<CaseWindowHarness start={{ ...verdictEvaluation(), judge_set: accuracyJudgeSet() }} caseId="3" />);
+    render(<CaseWindowHarness start={{ ...verdictProject(), judge_set: accuracyJudgeSet() }} caseId="3" />);
     expect(win().textContent).not.toMatch(/evaluated per case/);
   });
 });
 
 describe('the Summary', () => {
   it('says in one sentence that cases were counted, and shows no per-error counts', () => {
-    show(verdictEvaluation());
+    show(verdictProject());
     expect(screen.getByText(/one verdict for the whole text, so the tool counts cases, not errors/i)).toBeTruthy();
     for (const name of ['Expected errors', 'Additional findings', 'Subtle errors']) expect(screen.queryByRole('group', { name })).toBeNull();
   });
 
   it('counts cases with errors (flagged, not flagged) and clean cases (flagged wrongly, not flagged)', () => {
-    show(verdictEvaluation());
+    show(verdictProject());
     const withErrors = screen.getByRole('group', { name: 'Cases with expected errors' }).textContent ?? '';
     expect(withErrors).toMatch(/Decided\s*2/);
     expect(withErrors).toMatch(/Flagged\s*1/);
@@ -88,7 +88,7 @@ describe('the Summary', () => {
   });
 
   it('names the two rates "Case detection rate" and "Clean-case false-positive rate"', () => {
-    show(verdictEvaluation());
+    show(verdictProject());
     const rates = screen.getByRole('group', { name: 'Rates' }).textContent ?? '';
     expect(rates).toMatch(/Case detection rate\s*50%\s*\(1 of 2\)/);
     expect(rates).toMatch(/Clean-case false-positive rate\s*33\.3%\s*\(1 of 3\)/);
@@ -96,13 +96,13 @@ describe('the Summary', () => {
   });
 
   it('counts the test size in cases with errors and clean cases', () => {
-    show(verdictEvaluation());
+    show(verdictProject());
     expect(screen.getByRole('region', { name: 'Test size' }).textContent).toMatch(/Decided so far: 2 of 30 cases with errors, 3 of 10 clean cases/);
     expect(screen.getByRole('region', { name: 'Overall result' }).textContent).toContain('The judge was evaluated per case.');
   });
 
   it('shows the two case-level thresholds in Details', () => {
-    show(verdictEvaluation());
+    show(verdictProject());
     const details = screen.getByText('Details').closest('details') as HTMLElement;
     expect((within(details).getByLabelText('Case detection rate: at least (%)') as HTMLInputElement).value).toBe('80');
     expect((within(details).getByLabelText('Clean-case false-positive rate: at most (%)') as HTMLInputElement).value).toBe('10');
@@ -112,7 +112,7 @@ describe('the Summary', () => {
 
 describe('Error analysis per case', () => {
   it('counts cases once in each category and difficulty, counts only, with one sentence why', () => {
-    show(verdictEvaluation());
+    show(verdictProject());
     tab('Error analysis');
     const byCategory = screen.getByRole('table', { name: 'By category' });
     const row = (name: string) => [...within(byCategory).getByRole('cell', { name }).closest('tr')!.querySelectorAll('td')].map((c) => c.textContent);
@@ -127,14 +127,14 @@ describe('Error analysis per case', () => {
 
 describe('a correction of the rules that switched the way of counting', () => {
   it('names the way used before and after', () => {
-    const e: Evaluation = { ...verdictEvaluation(), reply_counted_per: 'case', judge_set: accuracyJudgeSet() };
+    const e: TestProject = { ...withRun(verdictProject(), { reply_counted_per: 'case' }), judge_set: accuracyJudgeSet() };
     show(e, accuracyMetric);
     const notice = screen.getByRole('region', { name: 'Notices' }).textContent ?? '';
     expect(notice).toMatch(/counted per case when the replies were received and is counted per expected error now/);
   });
 
   it('has no such notice when the way did not change', async () => {
-    show({ ...verdictEvaluation(), reply_counted_per: 'case', reply_judge_version: undefined });
+    show(withRun(verdictProject(), { reply_counted_per: 'case', reply_judge_version: undefined }));
     await waitFor(() => expect(screen.queryByText(/counted per case when/)).toBeNull());
   });
 });

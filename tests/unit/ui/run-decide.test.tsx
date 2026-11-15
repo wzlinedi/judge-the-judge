@@ -4,17 +4,17 @@ import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { useState } from 'preact/hooks';
 import { createState } from '../../../src/app/store';
 import { reviewEvaluation } from '../../../src/core/evaluation/results';
-import { readEvaluation } from '../../../src/core/io/evaluation-file';
-import type { Evaluation } from '../../../src/core/model';
+import { readTestProject } from '../../../src/core/io/test-project-file';
+import type { TestProject } from '../../../src/core/model';
 import { CaseWindow } from '../../../src/ui/windows/case-window/CaseWindow';
 import { RunStep } from '../../../src/ui/steps/run/RunStep';
 import { accuracyMetric } from '../../helpers/fixtures';
 
-const loaded = readEvaluation(readFileSync('examples/demo/evaluation.json', 'utf8'));
+const loaded = readTestProject(readFileSync('examples/demo/test-project.json', 'utf8'));
 if (!loaded.ok) throw new Error('demo not readable');
-const demo = loaded.value.evaluation;
+const demo = loaded.value.project;
 
-function Window({ caseId, start = demo, onlyAwaiting = false }: { caseId: string; start?: Evaluation; onlyAwaiting?: boolean }) {
+function Window({ caseId, start = demo, onlyAwaiting = false }: { caseId: string; start?: TestProject; onlyAwaiting?: boolean }) {
   const [evaluation, setEvaluation] = useState(start);
   const [current, setCurrent] = useState(caseId);
   const [only, setOnly] = useState(onlyAwaiting);

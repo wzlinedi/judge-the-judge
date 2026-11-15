@@ -3,14 +3,14 @@ import { NO_ANSWER, opinionPlan, type OpinionPlan, type PlannedMark } from '../.
 import type { ReviewedCase } from '../../../core/evaluation/results';
 import { verificationPrompt } from '../../../core/generation/verification-prompt';
 import { readOpinion } from '../../../core/io/opinions';
-import type { Evaluation } from '../../../core/model';
+import type { TestProject } from '../../../core/model';
 import { CopyButton } from '../../components/CopyButton';
 import { Dialog } from '../../components/Dialog';
 import { JsonBox } from '../../components/JsonBox';
 import { labels } from '../../labels';
 
 export interface SecondOpinionWindowProps {
-  evaluation: Evaluation;
+  evaluation: TestProject;
   reviewed: ReviewedCase;
   onApply: (plan: OpinionPlan) => void;
   onClose: () => void;

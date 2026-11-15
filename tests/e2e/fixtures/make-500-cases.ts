@@ -1,6 +1,6 @@
-// A generated evaluation of 500 test cases for the performance check of FR-036 and SC-018 (quickstart "Performance checks").
-// Built from the demo evaluation: each case copies one of its 20 cases, with a number added to its name and fields so that
-// no two cases are alike. Every second case has injected errors, every fourth case has a reply, and no decision is made.
+// A generated test project of 500 test cases, with a test run, for the performance check of FR-036 and SC-018 (quickstart "Performance checks").
+// Built from the demo test project (schema version 2, T289): each case copies one of its 20 cases, with a number added to its name and
+// fields so that no two cases are alike. Every second case has injected errors, every fourth case has a reply, and no decision is made.
 import { readFileSync } from 'node:fs';
 
 interface DemoCase {
@@ -10,10 +10,8 @@ interface DemoCase {
   expected_errors: unknown[];
 }
 interface Demo {
-  dataset: { name: string; version?: string; finalized: boolean; cases: DemoCase[] };
-  replies: Record<string, unknown>;
-  decisions: Record<string, unknown>;
-  results: unknown;
+  dataset: { name: string; version?: string; cases: DemoCase[] };
+  test_run: { replies: Record<string, unknown>; decisions: Record<string, unknown>; results: unknown; [key: string]: unknown };
   [key: string]: unknown;
 }
 
@@ -28,7 +26,7 @@ export interface Large {
 }
 
 export function make500Cases(): Large {
-  const demo = JSON.parse(readFileSync('examples/demo/evaluation.json', 'utf8')) as Demo;
+  const demo = JSON.parse(readFileSync('examples/demo/test-project.json', 'utf8')) as Demo;
   const withErrors = demo.dataset.cases.filter((c) => c.expected_errors.length > 0);
   const clean = demo.dataset.cases.filter((c) => c.expected_errors.length === 0);
   const cases: DemoCase[] = [];
@@ -48,11 +46,11 @@ export function make500Cases(): Large {
     });
     if (from.expected_errors.length > 0) injected++;
     if (i % 4 === 0) {
-      replies[id] = demo.replies[from.id] ?? Object.values(demo.replies)[0];
+      replies[id] = demo.test_run.replies[from.id] ?? Object.values(demo.test_run.replies)[0];
       replied++;
     } else if (from.expected_errors.length > 0) injectedWithoutReply++;
   }
   const { version: _version, ...dataset } = demo.dataset; // the content version is recomputed on load
-  const file = { ...demo, dataset: { ...dataset, cases }, replies, decisions: {}, results: {} };
+  const file = { ...demo, dataset: { ...dataset, cases }, test_run: { ...demo.test_run, replies, decisions: {}, results: {} } };
   return { text: JSON.stringify(file), withInjectedErrors: injected, withReply: replied, injectedWithoutReply };
 }

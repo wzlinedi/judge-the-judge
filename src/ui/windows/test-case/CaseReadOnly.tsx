@@ -1,5 +1,6 @@
 import { useRef, useState } from 'preact/hooks';
 import type { AppState } from '../../../app/store';
+import { repliesOf } from '../../../core/cases/test-run';
 import { composePrompt } from '../../../core/judge/compose';
 import { CaseWindowFrame } from '../../components/CaseWindowFrame';
 import { PromptButtons } from '../../components/PromptButtons';
@@ -23,7 +24,8 @@ export function CaseReadOnly({ state, caseId, onNavigate, onApply, onClose }: Ca
   const [editing, setEditing] = useState(false);
   const textRef = useRef<HTMLDivElement>(null);
   const { strong, shown, show: showInText } = useShowIssue(textRef);
-  const { dataset, replies, judge_set } = state.evaluation;
+  const { dataset, judge_set } = state.project;
+  const replies = repliesOf(state.project);
   const index = dataset.cases.findIndex((c) => c.id === caseId);
   const testCase = dataset.cases[index];
   if (!testCase) return null;

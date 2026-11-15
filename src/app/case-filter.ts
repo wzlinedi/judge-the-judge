@@ -1,6 +1,7 @@
 // The Test cases table: the row of each case, and the search, filters, sorting and count that shape what is shown
 // (FR-025, FR-036; User Story 15). Pure: the view is data, the functions return new lists.
 import { testProjectFeedback } from '../core/cases/feedback';
+import { repliesOf } from '../core/cases/test-run';
 import { normalizeName } from '../core/cases/validate';
 import { composePrompt } from '../core/judge/compose';
 import type { TestCase } from '../core/model';
@@ -35,8 +36,9 @@ export interface CaseRow {
 
 /** Every case with its reply state and warnings, computed once for the whole test project (not once per case). */
 export function caseRows(state: AppState): CaseRow[] {
-  const { dataset, replies, judge_set } = state.evaluation;
-  const { duplicates } = testProjectFeedback(state.evaluation);
+  const { dataset, judge_set } = state.project;
+  const replies = repliesOf(state.project);
+  const { duplicates } = testProjectFeedback(state.project);
   const twins = new Map<string, string>();
   for (const ids of duplicates) for (const id of ids) twins.set(id, ids.find((other) => other !== id) ?? id);
   const byName = new Map<string, string[]>();

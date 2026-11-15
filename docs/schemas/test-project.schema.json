@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "test-project.schema.json",
   "title": "Judge the Judge: test project file",
-  "description": "The judge set, the error catalog, the test cases, the metric and the thresholds: one test, used for every run (file-formats.md, section 1).",
+  "description": "The judge set, the error catalog, the test cases, the metric and the thresholds and, once the test run has started, the test_run section with the replies, decisions and results (file-formats.md, sections 1 and 5).",
   "type": "object",
   "properties": {
     "format": {
@@ -11,7 +11,7 @@
     },
     "schema_version": {
       "type": "number",
-      "const": 1
+      "const": 2
     },
     "tool_version": {
       "type": "string"
@@ -141,10 +141,6 @@
         },
         "version": {
           "type": "string"
-        },
-        "finalized": {
-          "default": false,
-          "type": "boolean"
         },
         "cases": {
           "maxItems": 500,
@@ -382,6 +378,200 @@
       "required": [
         "rules"
       ]
+    },
+    "test_run": {
+      "type": "object",
+      "properties": {
+        "saved": {
+          "type": "string"
+        },
+        "judge_version": {
+          "type": "string"
+        },
+        "reply_judge_version": {
+          "type": "string"
+        },
+        "reply_counted_per": {
+          "type": "string",
+          "enum": [
+            "expected_error",
+            "case"
+          ]
+        },
+        "rules_corrected_after_replies": {
+          "type": "boolean"
+        },
+        "model_note": {
+          "default": "",
+          "type": "string"
+        },
+        "replies": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "prompt": {
+                "type": "string"
+              },
+              "reply": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "prompt",
+              "reply"
+            ]
+          }
+        },
+        "decisions": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "expected": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "state": {
+                      "type": "string",
+                      "enum": [
+                        "found",
+                        "missed",
+                        "ignored"
+                      ]
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "manual",
+                        "llm-approved"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "state",
+                    "source"
+                  ]
+                }
+              },
+              "additional": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "state": {
+                      "type": "string",
+                      "enum": [
+                        "real_error",
+                        "false_positive",
+                        "ignored"
+                      ]
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "manual",
+                        "llm-approved"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "state",
+                    "source"
+                  ]
+                }
+              },
+              "added_findings": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    },
+                    "category": {
+                      "type": "string"
+                    },
+                    "difficulty": {
+                      "type": "string",
+                      "enum": [
+                        "obvious",
+                        "subtle"
+                      ]
+                    },
+                    "from_opinion": {
+                      "type": "boolean"
+                    },
+                    "state": {
+                      "type": "string",
+                      "enum": [
+                        "real_error",
+                        "false_positive",
+                        "ignored"
+                      ]
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "manual",
+                        "llm-approved"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "state",
+                    "source"
+                  ]
+                }
+              },
+              "approved": {
+                "default": false,
+                "type": "boolean"
+              },
+              "note": {
+                "default": "",
+                "type": "string"
+              }
+            }
+          }
+        },
+        "minimum_sample": {
+          "type": "object",
+          "properties": {
+            "expected_errors": {
+              "type": "number"
+            },
+            "clean_cases": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "expected_errors",
+            "clean_cases"
+          ]
+        },
+        "results": {}
+      }
     }
   },
   "required": [

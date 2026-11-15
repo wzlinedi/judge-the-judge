@@ -2,6 +2,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { saveExpectedErrors, type CaseEdit } from '../../../app/actions/cases';
 import type { AppState } from '../../../app/store';
 import { checkExpectedErrorsJson, expectedErrorsToJson, planExpectedErrors } from '../../../core/cases/expected-errors';
+import { decisionsOf, repliesOf } from '../../../core/cases/test-run';
 import { Dialog } from '../../components/Dialog';
 import { JsonBox } from '../../components/JsonBox';
 import { labels } from '../../labels';
@@ -21,15 +22,15 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
  * checked as it changes; for a case with a reply Save asks first, because the marks of the changed and removed errors go.
  */
 export function ExpectedErrorsDialog({ state, caseId, onApply, onClose }: ExpectedErrorsDialogProps) {
-  const testCase = state.evaluation.dataset.cases.find((c) => c.id === caseId);
+  const testCase = state.project.dataset.cases.find((c) => c.id === caseId);
   const initial = useMemo(() => (testCase ? expectedErrorsToJson(testCase) : ''), [testCase]);
   const [text, setText] = useState(initial);
   const [asking, setAsking] = useState(false);
   if (!testCase) return null;
 
   const check = checkExpectedErrorsJson(text, { ...contextOf(state), mode: 'correct', original: testCase });
-  const plan = check.errors ? planExpectedErrors(testCase.expected_errors, check.errors, state.evaluation.decisions[caseId]) : undefined;
-  const hasReply = state.evaluation.replies[caseId] !== undefined;
+  const plan = check.errors ? planExpectedErrors(testCase.expected_errors, check.errors, decisionsOf(state.project)[caseId]) : undefined;
+  const hasReply = repliesOf(state.project)[caseId] !== undefined;
   const why = !plan ? 'Fix the problems listed under the JSON to save.' : plan.nothing ? 'Change the JSON to save.' : undefined;
 
   const save = () => {

@@ -3,8 +3,9 @@ export const labels = {
   // File menu and header
   more: 'More',
   help: 'Help',
-  loadEvaluation: 'Load evaluation…',
   loadTestProject: 'Load test project…',
+  loadWithTestRun: 'Load with the test run',
+  loadTestProjectOnly: 'Load the test project only',
   saveTestProject: 'Save test project',
   saveTestProjectAs: 'Save test project as…',
   importTestCases: 'Import test cases…',
@@ -12,7 +13,9 @@ export const labels = {
   loadExample: 'Load demo…',
   loadMetricDefinition: 'Load metric definition…',
   startNewEvaluation: 'New evaluation',
-  // Saving the evaluation (Run only) and the guard
+  saveTestProjectFirst: 'Save test project first',
+  // Legacy: the one-file flow has no evaluation file. Help still reads these keys; they go with the Help update (T225).
+  loadEvaluation: 'Load evaluation…',
   saveEvaluation: 'Save evaluation',
   saveEvaluationAs: 'Save evaluation as…',
   saveEvaluationFirst: 'Save evaluation first',
@@ -40,8 +43,11 @@ export const labels = {
   open: 'Open',
   /** No button has this label any more (T218). It stays only because the Help still quotes it; the Help update at the end removes both (T225). */
   clone: 'Clone',
+  startTestRun: 'Start test run',
+  // Old names kept only because Help (src/ui/help) still reads them; removed with the Help update (T225).
   finalizeTestCases: 'Finalize test cases…',
   editTestCases: 'Reopen test cases',
+  editJudgeAndRunAgain: 'Run again with a new judge…',
   downloadExampleFile: 'Download example file',
   // Test case window
   pasteJson: 'From JSON',
@@ -82,7 +88,6 @@ export const labels = {
   testCaseList: 'Test case list',
   exportHtmlReport: 'Export HTML report…',
   loadCheckSettings: 'Load check settings…',
-  editJudgeAndRunAgain: 'Run again with a new judge…',
 } as const;
 
 export type LabelKey = keyof typeof labels;

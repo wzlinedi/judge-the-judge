@@ -32,7 +32,7 @@ export function newDraft(state: AppState): InjectDraft {
 }
 
 function newRow(state: AppState, rows: readonly ErrorRow[]): ErrorRow {
-  const first = state.evaluation.judge_set.error_catalog[0]?.name;
+  const first = state.project.judge_set.error_catalog[0]?.name;
   return { id: rows.reduce((max, r) => Math.max(max, r.id), 0) + 1, category: first ?? '', isNew: first === undefined, difficulty: 'llm', description: '' };
 }
 
@@ -40,11 +40,11 @@ export const addRow = (state: AppState, draft: InjectDraft): InjectDraft => ({ .
 export const removeRow = (draft: InjectDraft, id: number): InjectDraft => ({ ...draft, rows: draft.rows.filter((r) => r.id !== id) });
 export const updateRow = (draft: InjectDraft, id: number, patch: Partial<Omit<ErrorRow, 'id'>>): InjectDraft => ({ ...draft, rows: draft.rows.map((r) => (r.id === id ? { ...r, ...patch } : r)) });
 
-export const cleanCasesOf = (state: AppState): TestCase[] => state.evaluation.dataset.cases.filter((c) => c.expected_errors.length === 0);
+export const cleanCasesOf = (state: AppState): TestCase[] => state.project.dataset.cases.filter((c) => c.expected_errors.length === 0);
 
 /** The cases "Base case" offers (T262): the clean cases, and the cases with errors, whose errors can be copied. */
 export function baseCasesOf(state: AppState): { clean: TestCase[]; withErrors: TestCase[] } {
-  const cases = state.evaluation.dataset.cases;
+  const cases = state.project.dataset.cases;
   return { clean: cases.filter((c) => c.expected_errors.length === 0), withErrors: cases.filter((c) => c.expected_errors.length > 0) };
 }
 
@@ -53,10 +53,10 @@ export function baseCasesOf(state: AppState): { clean: TestCase[]; withErrors: T
  * errors (still editable) and gives its own clean base, if it has one, as the base text; otherwise the LLM writes the whole case.
  */
 export function startFrom(state: AppState, draft: InjectDraft, caseId: string): InjectDraft {
-  const chosen = state.evaluation.dataset.cases.find((c) => c.id === caseId);
+  const chosen = state.project.dataset.cases.find((c) => c.id === caseId);
   if (!chosen) return { ...draft, from: '', base: '' };
   if (chosen.expected_errors.length === 0) return { ...draft, from: chosen.id, base: chosen.id };
-  const catalog = state.evaluation.judge_set.error_catalog;
+  const catalog = state.project.judge_set.error_catalog;
   const base = chosen.base !== undefined && cleanCasesOf(state).some((c) => c.id === chosen.base) ? chosen.base : '';
   const rows: ErrorRow[] = chosen.expected_errors.map((e, i) => {
     const category = e.category ?? catalog[0]?.name ?? '';
@@ -67,9 +67,9 @@ export function startFrom(state: AppState, draft: InjectDraft, caseId: string): 
 
 /** The one prompt for the user's LLM, rebuilt from the base and the rows (FR-040). */
 export function injectPrompt(state: AppState, draft: InjectDraft): string {
-  const base = draft.base === '' ? undefined : state.evaluation.dataset.cases.find((c) => c.id === draft.base);
+  const base = draft.base === '' ? undefined : state.project.dataset.cases.find((c) => c.id === draft.base);
   const errors: ErrorToPrepare[] = draft.rows.map((r) => ({ category: r.isNew ? normalizeCategoryName(r.category) : r.category.trim(), difficulty: r.difficulty, description: r.description }));
-  return injectErrorsPrompt({ judgeSet: state.evaluation.judge_set, base, errors });
+  return injectErrorsPrompt({ judgeSet: state.project.judge_set, base, errors });
 }
 
 /** The prompt in the box: the user's edit while there is one, otherwise the prompt built from the parts (T262). */

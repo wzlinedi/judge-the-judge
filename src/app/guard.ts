@@ -1,28 +1,27 @@
 // The unsaved-work guard (FR-051, FR-056).
-import type { Evaluation } from '../core/model';
+import { decisionsOf } from '../core/cases/test-run';
+import type { TestProject } from '../core/model';
 import type { AppState } from './store';
 
 export type GuardedAction =
   | 'load-test-project'
-  | 'load-evaluation'
   | 'load-example'
   | 'start-new-evaluation'
-  | 'edit-judge-and-run-again'
   | 'edit-test-cases';
 
 /** Actions that would discard unsaved work. "Edit test cases" keeps everything, so it is not here. */
-const DISCARDING: readonly GuardedAction[] = ['load-test-project', 'load-evaluation', 'load-example', 'start-new-evaluation', 'edit-judge-and-run-again'];
+const DISCARDING: readonly GuardedAction[] = ['load-test-project', 'load-example', 'start-new-evaluation'];
 
 export interface Guard {
   question: string;
-  choices: ['Save evaluation first', 'Discard', 'Cancel'];
+  choices: ['Save test project first', 'Discard', 'Cancel'];
 }
 
 export function guardFor(state: AppState, action: GuardedAction): Guard | null {
   if (!state.unsaved || !DISCARDING.includes(action)) return null;
   return {
     question: 'You have unsaved changes. What do you want to do with them?',
-    choices: ['Save evaluation first', 'Discard', 'Cancel'],
+    choices: ['Save test project first', 'Discard', 'Cancel'],
   };
 }
 
@@ -44,8 +43,8 @@ export function installBeforeUnload(target: Pick<Window, 'addEventListener' | 'r
 }
 
 /** Replacing a reply asks only when its case has decisions set by hand or from an applied opinion. */
-export function replaceNeedsQuestion(evaluation: Evaluation, caseId: string): { ask: boolean; count: number } {
-  const decisions = evaluation.decisions[caseId];
+export function replaceNeedsQuestion(evaluation: TestProject, caseId: string): { ask: boolean; count: number } {
+  const decisions = decisionsOf(evaluation)[caseId];
   if (!decisions) return { ask: false, count: 0 };
   const kept = (source: string) => source === 'manual' || source === 'llm-approved';
   const count =

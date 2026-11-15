@@ -1,5 +1,5 @@
 import type { AppState } from '../../../app/store';
-import { finalizeSummary } from '../../../core/cases/finalize';
+import { startSummary } from '../../../core/cases/start-summary';
 import { Dialog } from '../../components/Dialog';
 import { labels } from '../../labels';
 import { plural, TestSize } from './TestSize';
@@ -13,12 +13,12 @@ export interface FinalizeDialogProps {
 
 /** The summary shown before the test cases are fixed (FR-052): counts, balance, test size and every warning. Warnings do not stop it; an empty test project or prompt does. */
 export function FinalizeDialog({ open, state, onConfirm, onClose }: FinalizeDialogProps) {
-  const summary = finalizeSummary(state.evaluation);
+  const summary = startSummary(state.project);
   const f = summary.feedback;
   return (
     <Dialog
       open={open}
-      title="Finalize the test cases?"
+      title="Start the test run?"
       onClose={onClose}
       actions={
         <>
@@ -26,7 +26,7 @@ export function FinalizeDialog({ open, state, onConfirm, onClose }: FinalizeDial
             {labels.cancel}
           </button>
           <button type="button" class="primary" disabled={!summary.allowed} onClick={onConfirm}>
-            {labels.finalizeTestCases}
+            {labels.startTestRun}
           </button>
         </>
       }
@@ -42,8 +42,8 @@ export function FinalizeDialog({ open, state, onConfirm, onClose }: FinalizeDial
         </ul>
       ) : null}
       <p class="muted">
-        Once finalized, the judge prompt and the fields of every case are fixed, so that every reply is judged by the same prompt. You can still add test cases, correct the expected errors of a case without a reply, and correct the
-        reply mapping and the error rules. Until the first reply, {labels.editTestCases} opens everything again.
+        Once the test run has started, the judge prompt and the fields of every case are fixed, with no way back, so that every reply is judged by the same prompt. You can still add test cases, correct the expected errors of a case,
+        and correct the reply mapping and the error rules.
       </p>
     </Dialog>
   );

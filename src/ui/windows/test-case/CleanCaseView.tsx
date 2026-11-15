@@ -24,7 +24,7 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
   const [answer, setAnswer] = useState('');
   /** The prompt as the user edited it (T262); undefined while it follows Like case. */
   const [edited, setEdited] = useState<string | undefined>(undefined);
-  const { judge_set, dataset } = state.evaluation;
+  const { judge_set, dataset } = state.project;
   const clean = dataset.cases.filter((c) => c.expected_errors.length === 0);
   const likeCase = clean.find((c) => c.id === like);
   const built = cleanCasePrompt(judge_set, likeCase);

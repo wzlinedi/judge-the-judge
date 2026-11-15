@@ -1,6 +1,7 @@
 // The session state and its named actions (contracts/core-api.md, Application state).
 // Actions never change the old state: they return the next one. Derived values are never stored.
-import type { CheckConfiguration, Evaluation } from '../core/model';
+import { isStarted, withoutTestRun } from '../core/cases/test-run';
+import type { CheckConfiguration, TestProject } from '../core/model';
 import checksDefaults from '../core/metrics/builtin/checks.default.json';
 import type { Difference } from '../core/evaluation/recompute';
 import type { Ports, SaveResult, SaveTarget } from './ports/types';
@@ -17,61 +18,54 @@ export const DEFAULT_METRIC = {
 
 export interface AppState {
   step: StepId;
-  evaluation: Evaluation;
+  project: TestProject;
   /** The one unsaved flag (FR-051). Not stored in any file. */
   unsaved: boolean;
-  /** Replies saved since the last "Save evaluation" (FR-059). */
+  /** Replies saved since the last "Save test project" (FR-059). */
   repliesSinceSave: number;
   /** Remembered file names, shown in the header; the handles live in the ports. */
   testProjectFile: string | null;
-  evaluationFile: string | null;
   /** True once a file was loaded or saved, so the indicator can say "All changes saved". */
   hasFile: boolean;
   /** The case open in the case window of Run, if any. */
   openCase: string | null;
-  /** "Edit the judge and run again" opened the judge prompt for the next run; it closes with the first new reply (FR-074). */
-  judgeOpen: boolean;
   /**
    * What a loaded evaluation file said differently from what recomputing it gives (SC-003). It belongs to that one
    * evaluation: once any change makes a new evaluation, it no longer applies (see `recomputeDifferences`).
    */
-  loadCheck: { evaluation: Evaluation; differences: Difference[] } | null;
+  loadCheck: { project: TestProject; differences: Difference[] } | null;
 }
 
 /** The differences found on load, while the work is still exactly what was loaded. */
-export function recomputeDifferences(state: Pick<AppState, 'evaluation' | 'loadCheck'>): Difference[] {
-  return state.loadCheck !== null && state.loadCheck.evaluation === state.evaluation ? state.loadCheck.differences : [];
+export function recomputeDifferences(state: Pick<AppState, 'project' | 'loadCheck'>): Difference[] {
+  return state.loadCheck !== null && state.loadCheck.project === state.project ? state.loadCheck.differences : [];
 }
 
-export function emptyEvaluation(): Evaluation {
+export function emptyTestProject(): TestProject {
   return {
     judge_set: { prompt: '', reply_mapping: { finding_text: {} }, error_rules: [], error_catalog: [] },
-    dataset: { name: 'Untitled test cases', finalized: false, cases: [] },
+    dataset: { name: 'Untitled test cases', cases: [] },
     metric: structuredClone(DEFAULT_METRIC),
     checks: structuredClone(DEFAULT_CHECKS),
-    model_note: '',
-    replies: {},
-    decisions: {},
   };
 }
 
 export function createState(): AppState {
-  return { step: 'judge', evaluation: emptyEvaluation(), unsaved: false, repliesSinceSave: 0, testProjectFile: null, evaluationFile: null, hasFile: false, openCase: null, judgeOpen: false, loadCheck: null };
+  return { step: 'judge', project: emptyTestProject(), unsaved: false, repliesSinceSave: 0, testProjectFile: null, hasFile: false, openCase: null, loadCheck: null };
 }
 
 export function goToStep(state: AppState, step: StepId): AppState {
   return { ...state, step };
 }
 
-/** The judge prompt and the judged text are fixed once the test cases are finalized, except between "Edit the judge and run again" and the first new reply (FR-053, FR-074). */
-export function promptLocked(state: Pick<AppState, 'evaluation' | 'judgeOpen'>): boolean {
-  const { dataset, replies } = state.evaluation;
-  return dataset.finalized && !(state.judgeOpen && Object.keys(replies).length === 0);
+/** The judge prompt and the judged text are fixed once the test run has started, with no way back (FR-053). */
+export function promptLocked(state: Pick<AppState, 'project'>): boolean {
+  return isStarted(state.project);
 }
 
 /** Any change to the work: the one place that sets the unsaved flag. */
-export function edit(state: AppState, change: (evaluation: Evaluation) => Evaluation): AppState {
-  return { ...state, evaluation: change(state.evaluation), unsaved: true };
+export function edit(state: AppState, change: (evaluation: TestProject) => TestProject): AppState {
+  return { ...state, project: change(state.project), unsaved: true };
 }
 
 export function setPrompt(state: AppState, prompt: string): AppState {
@@ -109,34 +103,11 @@ async function write(target: SaveTarget, text: string, saveAs: boolean): Promise
   return saveAs ? target.saveAs(text) : target.save(text);
 }
 
-async function saveEvaluationWith(state: AppState, ports: Ports, serialize: Serializer, saveAs: boolean): Promise<ActionResult> {
-  const result = await write(ports.evaluationTarget, await serialize(state), saveAs);
-  if (result.status === 'saved') {
-    return { state: { ...state, unsaved: false, repliesSinceSave: 0, evaluationFile: result.fileName, hasFile: true }, outcome: 'saved' };
-  }
-  if (result.status === 'no_longer_writable') {
-    return { state: { ...state, evaluationFile: null }, outcome: result.status, message: NO_LONGER_WRITABLE };
-  }
-  return { state, outcome: result.status };
-}
-
-export function saveEvaluation(state: AppState, ports: Ports, serialize: Serializer): Promise<ActionResult> {
-  return saveEvaluationWith(state, ports, serialize, false);
-}
-
-export function saveEvaluationAs(state: AppState, ports: Ports, serialize: Serializer): Promise<ActionResult> {
-  return saveEvaluationWith(state, ports, serialize, true);
-}
-
 async function saveTestProjectWith(state: AppState, ports: Ports, serialize: Serializer, saveAs: boolean): Promise<ActionResult> {
   const result = await write(ports.testProjectTarget, await serialize(state), saveAs);
   if (result.status === 'saved') {
-    const hasReplies = Object.keys(state.evaluation.replies).length > 0;
-    // Only while no reply exists does the test project hold all the work (FR-051).
-    const next = { ...state, testProjectFile: result.fileName, hasFile: true, unsaved: hasReplies ? state.unsaved : false };
-    return hasReplies
-      ? { state: next, outcome: 'saved', message: 'The test project was saved. Replies are kept only by "Save evaluation".' }
-      : { state: next, outcome: 'saved' };
+    // The file holds all the work, with its test run when there is one: one indicator, one count (FR-051, FR-059).
+    return { state: { ...state, unsaved: false, repliesSinceSave: 0, testProjectFile: result.fileName, hasFile: true }, outcome: 'saved' };
   }
   if (result.status === 'no_longer_writable') {
     return { state: { ...state, testProjectFile: null }, outcome: result.status, message: NO_LONGER_WRITABLE };
@@ -152,44 +123,33 @@ export function saveTestProjectAs(state: AppState, ports: Ports, serialize: Seri
   return saveTestProjectWith(state, ports, serialize, true);
 }
 
-/** "Load test project": a new evaluation with these and no replies. Forgets the evaluation file (FR-076). */
-export function applyLoadedTestProject(state: AppState, evaluation: Evaluation, ports: Ports): AppState {
-  ports.evaluationTarget.forget();
+/** What the user chose for a file that holds a test run (FR-076). */
+export type LoadMode = 'with' | 'only';
+
+/**
+ * A loaded test project. 'with' keeps its test run and exactly the saved state; 'only' drops the test run and forgets the file,
+ * so the first save asks for a new one. The caller has already made the loaded file the remembered one, or forgotten it.
+ */
+export function applyLoadedTestProject(state: AppState, project: TestProject, ports: Ports, mode: LoadMode, differences: Difference[] = []): AppState {
+  if (mode === 'only') ports.testProjectTarget.forget();
+  const loaded = mode === 'only' ? withoutTestRun(project) : project;
   return {
     ...state,
-    evaluation: { ...evaluation, replies: {}, decisions: {}, model_note: '', reply_judge_version: undefined, rules_corrected_after_replies: undefined },
+    project: loaded,
     unsaved: false,
     repliesSinceSave: 0,
-    evaluationFile: null,
     testProjectFile: ports.testProjectTarget.fileName,
     hasFile: true,
-    judgeOpen: false,
+    loadCheck: differences.length > 0 ? { project: loaded, differences } : null,
   };
 }
 
-/** "Load evaluation": exactly the saved state. Forgets the test project file (FR-076). */
-export function applyLoadedEvaluation(state: AppState, evaluation: Evaluation, ports: Ports, differences: Difference[] = []): AppState {
+/** "Load demo…" and "New evaluation" forget the remembered file (FR-076). */
+export function forgetFile(ports: Ports): void {
   ports.testProjectTarget.forget();
-  return {
-    ...state,
-    evaluation,
-    unsaved: false,
-    repliesSinceSave: 0,
-    testProjectFile: null,
-    evaluationFile: ports.evaluationTarget.fileName,
-    hasFile: true,
-    judgeOpen: false,
-    loadCheck: differences.length > 0 ? { evaluation, differences } : null,
-  };
 }
 
-/** "Load example…" and "Start new evaluation" forget both files (FR-076). */
-export function forgetBothFiles(ports: Ports): void {
-  ports.testProjectTarget.forget();
-  ports.evaluationTarget.forget();
-}
-
-export function startNewEvaluation(state: AppState, ports: Ports): AppState {
-  forgetBothFiles(ports);
+export function startNewTestProject(state: AppState, ports: Ports): AppState {
+  forgetFile(ports);
   return { ...createState(), step: 'judge' };
 }

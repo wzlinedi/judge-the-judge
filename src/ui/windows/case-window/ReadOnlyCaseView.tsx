@@ -1,9 +1,10 @@
 import { useRef } from 'preact/hooks';
+import { decisionsOf, repliesOf } from '../../../core/cases/test-run';
 import type { Effective } from '../../../core/evaluation/decisions';
 import type { ReviewedCase } from '../../../core/evaluation/results';
 import { STATE_LABELS } from '../../../core/evaluation/source-labels';
 import { composePrompt } from '../../../core/judge/compose';
-import type { Evaluation } from '../../../core/model';
+import type { TestProject } from '../../../core/model';
 import { CaseWindowFrame } from '../../components/CaseWindowFrame';
 import { Part } from '../../components/CasePart';
 import { SOURCE_LABELS } from '../../components/sources';
@@ -14,7 +15,7 @@ import { MarkedFields } from './MarkedFields';
 import { showTargetOf, useShowIssue } from './useShowIssue';
 
 export interface ReadOnlyCaseViewProps {
-  evaluation: Evaluation;
+  evaluation: TestProject;
   reviewed: ReviewedCase[];
   caseId: string;
   onNavigate: (caseId: string) => void;
@@ -45,9 +46,9 @@ export function ReadOnlyCaseView({ evaluation, reviewed, caseId, onNavigate, onC
   const current = reviewed[index];
   if (!current) return null;
   const { testCase, effective } = current;
-  const reply = evaluation.replies[caseId];
+  const reply = repliesOf(evaluation)[caseId];
   const prompt = reply?.prompt ?? composePrompt(evaluation.judge_set.prompt, testCase).text;
-  const note = evaluation.decisions[caseId]?.note ?? '';
+  const note = decisionsOf(evaluation)[caseId]?.note ?? '';
   const judged = evaluation.judge_set.judged_text;
   const baseCase = testCase.base ? evaluation.dataset.cases.find((c) => c.id === testCase.base) : undefined;
 

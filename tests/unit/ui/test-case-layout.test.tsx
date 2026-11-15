@@ -4,12 +4,13 @@ import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
-import { sampleEvaluation } from '../../helpers/fixtures';
+import { sampleProject } from '../../helpers/fixtures';
+import { withoutTestRun } from '../../../src/core/cases/test-run';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 const draftState = (): AppState => {
-  const e = sampleEvaluation();
-  return { ...createState(), step: 'cases', evaluation: { ...e, dataset: { ...e.dataset, finalized: false }, replies: {}, decisions: {} } };
+  const e = sampleProject();
+  return { ...createState(), step: 'cases', project: withoutTestRun(e) };
 };
 const win = () => screen.getByRole('dialog', { name: 'Test case' });
 const start = (choice: 'From JSON' | 'Clean case' | 'Case with errors', state: AppState = draftState()) => {

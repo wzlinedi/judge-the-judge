@@ -1,5 +1,6 @@
 // Where to continue after a load (FR-073).
-import type { Evaluation } from '../model';
+import type { TestProject } from '../model';
+import { isStarted } from '../cases/test-run';
 import type { MetricDefinition } from '../metrics/types';
 import { reviewEvaluation } from './results';
 
@@ -13,13 +14,13 @@ export interface ResumePoint {
   total: number;
 }
 
-/** The first step with unfinished work: Judge with no prompt, Test cases when not finalized, Run while a case is undecided, else Results. */
-export function resumePoint(evaluation: Evaluation, metric?: Pick<MetricDefinition, 'parameters'>): ResumePoint {
+/** The first step with unfinished work: Judge with no prompt, Test cases while the test run has not started, Run while a case is undecided, else Results. */
+export function resumePoint(evaluation: TestProject, metric?: Pick<MetricDefinition, 'parameters'>): ResumePoint {
   const reviewed = reviewEvaluation(evaluation, metric);
   const decided = reviewed.filter((r) => r.status === 'pass' || r.status === 'fail').length;
   const counts = { decided, total: reviewed.length };
   if (evaluation.judge_set.prompt.trim() === '') return { step: 'judge', ...counts };
-  if (!evaluation.dataset.finalized) return { step: 'cases', ...counts };
+  if (!isStarted(evaluation)) return { step: 'cases', ...counts };
   const next = (reviewed.find((r) => r.status === 'awaiting') ?? reviewed.find((r) => r.status === 'not_run'))?.testCase.id;
   if (next !== undefined) return { step: 'run', caseId: next, ...counts };
   return { step: 'results', ...counts };

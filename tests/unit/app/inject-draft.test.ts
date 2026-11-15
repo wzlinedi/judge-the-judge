@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { baseCasesOf, injectPrompt, newDraft, promptOf, startFrom } from '../../../src/app/actions/test-case-window';
 import { createState, type AppState } from '../../../src/app/store';
-import { sampleEvaluation } from '../../helpers/fixtures';
+import { sampleProject } from '../../helpers/fixtures';
 
 const state = (): AppState => {
-  const e = sampleEvaluation();
+  const e = sampleProject();
   const cases = [
     ...e.dataset.cases,
     { id: '3', name: 'No base + 1 error', fields: { source_text: 'x', summary: 'y' }, expected_errors: [{ id: 'e1', description: 'Made up.', category: 'brand-new' }] },
   ];
-  return { ...createState(), evaluation: { ...e, dataset: { ...e.dataset, cases } } };
+  return { ...createState(), project: { ...e, dataset: { ...e.dataset, cases } } };
 };
 
 describe('Case with errors can start from any case (T262)', () => {

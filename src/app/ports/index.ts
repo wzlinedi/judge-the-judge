@@ -9,7 +9,6 @@ export function createBrowserPorts(env: BrowserEnv, testProjectName: () => strin
   const safe = (name: string) => name.trim().replace(/[\\/:*?"<>|]+/g, '-') || 'untitled';
   return {
     testProjectTarget: createBrowserSaveTarget(env, () => `${safe(testProjectName())} - test project.json`),
-    evaluationTarget: createBrowserSaveTarget(env, () => `${safe(testProjectName())} - evaluation.json`),
     exportTarget: createBrowserSaveTarget(env, () => `${safe(testProjectName())} - test cases.json`),
     clipboard: createBrowserClipboardReader(env),
     opener: createBrowserOpener(env),

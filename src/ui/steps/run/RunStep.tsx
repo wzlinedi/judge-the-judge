@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 import type { ReviewedCase } from '../../../core/evaluation/results';
-import type { Evaluation } from '../../../core/model';
+import type { TestProject } from '../../../core/model';
 import { EmptyState } from '../../components/EmptyState';
 import { StatusMark } from '../../components/StatusMark';
 import { testProjectFeedback } from '../../../core/cases/feedback';
@@ -11,7 +11,7 @@ import { useVersions } from './useVersions';
 import { TableScroll } from '../../components/TableScroll';
 
 export interface RunStepProps {
-  evaluation: Evaluation;
+  evaluation: TestProject;
   reviewed: ReviewedCase[];
   repliesSinceSave: number;
   onOpen: (caseId: string) => void;
@@ -52,7 +52,7 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
         : reviewed;
 
   if (evaluation.dataset.cases.length === 0) {
-    return <EmptyState title="There are no test cases to run">Add and finalize test cases on the Test cases step first.</EmptyState>;
+    return <EmptyState title="There are no test cases to run">Add test cases and start the test run on the Test cases step first.</EmptyState>;
   }
 
   return (
@@ -63,7 +63,7 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
         <h2>
           <label for="model-details">Model details</label>
         </h2>
-        <textarea id="model-details" rows={3} value={evaluation.model_note} spellcheck={false} onInput={(event) => onModelDetails((event.currentTarget as HTMLTextAreaElement).value)} />
+        <textarea id="model-details" rows={3} value={evaluation.testRun?.model_note ?? ''} spellcheck={false} onInput={(event) => onModelDetails((event.currentTarget as HTMLTextAreaElement).value)} />
         <p class="muted">Optional. Write the model name, the temperature and other settings in any form; the tool does not read them. They are saved with the result.</p>
       </section>
 

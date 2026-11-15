@@ -17,11 +17,11 @@ async function loadDemo(page: Page) {
   await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
-  await page.getByRole('button', { name: /3\s*Run/ }).click();
-  await expect(page.getByRole('button', { name: /3\s*Run/ })).toHaveAttribute('aria-current', 'step');
+  await page.getByRole('button', { name: /3\s*Test run/ }).click();
+  await expect(page.getByRole('button', { name: /3\s*Test run/ })).toHaveAttribute('aria-current', 'step');
 }
 
-test('the Run step has no second-opinion card; a second opinion is previewed, applied, and its marks can be changed by hand', async ({ page }) => {
+test('the Test run step has no second-opinion card; a second opinion is previewed, applied, and its marks can be changed by hand', async ({ page }) => {
   await loadDemo(page);
   await expect(page.getByRole('main')).not.toContainText('Second opinion');
 

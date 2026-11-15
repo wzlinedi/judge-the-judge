@@ -16,7 +16,7 @@ export interface ReportExport {
 const safeName = (name: string) => name.replace(/[\\/:*?"<>|]/g, '-').trim() || 'Untitled';
 
 export async function exportReport(state: AppState, env: FileEnv, metric: MetricDefinition | undefined): Promise<ReportExport> {
-  const { evaluation } = state;
+  const { project: evaluation } = state;
   const results = computeResults(evaluation, metric as MetricDefinition);
   const html = buildHtmlReport(evaluation, results, reviewEvaluation(evaluation, metric), {
     now: env.now(),

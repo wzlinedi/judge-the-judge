@@ -2,8 +2,9 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { installMemoryFiles } from '../helpers/memory-files';
+import { saveButton, TEST_RUN_STEP } from '../helpers/test-run-flow';
 
-const demo = JSON.parse(readFileSync('examples/demo/evaluation.json', 'utf8')) as { judge_version: string };
+const demo = (JSON.parse(readFileSync('examples/demo/test-project.json', 'utf8')) as { test_run: { judge_version: string } }).test_run;
 const next = (page: Page) => page.getByRole('region', { name: 'What next' });
 const notices = (page: Page) => page.getByRole('region', { name: 'Notices' });
 
@@ -12,7 +13,7 @@ async function loadDemo(page: Page) {
   await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load demo…' }).click();
   await expect(page.getByRole('button', { name: /1\s*Judge/ })).toHaveAttribute('aria-current', 'step'); // the demo opens on Judge (T243)
-  await page.getByRole('button', { name: /3\s*Run/ }).click();
+  await page.getByRole('button', { name: /3\s*Test run/ }).click();
 }
 
 test('correcting a rule after replies keeps the replies, changes the judge version, and the Results step, the file and the report say so', async ({ page }, testInfo) => {
@@ -36,11 +37,11 @@ test('correcting a rule after replies keeps the replies, changes the judge versi
   await expect(notices(page)).not.toContainText(`the current one is ${demo.judge_version}`);
   await expect(next(page)).toContainText('of 20 cases decided');
 
-  // the evaluation file keeps the replies and records both versions
-  await page.getByRole('button', { name: /3\s*Run/ }).click();
-  await page.getByRole('button', { name: 'Save evaluation', exact: true }).click();
+  // the test project file keeps the test run with its replies and records both versions
+  await page.getByRole('button', { name: TEST_RUN_STEP }).click();
+  await saveButton(page).click();
   await expect.poll(() => memory.files.has('corrected.json')).toBe(true);
-  const file = JSON.parse(memory.files.get('corrected.json')!);
+  const file = JSON.parse(memory.files.get('corrected.json')!).test_run;
   expect(file.rules_corrected_after_replies).toBe(true);
   expect(file.reply_judge_version).toBe(demo.judge_version);
   expect(file.judge_version).not.toBe(demo.judge_version);

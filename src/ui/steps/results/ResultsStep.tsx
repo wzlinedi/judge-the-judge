@@ -3,7 +3,7 @@ import type { ReviewedCase } from '../../../core/evaluation/results';
 import { differenceNote, type Difference } from '../../../core/evaluation/recompute';
 import { countingSwitchNote } from '../../../core/evaluation/counting-note';
 import type { Results } from '../../../core/evaluation/results';
-import type { Evaluation } from '../../../core/model';
+import type { TestProject } from '../../../core/model';
 import { NextBar } from '../../components/shell/NextBar';
 import { labels } from '../../labels';
 import { useVersions } from '../run/useVersions';
@@ -20,10 +20,9 @@ const TABS: ReadonlyArray<{ id: View; label: string }> = [
 
 export interface ResultsStepProps {
   results: Results;
-  evaluation: Evaluation;
+  evaluation: TestProject;
   reviewed: ReviewedCase[];
   /** "Edit the judge and run again" (FR-074); the caller asks about unsaved work first. */
-  onRerun: () => void;
   /** Exports the HTML report (FR-072). */
   onExport: (() => void) | undefined;
   onThreshold: (measure: string, value: number) => void;
@@ -33,7 +32,7 @@ export interface ResultsStepProps {
 }
 
 /** The Results step is read-only: nothing here changes a reply, decision, expected error, rule or mapping. Only the thresholds do (FR-065). Its main action is always Export HTML report (T267). */
-export function ResultsStep({ results, evaluation, reviewed, onRerun, onExport, onThreshold, onOpenCase, differences = [] }: ResultsStepProps) {
+export function ResultsStep({ results, evaluation, reviewed, onExport, onThreshold, onOpenCase, differences = [] }: ResultsStepProps) {
   const [view, setView] = useState<View>('summary');
   const versions = useVersions(evaluation);
   const c = results.counters;
@@ -41,11 +40,12 @@ export function ResultsStep({ results, evaluation, reviewed, onRerun, onExport, 
 
   const action = { label: labels.exportHtmlReport, onClick: () => onExport?.(), disabled: onExport === undefined };
 
-  const corrected = versions.judge !== '' && evaluation.reply_judge_version !== undefined && evaluation.reply_judge_version !== versions.judge;
+  const replyJudgeVersion = evaluation.testRun?.reply_judge_version;
+  const corrected = versions.judge !== '' && replyJudgeVersion !== undefined && replyJudgeVersion !== versions.judge;
   const changed = (kind: 'added' | 'corrected') => evaluation.dataset.cases.filter((t) => t.changed_after_first_reply === kind);
   const added = changed('added');
   const fixed = changed('corrected');
-  const named = (list: Evaluation['dataset']['cases']) => list.map((t) => `case ${t.id} (${t.name})`).join(', ');
+  const named = (list: TestProject['dataset']['cases']) => list.map((t) => `case ${t.id} (${t.name})`).join(', ');
   const switchNote = countingSwitchNote(results);
   const mismatch = differenceNote(differences);
   const hasNotices = corrected || switchNote !== null || mismatch !== null || added.length > 0 || fixed.length > 0;
@@ -55,12 +55,11 @@ export function ResultsStep({ results, evaluation, reviewed, onRerun, onExport, 
       <NextBar
         sentence={`${c.cases_decided} of ${total} cases decided${results.undecided > 0 ? ` · ${results.undecided} not decided yet` : ''}`}
         action={action}
-        others={[{ label: labels.editJudgeAndRunAgain, onClick: onRerun }]}
       />
       {hasNotices ? (
         <section role="region" aria-label="Notices" class="notices">
           {corrected ? (
-            <p class="notice warn">{`The rules were corrected after the replies were received (the error rules or the reply mapping changed). The judge version in force when the replies were received was ${evaluation.reply_judge_version}; the current one is ${versions.judge}.`}</p>
+            <p class="notice warn">{`The rules were corrected after the replies were received (the error rules or the reply mapping changed). The judge version in force when the replies were received was ${replyJudgeVersion}; the current one is ${versions.judge}.`}</p>
           ) : null}
           {switchNote ? <p class="notice warn">{switchNote}</p> : null}
           {mismatch ? <p class="notice warn">{mismatch}</p> : null}

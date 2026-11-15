@@ -27,7 +27,6 @@ export const testCaseSchema = z.object({
 export const testCasesSchema = z.object({
   name: z.string().default('Untitled test cases'),
   version: z.string().optional(),
-  finalized: z.boolean().default(false),
   cases: z.array(testCaseSchema).max(MAX_CASES),
 });
 

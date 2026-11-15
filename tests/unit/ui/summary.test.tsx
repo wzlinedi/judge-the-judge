@@ -2,20 +2,20 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { computeResults, reviewEvaluation } from '../../../src/core/evaluation/results';
-import { readEvaluation } from '../../../src/core/io/evaluation-file';
+import { readTestProject } from '../../../src/core/io/test-project-file';
 import { ResultsStep } from '../../../src/ui/steps/results/ResultsStep';
-import { accuracyMetric } from '../../helpers/fixtures';
+import { accuracyMetric, withRun } from '../../helpers/fixtures';
 
-const loaded = readEvaluation(readFileSync('examples/demo/evaluation.json', 'utf8'));
+const loaded = readTestProject(readFileSync('examples/demo/test-project.json', 'utf8'));
 if (!loaded.ok) throw new Error('demo not readable');
 const expected = JSON.parse(readFileSync('examples/demo/expected-results.json', 'utf8'));
-const provisional = computeResults(loaded.value.evaluation, accuracyMetric);
-const final = computeResults({ ...loaded.value.evaluation, decisions: expected.decisions_after }, accuracyMetric);
+const provisional = computeResults(loaded.value.project, accuracyMetric);
+const final = computeResults(withRun(loaded.value.project, { decisions: expected.decisions_after }), accuracyMetric);
 
-const finalEvaluation = { ...loaded.value.evaluation, decisions: expected.decisions_after };
+const finalEvaluation = withRun(loaded.value.project, { decisions: expected.decisions_after });
 const finalContext = { evaluation: finalEvaluation, reviewed: reviewEvaluation(finalEvaluation, accuracyMetric) };
-const provisionalContext = { evaluation: loaded.value.evaluation, reviewed: reviewEvaluation(loaded.value.evaluation, accuracyMetric) };
-const props = { onRerun: vi.fn(), onExport: undefined as undefined | (() => void), onThreshold: vi.fn(), onOpenCase: vi.fn() };
+const provisionalContext = { evaluation: loaded.value.project, reviewed: reviewEvaluation(loaded.value.project, accuracyMetric) };
+const props = { onExport: undefined as undefined | (() => void), onThreshold: vi.fn(), onOpenCase: vi.fn() };
 
 describe('Summary', () => {
   it('shows three count groups first: expected errors, additional findings, subtle errors', () => {

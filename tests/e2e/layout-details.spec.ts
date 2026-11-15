@@ -2,20 +2,16 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { installMemoryFiles } from '../helpers/memory-files';
+import { loadTestProject } from '../helpers/test-run-flow';
 
 const demoProject = readFileSync('examples/demo/test-project.json', 'utf8');
-const menu = async (page: Page, item: string) => {
-  await page.getByRole('button', { name: 'More', exact: true }).click();
-  await page.getByRole('menuitem', { name: item, exact: true }).click();
-};
 
 async function openDemoCases(page: Page) {
   const memory = await installMemoryFiles(page);
   memory.files.set('books.json', demoProject);
-  memory.chooseOpenName('books.json');
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
-  await menu(page, 'Load test project…');
+  await loadTestProject(page, memory, 'books.json', 'with');
   await page.getByRole('button', { name: /2\s*Test cases/ }).click();
   await expect(page.getByRole('table', { name: 'Test cases' })).toBeVisible();
 }
@@ -51,7 +47,7 @@ test('the marker of a mark has room before the text it marks', async ({ page }) 
 
 test('the disabled Save case is quiet, not pale red, and says what is needed', async ({ page }) => {
   await openDemoCases(page);
-  await page.getByRole('button', { name: 'Add test case…' }).click(); // cases can still be added after the test cases are finalized
+  await page.getByRole('button', { name: 'Add test case…' }).click(); // cases can still be added after the test run has started
   await page.getByRole('button', { name: 'Clean case' }).click();
   const approve = page.getByRole('button', { name: 'Save case' });
   await expect(approve).toBeDisabled();
@@ -69,7 +65,7 @@ test('the disabled Save case is quiet, not pale red, and says what is needed', a
   expect(await approve.evaluate((b) => getComputedStyle(b).opacity)).toBe('1');
 });
 
-test('the More menu opens inside the screen, at a wide and at a narrow width, and More and Help stand on the line of the save buttons (T246)', async ({ page }) => {
+test('the More menu opens inside the screen, at a wide and at a narrow width, and More and Help stand on the line of the one save button (T246, T289)', async ({ page }) => {
   for (const width of [1280, 420]) {
     await page.setViewportSize({ width, height: 700 });
     await page.goto('/');
@@ -78,10 +74,10 @@ test('the More menu opens inside the screen, at a wide and at a narrow width, an
     expect(box.x, `left edge at ${width}`).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width, `right edge at ${width}`).toBeLessThanOrEqual(width);
     expect(box.y + box.height, `bottom edge at ${width}`).toBeLessThanOrEqual(700);
-    await expect(page.getByRole('menuitem', { name: 'New evaluation' })).toBeInViewport({ ratio: 1 });
+    await expect(page.getByRole('menuitem', { name: 'New test project' })).toBeInViewport({ ratio: 1 });
     await page.keyboard.press('Escape');
   }
   await page.setViewportSize({ width: 1280, height: 700 });
-  const tops = await Promise.all(['Save test project', 'Save evaluation', 'More', 'Help'].map(async (name) => Math.round((await page.getByRole('button', { name, exact: true }).boundingBox())!.y)));
+  const tops = await Promise.all(['Save test project', 'More', 'Help'].map(async (name) => Math.round((await page.getByRole('button', { name, exact: true }).boundingBox())!.y)));
   expect(new Set(tops).size, JSON.stringify(tops)).toBe(1);
 });

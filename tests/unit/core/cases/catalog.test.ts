@@ -1,9 +1,9 @@
 // FR-015: the error catalog.
 import { describe, expect, it } from 'vitest';
 import { addCategories, categoryUses, joinCategoryExamples, removeCategoryEverywhere, normalizeCategoryName, parseCategoryList, renameCategory } from '../../../../src/core/cases/catalog';
-import { sampleEvaluation } from '../../../helpers/fixtures';
+import { sampleProject } from '../../../helpers/fixtures';
 
-const e = sampleEvaluation();
+const e = sampleProject();
 const catalog = e.judge_set.error_catalog;
 const cases = e.dataset.cases; // case 2 uses factual-error and wrong-number
 

@@ -4,10 +4,11 @@ import { applyImport, downloadExample, exportTestCases, prepareImport } from '..
 import { createFakePorts } from '../../src/app/ports/fakes';
 import { createState, type AppState } from '../../src/app/store';
 import { readTestCasesJson } from '../../src/core/io/test-cases-json';
-import { sampleEvaluation } from '../helpers/fixtures';
+import { withoutTestRun } from '../../src/core/cases/test-run';
+import { sampleProject, withRun } from '../helpers/fixtures';
 
 const env = { now: () => '2026-11-14T10:00:00Z', toolVersion: '1.0.0' };
-const project = (over: Partial<AppState['evaluation']> = {}, unsaved = false): AppState => ({ ...createState(), step: 'cases', unsaved, evaluation: { ...sampleEvaluation(), ...over } });
+const project = (started = true, unsaved = false): AppState => ({ ...createState(), step: 'cases', unsaved, project: started ? sampleProject() : withoutTestRun(sampleProject()) });
 const csv = 'name,field:source_text,field:summary\nZażółć,"Gęsia, ""jaźń""","Krótko"\nBad,,\nDora,D,E\n';
 const fresh = () => {
   const ports = createFakePorts();
@@ -82,37 +83,37 @@ describe('applyImport', () => {
   };
 
   it('adds the valid cases to the ones already there and marks the work as unsaved', async () => {
-    const state = project({ replies: {}, decisions: {} }, false);
+    const state = { ...project(true), project: withRun(sampleProject(), { replies: {}, decisions: {} }) };
     const edit = applyImport(state, await plan(state));
-    expect(edit.state.evaluation.dataset.cases.map((c) => c.name)).toEqual(['Anna', 'Anna + 2 errors', 'Zażółć', 'Dora']);
+    expect(edit.state.project.dataset.cases.map((c) => c.name)).toEqual(['Anna', 'Anna + 2 errors', 'Zażółć', 'Dora']);
     expect(edit.state.unsaved).toBe(true);
     expect(edit.note).toMatch(/2 test cases/);
-    expect(edit.state.evaluation.dataset.version).toBeUndefined();
-    expect(edit.state.evaluation.dataset.cases.some((c) => c.changed_after_first_reply === 'added' && ['Zażółć', 'Dora'].includes(c.name))).toBe(false);
+    expect(edit.state.project.dataset.version).toBeUndefined();
+    expect(edit.state.project.dataset.cases.some((c) => c.changed_after_first_reply === 'added' && ['Zażółć', 'Dora'].includes(c.name))).toBe(false);
   });
 
   it('after finalizing: the new cases start as Not run, are marked "added" once replies exist, and the replies and decisions of the others are kept', async () => {
     const state = project();
-    expect(state.evaluation.dataset.finalized).toBe(true);
+    expect(state.project.testRun).toBeDefined();
     const edit = applyImport(state, await plan(state));
-    const next = edit.state.evaluation;
-    expect(next.dataset.finalized).toBe(true);
-    expect(next.replies).toEqual(state.evaluation.replies);
-    expect(next.decisions).toEqual(state.evaluation.decisions);
+    const next = edit.state.project;
+    expect(next.testRun).toBeDefined();
+    expect(next.testRun!.replies).toEqual(state.project.testRun!.replies);
+    expect(next.testRun!.decisions).toEqual(state.project.testRun!.decisions);
     const added = next.dataset.cases.filter((c) => ['Zażółć', 'Dora'].includes(c.name));
-    expect(added.every((c) => c.changed_after_first_reply === 'added' && next.replies[c.id] === undefined)).toBe(true);
+    expect(added.every((c) => c.changed_after_first_reply === 'added' && next.testRun!.replies[c.id] === undefined)).toBe(true);
   });
 
   it('adds a missing category to the catalog only through the import, and says so', async () => {
-    const state = project({ replies: {}, decisions: {} });
+    const state = { ...project(true), project: withRun(sampleProject(), { replies: {}, decisions: {} }) };
     const ports = fresh();
     const file = { format: 'judge-the-judge-test-cases', schema_version: 1, cases: [{ name: 'N', fields: { source_text: 'S', summary: 'Tone' }, expected_errors: [{ description: 'd', category: 'tone-shift', fragment: 'Tone' }] }] };
     ports.opener.next = { name: 'c.json', text: JSON.stringify(file) };
     const prepared = await prepareImport(state, ports);
     if (prepared.outcome !== 'ready') throw new Error('not ready');
-    expect(state.evaluation.judge_set.error_catalog.some((c) => c.name === 'tone-shift')).toBe(false);
+    expect(state.project.judge_set.error_catalog.some((c) => c.name === 'tone-shift')).toBe(false);
     const edit = applyImport(state, prepared.plan);
-    expect(edit.state.evaluation.judge_set.error_catalog.some((c) => c.name === 'tone-shift')).toBe(true);
+    expect(edit.state.project.judge_set.error_catalog.some((c) => c.name === 'tone-shift')).toBe(true);
     expect(edit.note).toMatch(/tone-shift/);
   });
 });
@@ -120,7 +121,7 @@ describe('applyImport', () => {
 describe('exportTestCases', () => {
   it('writes every case, asks for a file each time, remembers none, and leaves the unsaved flag as it was', async () => {
     const ports = fresh();
-    const state = project({}, true);
+    const state = project(true, true);
     const first = await exportTestCases(state, ports, env);
     expect(first.outcome).toBe('saved');
     expect(first.state).toBe(state);
@@ -128,7 +129,7 @@ describe('exportTestCases', () => {
     expect(ports.exportTarget.fileName).toBeNull();
     const read = readTestCasesJson(ports.exportTarget.lastText ?? '');
     expect(read.ok && read.value.drafts).toHaveLength(2);
-    await exportTestCases(project({}, false), ports, env);
+    await exportTestCases(project(true, false), ports, env);
     expect(ports.exportTarget.asked).toBe(2);
     expect(ports.testProjectTarget.fileName).toBeNull();
   });

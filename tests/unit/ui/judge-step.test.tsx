@@ -7,7 +7,7 @@ import { nextAction } from '../../../src/app/selectors';
 import { createState, type AppState } from '../../../src/app/store';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { metricFor } from '../../../src/app/metrics';
-import { sampleEvaluation, startFromMetric } from '../../helpers/fixtures';
+import { sampleProject, startFromMetric } from '../../helpers/fixtures';
 
 const SAMPLE = JSON.stringify({ claims: [{ text: 'The hero is a doctor', verdict: 'contradicted' }, { text: 'The hero is a baker', verdict: 'supported' }] });
 
@@ -72,7 +72,7 @@ describe('prompt, variables and judged text (FR-010)', () => {
     ]);
     expect((screen.getByRole('radio', { name: /context/ }) as HTMLInputElement).checked).toBe(true);
     fireEvent.click(screen.getByRole('radio', { name: /prompt_output/ }));
-    expect(latest.evaluation.judge_set.judged_text).toBe('prompt_output');
+    expect(latest.project.judge_set.judged_text).toBe('prompt_output');
   });
 
   it('says that nothing reaches the prompt when it has no variables', () => {
@@ -95,9 +95,9 @@ describe('prompt, variables and judged text (FR-010)', () => {
   });
 
   it('is read-only once the test cases are finalized, and says why', () => {
-    show({ ...createState(), evaluation: sampleEvaluation() });
+    show({ ...createState(), project: sampleProject() });
     expect((screen.getByLabelText('Judge prompt') as HTMLTextAreaElement).readOnly).toBe(true);
-    expect(screen.getByText(/fixed because the test cases are finalized/i)).toBeTruthy();
+    expect(screen.getByText(/test run has started, so the prompt is fixed/i)).toBeTruthy();
   });
 });
 
@@ -146,11 +146,11 @@ describe('rules (FR-013, FR-014)', () => {
     fireEvent.change(screen.getByLabelText(/Field of condition 1 of rule 1/), { target: { value: 'claims[].verdict' } });
     const select = screen.getByLabelText(/Where the error is in rule 1/) as HTMLSelectElement;
     expect(select.value).toBe('claims[].text');
-    expect(latest.evaluation.judge_set.error_rules[0]).not.toHaveProperty('finding_text');
+    expect(latest.project.judge_set.error_rules[0]).not.toHaveProperty('finding_text');
     fireEvent.change(select, { target: { value: 'claims[].verdict' } });
-    expect(latest.evaluation.judge_set.error_rules[0]?.finding_text).toBe('claims[].verdict');
+    expect(latest.project.judge_set.error_rules[0]?.finding_text).toBe('claims[].verdict');
     fireEvent.change(select, { target: { value: 'claims[].text' } });
-    expect(latest.evaluation.judge_set.error_rules[0]).not.toHaveProperty('finding_text');
+    expect(latest.project.judge_set.error_rules[0]).not.toHaveProperty('finding_text');
   });
 
   it('with one text field per item there is nothing to choose, so "Where the error is" is not shown (T232)', () => {
@@ -179,7 +179,7 @@ describe('rules (FR-013, FR-014)', () => {
     show();
     fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
     expect(notes.join(' ')).toMatch(/sample reply/);
-    expect(latest.evaluation.judge_set.error_rules).toEqual([]);
+    expect(latest.project.judge_set.error_rules).toEqual([]);
   });
 
   it('builds a rule with two conditions joined by "any of", then a second with "all of"', () => {
@@ -193,7 +193,7 @@ describe('rules (FR-013, FR-014)', () => {
     fireEvent.change(screen.getByLabelText('Conditions of rule 1'), { target: { value: 'any' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
     fireEvent.change(screen.getByLabelText('Conditions of rule 2'), { target: { value: 'all' } });
-    const rules = latest.evaluation.judge_set.error_rules;
+    const rules = latest.project.judge_set.error_rules;
     expect(rules).toHaveLength(2);
     expect(rules[0]).toMatchObject({ match: 'any' });
     expect(rules[0]!.conditions.map((c) => c.value)).toEqual(['contradicted', 'unsupported']);
@@ -206,7 +206,7 @@ describe('rules (FR-013, FR-014)', () => {
     fireEvent.change(screen.getByLabelText(/Comparison of condition 1 of rule 1/), { target: { value: 'is_empty' } });
     expect(screen.queryByLabelText(/Value of condition 1 of rule 1/)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Remove rule 1/ }));
-    expect(latest.evaluation.judge_set.error_rules).toEqual([]);
+    expect(latest.project.judge_set.error_rules).toEqual([]);
   });
 
   it('the preview names the rule that makes each part a finding', () => {
@@ -266,7 +266,7 @@ describe('rules (FR-013, FR-014)', () => {
     expect(screen.getAllByText(/Any value; it is kept as you type it/).length).toBeGreaterThan(0);
     type(/Value of condition 1 of rule 1/, 'aaa');
     expect((screen.getByLabelText(/Value of condition 1 of rule 1/) as HTMLInputElement).value).toBe('aaa');
-    expect(latest.evaluation.judge_set.error_rules[0]!.conditions[0]!.value).toBe('aaa');
+    expect(latest.project.judge_set.error_rules[0]!.conditions[0]!.value).toBe('aaa');
   });
 
   it("T227: the owner's steps (verdict equals aaa, text equals bbb, Add condition) show an unfinished condition, not a broken rule", () => {
@@ -332,12 +332,12 @@ describe('the "what next" line (FR-001)', () => {
   });
 
   it('says the prompt is fixed after finalizing', () => {
-    const state: AppState = { ...createState(), evaluation: sampleEvaluation() };
+    const state: AppState = { ...createState(), project: sampleProject() };
     expect(next(state).sentence).toMatch(/fixed/);
   });
 
   function latestFrom(prompt: string): AppState {
     const s = createState();
-    return { ...s, evaluation: { ...s.evaluation, judge_set: { ...s.evaluation.judge_set, prompt } } };
+    return { ...s, project: { ...s.project, judge_set: { ...s.project.judge_set, prompt } } };
   }
 });

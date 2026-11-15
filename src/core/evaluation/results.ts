@@ -1,5 +1,6 @@
 // Everything the Results step and the files show, in one value (core-api.md, computeResults).
-import type { CaseDecisions, Evaluation, TestCase } from '../model';
+import type { CaseDecisions, TestProject, TestCase } from '../model';
+import { decisionsOf, repliesOf } from '../cases/test-run';
 import { findFindings, type Finding } from '../judge/findings';
 import { recognizeFields } from '../judge/fields';
 import { countingModeOf } from '../judge/counting-mode';
@@ -43,14 +44,14 @@ export interface Results {
   cases: Record<string, CaseResult>;
 }
 
-export function matchParameters(evaluation: Evaluation, metric: Pick<MetricDefinition, 'parameters'> | undefined): MatchParameters {
+export function matchParameters(evaluation: TestProject, metric: Pick<MetricDefinition, 'parameters'> | undefined): MatchParameters {
   const defaults: Record<string, number> = { ...DEFAULT_MATCH };
   for (const [name, def] of Object.entries(metric?.parameters ?? {})) defaults[name] = def.default;
   return { ...DEFAULT_MATCH, ...defaults, ...evaluation.metric.parameters } as MatchParameters;
 }
 
 /** Reads and matches every case; cases without a reply are Not run. */
-export function reviewEvaluation(evaluation: Evaluation, metric?: Pick<MetricDefinition, 'parameters'>): ReviewedCase[] {
+export function reviewEvaluation(evaluation: TestProject, metric?: Pick<MetricDefinition, 'parameters'>): ReviewedCase[] {
   const { judge_set } = evaluation;
   const sample = judge_set.sample_reply ? recognizeFields(judge_set.sample_reply) : undefined;
   const recognized = sample?.ok ? sample : undefined;
@@ -58,17 +59,17 @@ export function reviewEvaluation(evaluation: Evaluation, metric?: Pick<MetricDef
   const mode = countingModeOf(judge_set);
 
   return evaluation.dataset.cases.map((testCase) => {
-    const reply = evaluation.replies[testCase.id];
+    const reply = repliesOf(evaluation)[testCase.id];
     if (!reply) return { testCase, review: null, effective: null, status: 'not_run' as const, findings: [] };
     const found = findFindings(reply.reply, judge_set.error_rules, judge_set.reply_mapping.finding_text, recognized);
     const review = reviewCase(testCase, found, parameters, mode);
-    const decisions: CaseDecisions | undefined = evaluation.decisions[testCase.id];
+    const decisions: CaseDecisions | undefined = decisionsOf(evaluation)[testCase.id];
     const effective = applyDecisions(review, decisions);
     return { testCase, review, effective, status: caseStatus(effective), findings: found.findings };
   });
 }
 
-export function computeResults(evaluation: Evaluation, metric: MetricDefinition, minimum: MinimumSample = MINIMUM_SAMPLE): Results {
+export function computeResults(evaluation: TestProject, metric: MetricDefinition, minimum: MinimumSample = MINIMUM_SAMPLE): Results {
   const mode = countingModeOf(evaluation.judge_set);
   const evaluated = mode === 'per_case' ? ('case' as const) : ('expected_error' as const);
   const reviewed = reviewEvaluation(evaluation, metric);
@@ -87,7 +88,7 @@ export function computeResults(evaluation: Evaluation, metric: MetricDefinition,
   const undecided = counters.cases_awaiting + counters.cases_not_run;
   return {
     evaluated_per: evaluated,
-    counted_per_before_correction: evaluation.reply_counted_per !== undefined && evaluation.reply_counted_per !== evaluated ? evaluation.reply_counted_per : null,
+    counted_per_before_correction: evaluation.testRun?.reply_counted_per !== undefined && evaluation.testRun.reply_counted_per !== evaluated ? evaluation.testRun.reply_counted_per : null,
     provisional: undecided > 0,
     undecided,
     counters,

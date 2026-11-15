@@ -4,17 +4,17 @@ import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { RunStep } from '../../../src/ui/steps/run/RunStep';
 import { reviewEvaluation } from '../../../src/core/evaluation/results';
-import { readEvaluation } from '../../../src/core/io/evaluation-file';
-import type { Evaluation } from '../../../src/core/model';
+import { readTestProject } from '../../../src/core/io/test-project-file';
+import type { TestProject } from '../../../src/core/model';
 import { CaseWindowHarness } from '../../helpers/case-window-harness';
-import { accuracyMetric } from '../../helpers/fixtures';
+import { accuracyMetric, withRun } from '../../helpers/fixtures';
 
-const loaded = readEvaluation(readFileSync('examples/demo/evaluation.json', 'utf8'));
+const loaded = readTestProject(readFileSync('examples/demo/test-project.json', 'utf8'));
 if (!loaded.ok) throw new Error('demo not readable');
-const demo = loaded.value.evaluation;
+const demo = loaded.value.project;
 
-const open = (caseId: string, start: Evaluation = demo) => {
-  const seen: Evaluation[] = [];
+const open = (caseId: string, start: TestProject = demo) => {
+  const seen: TestProject[] = [];
   render(<CaseWindowHarness start={start} caseId={caseId} seen={(e) => seen.push(e)} />);
   return seen;
 };
@@ -40,7 +40,7 @@ describe('the buttons under the list', () => {
   });
 
   it('shows Add finding and Second opinion disabled, with the reason beside them, while the case has no reply; enabled once there is one (T290)', () => {
-    open('3', { ...demo, replies: {}, decisions: {} });
+    open('3', withRun(demo, { replies: {}, decisions: {} }));
     for (const name of ['Add finding…', 'Second opinion…']) {
       const button = within(win()).getByRole('button', { name }) as HTMLButtonElement;
       expect(button.disabled).toBe(true);
@@ -86,7 +86,7 @@ describe('Add finding…', () => {
     expect(added.textContent).toContain('subtle');
     expect(added.textContent).toContain('Set by hand');
     expect(within(added).getByRole('button', { name: 'Remove' })).toBeTruthy();
-    expect(seen.at(-1)?.decisions['3']?.added_findings[0]).toMatchObject({ text: 'The prince has a fox', category: 'factual-error', difficulty: 'subtle', source: 'manual' });
+    expect(seen.at(-1)?.testRun!.decisions['3']?.added_findings[0]).toMatchObject({ text: 'The prince has a fox', category: 'factual-error', difficulty: 'subtle', source: 'manual' });
   });
 
   it('lets a new category name join the catalog', () => {
@@ -101,7 +101,7 @@ describe('Add finding…', () => {
     addFinding('The prince has a fox');
     fireEvent.click(within(document.querySelector<HTMLElement>('[data-additional="added#1"]') as HTMLElement).getByRole('button', { name: 'Remove' }));
     expect(document.querySelector('[data-additional="added#1"]')).toBeNull();
-    expect(seen.at(-1)?.decisions['3']?.added_findings).toEqual([]);
+    expect(seen.at(-1)?.testRun!.decisions['3']?.added_findings).toEqual([]);
   });
 
   it('is offered for a reply that could not be read, with the note that the case needs No more findings', () => {
@@ -117,19 +117,19 @@ describe('Add finding…', () => {
 describe('the note of a case', () => {
   it('has no Note button or box in the window, and a note a file holds is kept', () => {
     const e = structuredClone(demo);
-    e.decisions['3'] = { expected: {}, additional: {}, added_findings: [], approved: false, note: 'an earlier note' };
+    e.testRun!.decisions['3'] = { expected: {}, additional: {}, added_findings: [], approved: false, note: 'an earlier note' };
     const seen = open('3', e);
     expect(within(win()).queryByRole('button', { name: 'Note' })).toBeNull();
     expect(within(win()).queryByRole('textbox', { name: 'Note' })).toBeNull();
     fireEvent.click(within(item('additional', 'claims[]#2')).getByRole('button', { name: 'Genuine error' }));
-    expect(seen.at(-1)?.decisions['3']?.note).toBe('an earlier note');
+    expect(seen.at(-1)?.testRun!.decisions['3']?.note).toBe('an earlier note');
   });
 });
 
 describe('the source of every mark', () => {
   it('says "Automatic", "Set by hand" or "LLM opinion, approved by the user"', () => {
     const e = structuredClone(demo);
-    e.decisions['17'] = { expected: { e1: { state: 'missed', source: 'manual' }, e3: { state: 'found', source: 'llm-approved' } }, additional: {}, added_findings: [], approved: false, note: '' };
+    e.testRun!.decisions['17'] = { expected: { e1: { state: 'missed', source: 'manual' }, e3: { state: 'found', source: 'llm-approved' } }, additional: {}, added_findings: [], approved: false, note: '' };
     open('17', e);
     expect(item('expected', 'e1').textContent).toContain('Set by hand');
     expect(item('expected', 'e3').textContent).toContain('LLM opinion, approved by the user');

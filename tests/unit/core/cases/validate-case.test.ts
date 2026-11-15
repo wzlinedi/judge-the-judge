@@ -2,9 +2,9 @@
 import { describe, expect, it } from 'vitest';
 import { validateCase, type CaseContext } from '../../../../src/core/cases/validate';
 import type { TestCase } from '../../../../src/core/model';
-import { sampleEvaluation } from '../../../helpers/fixtures';
+import { sampleProject } from '../../../helpers/fixtures';
 
-const e = sampleEvaluation();
+const e = sampleProject();
 const context = (over: Partial<CaseContext> = {}): CaseContext => ({
   variables: ['source_text', 'summary'],
   judgedText: 'summary',

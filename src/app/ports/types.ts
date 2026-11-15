@@ -12,7 +12,7 @@ export interface FileHandleLike {
   requestPermission?(descriptor: { mode: 'readwrite' }): Promise<'granted' | 'denied' | 'prompt'>;
 }
 
-/** One instance per kind of file: the test project and the evaluation (FR-076). */
+/** One instance per kind of file: the test project, and the export of test cases (FR-076). */
 export interface SaveTarget {
   /** The remembered file, in memory only; null when there is none. */
   fileName: string | null;
@@ -54,7 +54,6 @@ export interface FileOpener {
 
 export interface Ports {
   testProjectTarget: SaveTarget;
-  evaluationTarget: SaveTarget;
   /** "Export test cases": asks for a file name every time and remembers none (FR-050). */
   exportTarget: SaveTarget;
   clipboard: ClipboardReader;

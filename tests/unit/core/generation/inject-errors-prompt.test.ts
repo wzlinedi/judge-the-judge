@@ -1,10 +1,10 @@
 // FR-040, FR-043: the prompt that asks the user's LLM for one case with injected errors.
 import { describe, expect, it } from 'vitest';
 import { injectErrorsPrompt, type ErrorToPrepare } from '../../../../src/core/generation/inject-errors-prompt';
-import { accuracyJudgeSet, sampleEvaluation } from '../../../helpers/fixtures';
+import { accuracyJudgeSet, sampleProject } from '../../../helpers/fixtures';
 
 const set = accuracyJudgeSet();
-const base = sampleEvaluation().dataset.cases[0]!;
+const base = sampleProject().dataset.cases[0]!;
 const rows: ErrorToPrepare[] = [
   { category: 'factual-error', difficulty: 'obvious', description: 'Change the profession.' },
   { category: 'wrong-number', difficulty: 'llm', description: '' },

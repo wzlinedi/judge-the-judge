@@ -3,12 +3,12 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { markProgress } from '../../../../src/core/evaluation/mark-progress';
 import { reviewEvaluation } from '../../../../src/core/evaluation/results';
-import { readEvaluation } from '../../../../src/core/io/evaluation-file';
+import { readTestProject } from '../../../../src/core/io/test-project-file';
 import { accuracyMetric } from '../../../helpers/fixtures';
 
-const loaded = readEvaluation(readFileSync('examples/demo/evaluation.json', 'utf8'));
+const loaded = readTestProject(readFileSync('examples/demo/test-project.json', 'utf8'));
 if (!loaded.ok) throw new Error('demo not readable');
-const demo = loaded.value.evaluation;
+const demo = loaded.value.project;
 const caseOf = (id: string) => reviewEvaluation(demo, accuracyMetric).find((r) => r.testCase.id === id)!;
 
 describe('markProgress', () => {

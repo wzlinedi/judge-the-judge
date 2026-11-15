@@ -1,10 +1,10 @@
 // FR-083: the prompt that asks the user's LLM for one clean case.
 import { describe, expect, it } from 'vitest';
 import { cleanCasePrompt } from '../../../../src/core/generation/clean-case-prompt';
-import { accuracyJudgeSet, sampleEvaluation } from '../../../helpers/fixtures';
+import { accuracyJudgeSet, sampleProject } from '../../../helpers/fixtures';
 
 const set = accuracyJudgeSet();
-const like = sampleEvaluation().dataset.cases[0]!;
+const like = sampleProject().dataset.cases[0]!;
 
 describe('cleanCasePrompt', () => {
   it('asks for one clean case in the case JSON layout with no expected errors', () => {
