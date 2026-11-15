@@ -1826,7 +1826,7 @@ case and confirm the new case has the same fields and expected errors.
 - **FR-089**: The read-only view of every case, whether or not the test cases are finalized and
   whether or not the case has a reply, MUST offer "Edit expected errors" (T254). It opens the standard large dialog with the JSON of the
   list of the expected errors of that case only, each with its `id`; the name, the base and the fields cannot change there (they are not in the JSON). The JSON is checked as
-  it changes (FR-041, FR-084); "Save" is disabled with the reason beside it while there is a problem or nothing changed. An error that keeps its
+  it changes (FR-041, FR-080, FR-084): the check line and the changed places that no error covers are shown under the box, and a mismatch is asked about before saving, as for any case; "Save expected errors" is disabled with the reason beside it while there is a problem or nothing changed. An error that keeps its
   `id` and its words keeps its mark; an error without `id` is a new one and gets the next free identifier. Saving gives a new test cases version; after the first reply the
   case is marked "corrected". For a case with a reply "Save" asks first: the marks set by hand or by an opinion for the changed and removed errors are dropped, the case is marked again from
   the reply, and an error that a real-error mark made (T253) that is removed sets that finding to "Ignored".

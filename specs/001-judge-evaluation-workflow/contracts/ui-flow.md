@@ -190,9 +190,9 @@ which asks first when something was pasted or typed.
   the whole composed prompt and only **Close**) with **Copy prompt**. No reply is shown (a reply belongs to Run).
   Sections are in frames and the expected errors are highlighted strongly. A saved case is never edited.
 - **Edit expected errors** (FR-089, T254): the standard large dialog with the JSON of the list of the expected errors of the case
-  only (with their `id`), checked as it changes, with **Cancel** and **Save** at the bottom; **Save** is disabled with the reason beside it
-  ("Fix the problems listed under the JSON to save." or "Change the JSON to save."). For a case with a reply **Save** asks first
-  ("Save the expected errors?": the marks of the changed and removed errors are dropped, the case is marked again from the reply, the
+  only (with their `id`), checked as it changes, with **Cancel** and **Save expected errors** at the bottom, the check line of FR-080 and the uncovered places under the box; **Save expected errors** is disabled with the reason beside it
+  ("Fix the problems listed under the JSON to save." or "Change the JSON to save."). A mismatch, and a case with a reply, ask first
+  ("Save the expected errors?": the lines that do not agree, then the marks of the changed and removed errors are dropped, the case is marked again from the reply, the
   test cases version changes). Saving closes the dialog.
 - **States**: malformed JSON (line and column, text kept); missing variable, empty field, missing
   description (field path); nothing pasted yet; name taken; identical to base (refused); test
