@@ -1,18 +1,21 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { STEPS } from '../../../src/app/selectors';
 import { labels } from '../../../src/ui/labels';
 
 const required = [
   'Load test project…', 'Save test project', 'Save test project as…', 'Save test project first', 'Discard', 'Import test cases…', 'Export test cases…', 'Load demo…',
-  'Load metric definition…', 'Reopen test cases', 'Continue', 'Explain', 'More', 'Add test case…', 'From JSON',
+  'Load metric definition…', 'Continue', 'Explain', 'More', 'Add test case…', 'From JSON',
   'Clean case', 'Case with errors', 'Save case', 'Close without saving', 'Open',
   'Rename', 'Show JSON', 'Rebuild prompt', 'Add category', 'Show the issue', 'Edit expected errors',
   'Paste reply', 'Save reply', 'Add finding…', 'Second opinion…', 'Apply opinion', 'Approve',
   // the rest of FR-008
-  'New evaluation', 'Add rule', 'Add condition', 'Remove', 'Add categories',
+  'New test project', 'Add rule', 'Add condition', 'Remove', 'Add categories',
   'Start test run', 'Download example file', 'Next', 'Copy prompt', 'Add error', 'Previous case',
   'Next case', 'Found', 'Not found', 'False positive', 'Genuine error', 'Ignored', 'Cancel',
   'Summary', 'Error analysis', 'Test case list', 'Export HTML report…', 'Load check settings…',
-  'Run again with a new judge…', 'Help',
+  'Help',
 ];
 
 const forbidden = [
@@ -44,5 +47,43 @@ describe('labels (FR-008)', () => {
 
   it('names no Verify, Compare or shelf action', () => {
     for (const value of values) expect(value).not.toMatch(/\b(verify|compare|shelf)\b/i);
+  });
+});
+
+// T304 (f): the words of the old two-file flow are gone from the labels and the components.
+// Not scanned: src/ui/help, and the legacy label keys that Help still reads (both go with the Help update, T225).
+describe('no word of the old flow (T304 f)', () => {
+  const legacyKeys = ['finalizeTestCases', 'editTestCases', 'editJudgeAndRunAgain', 'loadEvaluation', 'saveEvaluation', 'saveEvaluationAs', 'saveEvaluationFirst', 'startNewEvaluation'];
+  const banned = /evaluation file|Run again with a new judge|Reopen test cases|Finalize|Edit test cases|Save evaluation|Load evaluation|New evaluation|Open on Run/i;
+
+  const sourceFiles = (dir: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) return entry.name === 'help' ? [] : sourceFiles(path);
+      return /\.tsx?$/.test(entry.name) ? [path] : [];
+    });
+
+  it('the labels outside the legacy keys use none of them', () => {
+    const live = Object.entries(labels).filter(([key]) => !legacyKeys.includes(key));
+    for (const [key, value] of live) expect(value, key).not.toMatch(banned);
+  });
+
+  it('no file under src/ui (outside help) or src/app shows them in a string', () => {
+    const offenders: string[] = [];
+    for (const file of [...sourceFiles('src/ui'), ...sourceFiles('src/app')]) {
+      if (file.endsWith('src/ui/labels.ts')) continue;
+      const lines = readFileSync(file, 'utf8').split('\n');
+      lines.forEach((line, i) => {
+        if (/^\s*(\/?\*|\/\/|import )/.test(line)) return; // comments and import paths are not shown to anyone
+        const code = line.replace(/\/\/.*$/, '');
+        if (/['"`]/.test(code) && banned.test(code)) offenders.push(`${file}:${i + 1}`);
+      });
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('names the step "Test run" and the new menu item "New test project"', () => {
+    expect(labels.startNewTestProject).toBe('New test project');
+    expect(STEPS.map((s) => s.name)).toEqual(['Judge', 'Test cases', 'Test run', 'Results']);
   });
 });

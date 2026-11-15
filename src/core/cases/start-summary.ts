@@ -6,9 +6,9 @@ import type { TestProject } from '../model';
 import { testProjectFeedback, type TestProjectFeedback } from './feedback';
 
 export interface StartSummary {
-  /** False only when there is nothing to finalize: no test cases, or an empty judge prompt. */
+  /** False only when there is nothing to start: no test cases, or an empty judge prompt. */
   allowed: boolean;
-  /** One plain sentence saying why finalizing is refused and what to do. */
+  /** One plain sentence saying why starting the test run is refused and what to do. */
   refusal?: string;
   /** Counts, balance and the test size against the minimums. */
   feedback: TestProjectFeedback;
@@ -37,7 +37,7 @@ export function startSummary(evaluation: Pick<TestProject, 'dataset' | 'judge_se
   const unique = [...new Set(warnings)];
 
   if (evaluation.dataset.cases.length === 0) {
-    return { allowed: false, refusal: 'There are no test cases to run. Add a test case, or import test cases from the File menu.', feedback, warnings: unique };
+    return { allowed: false, refusal: 'There are no test cases to run. Add a test case, or import test cases from the More menu.', feedback, warnings: unique };
   }
   if (evaluation.judge_set.prompt.trim() === '') {
     return { allowed: false, refusal: 'The judge prompt is empty. Write it on the Judge step, then start the test run.', feedback, warnings: unique };

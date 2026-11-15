@@ -8,12 +8,12 @@ import { sampleProject, withRun } from '../../helpers/fixtures';
 import { withoutTestRun } from '../../../src/core/cases/test-run';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
-/** Finalized; the clean case has a reply, the case with errors has none. */
-const finalized = (): AppState => {
+/** The test run has started; the clean case has a reply, the case with errors has none. */
+const started = (): AppState => {
   const e = sampleProject();
   return { ...createState(), step: 'cases', project: withRun(e, { replies: { '1': e.testRun!.replies['1']! }, decisions: {} }) };
 };
-const show = (state = finalized()) => render(<App ports={createFakePorts()} env={env} initialState={state} />);
+const show = (state = started()) => render(<App ports={createFakePorts()} env={env} initialState={state} />);
 const open = (name: string) => fireEvent.click(within(screen.getAllByRole('row').find((r) => r.textContent?.includes(name)) as HTMLElement).getByRole('button', { name: 'Open' }));
 const edit = () => fireEvent.click(screen.getByRole('button', { name: 'Edit expected errors' }));
 const dialog = () => screen.getByRole('dialog', { name: 'Edit expected errors' });
@@ -21,7 +21,7 @@ const box = () => within(dialog()).getByLabelText('Expected errors') as HTMLText
 const save = () => within(dialog()).getByRole('button', { name: 'Save expected errors' }) as HTMLButtonElement;
 
 describe('Edit expected errors', () => {
-  it('is offered on every case, with or without a reply, finalized or not', () => {
+  it('is offered on every case, with or without a reply, started or not', () => {
     show();
     open('Anna + 2 errors');
     expect(screen.getByRole('button', { name: 'Edit expected errors' })).toBeTruthy();

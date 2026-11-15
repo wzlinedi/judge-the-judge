@@ -1,6 +1,6 @@
 // The action names of FR-008, used by every component. One key per name; no two keys share a label.
 export const labels = {
-  // File menu and header
+  // More menu and header
   more: 'More',
   help: 'Help',
   loadTestProject: 'Load test project…',
@@ -12,8 +12,9 @@ export const labels = {
   exportTestCases: 'Export test cases…',
   loadExample: 'Load demo…',
   loadMetricDefinition: 'Load metric definition…',
-  startNewEvaluation: 'New evaluation',
+  startNewTestProject: 'New test project',
   saveTestProjectFirst: 'Save test project first',
+  startNewEvaluation: 'New evaluation', // legacy, read by Help (T225)
   // Legacy: the one-file flow has no evaluation file. Help still reads these keys; they go with the Help update (T225).
   loadEvaluation: 'Load evaluation…',
   saveEvaluation: 'Save evaluation',

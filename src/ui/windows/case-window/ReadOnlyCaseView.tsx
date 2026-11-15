@@ -20,7 +20,7 @@ export interface ReadOnlyCaseViewProps {
   caseId: string;
   onNavigate: (caseId: string) => void;
   onClose: () => void;
-  onOpenOnRun: (caseId: string) => void;
+  onOpenOnTestRun: (caseId: string) => void;
 }
 
 const count = (n: number, word: string) => (n === 0 ? [] : [`${n} ${word}`]);
@@ -39,7 +39,7 @@ export function errorsSummary(effective: Pick<Effective, 'expected' | 'additiona
  * The case as Results shows it (FR-071, T256): the same frame and the same parts as the case window of Run, and no action that changes the case.
  * 1. Case (the fields with the highlights and the complete prompt), 2. Judge reply (read-only), 3. Errors (a summary line, then the two groups).
  */
-export function ReadOnlyCaseView({ evaluation, reviewed, caseId, onNavigate, onClose, onOpenOnRun }: ReadOnlyCaseViewProps) {
+export function ReadOnlyCaseView({ evaluation, reviewed, caseId, onNavigate, onClose, onOpenOnTestRun }: ReadOnlyCaseViewProps) {
   const textRef = useRef<HTMLDivElement>(null);
   const { strong, shown, show } = useShowIssue(textRef);
   const index = reviewed.findIndex((r) => r.testCase.id === caseId);
@@ -161,8 +161,8 @@ export function ReadOnlyCaseView({ evaluation, reviewed, caseId, onNavigate, onC
       headerExtra={
         <>
           <StatusMark status={current.status} />
-          <button type="button" onClick={() => onOpenOnRun(caseId)}>
-            Open on Run
+          <button type="button" onClick={() => onOpenOnTestRun(caseId)}>
+            Open on Test run
           </button>
         </>
       }

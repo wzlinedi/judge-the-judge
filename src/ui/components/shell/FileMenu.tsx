@@ -16,7 +16,7 @@ export const FILE_ITEMS: ReadonlyArray<{ action: FileAction; label: string }> = 
   { action: 'import-test-cases', label: labels.importTestCases },
   { action: 'export-test-cases', label: labels.exportTestCases },
   { action: 'load-example', label: labels.loadExample },
-  { action: 'start-new-evaluation', label: labels.startNewEvaluation },
+  { action: 'start-new-evaluation', label: labels.startNewTestProject },
 ];
 
 export interface FileMenuProps {

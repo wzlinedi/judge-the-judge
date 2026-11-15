@@ -117,10 +117,10 @@ describe('the "what next" line on Run', () => {
 });
 
 describe('a test run that has not started', () => {
-  it('has no Run step: it says what to do first', () => {
+  it('shows the Test run step with its actions disabled and says why (T306 b)', () => {
     renderApp(createFakePorts(), stateOn(withoutTestRun(noReplies())));
-    expect(screen.getByText(/Run needs a started test run/)).toBeTruthy();
-    expect(screen.queryByLabelText('Model details')).toBeNull();
+    expect((screen.getByLabelText('Model details') as HTMLTextAreaElement).disabled).toBe(true);
+    expect(screen.getAllByText('Start the test run first').length).toBeGreaterThan(0);
   });
 });
 

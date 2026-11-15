@@ -1,4 +1,4 @@
-// Reproduce and audit (FR-075, SC-003): the results recomputed from a loaded evaluation file, and any
+// Reproduce and audit (FR-075, SC-003): the results recomputed from a loaded test project, and any
 // difference from the stored ones. Pure: the versions are passed in, because hashing them is asynchronous.
 import type { LoadedTestProject } from '../io/test-project-file';
 import type { MetricDefinition } from '../metrics/types';

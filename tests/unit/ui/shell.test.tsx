@@ -18,7 +18,7 @@ describe('header', () => {
     expect(within(header).getByText('Judge the Judge')).toBeTruthy();
     const nav = within(header).getByRole('navigation', { name: 'Steps' });
     const steps = within(nav).getAllByRole('button');
-    expect(steps.map((s) => s.textContent)).toEqual(['1Judge', '2Test cases', '3Run', '4Results']);
+    expect(steps.map((s) => s.textContent)).toEqual(['1Judge', '2Test cases', '3Test run', '4Results']);
     expect(steps[0]?.getAttribute('aria-current')).toBe('step');
     const actions = header.querySelector('.header-actions') as HTMLElement;
     expect(within(actions).getAllByRole('button').map((b) => b.textContent)).toEqual(['Save test project', 'More', 'Help']);
@@ -51,7 +51,7 @@ describe('header', () => {
     const items = screen.getAllByRole('menuitem').map((i) => i.textContent);
     expect(items).toEqual([
       'Load test project…', 'Save test project as…',
-      'Import test cases…', 'Export test cases…', 'Load demo…', 'New evaluation',
+      'Import test cases…', 'Export test cases…', 'Load demo…', 'New test project',
     ]);
     expect(screen.getByRole('button', { name: 'Save test project' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Save evaluation/ })).toBeNull();
@@ -103,7 +103,7 @@ describe('the "what next" line', () => {
 
   it('a step that is not available shows one sentence and a button that leads to the step needed', () => {
     renderApp();
-    fireEvent.click(screen.getByRole('button', { name: /3\s*Run/ }));
+    fireEvent.click(screen.getByRole('button', { name: /4\s*Results/ }));
     const gate = screen.getByRole('region', { name: 'Not available yet' });
     expect(within(gate).getByText(/started test run/i)).toBeTruthy();
     const buttons = within(gate).getAllByRole('button');

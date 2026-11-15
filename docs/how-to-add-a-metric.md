@@ -8,7 +8,7 @@ A definition file is data only. It cannot contain or run code.
 
 ## How to use a definition
 
-The tool has no separate step for loading a metric: **the test project file carries its metric**, and **Load test project…** registers it. The evaluation file keeps only the metric's id and parameters, so load the test project first when you open an evaluation of a metric of your own.
+The tool has no separate step for loading a metric: **the test project file carries its metric**, and **Load test project…** registers it. The file keeps the whole metric definition, so one file is enough to open a test project of a metric of your own.
 
 1. Take a definition file such as the ones in the examples below (they are metric files: `judge_set` is the judge, the rest is the metric).
 2. Put the judge (`judge_set`, without `clean_base_cases`) and the test cases in a test project, and copy `name`, `description`, `limitations`, `output_format`, `parameters` and `measures` into `metric.definition` of that file, next to `metric.id` (the same `id` as the definition) and `metric.parameters`.

@@ -72,7 +72,7 @@ export function SummaryView({ results, evaluation, onThreshold, reviewed, onOpen
         </p>
       ) : null}
 
-      {c.cases_decided === 0 ? <p class="muted">No case is decided yet, so there is no result to show. Run the cases and decide what awaits you on the Run step.</p> : null}
+      {c.cases_decided === 0 ? <p class="muted">No case is decided yet, so there is no result to show. Run the cases and decide what awaits you on the Test run step.</p> : null}
 
       {perCase ? <p>{PER_CASE_SENTENCE}</p> : null}
 

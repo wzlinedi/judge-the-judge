@@ -52,7 +52,7 @@ async function open(page: Page, files: MemoryFiles): Promise<MemoryFiles> {
   return files;
 }
 
-/** Opens the page on a new Accuracy project (three clean cases, nothing finalized) and goes to the Test cases step. */
+/** Opens the page on a new Accuracy project (three clean cases, nothing started) and goes to the Test cases step. */
 export async function startFromAccuracy(page: Page, memory?: MemoryFiles): Promise<MemoryFiles> {
   const files = memory ?? (await installMemoryFiles(page));
   files.files.set('starter.json', accuracyStarterProject());

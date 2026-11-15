@@ -175,6 +175,8 @@ test('no request leaves the page or carries user data while the demo is loaded, 
   await caseWindow.getByRole('button', { name: 'Copy prompt' }).click();
   await page.evaluate(() => navigator.clipboard.writeText('{"claims": []}'));
   await caseWindow.getByRole('button', { name: 'Paste reply' }).click();
+  // the demo case already has a reply, so the tool asks before it changes it
+  await page.getByRole('dialog', { name: 'Change the judge’s reply?' }).getByRole('button', { name: 'Change reply' }).click();
   await caseWindow.getByRole('button', { name: 'Close' }).click();
   await saveButton(page).click();
   await expect.poll(() => memory.files.get('books.json')).not.toBe(demoProject); // the loaded file is remembered, so the save overwrites it
@@ -194,7 +196,7 @@ test('no request leaves the page or carries user data while the demo is loaded, 
   expect(storage).toEqual({ local: 0, session: 0, databases: 0, cookies: '' });
 });
 
-test('every action is reachable with the keyboard alone: the File menu, a dialog, the steps, and focus is visible', async ({ page }) => {
+test('every action is reachable with the keyboard alone: the More menu, a dialog, the steps, and focus is visible', async ({ page }) => {
   await installMemoryFiles(page);
   await page.goto('/');
   const focusRing = () => page.evaluate(() => (document.activeElement ? getComputedStyle(document.activeElement).outlineStyle : 'none'));

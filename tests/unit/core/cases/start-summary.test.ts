@@ -1,4 +1,4 @@
-// What the user sees before finalizing the test cases, and whether finalizing is allowed (FR-052, SC-014, SC-025).
+// What the user sees before the start the test cases, and whether starting is allowed (FR-052, SC-014, SC-025).
 import { describe, expect, it } from 'vitest';
 import { startSummary } from '../../../../src/core/cases/start-summary';
 import type { TestProject, TestCase } from '../../../../src/core/model';
@@ -19,7 +19,7 @@ const bigEnough = (): TestCase[] => [
   ...Array.from({ length: 10 }, (_, i) => clean(`c${i + 1}`)),
 ];
 
-describe('whether finalizing is allowed', () => {
+describe('whether starting is allowed', () => {
   it('is refused for empty test cases, and says what to do', () => {
     const summary = startSummary(make([]));
     expect(summary.allowed).toBe(false);
@@ -43,7 +43,7 @@ describe('whether finalizing is allowed', () => {
     expect(summary.warnings.length).toBeGreaterThan(0);
   });
 
-  it('is allowed again when the test cases are already finalized and nothing is wrong (finalizing twice changes nothing)', () => {
+  it('is allowed again when the test run has already started and nothing is wrong (starting twice changes nothing)', () => {
     expect(startSummary(sampleProject()).allowed).toBe(true);
   });
 });

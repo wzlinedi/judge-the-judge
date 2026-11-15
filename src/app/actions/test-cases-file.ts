@@ -69,7 +69,7 @@ export async function prepareImport(state: AppState, ports: Ports): Promise<Prep
   };
 }
 
-/** Adds the valid cases, also after finalizing; categories the user was told about join the catalog (FR-029, FR-053). */
+/** Adds the valid cases, also after the test run has started; categories the user was told about join the catalog (FR-029, FR-053). */
 export function applyImport(state: AppState, plan: ImportPlan): CaseEdit {
   if (plan.cases.length === 0) return { state, note: 'There was no valid test case to import.' };
   const hasReplies = replyCount(state.project) > 0;

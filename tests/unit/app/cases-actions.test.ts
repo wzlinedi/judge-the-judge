@@ -10,7 +10,7 @@ const open = (): AppState => {
   const e = sampleProject();
   return { ...createState(), project: { ...withoutTestRun(e), dataset: { ...e.dataset, version: 'stale' } } };
 };
-const finalized = (replies = false): AppState => {
+const started = (replies = false): AppState => {
   const s = open();
   return { ...s, project: { ...s.project, testRun: { ...emptyTestRun(), replies: replies ? sampleProject().testRun!.replies : {} } } };
 };
@@ -41,12 +41,12 @@ describe('saveCaseFromJson', () => {
   });
 
   it('marks a case added after the first reply', () => {
-    const r = saveCaseFromJson(finalized(true), json(), { mode: 'paste' });
+    const r = saveCaseFromJson(started(true), json(), { mode: 'paste' });
     expect(r.state.project.dataset.cases[2]?.changed_after_first_reply).toBe('added');
   });
 
-  it('does not mark a case added before the first reply, also after finalizing', () => {
-    const r = saveCaseFromJson(finalized(false), json(), { mode: 'paste' });
+  it('does not mark a case added before the first reply, also after the start', () => {
+    const r = saveCaseFromJson(started(false), json(), { mode: 'paste' });
     expect(r.state.project.dataset.cases[2]?.changed_after_first_reply).toBeUndefined();
     expect(r.state.project.testRun).toBeDefined();
   });
@@ -67,7 +67,7 @@ describe('rename and remove', () => {
   });
 
   it('renames a case that has a reply, and the reply stays (T234)', () => {
-    const state = finalized(true);
+    const state = started(true);
     const renamed = renameCase(state, '2', 'x');
     expect(renamed.note).toBeUndefined();
     expect(renamed.state.project.dataset.cases.find((c) => c.id === '2')?.name).toBe('x');
@@ -75,7 +75,7 @@ describe('rename and remove', () => {
   });
 
   it('removes a case that has a reply together with its reply and its decisions (T234)', () => {
-    const base = finalized(true);
+    const base = started(true);
     const state: AppState = { ...base, project: withRun(base.project, { decisions: { '2': { expected: {}, additional: {}, added_findings: [], approved: true, note: '' }, '1': { expected: {}, additional: {}, added_findings: [], approved: false, note: '' } } }) };
     const removed = removeCase(state, '2');
     expect(removed.note).toBeUndefined();
@@ -86,15 +86,15 @@ describe('rename and remove', () => {
   });
 
   it('says what removing a case takes with it: its reply and the number of its decisions (T234)', () => {
-    const base = finalized(true);
+    const base = started(true);
     const decisions = { '2': { expected: { e1: { state: 'found' }, e2: { state: 'missed' } }, additional: { 'claims[]#2': { state: 'false_positive' } }, added_findings: [{ text: 'x' }], approved: false, note: '' } } as unknown as NonNullable<AppState['project']['testRun']>['decisions'];
     const state: AppState = { ...base, project: withRun(base.project, { decisions }) };
     expect(removalImpact(state, '2')).toEqual({ hasReply: true, decisions: 4 });
-    expect(removalImpact(finalized(false), '2')).toEqual({ hasReply: false, decisions: 0 });
+    expect(removalImpact(started(false), '2')).toEqual({ hasReply: false, decisions: 0 });
   });
 
   it('removes a base that other cases use: they lose `base`, are not marked corrected, and the version is dropped (T283)', () => {
-    const base = finalized(true);
+    const base = started(true);
     const cases = base.project.dataset.cases.map((c) => (c.id === '2' ? { ...c, base: '1' } : c));
     const state: AppState = { ...base, project: { ...base.project, dataset: { ...base.project.dataset, cases, version: 'v1' } } };
     const removed = removeCase(state, '1');
@@ -119,7 +119,7 @@ describe('saveExpectedErrors (T254)', () => {
   const withMark = (state: AppState, id: string, errorId: string): AppState => ({ ...state, project: withRun(state.project, { decisions: { [id]: { expected: { [errorId]: { state: 'found', source: 'manual' } }, additional: {}, added_findings: [], approved: false, note: '' } } }) });
 
   it('replaces only the expected errors of a case without a reply, drops the version and keeps the fields', () => {
-    const state = finalized(false);
+    const state = started(false);
     const original = state.project.dataset.cases[1]!;
     const items = listOf(state, '2');
     items[0]!['difficulty'] = 'subtle';
@@ -134,7 +134,7 @@ describe('saveExpectedErrors (T254)', () => {
   });
 
   it('works on a case that has a reply too: the marks of the changed and removed errors go, the other marks stay (T254)', () => {
-    const reset = finalized(true);
+    const reset = started(true);
     const base: AppState = { ...reset, project: { ...reset.project, dataset: { ...reset.project.dataset, cases: reset.project.dataset.cases.map(({ changed_after_first_reply: _mark, ...c }) => c) } } };
     const first = base.project.dataset.cases[1]!.expected_errors[0]!.id;
     const second = base.project.dataset.cases[1]!.expected_errors[1]!.id;
@@ -150,7 +150,7 @@ describe('saveExpectedErrors (T254)', () => {
   });
 
   it('adds, removes and renumbers: a new error gets a free identifier, a removed one loses its mark, an empty list makes a clean case', () => {
-    const state = withMark(finalized(true), '2', 'e2');
+    const state = withMark(started(true), '2', 'e2');
     const items = listOf(state, '2');
     const r = saveExpectedErrors(state, '2', JSON.stringify([items[0], { description: 'a third', fragment: 'Anna is a doctor' }]));
     const ids = r.state.project.dataset.cases[1]!.expected_errors.map((e) => e.id);
@@ -160,7 +160,7 @@ describe('saveExpectedErrors (T254)', () => {
   });
 
   it('a new category joins the catalog; unchanged text changes nothing and says so', () => {
-    const state = finalized(false);
+    const state = started(false);
     const items = listOf(state, '2');
     const r = saveExpectedErrors(state, '2', JSON.stringify([{ ...items[0], category: 'brand-new' }, items[1]]));
     expect(r.state.project.judge_set.error_catalog.map((c) => c.name)).toContain('brand-new');
@@ -170,7 +170,7 @@ describe('saveExpectedErrors (T254)', () => {
   });
 
   it('refuses a list with a problem and says where it is; the state is untouched', () => {
-    const state = finalized(false);
+    const state = started(false);
     const r = saveExpectedErrors(state, '2', JSON.stringify([{ category: 'x' }]));
     expect(r.state).toBe(state);
     expect(r.problems?.map((p) => p.path)).toContain('expected_errors[0].description');

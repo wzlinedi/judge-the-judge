@@ -22,7 +22,6 @@ export interface ResultsStepProps {
   results: Results;
   evaluation: TestProject;
   reviewed: ReviewedCase[];
-  /** "Edit the judge and run again" (FR-074); the caller asks about unsaved work first. */
   /** Exports the HTML report (FR-072). */
   onExport: (() => void) | undefined;
   onThreshold: (measure: string, value: number) => void;

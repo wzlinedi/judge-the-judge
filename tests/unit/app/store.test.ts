@@ -120,7 +120,7 @@ describe('the remembered file', () => {
     expect(next.project.testRun).toBeUndefined();
   });
 
-  it('"New evaluation" forgets the file and starts empty', () => {
+  it('"New test project" forgets the file and starts empty', () => {
     const ports = createFakePorts();
     ports.testProjectTarget.fileName = 'a.json';
     const next = startNewTestProject(edit(createState(), (e) => withRun(e, { model_note: 'x' })), ports);

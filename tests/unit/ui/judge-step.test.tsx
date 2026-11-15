@@ -94,7 +94,7 @@ describe('prompt, variables and judged text (FR-010)', () => {
     expect(await screen.findByText(/Judge version: [0-9a-f]{12}/)).toBeTruthy();
   });
 
-  it('is read-only once the test cases are finalized, and says why', () => {
+  it('is read-only once the test run has started, and says why', () => {
     show({ ...createState(), project: sampleProject() });
     expect((screen.getByLabelText('Judge prompt') as HTMLTextAreaElement).readOnly).toBe(true);
     expect(screen.getByText(/test run has started, so the prompt is fixed/i)).toBeTruthy();
@@ -331,7 +331,7 @@ describe('the "what next" line (FR-001)', () => {
     expect(next(state).action.disabled).toBeFalsy();
   });
 
-  it('says the prompt is fixed after finalizing', () => {
+  it('says the prompt is fixed after the start', () => {
     const state: AppState = { ...createState(), project: sampleProject() };
     expect(next(state).sentence).toMatch(/fixed/);
   });

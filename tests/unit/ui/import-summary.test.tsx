@@ -28,7 +28,7 @@ async function choose(ports: FakePorts, file: { name: string; text: string; byte
 }
 
 describe('the import panel', () => {
-  it('opens from the File menu with Download example file explained behind Explain, and Choose file', () => {
+  it('opens from the More menu with Download example file explained behind Explain, and Choose file', () => {
     openPanel();
     expect(within(panel()).getByRole('button', { name: 'Download example file' })).toBeTruthy();
     fireEvent.click(within(panel()).getByRole('button', { name: 'Explain' }));

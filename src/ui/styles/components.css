@@ -96,7 +96,7 @@
 .copy-status { font-size: var(--text-sm); color: var(--success); margin-left: var(--space-2); }
 .drop-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: var(--space-4); text-align: center; }
 
-/* Run step, case window, results */
+/* Test run step, case window, results */
 .notice-line { min-height: 1.5rem; padding: 0 var(--space-4); color: var(--text-muted); font-size: var(--text-sm); }
 /* A message is a banner that stays in view when the page is scrolled; a refusal is red and says "Not done" */
 .notice-line.has-message { position: sticky; top: 0; z-index: 10; margin: var(--space-2) var(--space-4); padding: var(--space-2) var(--space-3); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: var(--text-md); box-shadow: var(--shadow); }
@@ -215,7 +215,7 @@ button.fold { background: transparent; border: 0; padding: 0; font: inherit; fon
 .judge-says { margin: 0; }
 .field-name { margin: var(--space-2) 0 var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
 
-/* US7: the Run step and the reply pane of the case window */
+/* US7: the Test run step and the reply pane of the case window */
 .judge-summary p { margin: 0; }
 .steps { margin: 0 0 var(--space-3); padding-left: var(--space-5); display: grid; gap: var(--space-2); }
 .reply-message { min-height: 1.4em; margin: var(--space-2) 0; color: var(--text-muted); }

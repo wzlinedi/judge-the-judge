@@ -33,7 +33,7 @@ export function CasesStep({ state, onAdd, onOpen, onEdit, categoriesOpen, onTogg
         </button>
       </div>
       {empty ? (
-        <EmptyState title="There are no test cases yet">Add a test case, or import test cases from the File menu.</EmptyState>
+        <EmptyState title="There are no test cases yet">Add a test case, or import test cases from the More menu.</EmptyState>
       ) : (
         <CasesTable state={state} onOpen={onOpen} onEdit={onEdit} />
       )}

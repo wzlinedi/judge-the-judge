@@ -9,10 +9,12 @@ import { SampleReplySection } from './SampleReplySection';
 export interface JudgeStepProps {
   state: AppState;
   onEdit: (result: JudgeEdit) => void;
+  /** "Load test project…" beside the lock notice, once the test run has started. */
+  onLoad?: () => void;
 }
 
 /** One judge set: prompt, sample reply and rules. No welcome section and no buttons besides the rule ones (FR-088). */
-export function JudgeStep({ state, onEdit }: JudgeStepProps) {
+export function JudgeStep({ state, onEdit, onLoad }: JudgeStepProps) {
   const warnings = readabilityWarnings(state.project.judge_set);
   return (
     <div class="judge-step">
@@ -25,7 +27,7 @@ export function JudgeStep({ state, onEdit }: JudgeStepProps) {
           </ul>
         </section>
       ) : null}
-      <PromptSection state={state} onEdit={onEdit} />
+      <PromptSection state={state} onEdit={onEdit} onLoad={onLoad} />
       <SampleReplySection state={state} onEdit={onEdit} />
       <RulesSection state={state} onEdit={onEdit} />
       {countingModeOf(state.project.judge_set) === 'per_case' ? (

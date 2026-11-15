@@ -3,15 +3,17 @@ import { setJudgedText, setPrompt, type JudgeEdit } from '../../../app/actions/j
 import { promptLocked, type AppState } from '../../../app/store';
 import { findVariables } from '../../../core/judge/variables';
 import { judgeVersion } from '../../../core/judge/version';
+import { labels } from '../../labels';
 import { Explain } from '../../components/Explain';
 
 export interface SectionProps {
   state: AppState;
   onEdit: (result: JudgeEdit) => void;
+  onLoad?: () => void;
 }
 
 /** The judge prompt, its variables, the judged text and the judge version (FR-010). Read as it changes: no button. */
-export function PromptSection({ state, onEdit }: SectionProps) {
+export function PromptSection({ state, onEdit, onLoad }: SectionProps) {
   const id = useId();
   const set = state.project.judge_set;
   const locked = promptLocked(state);
@@ -41,7 +43,16 @@ export function PromptSection({ state, onEdit }: SectionProps) {
         spellcheck={false}
         onInput={(event) => onEdit(setPrompt(state, (event.currentTarget as HTMLTextAreaElement).value))}
       />
-      {locked ? <p class="muted">The test run has started, so the prompt is fixed. To test another prompt, load the test project with “Load the test project only”.</p> : null}
+      {locked ? (
+        <p class="muted">
+          The test run has started, so the prompt is fixed. To test another prompt, load the test project with “Load the test project only”.{' '}
+          {onLoad ? (
+            <button type="button" onClick={onLoad}>
+              {labels.loadTestProject}
+            </button>
+          ) : null}
+        </p>
+      ) : null}
       {version ? <p class="muted">{`Judge version: ${version}`}</p> : null}
       {set.prompt.trim() !== '' && variables.length === 0 ? <p class="muted">Nothing from the test cases will reach the prompt.</p> : null}
       {variables.length > 0 ? (

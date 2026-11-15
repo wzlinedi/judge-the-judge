@@ -9,9 +9,9 @@ import { sampleProject, withRun } from '../../helpers/fixtures';
 import { withoutTestRun } from '../../../src/core/cases/test-run';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
-const stateOf = (finalized = false, replies = false): AppState => {
+const stateOf = (started = false, replies = false): AppState => {
   const e = sampleProject();
-  return { ...createState(), step: 'cases', project: finalized ? withRun(e, { replies: replies ? { '2': e.testRun!.replies['2']! } : {}, decisions: {} }) : { ...withoutTestRun(e), dataset: e.dataset } };
+  return { ...createState(), step: 'cases', project: started ? withRun(e, { replies: replies ? { '2': e.testRun!.replies['2']! } : {}, decisions: {} }) : { ...withoutTestRun(e), dataset: e.dataset } };
 };
 const show = (state = stateOf()) => render(<App ports={createFakePorts()} env={env} initialState={state} />);
 const rowOf = (name: string) => screen.getAllByRole('row').find((r) => within(r).queryByText(name, { exact: false })) as HTMLElement;
@@ -109,7 +109,7 @@ describe('Open, Rename and Remove', () => {
   });
 });
 
-describe('after finalizing (FR-053)', () => {
+describe('after the start (FR-053)', () => {
   it('keeps Open, Rename, Remove and Add test case enabled, also for a case with a reply (T234)', () => {
     show(stateOf(true, true));
     expect((screen.getByRole('button', { name: 'Add test case…' }) as HTMLButtonElement).disabled).toBe(false);
@@ -122,7 +122,7 @@ describe('after finalizing (FR-053)', () => {
 });
 
 describe('the "what next" line', () => {
-  it('offers a disabled Finalize test cases with no cases (Add test case is above the list, T228), and Finalize test cases otherwise', () => {
+  it('offers a disabled Start test run with no cases (Add test case is above the list, T228), and Start test run otherwise', () => {
     const empty = { ...createState(), step: 'cases' as const };
     expect(nextAction(empty, 'cases').action).toMatchObject({ label: 'Start test run', disabled: true });
     expect(nextAction(empty, 'cases').sentence).toMatch(/button below/);

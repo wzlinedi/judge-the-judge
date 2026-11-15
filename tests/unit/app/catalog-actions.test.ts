@@ -39,7 +39,7 @@ describe('catalog actions', () => {
     expect(taken.state.project.judge_set.error_catalog.map((c) => c.name)).toContain('factual-error');
   });
 
-  it('allows a rename after finalizing, when the cases have replies', () => {
+  it('allows a rename after the start, when the cases have replies', () => {
     const r = renameCategoryAction(open(true), 'factual-error', 'renamed');
     expect(r.state.project.dataset.cases[1]?.expected_errors[0]?.category).toBe('renamed');
   });

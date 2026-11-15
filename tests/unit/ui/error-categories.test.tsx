@@ -12,12 +12,12 @@ import { withoutTestRun } from '../../../src/core/cases/test-run';
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 afterEach(() => resetRegistry());
 
-const stateWith = (over: { finalized?: boolean; cases?: boolean } = {}): AppState => {
+const stateWith = (over: { started?: boolean; cases?: boolean } = {}): AppState => {
   const e = sampleProject();
   return {
     ...createState(),
     step: 'cases',
-    project: { ...(over.finalized ? withRun(e, { decisions: {} }) : withoutTestRun(e)), dataset: { ...e.dataset, cases: over.cases === false ? [] : e.dataset.cases } },
+    project: { ...(over.started ? withRun(e, { decisions: {} }) : withoutTestRun(e)), dataset: { ...e.dataset, cases: over.cases === false ? [] : e.dataset.cases } },
   };
 };
 const show = (state = stateWith(), ports: FakePorts = createFakePorts()) => render(<App ports={ports} env={env} initialState={state} />);
@@ -135,8 +135,8 @@ describe('each category', () => {
     expect(heading().textContent).toContain('3 categories');
   });
 
-  it('after finalizing, a category in use can still be removed and renamed', () => {
-    open(stateWith({ finalized: true }));
+  it('after the start, a category in use can still be removed and renamed', () => {
+    open(stateWith({ started: true }));
     expect(within(rowOf('factual-error')).getAllByRole('button').every((b) => !(b as HTMLButtonElement).disabled)).toBe(true);
   });
 

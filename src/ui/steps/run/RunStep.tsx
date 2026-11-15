@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks';
+import { isStarted } from '../../../core/cases/test-run';
 import type { ReviewedCase } from '../../../core/evaluation/results';
 import type { TestProject } from '../../../core/model';
 import { EmptyState } from '../../components/EmptyState';
@@ -39,7 +40,9 @@ export function findingCounts(r: ReviewedCase): { additional: number; byHand: nu
 export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd, onModelDetails }: RunStepProps) {
   const [show, setShow] = useState<Show>('all');
   const versions = useVersions(evaluation);
+  const started = isStarted(evaluation);
   const full = testProjectFeedback(evaluation).capacity.full;
+  const reason = started ? null : <span class="muted">Start the test run first</span>;
   const decided = reviewed.filter((r) => r.status === 'pass' || r.status === 'fail').length;
   const received = reviewed.filter((r) => r.status !== 'not_run').length;
   const toDecide = reviewed.reduce((sum, r) => sum + itemsToDecide(r), 0);
@@ -63,7 +66,8 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
         <h2>
           <label for="model-details">Model details</label>
         </h2>
-        <textarea id="model-details" rows={3} value={evaluation.testRun?.model_note ?? ''} spellcheck={false} onInput={(event) => onModelDetails((event.currentTarget as HTMLTextAreaElement).value)} />
+        <textarea id="model-details" rows={3} value={evaluation.testRun?.model_note ?? ''} spellcheck={false} disabled={!started} onInput={(event) => onModelDetails((event.currentTarget as HTMLTextAreaElement).value)} />
+        {reason}
         <p class="muted">Optional. Write the model name, the temperature and other settings in any form; the tool does not read them. They are saved with the result.</p>
       </section>
 
@@ -79,9 +83,10 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
       <section class="card" aria-label="Cases">
         <div class="list-head">
           <h2>Cases</h2>
-          <button type="button" onClick={onAdd} disabled={full}>
+          <button type="button" onClick={onAdd} disabled={full || !started}>
             {labels.addTestCase}
           </button>
+          {reason}
           <label>
             Show{' '}
             <select value={show} onChange={(event) => setShow((event.currentTarget as HTMLSelectElement).value as Show)}>
@@ -127,9 +132,10 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
                   </td>
                   <td>{itemsToDecide(r)}</td>
                   <td>
-                    <button type="button" onClick={() => onOpen(r.testCase.id)}>
+                    <button type="button" onClick={() => onOpen(r.testCase.id)} disabled={!started}>
                       {labels.open}
                     </button>
+                    {reason}
                   </td>
                 </tr>
                 );

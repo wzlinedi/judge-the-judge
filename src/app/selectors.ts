@@ -8,7 +8,7 @@ import type { AppState, StepId } from './store';
 export const STEPS: ReadonlyArray<{ id: Exclude<StepId, 'help'>; number: number; name: string }> = [
   { id: 'judge', number: 1, name: 'Judge' },
   { id: 'cases', number: 2, name: 'Test cases' },
-  { id: 'run', number: 3, name: 'Run' },
+  { id: 'run', number: 3, name: 'Test run' },
   { id: 'results', number: 4, name: 'Results' },
 ];
 
@@ -40,9 +40,9 @@ export function saveIndicator(state: AppState): { text: string; kind: 'none' | '
 
 /** A step that is not available yet shows one sentence and a button that leads to what is needed first. */
 export function stepGate(state: AppState, step: StepId): StepGateInfo | null {
-  if ((step === 'run' || step === 'results') && !isStarted(state.project)) {
+  if (step === 'results' && !isStarted(state.project)) {
     return {
-      sentence: `${step === 'run' ? 'Run' : 'Results'} needs a started test run. Start the test run on the Test cases step first.`,
+      sentence: 'Results needs a started test run. Start the test run on the Test cases step first.',
       action: { label: labels.goToTestCases, go: 'cases' },
     };
   }
@@ -92,7 +92,7 @@ export function nextAction(state: AppState, step: StepId = state.step, reviewed:
         };
       }
       if (count === 0) {
-        return { sentence: 'Add your first test case with the button below, or import test cases from the File menu.', action: { label: labels.startTestRun, intent: 'start', disabled: true } };
+        return { sentence: 'Add test case with the button below, or import test cases from the More menu.', action: { label: labels.startTestRun, intent: 'start', disabled: true } };
       }
       return { sentence: 'Start the test run when the test cases are ready.', detail: `${count} test cases`, action: { label: labels.startTestRun, intent: 'start' } };
     case 'run': {

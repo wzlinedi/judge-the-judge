@@ -30,7 +30,7 @@ describe('identifiers', () => {
 });
 
 describe('canChangeCase', () => {
-  it('allows everything before finalizing', () => {
+  it('allows everything before the start', () => {
     const open = { ...e.dataset.cases };
     void open;
     expect(canChangeCase(cases, {}, false, '1', 'rename')).toEqual({ allowed: true });
@@ -40,7 +40,7 @@ describe('canChangeCase', () => {
     for (const action of ['correct', 'rename', 'remove'] as const) expect(canChangeCase(cases, e.testRun!.replies, true, '2', action)).toEqual({ allowed: true });
   });
 
-  it('allows them after finalizing for a case without a reply', () => {
+  it('allows them after the start for a case without a reply', () => {
     const noReplies = {};
     expect(canChangeCase(cases, noReplies, true, '2', 'rename').allowed).toBe(true);
     expect(canChangeCase(cases, noReplies, true, '2', 'correct').allowed).toBe(true);

@@ -193,7 +193,7 @@ describe('the actions of Results (T267): no card "Report and next version", Expo
     }
   });
 
-  it('has Export HTML report as the main action when every case is decided, and Run again with a new judge… beside it', () => {
+  it('has Export HTML report as the main action when every case is decided', () => {
     const h = show(decided);
     const next = screen.getByRole('region', { name: 'What next' });
     expect(within(next).getByRole('button', { name: 'Export HTML report…' }).classList.contains('primary')).toBe(true);
@@ -231,8 +231,8 @@ describe('states', () => {
 describe('the read-only case view', () => {
   const evaluation = sampleProject();
   const reviewed = reviewEvaluation(evaluation, accuracyMetric);
-  const view = (caseId: string, over: Partial<{ onNavigate: (id: string) => void; onClose: () => void; onOpenOnRun: (id: string) => void }> = {}) => {
-    const h = { onNavigate: vi.fn(), onClose: vi.fn(), onOpenOnRun: vi.fn(), ...over };
+  const view = (caseId: string, over: Partial<{ onNavigate: (id: string) => void; onClose: () => void; onOpenOnTestRun: (id: string) => void }> = {}) => {
+    const h = { onNavigate: vi.fn(), onClose: vi.fn(), onOpenOnTestRun: vi.fn(), ...over };
     render(<ReadOnlyCaseView evaluation={evaluation} reviewed={reviewed} caseId={caseId} {...h} />);
     return h;
   };
@@ -254,10 +254,10 @@ describe('the read-only case view', () => {
     expect(win.textContent).toMatch(/factual-error · obvious/);
   });
 
-  it('offers no action that changes the case: only Previous, Next, Open on Run, Close and Show the issue (T256)', () => {
+  it('offers no action that changes the case: only Previous, Next, Open on Test run, Close and Show the issue (T256)', () => {
     view('2');
     const names = within(screen.getByRole('dialog')).getAllByRole('button').map((b) => b.textContent);
-    expect(new Set(names)).toEqual(new Set(['Close', 'Next case', 'Open on Run', 'Previous case', 'Show the issue']));
+    expect(new Set(names)).toEqual(new Set(['Close', 'Next case', 'Open on Test run', 'Previous case', 'Show the issue']));
     expect(names).not.toContain('Copy prompt');
   });
 
@@ -269,10 +269,10 @@ describe('the read-only case view', () => {
     expect(h.onNavigate).toHaveBeenCalledWith('2');
   });
 
-  it('has Open on Run and Close', () => {
+  it('has Open on Test run and Close', () => {
     const h = view('2');
-    fireEvent.click(screen.getByRole('button', { name: 'Open on Run' }));
-    expect(h.onOpenOnRun).toHaveBeenCalledWith('2');
+    fireEvent.click(screen.getByRole('button', { name: 'Open on Test run' }));
+    expect(h.onOpenOnTestRun).toHaveBeenCalledWith('2');
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(h.onClose).toHaveBeenCalled();
   });
@@ -310,14 +310,14 @@ describe('the read-only case view', () => {
 
   it('says so for a case without a reply', () => {
     const e = withRun(evaluation, { replies: {}, decisions: {} });
-    render(<ReadOnlyCaseView evaluation={e} reviewed={reviewEvaluation(e, accuracyMetric)} caseId="1" onNavigate={() => {}} onClose={() => {}} onOpenOnRun={() => {}} />);
+    render(<ReadOnlyCaseView evaluation={e} reviewed={reviewEvaluation(e, accuracyMetric)} caseId="1" onNavigate={() => {}} onClose={() => {}} onOpenOnTestRun={() => {}} />);
     expect(screen.getByText(/This case has no reply yet/)).toBeTruthy();
   });
 
   it('T272: a case without a reply lists its expected errors read-only, as the case window of Run does', () => {
     const e = withRun(evaluation, { replies: {}, decisions: {} });
     const withErrors = e.dataset.cases.find((c) => c.expected_errors.length > 0)!;
-    render(<ReadOnlyCaseView evaluation={e} reviewed={reviewEvaluation(e, accuracyMetric)} caseId={withErrors.id} onNavigate={() => {}} onClose={() => {}} onOpenOnRun={() => {}} />);
+    render(<ReadOnlyCaseView evaluation={e} reviewed={reviewEvaluation(e, accuracyMetric)} caseId={withErrors.id} onNavigate={() => {}} onClose={() => {}} onOpenOnTestRun={() => {}} />);
     const list = screen.getByRole('list', { name: 'Expected errors' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(withErrors.expected_errors.length);
     expect(list.textContent).toContain(withErrors.expected_errors[0]!.description);

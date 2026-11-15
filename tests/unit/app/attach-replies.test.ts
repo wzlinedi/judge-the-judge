@@ -33,7 +33,7 @@ describe('attachReplies', () => {
     expect(second.testRun!.reply_judge_version).toBe('v1');
   });
 
-  it('refuses before the test cases are finalized and changes nothing', () => {
+  it('refuses before the test run has started and changes nothing', () => {
     const e = withoutTestRun(withoutReplies());
     const result = attachReplies(e, { items: [{ case_id: '1', reply }], problems: [] }, { judgeVersion: 'v1' });
     expect(result.project).toBe(e);
@@ -168,7 +168,7 @@ describe('saveReply', () => {
     expect(done.state.project.testRun!.decisions['2']).toBeUndefined();
   });
 
-  it('is refused before the test cases are finalized', async () => {
+  it('is refused before the test run has started', async () => {
     const e = withoutReplies();
     const state = stateOf(withoutTestRun(e));
     const outcome = await saveReply(state, '1', reply);

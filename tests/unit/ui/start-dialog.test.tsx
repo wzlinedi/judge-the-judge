@@ -11,9 +11,9 @@ import { withoutTestRun } from '../../../src/core/cases/test-run';
 import { sampleProject, withRun } from '../../helpers/fixtures';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
-const stateOf = (step: StepId, over: { finalized?: boolean; replies?: boolean; prompt?: string } = {}): AppState => {
+const stateOf = (step: StepId, over: { started?: boolean; replies?: boolean; prompt?: string } = {}): AppState => {
   const e = sampleProject();
-  const started = over.finalized ? withRun(e, { replies: over.replies ? { '2': e.testRun!.replies['2']! } : {}, decisions: {} }) : withoutTestRun(e);
+  const started = over.started ? withRun(e, { replies: over.replies ? { '2': e.testRun!.replies['2']! } : {}, decisions: {} }) : withoutTestRun(e);
   const evaluation: TestProject = {
     ...started,
     judge_set: { ...e.judge_set, ...(over.prompt !== undefined ? { prompt: over.prompt } : {}) },
@@ -84,13 +84,13 @@ describe('the summary and the confirmation', () => {
 
 describe('the "what next" line after the start', () => {
   it('Test cases and Judge offer Continue only: there is no way back', () => {
-    expect(nextAction(stateOf('cases', { finalized: true }), 'cases').action).toMatchObject({ label: 'Continue', go: 'run' });
-    expect(nextAction(stateOf('judge', { finalized: true }), 'judge').sentence).toMatch(/fixed/);
-    expect(barLabels(nextAction(stateOf('run', { finalized: true }), 'run'))).toEqual(['Next: Results']);
+    expect(nextAction(stateOf('cases', { started: true }), 'cases').action).toMatchObject({ label: 'Continue', go: 'run' });
+    expect(nextAction(stateOf('judge', { started: true }), 'judge').sentence).toMatch(/fixed/);
+    expect(barLabels(nextAction(stateOf('run', { started: true }), 'run'))).toEqual(['Next: Results']);
   });
 
   it('on Run, Add test case stands above the table of cases, not in the bar, and opens the window (T228)', () => {
-    show(stateOf('run', { finalized: true }));
+    show(stateOf('run', { started: true }));
     expect(within(bar()).queryByRole('button', { name: 'Add test case…' })).toBeNull();
     const cases = screen.getByRole('region', { name: 'Cases' });
     fireEvent.click(within(cases).getByRole('button', { name: 'Add test case…' }));
@@ -98,12 +98,12 @@ describe('the "what next" line after the start', () => {
   });
 
   it('on Judge there is no Add test case button at all (T228)', () => {
-    show(stateOf('judge', { finalized: true }));
+    show(stateOf('judge', { started: true }));
     expect(screen.queryByRole('button', { name: 'Add test case…' })).toBeNull();
   });
 
   it('on Run the button above the cases is disabled at the limit of cases (T228, FR-053)', () => {
-    const base = stateOf('run', { finalized: true });
+    const base = stateOf('run', { started: true });
     const one = base.project.dataset.cases[0]!;
     const cases = Array.from({ length: MAX_CASES }, (_, i) => ({ ...one, id: String(i + 1), name: `Case ${i + 1}` }));
     show({ ...base, project: { ...base.project, dataset: { ...base.project.dataset, cases } } });
@@ -113,7 +113,7 @@ describe('the "what next" line after the start', () => {
 
 describe('the test project card', () => {
   it('says that the test run has started and what that fixes', () => {
-    show(stateOf('cases', { finalized: true }));
+    show(stateOf('cases', { started: true }));
     const card = screen.getByRole('region', { name: 'Test project' });
     expect(card.textContent).toMatch(/test run has started/i);
   });

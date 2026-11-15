@@ -81,7 +81,7 @@ describe('loading', () => {
     await loadFile(ports, 'Load test project…', demoText, 'demo-run.json');
     const question = await screen.findByRole('dialog', { name: 'Load test project' });
     fireEvent.click(within(question).getByRole('button', { name: 'Load with the test run' }));
-    await waitFor(() => expect(screen.getByRole('button', { name: /3\s*Run/ }).getAttribute('aria-current')).toBe('step'));
+    await waitFor(() => expect(screen.getByRole('button', { name: /3\s*Test run/ }).getAttribute('aria-current')).toBe('step'));
     const next = screen.getByRole('region', { name: 'What next' });
     expect(within(next).getByText('15 of 20 cases decided')).toBeTruthy();
     expect(screen.getByText('All changes saved (demo-run.json)')).toBeTruthy();
@@ -164,7 +164,7 @@ describe('Continue on Run and Results', () => {
     await loadFile(ports, 'Load test project…', saver.testProjectTarget.lastText!, 'again.json');
     fireEvent.click(await screen.findByRole('button', { name: 'Load with the test run' }));
     await waitFor(() => expect(screen.getByText('All changes saved (again.json)')).toBeTruthy());
-    fireEvent.click(screen.getByRole('button', { name: /3\s*Run/ }));
+    fireEvent.click(screen.getByRole('button', { name: /3\s*Test run/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Save test project' }));
     await waitFor(() => expect(ports.testProjectTarget.lastText).not.toBeNull());
     expect(ports.testProjectTarget.asked).toBe(0);

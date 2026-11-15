@@ -87,7 +87,11 @@ test('Export test cases, a new test project, Import test cases; and the test pro
   await expect(rows(page)).toHaveCount(4);
   await expect(page.getByRole('dialog', { name: 'Load test project' })).toHaveCount(0);
 
-  // "Start test run" in place of finalizing: the one file now holds an empty test run, and loading it asks the question
+  // a new test project has no judge prompt, and the test run cannot start without one
+  await page.getByRole('button', { name: /1\s*Judge/ }).click();
+  await page.getByLabel('Judge prompt').fill('Find the errors in {{answer}} using {{source_text}}.');
+  await page.getByRole('button', { name: /2\s*Test cases/ }).click();
+  // "Start test run": the one file now holds an empty test run, and loading it asks the question
   await startTestRun(page);
   await saveButton(page).click(); // the remembered file is overwritten, with no picker
   await expect.poll(() => JSON.parse(memory.files.get('project.json') ?? '{}').test_run !== undefined).toBe(true);

@@ -4,7 +4,7 @@ import { Dialog } from '../../components/Dialog';
 import { labels } from '../../labels';
 import { plural, TestSize } from './TestSize';
 
-export interface FinalizeDialogProps {
+export interface StartTestRunDialogProps {
   open: boolean;
   state: AppState;
   onConfirm: () => void;
@@ -12,7 +12,7 @@ export interface FinalizeDialogProps {
 }
 
 /** The summary shown before the test cases are fixed (FR-052): counts, balance, test size and every warning. Warnings do not stop it; an empty test project or prompt does. */
-export function FinalizeDialog({ open, state, onConfirm, onClose }: FinalizeDialogProps) {
+export function StartTestRunDialog({ open, state, onConfirm, onClose }: StartTestRunDialogProps) {
   const summary = startSummary(state.project);
   const f = summary.feedback;
   return (

@@ -46,7 +46,7 @@ describe('prompt and judged text', () => {
     expect(result.note).toMatch(/not a variable/);
   });
 
-  it('keeps the prompt and judged text fixed once the test cases are finalized', () => {
+  it('keeps the prompt and judged text fixed once the test run has started', () => {
     const state: AppState = { ...fresh(), project: sampleProject() };
     for (const result of [setPrompt(state, 'changed {{x}}'), setJudgedText(state, 'source_text')]) {
       expect(result.state).toBe(state);
@@ -163,7 +163,7 @@ describe('rules', () => {
     expect(state.project.judge_set.error_rules).toHaveLength(1);
   });
 
-  it('rules stay editable after finalizing (the reply mapping and the rules may still be corrected)', () => {
+  it('rules stay editable after the start (the reply mapping and the rules may still be corrected)', () => {
     const state: AppState = { ...fresh(), project: sampleProject() };
     const next = addRule(state).state;
     expect(next.project.judge_set.error_rules.length).toBe(state.project.judge_set.error_rules.length + 1);

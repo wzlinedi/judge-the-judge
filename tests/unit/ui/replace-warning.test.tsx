@@ -20,7 +20,7 @@ const menu = (name: string) => {
 const REPLACING: Array<[string, GuardedAction]> = [
   ['Load test project…', 'load-test-project'],
   ['Load demo…', 'load-example'],
-  ['New evaluation', 'start-new-evaluation'],
+  ['New test project', 'start-new-evaluation'],
 ];
 
 describe('with unsaved changes', () => {
@@ -36,17 +36,17 @@ describe('with unsaved changes', () => {
   it('Cancel changes nothing', () => {
     const ports = createFakePorts();
     renderApp(ports, unsaved());
-    menu('New evaluation');
+    menu('New test project');
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('dialog', { name: 'Unsaved changes' })).toBeNull();
-    expect(screen.getByRole('button', { name: /3\s*Run/ }).getAttribute('aria-current')).toBe('step');
+    expect(screen.getByRole('button', { name: /3\s*Test run/ }).getAttribute('aria-current')).toBe('step');
     expect(screen.getByText('Unsaved changes')).toBeTruthy();
   });
 
   it('Discard goes on with the action', async () => {
     const ports = createFakePorts();
     renderApp(ports, unsaved());
-    menu('New evaluation');
+    menu('New test project');
     fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
     await waitFor(() => expect(screen.getByRole('button', { name: /1\s*Judge/ }).getAttribute('aria-current')).toBe('step'));
     expect(screen.getByText('Nothing to save yet')).toBeTruthy();
@@ -55,7 +55,7 @@ describe('with unsaved changes', () => {
   it('Save test project first saves, then goes on', async () => {
     const ports = createFakePorts();
     renderApp(ports, unsaved());
-    menu('New evaluation');
+    menu('New test project');
     fireEvent.click(screen.getByRole('button', { name: 'Save test project first' }));
     await waitFor(() => expect(ports.testProjectTarget.lastText).not.toBeNull());
     await waitFor(() => expect(screen.getByRole('button', { name: /1\s*Judge/ }).getAttribute('aria-current')).toBe('step'));
@@ -65,11 +65,11 @@ describe('with unsaved changes', () => {
     const ports = createFakePorts();
     ports.testProjectTarget.nextResult = { status: 'cancelled' };
     renderApp(ports, unsaved());
-    menu('New evaluation');
+    menu('New test project');
     fireEvent.click(screen.getByRole('button', { name: 'Save test project first' }));
     await waitFor(() => expect(ports.testProjectTarget.lastText).toBeNull());
     expect(screen.getByRole('dialog', { name: 'Unsaved changes' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /3\s*Run/ }).getAttribute('aria-current')).toBe('step');
+    expect(screen.getByRole('button', { name: /3\s*Test run/ }).getAttribute('aria-current')).toBe('step');
   });
 });
 
@@ -84,7 +84,7 @@ describe('with nothing unsaved', () => {
     const ports = createFakePorts();
     const saved = await saveTestProject(unsaved(), ports, fileEnv);
     renderApp(ports, saved.state);
-    menu('New evaluation');
+    menu('New test project');
     expect(screen.queryByRole('dialog', { name: 'Unsaved changes' })).toBeNull();
   });
 });

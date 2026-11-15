@@ -17,7 +17,7 @@ const json = (name: string, summary: string, errors: unknown[] = []) => JSON.str
 const doctor = { category: 'factual-error', fragment: 'Anna is a doctor', description: 'Profession changed', difficulty: 'subtle' };
 const rows = 'name,field:source_text,field:summary\n' + Array.from({ length: 10 }, (_, i) => `Imported ${i + 1},${source},Summary number ${i + 1}`).join('\n') + '\n';
 
-/** An open test project (nothing finalized, no cases) with the judge of the sample. */
+/** An open test project (nothing started, no cases) with the judge of the sample. */
 const open = (): AppState => {
   const e = sampleProject();
   return { ...createState(), step: 'cases', project: { ...withoutTestRun(e), dataset: { name: 'Book summaries', cases: [] } } };
@@ -40,7 +40,7 @@ const twelve = async (): Promise<AppState> => {
 
 const started = async (): Promise<AppState> => {
   const done = startTestRun(await twelve());
-  if (done.state.project.testRun === undefined) throw new Error('not finalized');
+  if (done.state.project.testRun === undefined) throw new Error('not started');
   return done.state;
 };
 

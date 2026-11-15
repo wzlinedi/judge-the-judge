@@ -1,4 +1,4 @@
-// The file actions of the File menu and the Run step (FR-004, FR-020, FR-051, FR-073, FR-076).
+// The file actions of the More menu and the Test run step (FR-004, FR-020, FR-051, FR-073, FR-076).
 // Each returns the next state and what to tell the user; nothing here touches the page.
 import { testCasesVersion } from '../../core/cases/version';
 import { computeResults } from '../../core/evaluation/results';

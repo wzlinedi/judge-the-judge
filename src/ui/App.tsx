@@ -31,7 +31,7 @@ import { HelpStep } from './help/HelpStep';
 import { labels } from './labels';
 import { ResultsStep } from './steps/results/ResultsStep';
 import { CasesStep } from './steps/cases/CasesStep';
-import { FinalizeDialog } from './steps/cases/FinalizeDialog';
+import { StartTestRunDialog } from './steps/cases/StartTestRunDialog';
 import { JudgeStep } from './steps/judge/JudgeStep';
 import { RunStep } from './steps/run/RunStep';
 import { CaseWindow } from './windows/case-window/CaseWindow';
@@ -65,7 +65,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const [categoriesOpen, setCategoriesOpen] = useState<boolean | undefined>(undefined);
   const [testWindow, setTestWindow] = useState<TestWindowView | null>(null);
   const [importing, setImporting] = useState(false);
-  const [finalizing, setFinalizing] = useState(false);
+  const [startDialogOpen, setStartDialogOpen] = useState(false);
   /** A file that holds a test run, waiting for the choice "Load with the test run" or "Load the test project only". */
   const [loadQuestion, setLoadQuestion] = useState<PendingLoad | null>(null);
   const [viewCase, setViewCase] = useState<string | null>(null);
@@ -158,7 +158,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     if (action === 'load-example') loadDemo();
     else if (action === 'start-new-evaluation') {
       setState((s) => startNewTestProject(s, portsRef.current));
-      say('Started a new evaluation.');
+      say('Started a new test project.');
     } else if (action === 'load-test-project') void load();
     else if (action === 'save-test-project') void save(false);
     else if (action === 'save-test-project-as') void save(true);
@@ -182,15 +182,15 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const gate = stepGate(state, state.step);
   const next = nextAction(state, state.step, reviewed);
   const doIntent = (intent: NextIntent | undefined) => {
-    if (intent === 'start') setFinalizing(true);
+    if (intent === 'start') setStartDialogOpen(true);
   };
   const runAction = () => {
     if (next.action.openCase) setState((s) => ({ ...s, openCase: next.action.openCase ?? null }));
     else if (next.action.go) go(next.action.go);
     else doIntent(next.action.intent);
   };
-  const confirmFinalize = () => {
-    setFinalizing(false);
+  const confirmStart = () => {
+    setStartDialogOpen(false);
     const result = startTestRun(stateRef.current);
     setState(result.state);
     say(result.note);
@@ -239,7 +239,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
                 onModelDetails={(text) => setState((s) => modelDetailsEdit(s, text))}
               />
             ) : state.step === 'judge' ? (
-              <JudgeStep state={state} onEdit={applyJudge} />
+              <JudgeStep state={state} onEdit={applyJudge} onLoad={() => onFile('load-test-project')} />
             ) : state.step === 'cases' ? (
               <CasesStep
                 state={state}
@@ -279,13 +279,13 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
           caseId={viewCase}
           onNavigate={setViewCase}
           onClose={() => setViewCase(null)}
-          onOpenOnRun={(id) => {
+          onOpenOnTestRun={(id) => {
             setViewCase(null);
             setState((s) => ({ ...s, step: 'run', openCase: id }));
           }}
         />
       ) : null}
-      <FinalizeDialog open={finalizing} state={state} onConfirm={confirmFinalize} onClose={() => setFinalizing(false)} />
+      <StartTestRunDialog open={startDialogOpen} state={state} onConfirm={confirmStart} onClose={() => setStartDialogOpen(false)} />
       {testWindow ? <TestCaseWindow state={state} view={testWindow} onView={setTestWindow} onApply={applyCase} /> : null}
       {importing ? (
         <ImportWindow

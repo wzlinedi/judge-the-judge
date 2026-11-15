@@ -16,7 +16,7 @@ const REQUIRED = ['detection_rate', 'false_positive_rate'];
 
 type MeasureLike = { id: string; operation: string; numerator?: string | undefined; denominator?: string | undefined; of?: string | undefined; interval?: string | undefined };
 
-/** The problems of the measures of a definition, in a metric file or inside a test project or an evaluation file (T243). */
+/** The problems of the measures of a definition, in a metric file or inside a test project (T243). */
 export function measureProblems(measures: readonly MeasureLike[], prefix: string): Problem[] {
   const problems: Problem[] = [];
   const ids = new Set<string>();

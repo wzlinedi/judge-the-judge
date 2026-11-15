@@ -1,4 +1,4 @@
-// FR-027 to FR-029, FR-050, FR-053: importing adds cases to the test project, also after finalizing; exporting changes nothing.
+// FR-027 to FR-029, FR-050, FR-053: importing adds cases to the test project, also after the start; exporting changes nothing.
 import { describe, expect, it } from 'vitest';
 import { applyImport, downloadExample, exportTestCases, prepareImport } from '../../src/app/actions/test-cases-file';
 import { createFakePorts } from '../../src/app/ports/fakes';
@@ -92,7 +92,7 @@ describe('applyImport', () => {
     expect(edit.state.project.dataset.cases.some((c) => c.changed_after_first_reply === 'added' && ['Zażółć', 'Dora'].includes(c.name))).toBe(false);
   });
 
-  it('after finalizing: the new cases start as Not run, are marked "added" once replies exist, and the replies and decisions of the others are kept', async () => {
+  it('after the start: the new cases start as Not run, are marked "added" once replies exist, and the replies and decisions of the others are kept', async () => {
     const state = project();
     expect(state.project.testRun).toBeDefined();
     const edit = applyImport(state, await plan(state));

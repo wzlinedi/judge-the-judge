@@ -30,8 +30,8 @@ export interface AppState {
   /** The case open in the case window of Run, if any. */
   openCase: string | null;
   /**
-   * What a loaded evaluation file said differently from what recomputing it gives (SC-003). It belongs to that one
-   * evaluation: once any change makes a new evaluation, it no longer applies (see `recomputeDifferences`).
+   * What a loaded test project said differently from what recomputing it gives (SC-003). It belongs to that one
+   * result: once any change makes a new result, it no longer applies (see `recomputeDifferences`).
    */
   loadCheck: { project: TestProject; differences: Difference[] } | null;
 }
@@ -144,7 +144,7 @@ export function applyLoadedTestProject(state: AppState, project: TestProject, po
   };
 }
 
-/** "Load demo…" and "New evaluation" forget the remembered file (FR-076). */
+/** "Load demo…" and "New test project" forget the remembered file (FR-076). */
 export function forgetFile(ports: Ports): void {
   ports.testProjectTarget.forget();
 }

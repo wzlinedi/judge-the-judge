@@ -125,7 +125,7 @@ test('the load question: Cancel changes nothing, and a file without a test run l
 
   await loadTestProject(page, memory, 'books.json');
   const question = loadQuestion(page);
-  await expect(question.getByRole('button')).toHaveText(['Load with the test run', 'Load the test project only', 'Cancel']);
+  await expect(question.getByRole('button')).toHaveText(['Cancel', 'Load the test project only', 'Load with the test run']);
   await question.getByRole('button', { name: 'Cancel' }).click();
   await expect(question).toHaveCount(0);
   await expect(page.getByRole('button', { name: TEST_RUN_STEP })).toHaveAttribute('aria-current', 'step'); // nothing changed
