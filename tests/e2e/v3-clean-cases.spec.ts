@@ -43,23 +43,11 @@ test('a clean case is made from a prompt and an answer, and checked as it is pas
   await expect(row(page, 'Keeper')).toContainText('Clean');
   await expect(page.getByText('Unsaved changes')).toBeVisible();
 
-  // T238: the case keeps its prompt; Open offers Recreate the test case, and the other cases do not have one
+  // T262: Open has no Recreate the test case; a similar case is made with Add test case
   await row(page, 'Keeper').getByRole('button', { name: 'Open' }).click();
-  await page.getByRole('button', { name: 'Recreate the test case' }).click();
-  const original = page.getByRole('dialog', { name: 'Original prompt' });
-  await expect(original.getByRole('textbox', { name: 'Original prompt' })).toHaveValue(/\{\{source_text\}\}/);
-  await original.getByRole('button', { name: 'Copy and recreate' }).click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('{{source_text}}');
-  await expect(testWindow(page).getByLabel('Case JSON')).toHaveValue('');
-  // T255: the new window has Show prompt at the top, with the prompt that was copied
-  await testWindow(page).getByRole('button', { name: 'Show prompt' }).click();
-  const shown = page.getByRole('dialog', { name: 'Complete judge prompt' });
-  await expect(shown.getByRole('textbox')).toHaveValue(/\{\{source_text\}\}/);
-  await shown.getByRole('button', { name: 'Close' }).click();
-  await testWindow(page).getByRole('button', { name: 'Close' }).click();
-  await row(page, 'Keeper').getByRole('button', { name: 'Open' }).click();
-  await page.getByRole('button', { name: 'Previous case' }).click();
-  await expect(page.getByRole('button', { name: 'Recreate the test case' })).toBeDisabled();
+  const opened = page.getByRole('dialog', { name: /Keeper/ });
+  await expect(opened).toBeVisible();
+  await expect(opened.getByRole('button', { name: /Recreate/ })).toHaveCount(0);
 });
 
 test('Rename and Remove work from the row buttons, a copy is made with From JSON, and a base in use cannot be removed', async ({ page }) => {

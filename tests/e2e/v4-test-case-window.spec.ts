@@ -80,6 +80,23 @@ test('a case with injected errors on one page: base, errors, prompt, JSON, expec
   await expect(page.getByRole('button', { name: /Error categories.*6/ })).toBeVisible(); // the new category joined the five
   await page.getByRole('button', { name: /Error categories/ }).click();
   await expect(page.getByText('tone-shift', { exact: true }).first()).toBeVisible();
+
+  // T262: a new case with the same errors starts from the saved case: its errors are copied and its base gives the base text
+  await page.getByRole('button', { name: 'Add test case…' }).click();
+  await win(page).getByRole('button', { name: 'Case with errors' }).click();
+  await win(page).getByLabel('Base case (optional)').selectOption({ label: 'Anna, two errors' });
+  await expect(win(page).getByRole('status').filter({ hasText: 'are copied into Errors to prepare' })).toContainText(`The base text is ${base.name}.`);
+  await expect(win(page).getByRole('row', { name: 'Error 2' }).getByLabel('Category')).toHaveValue('tone-shift');
+  await expect(win(page).getByRole('row', { name: 'Error 2' }).getByLabel('Description')).toHaveValue('The last word was changed');
+  const again = win(page).getByRole('textbox', { name: 'Prompt for your LLM' });
+  await expect(again).toHaveValue(/The last word was changed/);
+  // the prompt can be edited before it is copied, and Rebuild prompt asks first
+  await again.fill('Write one more case like this, please.');
+  await win(page).getByRole('button', { name: 'Copy prompt' }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('Write one more case like this, please.');
+  await win(page).getByRole('button', { name: 'Rebuild prompt' }).click();
+  await page.getByRole('dialog', { name: 'Rebuild the prompt?' }).getByRole('button', { name: 'Rebuild prompt' }).click();
+  await expect(again).toHaveValue(/The last word was changed/);
 });
 
 test('From JSON: a case identical to its base is refused with the reason', async ({ page }) => {

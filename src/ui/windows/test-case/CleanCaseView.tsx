@@ -3,11 +3,11 @@ import { saveCaseFromJson, type CaseEdit } from '../../../app/actions/cases';
 import type { AppState } from '../../../app/store';
 import { checkCaseJson } from '../../../core/cases/case-json';
 import { cleanCasePrompt } from '../../../core/generation/clean-case-prompt';
-import { CopyButton } from '../../components/CopyButton';
 import { JsonBox } from '../../components/JsonBox';
 import { labels } from '../../labels';
 import { CaseData } from './CaseData';
 import { contextOf, NameField, Part, Status, typedNameOf, type TypedName } from './CaseParts';
+import { PromptEditor } from './PromptEditor';
 import { TestCaseFrame } from './TestCaseFrame';
 
 export interface CleanCaseViewProps {
@@ -22,10 +22,13 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
   const name = typedNameOf(typed) ?? '';
   const [like, setLike] = useState('');
   const [answer, setAnswer] = useState('');
+  /** The prompt as the user edited it (T262); undefined while it follows Like case. */
+  const [edited, setEdited] = useState<string | undefined>(undefined);
   const { judge_set, dataset } = state.evaluation;
   const clean = dataset.cases.filter((c) => c.expected_errors.length === 0);
   const likeCase = clean.find((c) => c.id === like);
-  const prompt = cleanCasePrompt(judge_set, likeCase);
+  const built = cleanCasePrompt(judge_set, likeCase);
+  const prompt = edited ?? built;
   const check = answer.trim() === '' ? undefined : checkCaseJson(answer, { ...contextOf(state), mode: 'clean', name });
   const valid = check?.case !== undefined;
 
@@ -38,7 +41,7 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
   return (
     <TestCaseFrame
       title={labels.cleanCase}
-      dirty={typed !== null || like !== '' || answer !== ''}
+      dirty={typed !== null || like !== '' || answer !== '' || edited !== undefined}
       onClose={onClose}
       headerAction={
         <>
@@ -73,15 +76,7 @@ export function CleanCaseView({ state, onApply, onClose }: CleanCaseViewProps) {
         </div>
       </Part>
       <Part number={2} title="Ask your LLM">
-        <div class="form-grid">
-          <label class="field-label" for="clean-prompt">
-            Prompt for your LLM
-          </label>
-          <div>
-            <textarea id="clean-prompt" class="json" rows={12} readOnly value={prompt} />
-            <CopyButton text={prompt} label={labels.copyPrompt} />
-          </div>
-        </div>
+        <PromptEditor id="clean-prompt" rows={12} built={built} edited={edited} onEdit={setEdited} />
       </Part>
       <Part number={3} title="Paste its answer">
         <JsonBox label="Answer of your LLM" value={answer} onChange={setAnswer} check={() => check?.problems ?? []} rows={10} />

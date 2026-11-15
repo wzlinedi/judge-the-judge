@@ -8,8 +8,7 @@ import { JsonCaseView } from './JsonCaseView';
 
 export type TestWindowView =
   | { view: 'choice' }
-  /** `prompt`: the original prompt of a case that is made again; "Show prompt" stands at the top of the window (T255). */
-  | { view: 'paste'; text: string; prompt?: string }
+  | { view: 'paste'; text: string }
   | { view: 'clean' }
   | { view: 'inject' }
   | { view: 'open'; id: string };
@@ -31,7 +30,7 @@ export function TestCaseWindow({ state, view, onView, onApply }: TestCaseWindowP
     case 'inject':
       return <InjectWindow state={state} onApply={onApply} onClose={close} />;
     case 'paste':
-      return <JsonCaseView key={`${view.prompt ?? ''}|${view.text}`} state={state} initialText={view.text} recreatePrompt={view.prompt} onApply={onApply} onClose={close} />;
+      return <JsonCaseView key={view.text} state={state} initialText={view.text} onApply={onApply} onClose={close} />;
     case 'clean':
       return <CleanCaseView state={state} onApply={onApply} onClose={close} />;
     case 'open':
@@ -41,7 +40,6 @@ export function TestCaseWindow({ state, view, onView, onApply }: TestCaseWindowP
           caseId={view.id}
           onNavigate={(id) => onView({ view: 'open', id })}
           onApply={onApply}
-          onRecreate={(prompt) => onView({ view: 'paste', text: '', prompt })}
           onClose={close}
         />
       );

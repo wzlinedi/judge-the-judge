@@ -57,11 +57,11 @@ describe('the read-only view', () => {
     }
   });
 
-  it('has no Clone and no Show JSON: a copy is made with Recreate the test case or Export test cases (T218, T238)', () => {
+  it('has no Clone, no Show JSON and no Recreate: a similar case is made with Add test case › Case with errors (T218, T262)', () => {
     show();
     open('Anna + 2 errors');
     expect(within(view()).queryByRole('button', { name: 'Clone' })).toBeNull();
     expect(within(view()).queryByRole('button', { name: 'Show JSON' })).toBeNull();
-    expect(within(view()).getByRole('button', { name: 'Recreate the test case' })).toBeTruthy();
+    expect(within(view()).queryByRole('button', { name: /Recreate/ })).toBeNull();
   });
 });

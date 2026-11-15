@@ -1,11 +1,11 @@
 import type { ComponentChildren } from 'preact';
-import { addRow, cleanCasesOf, injectPrompt, NEW_CATEGORY, removeRow, updateRow, type ErrorRow, type InjectDraft } from '../../../app/actions/test-case-window';
+import { addRow, baseCasesOf, injectPrompt, NEW_CATEGORY, removeRow, startFrom, updateRow, type ErrorRow, type InjectDraft } from '../../../app/actions/test-case-window';
 import type { AppState } from '../../../app/store';
 import { normalizeCategoryName } from '../../../core/cases/catalog';
 import type { PreparedDifficulty } from '../../../core/generation/inject-errors-prompt';
-import { CopyButton } from '../../components/CopyButton';
 import { labels } from '../../labels';
 import { Part } from './CaseParts';
+import { PromptEditor } from './PromptEditor';
 
 export interface InjectPartsProps {
   state: AppState;
@@ -73,11 +73,15 @@ function Row({ row, number, state, onChange, onRemove }: { row: ErrorRow; number
   );
 }
 
+const withoutPrompt = ({ prompt: _edit, ...rest }: InjectDraft): InjectDraft => rest;
+
 /** Parts 1 to 3 of a case with injected errors (FR-040): the base, the errors to prepare, and the prompt for the user's LLM. */
 export function InjectParts({ state, draft, onDraft, nameField }: InjectPartsProps) {
-  const clean = cleanCasesOf(state);
-  const base = draft.base === '' ? undefined : state.evaluation.dataset.cases.find((c) => c.id === draft.base);
-  const prompt = injectPrompt(state, draft);
+  const { clean, withErrors } = baseCasesOf(state);
+  const cases = state.evaluation.dataset.cases;
+  const base = draft.base === '' ? undefined : cases.find((c) => c.id === draft.base);
+  const from = draft.from === '' ? undefined : cases.find((c) => c.id === draft.from);
+  const nameOf = (c: { id: string; name: string }) => c.name || `Case ${c.id}`;
 
   return (
     <>
@@ -88,17 +92,33 @@ export function InjectParts({ state, draft, onDraft, nameField }: InjectPartsPro
             Base case (optional)
           </label>
           <div>
-            <select id="inject-base" value={draft.base} onChange={(event) => onDraft({ ...draft, base: (event.currentTarget as HTMLSelectElement).value })}>
+            <select id="inject-base" value={draft.from} onChange={(event) => onDraft(startFrom(state, draft, (event.currentTarget as HTMLSelectElement).value))}>
               <option value="">None (the LLM writes the whole case)</option>
-              {clean.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name || `Case ${c.id}`}
-                </option>
-              ))}
+              {clean.length > 0 ? (
+                <optgroup label="Clean cases">
+                  {clean.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {nameOf(c)}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null}
+              {withErrors.length > 0 ? (
+                <optgroup label="Cases with errors (their errors are copied)">
+                  {withErrors.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {nameOf(c)}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null}
             </select>
           </div>
         </div>
-        {clean.length === 0 ? <p class="muted">There is no clean case yet, so the LLM writes the whole case. A base is optional.</p> : null}
+        {clean.length === 0 ? <p class="muted">There is no clean case yet, so without a base the LLM writes the whole case. A base is optional.</p> : null}
+        {from && from.expected_errors.length > 0 ? (
+          <p class="muted" role="status">{`The ${from.expected_errors.length} ${from.expected_errors.length === 1 ? 'error' : 'errors'} of ${nameOf(from)} ${from.expected_errors.length === 1 ? 'is' : 'are'} copied into Errors to prepare. ${base ? `The base text is ${nameOf(base)}.` : 'It has no clean base, so the LLM writes the whole case.'}`}</p>
+        ) : null}
         {base ? (
           <div class="base-fields">
             {Object.entries(base.fields).map(([name, value]) => (
@@ -142,15 +162,7 @@ export function InjectParts({ state, draft, onDraft, nameField }: InjectPartsPro
 
       <Part number={3} title="Ask your LLM">
         <p class="muted">Copy this prompt into your LLM. What it returns is a proposal to review, not a guaranteed result.</p>
-        <div class="form-grid">
-          <label class="field-label" for="inject-prompt">
-            Prompt for your LLM
-          </label>
-          <div>
-            <textarea id="inject-prompt" class="json" rows={14} readOnly value={prompt} />
-            <CopyButton text={prompt} label={labels.copyPrompt} />
-          </div>
-        </div>
+        <PromptEditor id="inject-prompt" rows={14} built={injectPrompt(state, draft)} edited={draft.prompt} onEdit={(text) => onDraft(text === undefined ? withoutPrompt(draft) : { ...draft, prompt: text })} />
       </Part>
     </>
   );

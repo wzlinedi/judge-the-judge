@@ -237,7 +237,7 @@ Rules (see data-model.md for the full list):
 - A name already used in the test project is kept on import and both cases show the warning
   (FR-079, SC-034).
 - `generation_prompt` (optional text) is the prompt a case was made with, written when it is saved
-  from "Clean case" or "Case with errors"; "Open" offers it as "Recreate the test case". It is not part of
+  from "Clean case" or "Case with errors" (the prompt in the box, as the user may have edited it, T262). It is not part of
   the test cases version, and a case pasted as JSON, imported or from the demo has none (T238).
 - `changed_after_first_reply` is `added` or `corrected` for a case added, or whose expected errors
   were corrected, after the first reply of the run was entered (FR-053); it is absent otherwise.

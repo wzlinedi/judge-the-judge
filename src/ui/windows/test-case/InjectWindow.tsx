@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 import type { CaseEdit } from '../../../app/actions/cases';
-import { injectPrompt, newDraft, type InjectDraft } from '../../../app/actions/test-case-window';
+import { newDraft, promptOf, type InjectDraft } from '../../../app/actions/test-case-window';
 import type { AppState } from '../../../app/store';
 import { checkCaseJson } from '../../../core/cases/case-json';
 import { AnswerBox, contextOf, ExpectedErrorsPart, NameField, Part, typedNameOf, type TypedName } from './CaseParts';
@@ -22,7 +22,7 @@ export function InjectWindow({ state, onApply, onClose }: InjectWindowProps) {
   const [touched, setTouched] = useState(false);
   const [typed, setTyped] = useState<TypedName>(null);
   const first = newDraft(state);
-  const changed = touched || typed !== null || draft.base !== '' || draft.rows.length !== first.rows.length || draft.rows.some((r, i) => r.description !== '' || r.difficulty !== 'llm' || r.category !== first.rows[i]?.category);
+  const changed = touched || typed !== null || draft.from !== '' || draft.prompt !== undefined || draft.rows.length !== first.rows.length || draft.rows.some((r, i) => r.description !== '' || r.difficulty !== 'llm' || r.category !== first.rows[i]?.category);
   const check = text.trim() === '' ? undefined : checkCaseJson(text, { ...contextOf(state), mode: 'inject', ...(draft.base !== '' ? { base: draft.base } : {}), errorsToPrepare: draft.rows.length, ...(typedNameOf(typed) !== undefined ? { name: typedNameOf(typed) as string } : {}) });
 
   return (
@@ -30,7 +30,7 @@ export function InjectWindow({ state, onApply, onClose }: InjectWindowProps) {
       title={labels.caseWithInjectedErrors}
       dirty={changed || text !== ''}
       onClose={onClose}
-      headerAction={<SaveCaseButton state={state} text={text} mode="inject" {...(draft.base !== '' ? { base: draft.base } : {})} errorsToPrepare={draft.rows.length} generationPrompt={injectPrompt(state, draft)} {...(typedNameOf(typed) !== undefined ? { name: typedNameOf(typed) as string } : {})} check={check} emptyReason="Paste the answer of your LLM to save." onApply={onApply} onClose={onClose} />}
+      headerAction={<SaveCaseButton state={state} text={text} mode="inject" {...(draft.base !== '' ? { base: draft.base } : {})} errorsToPrepare={draft.rows.length} generationPrompt={promptOf(state, draft)} {...(typedNameOf(typed) !== undefined ? { name: typedNameOf(typed) as string } : {})} check={check} emptyReason="Paste the answer of your LLM to save." onApply={onApply} onClose={onClose} />}
     >
       <InjectParts
         state={state}

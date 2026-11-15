@@ -11,7 +11,7 @@ Chrome and Microsoft Edge (FR-003).
 ## Shell
 
 - **The standard large dialog** (T247): about 90% of the screen in both directions, the content
-  scrolling inside it, its buttons in a bar at the bottom. Every "Show prompt", "Original prompt",
+  scrolling inside it, its buttons in a bar at the bottom. Every "Show prompt",
   "Second opinion…" and "Edit expected errors" use it. A short question keeps the small dialog.
 
 - A header with the tool name and, on the same line, **Save test project**, **Save evaluation**, the
@@ -160,21 +160,21 @@ which asks first when something was pasted or typed.
   changes, with problems under it (line and column, or field path), and **Test case name** above it (see below); 2. the expected errors,
   read-only. The window names the kind the case will have (clean without expected errors, injected
   errors with at least one); a JSON with no expected errors says "No expected errors: this will be
-  saved as a clean case." **Save case** is in the header. There is no **Clone**: a copy is made with **Recreate the test case** (Open) or **Export test cases**, and this window. A case saved from **Clean case** or **Case with errors** keeps the prompt of its window as `generation_prompt`.
+  saved as a clean case." **Save case** is in the header. There is no **Clone**: a copy is made with **Export test cases** and this window; a similar case with **Case with errors**, which can start from a case with errors (T262). A case saved from **Clean case** or **Case with errors** keeps the prompt in its box as `generation_prompt`.
 - **Test case name** (T239), the first field of part 1 in every way of adding a case (not in **Edit expected errors**, where the name cannot change): filled with "Case N", N being the identifier the case will get; a name in the pasted JSON replaces it while the user has not typed in the field; what the user typed wins over the JSON.
-- **Clean case** (FR-083): 1. **Test case name** (see below), an optional **Comment** and an optional **Like case**
+- **Clean case** (FR-083): 1. **Test case name** (see below), and an optional **Like case**
   (an existing clean case whose fields go into the prompt as a model); 2. the prompt for the
-  user's LLM with **Copy prompt**; 3. the box for the LLM's answer, checked as it changes. When
+  user's LLM, editable (T262), with **Copy prompt** and, once it is edited, **Rebuild prompt** (asks first; an edited prompt is no longer rebuilt); 3. the box for the LLM's answer, checked as it changes. When
   valid its fields are shown read-only and **Save case** (in the header, primary) saves and
   closes; an answer with expected errors is a problem that points to **From JSON**.
 - **Case with errors**, five parts (FR-040, FR-041, FR-085):
-  1. **Test case name** (see below) and the **Base case**: the optional base (any clean case, or none) with its fields.
+  1. **Test case name** (see below) and the **Base case**: the optional base with its fields: a clean case, or a case with errors (T262), whose errors are then copied into part 2 and whose own clean base is the base text, said in a line under the choice; or none.
   2. **Errors to prepare**: a table in the form of the categories table (T249), one row per error,
      with the columns **Category** (from the catalog or typed as a new name; the description of the
      category under it), **Difficulty** (obvious / subtle / left to the LLM) and **Description**
      (what should be wrong), and **Remove** in each row; below it **Add error**. There is no box for
      own instructions.
-  3. **Ask your LLM**: the prompt with **Copy prompt**.
+  3. **Ask your LLM**: the prompt, editable (T262), with **Copy prompt** and, once it is edited, **Rebuild prompt** (asks "Rebuild the prompt?" first); an edited prompt is no longer rebuilt when parts 1 and 2 change.
   4. **Paste its answer**: the box for the JSON, checked as it changes; changed places that no
      expected error covers are warnings under it ("A changed place is not in the list: …").
   5. **Expected errors**: the name, kind and base ("Base: 4 (name)"), the line of FR-080 ("Text and
@@ -186,7 +186,7 @@ which asks first when something was pasted or typed.
   it asks for confirmation; a case identical to its base is refused.
 - **Open** (FR-086): the case read-only (its own layout; the fields show no highlight until **Show the issue**, T257, except the warnings of FR-080), with **Previous test
   case**, **Next case** and the position ("case 7 of 20") in the header (Alt + Left/Right do
-  the same), **Recreate the test case** (enabled when the case keeps `generation_prompt`; opens **Original prompt** with **Copy**, **Copy and recreate** and **Close**; **Copy and recreate** copies the prompt and opens an empty **From JSON** window, which has **Show prompt** at the top (the standard large dialog with the copied prompt, **Copy prompt** and **Close**), and the case saved from it keeps that prompt; no **Show JSON** or **Copy JSON**), and, on every case, **Edit expected errors**; also **Show prompt** (a dialog of about 90% of the screen with
+  the same), no **Recreate the test case** (T262), no **Show JSON** or **Copy JSON**, and, on every case, **Edit expected errors**; also **Show prompt** (a dialog of about 90% of the screen with
   the whole composed prompt and only **Close**) with **Copy prompt**. No reply is shown (a reply belongs to Run).
   Sections are in frames. A saved case is never edited.
 - **Edit expected errors** (FR-089, T254): the standard large dialog with the JSON of the list of the expected errors of the case
@@ -339,7 +339,7 @@ leads to the case window.
   needs, with a worked example; the four steps; the manual copy-and-paste workflow; variables and
   the judged text; the sample reply, field paths and error rules, with examples; the error
   categories; adding test cases (From JSON, Clean case, Case with errors, the case JSON
-  layout, Open, Recreate the test case, Edit expected errors); importing test cases from a file;
+  layout, Open, Edit expected errors); importing test cases from a file;
   pasting replies and what happens when a reply is replaced; marking after each reply, Add finding
   and Remove, the second opinion window and "Ignored"; the two files (the test project, reused for
   every run; the evaluation, the progress of one run), the indicator of unsaved changes, "… as",

@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
+import { InjectWindow } from '../../../src/ui/windows/test-case/InjectWindow';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
 import { sampleEvaluation } from '../../helpers/fixtures';
@@ -42,8 +43,52 @@ describe('parts 1 to 3: the base, the errors to prepare, the prompt', () => {
     expect(within(win()).getByRole('row', { name: 'Error 1' })).toBeTruthy();
     expect(within(within(win()).getByRole('table', { name: 'Errors to prepare' })).getAllByRole('columnheader').map((h) => h.textContent?.trim())).toEqual(['Category', 'Difficulty', 'Description', 'Actions']);
     expect(within(win()).queryByLabelText('Your own instructions (optional)')).toBeNull();
-    expect((field('Prompt for your LLM') as HTMLTextAreaElement).readOnly).toBe(true);
+    expect((field('Prompt for your LLM') as HTMLTextAreaElement).readOnly).toBe(false);
     expect(button('Copy prompt')).toBeTruthy();
+  });
+
+  it('T262: Base case offers the cases with errors too; choosing one copies its errors into the table and uses its base as the base text', () => {
+    start();
+    const base = field('Base case (optional)') as HTMLSelectElement;
+    expect(Array.from(base.querySelectorAll('optgroup')).map((g) => g.label)).toEqual(['Clean cases', 'Cases with errors (their errors are copied)']);
+    fireEvent.change(base, { target: { value: '2' } });
+    const rows = within(within(win()).getByRole('table', { name: 'Errors to prepare' })).getAllByRole('row').slice(1);
+    expect(rows.map((r) => (within(r).getByLabelText('Description') as HTMLInputElement).value)).toEqual(['Profession changed.', 'Year changed.']);
+    expect(rows.map((r) => (within(r).getByLabelText('Difficulty') as HTMLSelectElement).value)).toEqual(['obvious', 'subtle']);
+    expect(within(win()).getByText(/The 2 errors of Anna \+ 2 errors are copied into Errors to prepare\. The base text is Anna\./)).toBeTruthy();
+    expect((field('Prompt for your LLM') as HTMLTextAreaElement).value).toContain('Anna is a baker.');
+    // the copied rows can still be changed
+    fireEvent.click(within(rows[1]!).getByRole('button', { name: 'Remove' }));
+    expect(within(win()).queryByRole('row', { name: 'Error 2' })).toBeNull();
+  });
+
+  it('T262: an edited prompt is kept when the parts change, and Rebuild prompt asks before it replaces the edit', () => {
+    start();
+    const prompt = () => field('Prompt for your LLM') as HTMLTextAreaElement;
+    expect(within(win()).queryByRole('button', { name: 'Rebuild prompt' })).toBeNull();
+    fireEvent.input(prompt(), { target: { value: 'my own prompt' } });
+    fireEvent.click(button('Add error'));
+    expect(prompt().value).toBe('my own prompt');
+    expect(within(win()).getByText(/You changed the prompt/)).toBeTruthy();
+    fireEvent.click(button('Rebuild prompt'));
+    const question = screen.getByRole('dialog', { name: 'Rebuild the prompt?' });
+    fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
+    expect(prompt().value).toBe('my own prompt');
+    fireEvent.click(button('Rebuild prompt'));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Rebuild the prompt?' })).getByRole('button', { name: 'Rebuild prompt' }));
+    expect(prompt().value).toContain('Error 2');
+    expect(within(win()).queryByRole('button', { name: 'Rebuild prompt' })).toBeNull();
+  });
+
+  it('T262: the saved case keeps the edited prompt as its generation prompt', () => {
+    const onApply = vi.fn();
+    render(<InjectWindow state={draftState()} onApply={onApply} onClose={vi.fn()} />);
+    const own = screen.getByRole('dialog', { name: 'Test case' });
+    fireEvent.input(within(own).getByLabelText('Prompt for your LLM'), { target: { value: 'my own prompt' } });
+    fireEvent.input(within(own).getByLabelText('Case JSON'), { target: { value: answer() } });
+    fireEvent.click(within(own).getByRole('button', { name: 'Save case' }));
+    const edit = onApply.mock.calls[0]?.[0] as { state: AppState };
+    expect(edit.state.evaluation.dataset.cases.find((c) => c.name === 'Anna with errors')?.generation_prompt).toBe('my own prompt');
   });
 
   it('Add error and Remove change the rows, and the prompt is rebuilt each time', () => {

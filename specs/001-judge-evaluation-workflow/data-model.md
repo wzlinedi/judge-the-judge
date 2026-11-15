@@ -166,7 +166,7 @@ any ──"Load evaluation" / "Load demo…"──> exactly the saved state (ope
 | `name` | text | Unique in the test project, compared without regard to case (FR-079); a case JSON with an empty name gets one made from its base and number of errors. A name used twice by an import or a loaded file is kept and both cases show the warning. |
 | `base` | text or none | Optional. Identifier of the clean case it was made from (FR-022). Must name an existing clean case, otherwise a warning. A case made from a copied JSON keeps it only when that JSON names it; there is no link to an original (FR-078). |
 | `changed_after_first_reply` | `added`, `corrected` or none | Set when the case is added, or its expected errors are corrected, after the first reply of the run; shown in the tables, on Results and in the report (FR-053). |
-| `generation_prompt` | text or none | The prompt the case was made with, written when it is saved from "Clean case" or "Case with errors"; "Open" offers it as "Recreate the test case". Not part of the test cases version (T238). |
+| `generation_prompt` | text or none | The prompt the case was made with, written when it is saved from "Clean case" or "Case with errors" (the prompt in the box, as the user may have edited it, T262). Not part of the test cases version (T238). |
 | `fields` | name → text | One per variable of the judge prompt. At least one non-empty field (FR-037). Each at most 100,000 characters; warning above 30,000. |
 | `expected_errors` | list of ExpectedError | Empty list means a clean case. |
 | kind | "Clean" or "Injected errors", derived | From whether `expected_errors` is empty. |

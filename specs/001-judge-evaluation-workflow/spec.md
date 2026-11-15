@@ -172,6 +172,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner review 2026-11-15, fourth look, T258) Does "Findings in the reply" repeat the expected and additional errors? → A: Yes; the list goes. The one thing only it showed, which words of the judge match an expected error and whether fully or partly, moves into the card of that expected error ("Judge: “…” (matches)" or "(partly matches)"). Replaces the reply part of FR-077.
 - Q: (Owner review 2026-11-15, fourth look, T257) Should the fields of a case highlight the expected errors all the time? → A: No; that is redundant with "Show the issue". The fields of Test cases › Open, Run part 1 and Results part 1 show no highlight of their own; "Show the issue" highlights both passages of the error for a moment, with its number (and its state after a reply). The warnings of FR-080 ("not in the list") stay. Replaces the always-on highlights of FR-077.
 - Q: (Owner review 2026-11-15, fourth look, T261) Pasting or typing over a saved judge reply changes the results; what should the box do? → A: It stays editable, but the first change (typed or Paste reply) asks "Change the judge’s reply?": the reply is what the judge returned and the results are counted from it; the case is marked again from the changed text and the marks set by hand are removed (named with their number). Cancel keeps the reply; after Change reply the case can be edited freely until the window moves to another case. Replaces the question of FR-056 that asked only when there were marks set by hand.
+- Q: (Owner review 2026-11-15, fourth look, T262) Is "Recreate the test case" needed, when "Add test case" already makes clean cases and cases with errors? → A: No; it goes, and From JSON loses its Show prompt. Instead "Case with errors" can start from a case with errors: "Base case" lists the clean cases and the cases with errors; choosing a case with errors copies its errors into "Errors to prepare" (still editable) and uses its own clean base, if it has one, as the base text (its text with the errors is not used as the base, so the LLM does not have to keep old errors in place). The prompts of Case with errors and Clean case can be edited before they are copied; an edited prompt is no longer rebuilt, and Rebuild prompt asks first. `generation_prompt` stays in the format and holds the prompt in the box. Replaces T238 and T255.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -1022,7 +1023,7 @@ case and confirm the new case has the same fields and expected errors.
   "From JSON" "Save case" and "Close without saving"; for a clean case "Copy prompt", "Save case" and
   "Close without saving"; for a case with errors "Add error" and "Remove" in the list of errors to
   prepare, "Copy prompt", "Save case" and "Close without saving". In the read-only view of a saved case
-  ("Open"): "Previous case", "Next case", "Show the issue", "Recreate the test case", "Show prompt", "Copy prompt"
+  ("Open"): "Previous case", "Next case", "Show the issue", "Show prompt", "Copy prompt"
   and, after finalizing, "Edit expected errors".
   Run: "Save evaluation", "Save evaluation as…", "Open" at each case; in its window "Previous case",
   "Next case", "Show the issue", "Copy prompt", "Show prompt", "Paste reply", "Keep as text" (for a text in the
@@ -1285,13 +1286,16 @@ case and confirm the new case has the same fields and expected errors.
   no reply (FR-053). Each change MUST update the test
   cases version. A saved case's fields are not edited (FR-025).
 - **FR-040**: For a case with injected errors the window MUST first offer the base: any clean case,
-  or none (the base is optional). The window MUST then show the **list of errors to prepare**: one row per wanted error with its category (picked
+  any case with errors, or none (the base is optional). Choosing a case with errors (T262) MUST fill the list of
+  errors to prepare with its errors (category, difficulty or "left to the LLM", description; still editable) and use its own clean
+  base, if it has one, as the base text, and the window says so ("The 2 errors of … are copied into Errors to prepare. The base text is …"). The window MUST then show the **list of errors to prepare**: one row per wanted error with its category (picked
   from the catalog, or typed as a new name in a text box, FR-024; its description is
   taken from the catalog and MUST NOT have to be typed again), its difficulty (obvious, subtle, or
   left to the LLM) and a short description of what should be wrong. The user MUST be able to add
   and remove rows ("Add error", "Remove"). From the base case and these rows the window MUST build
   one ready, universal prompt for the user's own LLM, shown in full with "Copy prompt" and rebuilt
-  whenever a row or the base changes. It MUST contain the judge prompt with its judged text (so the
+  whenever a row or the base changes, until the user edits it: the prompt can be edited before it is copied (T262), an edited prompt
+  is no longer rebuilt, and "Rebuild prompt" asks before it replaces the edit. It MUST contain the judge prompt with its judged text (so the
   LLM knows what the judge checks), every field of the base case when one is picked (without one,
   it asks the LLM to write the whole case, a value for every variable, with the errors in its
   judged text), the rows with each category's description (with its examples), the rules for realistic
@@ -1714,8 +1718,7 @@ case and confirm the new case has the same fields and expected errors.
   schemes.
 
 - **FR-078**: There MUST be no "Clone" button, on the row of a case or in its read-only view (removed
-  in the owner review of 2026-11-14). A copy of a case is made by hand: "Recreate the test case"
-  (FR-086) or "Export test cases", then "From JSON" (FR-090) in a new case, where the user changes the name and the rest
+  in the owner review of 2026-11-14). A copy of a case is made by hand: "Export test cases", then "From JSON" (FR-090) in a new case, where the user changes the name and the rest
   and presses "Save case"; the copy is an ordinary new case with no link to the original. A new
   clean case is made with "Clean case" and its "Like case" (FR-083), and a new case with injected
   errors with "Case with errors" (FR-040), neither of which needs a copy. Before its first
@@ -1758,7 +1761,8 @@ case and confirm the new case has the same fields and expected errors.
   answer; and, in the header, "Save case" with the reason beside it while it is disabled
   (next to "Close without saving"). The optional "Like case" choice lists the existing clean cases;
   the fields of the one picked are put into the prompt as a model. The prompt MUST be rebuilt when
-  the pick changes and MUST contain the judge prompt with its variables and its
+  the pick changes, until the user edits it (T262: the prompt can be edited before it is copied, an edited prompt is no longer
+  rebuilt, and "Rebuild prompt" asks before it replaces the edit), and MUST contain the judge prompt with its variables and its
   judged text, the error catalog (so the case contains none of its errors), the
   picked case if any, and the answer format:
   one clean case in the case JSON layout (FR-031) with a value for every variable and no expected
@@ -1802,12 +1806,9 @@ case and confirm the new case has the same fields and expected errors.
   with "Copy prompt" (FR-048), with "Previous case" and "Next case". It does not show a
   reply: a reply belongs to Run. Its sections are in frames. Nothing in it can be edited. There is
   no "Show JSON" and no "Copy JSON" (T238). "Show prompt" opens a dialog of about 90% of the screen in
-  both directions. At the top, "Recreate the test case" is enabled when the case keeps the prompt it
-  was made with (`generation_prompt`, written by "Clean case" and "Case with errors", FR-083, FR-085);
-  it opens the dialog "Original prompt" with "Copy", "Copy and recreate" (copies the prompt, closes
-  the view and opens an empty "From JSON" window) and "Close". A case pasted as JSON, imported or from
-  the demo keeps no prompt, so the button is disabled with the reason. The prompt is not part of the
-  test cases version.
+  both directions. There is no "Recreate the test case" (T262): a similar case is made with "Add test case…" › "Case
+  with errors", which can start from a case with errors (FR-040), or "Clean case" with "Like case" (FR-083). A case saved from those
+  windows keeps the prompt that was in the box as `generation_prompt`, which is not part of the test cases version.
   The view MUST NOT offer "Clone" (FR-078); it offers, after finalizing, for a case without a reply,
   "Edit expected errors" (FR-089).
 

@@ -36,6 +36,17 @@ describe('the prompt', () => {
     fireEvent.change(like, { target: { value: like.options[1]!.value } });
     expect(promptText()).toContain('Anna is a baker');
   });
+
+  it('T262: the prompt can be edited; Like case then no longer changes it, and Rebuild prompt asks first', () => {
+    start();
+    type('Prompt for your LLM', 'my own clean prompt');
+    const like = within(windowOf()).getByLabelText('Like case (optional)') as HTMLSelectElement;
+    fireEvent.change(like, { target: { value: like.options[1]!.value } });
+    expect(promptText()).toBe('my own clean prompt');
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Rebuild prompt' }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Rebuild the prompt?' })).getByRole('button', { name: 'Rebuild prompt' }));
+    expect(promptText()).toContain('Anna is a baker');
+  });
 });
 
 describe('the answer', () => {
