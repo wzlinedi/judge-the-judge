@@ -115,9 +115,13 @@ the test cases, the active metric, the thresholds and, once the test run has sta
 - **Loading** (FR-020, FR-051, FR-073, FR-076), in this order:
   1. When there are unsaved changes, the unsaved-work question ("Save test project first",
      "Discard", "Cancel").
-  2. The file picker (or a file dropped onto the page).
+  2. The file picker (or a file dropped onto the page). A file bigger than 50 MB is refused before
+     it is read: "The file is 72 MB; the tool reads files up to 50 MB." (S4).
   3. The whole file is validated, the `test_run` section included. An invalid file is explained
-     and changes nothing.
+     and changes nothing. Invalid also means: two test cases with the same `id`, or two expected
+     errors with the same `id` in one case (the message names the id and its path, R7), and JSON
+     nested more than 100 levels deep (S3). A case id may be any text, `constructor` and
+     `__proto__` included (S1).
   4. When the file has a `test_run` section, a question with "Load with the test run", "Load the
      test project only" and "Cancel". Cancel changes nothing. A file without it loads at once.
   5. The file is applied, and the tool opens the first step with unfinished work.
@@ -361,6 +365,8 @@ project" writes it whole. It is never written to a file of its own.
   versions; there is no option to leave anything out (FR-072).
 - `replies`, `decisions` and `results` are empty objects until the first reply; the section is
   still written, so a started test run stays started after save and load.
+- `replies.<id>.reply` is at most 200,000 characters and `replies.<id>.prompt` at most 1,000,000
+  characters; a longer one makes the file invalid, and the message names the path (S4).
 - `state` is one of `found`, `missed` ("Not found"), `ignored`, `real_error`,
   `false_positive` ("False positive"); `source` is `automatic`, `manual` (set by hand) or
   `llm-approved` (an LLM opinion applied by the user with "Apply opinion", FR-063).
@@ -424,6 +430,7 @@ clipboard") is treated exactly like text pasted into a box.
 {
   "opinion": {
     "id": "11",
+    "list": "3f9a2c",
     "expected": [ { "index": 1, "found": true, "reason": "…", "fragment": "…" } ],
     "additional": [ { "index": 1, "real": false, "reason": "…", "fragment": "…" } ],
     "new": [ { "text": "…a finding not in the list…", "real": true, "reason": "…", "fragment": "…", "category": "factual-error", "difficulty": "obvious" } ]
@@ -437,7 +444,13 @@ clipboard") is treated exactly like text pasted into a box.
 - `id` must be the case of the window; an opinion for another case is refused with the reason and
   nothing changes.
 - `expected[].index` and `additional[].index` count from 1 in the order the verification prompt
-  listed the expected errors and the additional findings of that case. An item is answered only
+  listed the expected errors and the additional findings of that case. The additional findings
+  are followed by the findings that only partly match an undecided expected error, marked
+  "(partly matches E2)" in the prompt (R8).
+- `list` repeats the code of the list of items that the prompt gave (six hexadecimal characters,
+  research.md section 34). An opinion with another code is refused with "The case changed after
+  this prompt was copied. Copy the prompt again." and nothing changes. An opinion without `list`
+  is read as before, so older answers and the demo still apply. An item is answered only
   when its entry has `found` (expected) or `real` (additional) as `true` or `false`.
 - `new[]` requires `text` and `real`; `category` and `difficulty` are optional.
 - The window shows a preview of every change before anything is applied. "Apply opinion" sets the
@@ -449,7 +462,9 @@ clipboard") is treated exactly like text pasted into a box.
 
 ## 8. HTML report (written)
 
-- One self-contained file: inline styles, no scripts, no external resources.
+- One self-contained file: inline styles, no scripts, no external resources. Its `<head>` holds
+  the Content Security Policy `default-src 'none'; style-src 'unsafe-inline'`, so no script can
+  run in it even if a value were not escaped (S5).
 - Order: title, test project name and test cases version, judge version, model details (all
   lines, as written), tool version and date, the number of cases not decided yet (not run,
   awaiting verification) when there are any, with no "provisional" mark (T267), the "rules corrected after replies" note when

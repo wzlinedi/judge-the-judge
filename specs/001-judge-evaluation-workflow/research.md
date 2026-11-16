@@ -152,6 +152,7 @@ has started; the step "Run" is named "Test run".
 The spec separates recognizing the structure of a reply (the reply mapping) from saying what an
 error is (the user's error rules), and leaves the notation of a field path to planning.
 
+- **Nesting limit** (security review 2026-11-16, S3): the reader stops at 100 levels of nesting and reports the place, so a crafted text gives a message instead of a stack overflow; real files have about 6 levels.
 - **Getting the JSON**: the reply is read as the first complete JSON object or list found in it:
   the whole text, or the content of a Markdown code fence, or the first balanced `{…}` or `[…]`
   that parses, in that order. If none parses, the reply "cannot be read".
@@ -209,7 +210,10 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
   levels.
   1. Normalize both texts: Unicode normalization, lower case, punctuation replaced by spaces,
      runs of spaces collapsed.
-  2. **Clear match** when one normalized text contains the other.
+  2. **Clear match** when one normalized text contains the other **as whole words** (the shorter
+     text, with a space on each side, occurs in the longer one with a space on each side) and the
+     shorter text has at least two words. A one-word text never matches clearly by containment; it
+     goes to step 3 (code review 2026-11-16, R4: "Paris" matched "comparison" and "he" matched "the hero").
   3. Otherwise compare words longer than three characters: let *hits* be the number of such words
      of the fragment that also occur in the finding, and *share* be hits divided by the fragment's
      word count. **Clear match** when hits ≥ 2 and share ≥ 0.6. **Partial match** when hits ≥ 1 and
@@ -247,9 +251,13 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
     was found, they count as correct findings.
   - A reply that cannot be read gives no findings; the user (or an LLM opinion) marks each expected
     error and adds findings by hand, and the case awaits verification until the user approves it.
-- **Counting findings** for the false-positive rate: correct findings (for each found expected
-  error, the number of findings attached to it, at least one) plus additional findings confirmed
-  as real errors plus false positives. Ignored items are left out of everything.
+- **Counting findings** for the false-positive rate: correct findings plus additional findings
+  confirmed as real errors plus false positives. **Correct findings** are the distinct findings
+  attached to found expected errors (a clear match, or a partial match once the error is found),
+  each counted once even when it points at several errors, plus one for each found expected error
+  that has no finding (code review 2026-11-16, R5 and R6; it replaced "for each found expected
+  error, the number of findings attached to it, at least one", which counted a finding twice and
+  dropped a partly matching finding when another finding had found the error). Ignored items are left out of everything.
 - **False-positive rate with no findings**: when the judge reported nothing in any decided case,
   the rate is shown as "not available" and its threshold counts as met (there are no false
   positives); the detection threshold then decides the overall result.
@@ -313,15 +321,19 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
 
 - **Decision**: A **judge version** is the first 12 hexadecimal characters of the SHA-256 hash of
   the canonical judge prompt, the finding-text choices and the error rules (keys sorted, line
-  endings normalized). The sample reply text, the error catalog and the clean base cases are not
-  part of it: they do not change how a reply is read. A **dataset version** is computed the same
+  endings normalized), plus the list of the rules that the sample reply turns off, only when that
+  list is not empty. The sample reply text, the error catalog and the clean base cases are not part
+  of it. The text of the sample does not change how a reply is read; the rules it turns off do, and
+  they decide the counting mode (code review 2026-11-16, R3). A judge set in which every rule works
+  keeps the version it had before this change. A **dataset version** is computed the same
   way from the cases in order (identifier, name, base, fields, expected errors). The dataset name
   is not part of the version. Hashing uses the Web Crypto API, which exists in browsers and in
   Node, so no library is needed.
 - **Rules corrected after replies** (FR-053, FR-075): the evaluation keeps the judge version that
   was in force when the first reply was saved. When the current judge version differs and the
-  prompt is the same, the Results step, the evaluation file and the report say that the rules or
-  the mapping were corrected after replies were received and name both versions.
+  prompt is the same, the Results step, the evaluation file and the report say that the rules,
+  the mapping, or the sample reply (when it turned a rule on or off, R3) were corrected after
+  replies were received and name both versions.
 - **Consequence**: Editing expected errors after finalizing (allowed by FR-053) changes the dataset
   version. A result always records the version at the moment it was saved.
 - **Rationale**: Principle V and FR-034: identical content always gives the same version, on any
@@ -395,7 +407,9 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
   clipboard cannot be read). All three find the JSON in the same way as a judge reply (section 9),
   validate it, and show proposals for review; nothing is added or decided before the user accepts
   it, and rejected text stays in its box. An opinion that names another case is refused with the
-  reason. Formats are in [contracts/file-formats.md](./contracts/file-formats.md).
+  reason, and so is an opinion that repeats the code of another list of items (code review
+  2026-11-16, R8: the list of a case changes when its marks change, so its numbers A1… can shift);
+  an opinion without the code is read as before. Formats are in [contracts/file-formats.md](./contracts/file-formats.md).
 - **Rationale**: FR-018, FR-041, FR-063. One reader for "JSON somewhere in pasted text" means one
   set of rules and one set of tests. The always-visible paste area of the first plan is gone,
   because the owner found a paste box next to its prompt clearer. In the review of v10 the owner
@@ -906,3 +920,71 @@ numbers cannot drift.
 - The Help texts that describe the old look (for example "red") are rewritten in the one pass of T225
   and T269. No file under `src/ui/help/` is changed by the redesign.
 - Everything that follows the old rules stays valid as history: section 30 is not rewritten; it gets one pointer to this section.
+
+## 34. Hardening after the reviews of 2026-11-16
+
+The security review (S1–S10) and the code review (R1–R10) of 2026-11-16 found no critical issue.
+The decisions that change behaviour are in the Clarifications of 2026-11-16 and in sections 9, 10,
+11 and 14. This section holds only the technical decisions that the plan needs (plan.md, slice 11).
+
+- **State after an await (R1, R2)**: an action that awaits a port (a file, the clipboard, a hash)
+  MUST NOT return a whole new state built from the state it started with. It returns a change, and
+  the shell applies it with `setState((current) => change(current))`. The change touches only the
+  fields the action owns (for example `unsaved`, `repliesSinceSave`, `testProjectFile` for a save;
+  the reply and decisions of one case for a reply). A save marks the work saved only when the
+  project is still the one that was written; otherwise `unsaved` stays true.
+  *Rationale*: the user can act while the file or the clipboard is busy; a snapshot written back
+  erases that work. *Alternatives*: a lock that blocks the interface during a save (slow on a
+  network drive, and a clipboard prompt can wait for minutes); comparing whole states after the
+  await (costly and still loses one of two changes).
+- **A failed "Save as…" (R9)**: `write()` forgets the remembered file only when the write to that
+  same file failed. A failed write to a newly chosen file keeps the remembered file and its name.
+  *Rationale*: the old file is still good. *Alternative*: always forget (today), which sends the
+  next plain save to a new file.
+- **Typed or pasted (R10)**: the box compares the new text with the text before the change. More
+  than one character added in one change counts as a paste or a drop and is saved at once when it
+  is readable JSON; anything else waits for the box to lose the focus. *Rationale*: the browser's
+  `inputType` is not set by every way of pasting and by the test tools; the length rule is
+  deterministic and keeps the existing tests valid. *Alternative*: `inputType === 'insertFromPaste'`
+  (missed by drag and drop and by `fireEvent.input`).
+- **Lookups by id (S1)**: `repliesOf`, `decisionsOf` and every other lookup by a case id or an error
+  id read only the object's own keys (`Object.hasOwn`), in one helper of `src/core/cases/test-run.ts`.
+  The stored objects keep their shape, so the file format does not change. *Alternative*: `Map`
+  everywhere (a larger change to the state and the writer for the same result).
+- **Error panel (S3)**: one boundary inside `App`, below the state, built with `useErrorBoundary`
+  from `preact/hooks` (no new dependency). The state lives above the boundary, so "Save test
+  project as…" still writes the work. The panel shows the message of the error, and nothing is
+  sent anywhere. The loaders (`loadTestProject`, `prepareImport`, the drop zone) also catch an
+  error of a reader and show it like an invalid file, so an error while loading never reaches the
+  panel. *Alternative*: a class component with `componentDidCatch` (the same, with more code).
+- **Size before reading (S4)**: the picker and the drop zone read `file.size` before `text()` or
+  `arrayBuffer()`, so a large file is refused without being read. The reply and prompt limits are
+  `max` rules in the Zod schemas, so the message names the field path like any other. The pasted
+  reply is checked in the reply action before it is saved. Limits: 50 MB (`MAX_FILE_BYTES`),
+  200,000 characters (`MAX_REPLY_LENGTH`), 1,000,000 characters (`MAX_PROMPT_LENGTH`), next to
+  `MAX_CASES` and `MAX_FIELD_LENGTH` in `src/core/schemas/`.
+- **Code of the list of items (R8)**: six hexadecimal characters of the FNV-1a hash of the keys of
+  the items in prompt order (`E:e1`, …, `A:claims[]#3`, `A:added#1`, …), computed at once without
+  Web Crypto, because the prompt is built while the window draws. It is not a security measure:
+  it only tells that the list changed. The opinion carries it as `opinion.list`; a missing `list`
+  is read as before (contracts/file-formats.md, section 7). *Alternative*: the SHA-256 of
+  section 14 (asynchronous, and nothing is gained for a change check).
+- **Finding a card from a block (S9)**: each card keeps `data-finding-line` for the tests and the
+  styles, and gets `data-finding-keys` with a JSON list of its keys. The case window finds the card
+  in code (`JSON.parse` and `includes`) instead of a CSS selector, so a key with a space or a quote
+  works. *Alternative*: `CSS.escape` with `~=` (still fails for a key with a space).
+- **Report CSP (S5)**: the report gets `<meta http-equiv="Content-Security-Policy"
+  content="default-src 'none'; style-src 'unsafe-inline'">`. The report has no
+  script and one inline style block, so nothing it shows today is blocked. *Rationale*: a missed
+  escape in a later change cannot run a script in an opened report.
+- **Publishing workflow (S2, S6, S7)**: the workflow keeps `contents: read` at the top; the
+  `deploy` job alone gets `pages: write` and `id-token: write`. Every action is pinned to the full
+  commit SHA of its current major version, with the version in a comment. `actions/checkout` gets
+  `persist-credentials: false`. The existing contract test `tests/contract/deploy-workflow.test.ts`
+  keeps passing: its permission check matches the block of the `deploy` job. *Rationale*: `npm ci`
+  and the tests run third-party code in the `build` job, which then cannot obtain a Pages token.
+  *Alternative considered and left to the owner*: Dependabot for the actions (it opens pull
+  requests, an outward action this plan does not take).
+- **Development tools (step 1 of the reviews)**: `eslint` 10.15.0, `typescript-eslint` 8.73.0 and
+  `@playwright/test` 1.65.1, minor versions only; they remove the moderate `minimatch` finding of
+  `npm audit`. TypeScript 7 is a major version and is not part of this slice.

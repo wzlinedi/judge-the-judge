@@ -142,7 +142,14 @@ and shadow stays in `tokens.css` (Principle VII); light and dark both remain, an
 data, file or schema (Principle IV) and no result (Principle V); every change starts with a failing
 test, and the one end-to-end test that checks the old red accent is rewritten before the tokens
 change (Principle I); no file of the Help changes now, and the Help is brought up to date in the one
-pass of T225 and T269 before any release (Principle VIII). No finding.
+pass of T225 and T269 before any release (Principle VIII). No finding. Re-checked on 2026-11-16 for the hardening
+(slice 11), before and after the design: every fix starts with a failing test (Principle I); the
+site stays static and the publishing workflow gets fewer rights, not more (Principle II); the
+changes to counting live in the pure core and stay deterministic, and a file that relied on a
+defect shows the difference on load instead of changing silently (Principles III and V); the file
+format gains only optional data and limits that every real file meets, with a message that names
+the path (Principle IV); the error panel is a designed error state (Principle VII); no file of the
+Help changes now (Principle VIII); no new dependency (Constraints). No finding.
 
 ## Project Structure
 
@@ -366,6 +373,117 @@ evaluation file, finalizing, Run); slice 9 replaces them (research.md, section 3
     **Help**: the redesign changes no file under `src/ui/help/`. The Help texts that describe the
     old look (for example the red accent, or a mark that fades) are rewritten in the one pass of
     T225 and T269, at the end, before any release.
+
+11. **Hardening (reviews of 2026-11-16; FR-056, FR-063, FR-067, FR-075, FR-076, FR-084; SC-004)**,
+    test first. The findings are named as in the reviews: R1–R10 from the code review, S1–S10 from
+    the security review. The decisions are in the Clarifications of 2026-11-16 and research.md,
+    sections 9, 10, 11, 14 and 34. The slice changes no file format except two optional additions
+    (`opinion.list`, and the limits of `reply` and `prompt`), so files written before it still load
+    and give the same results unless they relied on a defect (R4, R5, R6), which the existing
+    "stored vs recomputed" note of V9 then shows.
+
+    **Gate (SC-040)**: every end-to-end test passes before the first step and after every step,
+    with no change to what it checks. No decision of 2026-11-16 needs an exception: the probes of
+    the clarify sessions found no change in the demo (`expected-results.json`, `opinions.json`), in
+    the samples or in the existing assertions. A unit test may gain new cases; an existing assertion
+    changes only if a step below names it. If any other test fails, it is reported to the owner
+    before anything is changed. The contract test of the publishing workflow keeps passing as it
+    is (its permission check matches the block of the `deploy` job, research.md 34).
+
+    The steps, in this order. Each step starts with the tests that show the defect and fail:
+
+    1. **(B) Work that must not be lost.**
+       - *R1, R2*: tests in a new `tests/unit/ui/state-after-await.test.tsx` with fake ports whose
+         save and clipboard resolve only when the test says so: a threshold changed during
+         **Save test project** is kept and the indicator still says "Unsaved changes"; a mark changed
+         and **Next case** pressed while **Paste reply** waits are both kept; two replies saved one
+         after the other both stay. Code: `src/ui/App.tsx` (`save`, `replyActions` apply a change
+         with `setState((current) => …)`), `src/app/actions/files.ts` (`saveTestProjectWith`
+         returns the change of `unsaved`, `repliesSinceSave` and `testProjectFile`, and `unsaved`
+         stays true when the project changed), `src/app/actions/replies.ts` (`saveReply`,
+         `pasteReplyFromClipboard` return the change of one case).
+       - *R9*: a test in `tests/unit/app/ports.test.ts`: a failed **Save test project as…** to a new
+         file keeps the remembered file and its name, and the next plain save writes to it. Code:
+         `src/app/ports/browser.ts` (`write` forgets only the file it failed to write),
+         `src/app/ports/fakes.ts` (the fake follows).
+       - *R10*: tests in `tests/unit/ui/reply-box.test.tsx`: typing `{` then `}` one character at a
+         time saves nothing; leaving the box saves the whole text when it is readable JSON; one
+         change of the whole text (paste) saves at once, as the existing tests already expect. Code:
+         `src/ui/windows/case-window/CaseWindow.tsx` (`typed` compares with the previous text),
+         `ReplyPane.tsx` (`onBlur` of the box).
+       - *S1*: a test in `tests/unit/core/cases/test-run.test.ts` or a new
+         `tests/unit/core/evaluation/own-keys.test.ts`: a test project whose case ids are
+         `constructor`, `toString`, `__proto__` and `hasOwnProperty` loads, its results are computed
+         and the report is built, with every such case "Not run". Code:
+         `src/core/cases/test-run.ts` (`repliesOf`, `decisionsOf` and one `ownValue` helper), and
+         the direct lookups in `src/app/case-filter.ts`, `src/app/actions/replies.ts`,
+         `src/app/actions/decide.ts`, `src/app/actions/decisions.ts`, `src/app/actions/cases.ts`,
+         `src/app/guard.ts`, `src/core/cases/expected-errors.ts`.
+    2. **(A) Counting.**
+       - *R4*: new cases in `tests/unit/core/evaluation/match.test.ts`: "No comparison is given"
+         against "Paris" is not clear; "he" against "the hero rejects" is not clear; every existing
+         case keeps its level. Code: `src/core/evaluation/match.ts` (containment on whole words,
+         the shorter text at least two words).
+       - *R5, R6*: new cases in `tests/unit/core/evaluation/counting.test.ts`: one finding that
+         clearly matches E1 and E2 plus one false positive gives a false-positive rate of 1 of 2;
+         E1 found by a clear finding with a second finding that only partly matches it counts both
+         findings as correct; an error found by hand with no finding counts as one. Code:
+         `src/core/evaluation/decisions.ts` (`attached` becomes the keys of the attached findings),
+         `src/core/evaluation/counters.ts` (correct findings = distinct keys, plus one per found
+         error with none).
+       - *R3*: new cases in `tests/unit/core/judge/version-where.test.ts` or a new
+         `version-sample.test.ts`: a sample that turns a rule off changes the judge version, a
+         sample that changes only a value does not, and every pinned version of the file stays as
+         it is. Code: `src/core/judge/version.ts` (adds the indices of the rules that
+         `validateRules` marks unusable, only when there are any).
+       - *R7*: new cases in `tests/contract/test-project-file.test.ts`: a file with two cases with
+         id `7`, and a case with two errors `e1`, are rejected with the path in the message, and
+         nothing changes. Code: `src/core/io/test-project-file.ts` (after the schema).
+    3. **(C) Reading untrusted input.**
+       - *S3*: new cases in `tests/unit/core/judge/extract-json.test.ts`: 101 levels give "not
+         readable" with the place; 100 levels are read. A UI test: a component that throws shows
+         "Something went wrong" with **Save test project as…** and **Reload**, and the save writes
+         the work. A test in `tests/unit/app/files.test.ts`: a reader that throws while loading
+         gives the invalid-file message. Code: `src/core/judge/extract-json.ts` (depth counter),
+         a new `src/ui/components/ErrorPanel.tsx`, `src/ui/App.tsx` (the boundary below the state;
+         the loaders catch), `src/ui/components/FilePicker.tsx`.
+       - *S4*: tests in `tests/unit/app/ports.test.ts` (a 60 MB file is refused before `text()`),
+         `tests/contract/test-project-file.test.ts` (a reply of 200,001 characters and a prompt of
+         1,000,001 characters reject the file with the path), `tests/unit/ui/reply-box.test.tsx` (a
+         pasted reply of 200,001 characters is not saved and the message names the limit). Code:
+         `src/core/schemas/test-project.ts`, `src/core/schemas/test-case.ts` (the constants),
+         `src/app/ports/browser.ts`, `FilePicker.tsx`, `src/app/actions/replies.ts`.
+       - *R8*: new cases in `tests/unit/core/generation/verification-prompt.test.ts` (a finding that
+         only partly matches an undecided error is listed after the additional findings with
+         "(partly matches E1)"; the prompt holds the code of its list), `tests/unit/core/evaluation/opinions.test.ts`
+         and `tests/unit/ui/second-opinion-window.test.tsx` (an answer with another code is refused
+         with the sentence of FR-063 and "Apply opinion" is disabled; an answer without the code
+         applies as before; the demo opinions still apply). Code:
+         `src/core/generation/verification-prompt.ts`, `src/core/io/opinions.ts` (`list`),
+         `src/core/evaluation/opinions.ts` (the A list includes the partly matching findings, in
+         the same order as the prompt), `src/ui/windows/second-opinion/SecondOpinionWindow.tsx`.
+         `contracts/file-formats.md`, section 7, and `data-model.md` already describe `list`.
+    4. **(D) Hardening without a change of behaviour.**
+       - *S2, S6, S7*: new cases in `tests/contract/deploy-workflow.test.ts`: the top-level
+         permissions are `contents: read` only; `pages: write` and `id-token: write` are in the
+         `deploy` job only; every `uses:` names a 40-character SHA; `actions/checkout` has
+         `persist-credentials: false`. Code: `.github/workflows/deploy.yml`.
+       - *S5*: a new case in `tests/contract/html-report.test.ts`: the report has the Content
+         Security Policy of research.md 34 and still no `<script`. Code: `src/core/io/html-report.ts`.
+       - *S9*: new cases in `tests/unit/ui/reply-view.test.tsx`: a reply whose list key has a space
+         (`"missing facts"`) or a quote marks and scrolls to its card when its block is pressed.
+         The tests of T347 keep their selectors. Code: `src/ui/windows/case-window/DecidePane.tsx`
+         (`data-finding-keys`), `CaseWindow.tsx` (`point` finds the card in code).
+       - *Tools*: `eslint` 10.15.0, `typescript-eslint` 8.73.0, `@playwright/test` 1.65.1 in
+         `package.json` and `package-lock.json`; `npm audit` shows no `minimatch` finding; lint,
+         types, unit, build and e2e pass.
+    5. **Close.** The whole suite (lint, types, unit, build, e2e in Chrome and Edge) passes; the
+       demo and the samples give the same numbers as before (V1, V9, V12); V14 of quickstart.md
+       passes.
+
+    **Help**: no file under `src/ui/help/` changes in this slice. The Help texts that name the
+    reply box, the limits or the second opinion are brought up to date in the one pass of T225 and
+    T269.
 
 ## Complexity Tracking
 

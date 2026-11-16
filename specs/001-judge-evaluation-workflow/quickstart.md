@@ -336,6 +336,28 @@ research.md section 33); every text pair meets 4.5:1; every error and "Fail" car
 word or a sign besides its color; each step has exactly one primary action in its "what next"
 line.
 
+### V14. Hardening (reviews of 2026-11-16, plan.md slice 11)
+
+1. Load a test project in which one case has the id `constructor`; open Results and export the
+   report.
+2. Load a test project with two cases that share an id, one nested 200 levels deep, and one of
+   60 MB.
+3. In the case window of a case without a reply, type `{}` and go on typing a whole reply; then
+   paste a reply of 250,000 characters.
+4. Press **Save test project** and change a threshold while the file is written (a slow folder);
+   press **Paste reply** and change a mark while the browser asks for the clipboard.
+5. In the second-opinion window, copy the prompt, close the window, change a mark of an expected
+   error that a finding only partly matches, open the window again and paste the answer of the
+   first prompt.
+
+**Expected**: step 1 loads and computes the results as any other id. Step 2 rejects each file with
+a message that names the id, the depth or the size, and nothing changes. Step 3 saves nothing
+while typing and saves the whole reply when the box loses the focus; the long paste is not saved
+and the message names the limit. Step 4 keeps both changes, and the indicator still says
+"Unsaved changes" after the save. Step 5 refuses the answer with "The case changed after this
+prompt was copied. Copy the prompt again."; the partly matching finding is listed in the prompt
+with "(partly matches E1)". No step ever shows a blank page.
+
 ## Manual checks
 
 Do these by hand before a release, in Chrome or Edge. They need what the tests cannot give: a real

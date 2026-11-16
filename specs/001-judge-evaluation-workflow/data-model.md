@@ -166,7 +166,7 @@ any ──"Load test project…" › "Load the test project only"──> Open (n
 
 | Field | Type | Rules |
 |---|---|---|
-| `id` | text | Unique in the test project. From the file when every case has one; otherwise assigned by order (`1`, `2`, …) and reported. A mix of with and without is rejected. Cases made in the tool get the next free number (FR-033). |
+| `id` | text | Unique in the test project; a file with a repeated id is rejected (R7). Any text, `constructor` and `__proto__` included (S1). From the file when every case has one; otherwise assigned by order (`1`, `2`, …) and reported. A mix of with and without is rejected. Cases made in the tool get the next free number (FR-033). |
 | `name` | text | Unique in the test project, compared without regard to case (FR-079); a case JSON with an empty name gets one made from its base and number of errors. A name used twice by an import or a loaded file is kept and both cases show the warning. |
 | `base` | text or none | Optional. Identifier of the clean case it was made from (FR-022). Must name an existing clean case, otherwise a warning. A case made from a copied JSON keeps it only when that JSON names it; there is no link to an original (FR-078). |
 | `changed_after_first_reply` | `added`, `corrected` or none | Set when the case is added, or its expected errors are corrected, after the first reply of the run; shown in the tables, on Results and in the report (FR-053). |
@@ -187,7 +187,7 @@ any ──"Load test project…" › "Load the test project only"──> Open (n
 
 | Field | Type | Rules |
 |---|---|---|
-| `id` | text | Unique inside the case (for example `e1`); assigned by the tool when absent. Decisions refer to it (research.md, section 16). |
+| `id` | text | Unique inside the case (for example `e1`); a file with a repeated id in one case is rejected (R7); assigned by the tool when absent. Decisions refer to it (research.md, section 16). |
 | `description` | text | Required (FR-037). What is wrong and why; for an injected error, what was changed. |
 | `category` | text | Optional. A name from the error catalog. |
 | `fragment` | text | Optional. Exact words of the judged text where the error is; for an omission, words of another field that the judged text no longer covers (FR-044). Without it the error cannot be matched automatically (FR-061). |
@@ -234,8 +234,9 @@ of the test project file (contracts/file-formats.md, section 5).
 | `reply_counted_per` | `expected_error` or `case` | The way of counting when the first reply was saved, to name a switch caused by a later correction of the rules (FR-075). Absent while there is no reply. |
 
 **Reply**: `prompt` (the composed judge prompt at the moment the reply was saved) and `reply` (text
-of any format, never rejected for its format, not empty) (FR-056, FR-057). It arrives from
-"Paste reply" or from the always-visible box (a readable JSON is saved as soon as it is in the box; any
+of any format, never rejected for its format, not empty, at most 200,000 characters; the stored
+`prompt` at most 1,000,000 characters) (FR-056, FR-057, S4). It arrives from
+"Paste reply" or from the always-visible box (a readable JSON is saved as soon as it is pasted or dropped into the box, and typed text when the box loses the focus, R10; any
 other text with "Keep as text"); all have the same effect. The box is checked as it changes (line and column). Saving a new reply for a case resets
 it: its decisions, the added findings included, are removed and the automatic part is computed
 again. The tool asks first, saying how many will be removed, only when the case has
@@ -315,8 +316,9 @@ until the user presses "Apply opinion" after the preview of every change.
 | Field | Type | Rules |
 |---|---|---|
 | `id` | text | Must be the case whose window it was pasted into; an opinion for another case is refused with the reason (FR-063). |
+| `list` | text, optional | The code of the list of items that the prompt gave; another code is refused, a missing one is read as before (FR-063, R8). |
 | `expected` | list | Per expected error: `index` (position in the verification prompt, from 1), `found` yes/no, `reason`, `fragment` (the words of the data or reply it rests on). |
-| `additional` | list | Per additional finding: `index` (as numbered in the verification prompt); `real` yes/no; `reason`; `fragment`. An entry with `text` and no valid `index` is read as a new finding. |
+| `additional` | list | Per additional finding, then per finding that only partly matches an undecided expected error: `index` (as numbered in the verification prompt); `real` yes/no; `reason`; `fragment`. An entry with `text` and no valid `index` is read as a new finding. |
 | `new` | list | Findings the reply contains that are not in the list: `text`, `real` yes/no, `reason`, `fragment`, optional `category` and `difficulty`. |
 
 - An item is answered only when its entry has `found` or `real` as true or false. An opinion that
