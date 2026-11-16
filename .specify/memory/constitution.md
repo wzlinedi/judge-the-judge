@@ -134,6 +134,28 @@ itself (available on the published static site) and explains how to use the syst
 Rationale: users, including the project owner, rely on Help to use the tool correctly. Stale
 documentation is worse than none, so Help is brought up to date before anything is published.
 
+### IX. Untrusted Input
+Data from loaded files, pasted text and judge replies is untrusted. This holds also when the user
+made the data, because a judge or a shared file can contain anything.
+
+- The application MUST validate such data before it uses it. Data that fails validation MUST be
+  rejected with a clear, human-readable message and MUST NOT change the current work.
+- The application MUST limit the size of a loaded file, the length of a pasted reply and prompt,
+  and the nesting depth of JSON. The spec sets each limit. Data over a limit MUST be rejected
+  with a message that names the limit; it MUST NOT freeze or crash the page.
+- Keys that come from data (case ids, error ids, finding keys) MUST be read only as the data's
+  own keys. A key equal to a built-in object name (for example `constructor` or `__proto__`)
+  MUST NOT change any result.
+- Data MUST NOT be run as code, inserted as HTML, or used to build a CSS selector, a regular
+  expression or a URL without escaping. The interface shows data as text. A generated HTML
+  report MUST carry a Content Security Policy that blocks scripts and outside requests.
+- An unexpected error MUST show the designed error screen (Principle VII), not a blank page.
+- Each rule above MUST have tests with hostile input (Principle I).
+
+Rationale: the hardening review of 2026-11-16 (phase 25: findings S1, S3, S4, S5, S9) showed
+that one crafted file or paste could break the counts, freeze the page or run inside the report.
+A written rule keeps new features from opening the same holes.
+
 ## Constraints & Standards
 
 - **Language**: all documentation, specifications, code comments, identifiers, and UI text MUST
@@ -186,4 +208,4 @@ rationale, approval from the project owner, and a note of any affected specs or 
 - **Compliance review**: every spec, plan, and implementation review MUST verify compliance
   with this constitution. Unjustified violations block completion.
 
-**Version**: 3.1.1 | **Ratified**: 2026-11-08 | **Last Amended**: 2026-11-15
+**Version**: 3.2.0 | **Ratified**: 2026-11-08 | **Last Amended**: 2026-11-16
