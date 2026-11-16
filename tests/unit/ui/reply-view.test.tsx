@@ -8,6 +8,7 @@ import { createState, type AppState } from '../../../src/app/store';
 import type { TestProject } from '../../../src/core/model';
 import { ReplyView } from '../../../src/ui/windows/case-window/ReplyView';
 import { sampleProject, withRun } from '../../helpers/fixtures';
+import { expectCancelFirstMainLast } from '../../helpers/dialog-actions';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 const fileEnv = { now: () => '2026-01-01T00:00:00.000Z', toolVersion: 'test' };
@@ -238,5 +239,26 @@ describe('the marked objects of a JSON reply (T334)', () => {
     expect(read.hasAttribute('tabindex')).toBe(false);
     expect(read.tabIndex).toBe(-1);
     for (const block of blocks()) expect(block.tabIndex).toBe(0);
+  });
+});
+
+describe('the order of the buttons in the two reply questions (T337, FR-093)', () => {
+  const change = () => fireEvent.click(within(left()).getByRole('button', { name: 'Change reply' }));
+  const ask = (name: string) => screen.findByRole('dialog', { name });
+
+  it('"Change the judge’s reply?": "Cancel", "Change reply", the last one primary', async () => {
+    open('2');
+    change();
+    fireEvent.input(textbox()!, { target: { value: '{"claims": []}' } });
+    fireEvent.click(within(left()).getByRole('button', { name: 'Save reply' }));
+    expectCancelFirstMainLast(await ask('Change the judge’s reply?'), ['Cancel', 'Change reply']);
+  });
+
+  it('"Remove the judge’s reply?": "Cancel", "Remove reply", the last one primary', async () => {
+    open('2');
+    change();
+    fireEvent.input(textbox()!, { target: { value: '' } });
+    fireEvent.click(within(left()).getByRole('button', { name: 'Save reply' }));
+    expectCancelFirstMainLast(await ask('Remove the judge’s reply?'), ['Cancel', 'Remove reply']);
   });
 });

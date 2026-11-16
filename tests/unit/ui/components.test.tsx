@@ -12,6 +12,14 @@ import { EmptyState } from '../../../src/ui/components/EmptyState';
 import { CopyButton } from '../../../src/ui/components/CopyButton';
 import { FilePicker } from '../../../src/ui/components/FilePicker';
 import { download } from '../../../src/ui/components/download';
+import { AddFindingDialog } from '../../../src/ui/windows/case-window/AddFindingDialog';
+import { ImportWindow } from '../../../src/ui/windows/import/ImportWindow';
+import { StartTestRunDialog } from '../../../src/ui/steps/cases/StartTestRunDialog';
+import { ExpectedErrorsDialog } from '../../../src/ui/windows/test-case/ExpectedErrorsDialog';
+import { createState } from '../../../src/app/store';
+import { withoutTestRun } from '../../../src/core/cases/test-run';
+import { sampleProject } from '../../helpers/fixtures';
+import { expectCancelFirstMainLast } from '../../helpers/dialog-actions';
 
 describe('Dialog', () => {
   it('opens as a modal dialog, moves focus inside and returns it on close', async () => {
@@ -327,5 +335,30 @@ describe('no "More actions" menu (FR-008)', () => {
       </div>,
     );
     expect(container.textContent).not.toMatch(/more actions/i);
+  });
+});
+
+describe('the order of the buttons in the dialogs (T337, FR-093)', () => {
+  const state = () => ({ ...createState(), step: 'cases' as const, project: withoutTestRun(sampleProject()) });
+  const noop = () => {};
+
+  it('"Start the test run?": "Cancel", "Start test run" (primary)', () => {
+    render(<StartTestRunDialog open state={state()} onConfirm={noop} onClose={noop} />);
+    expectCancelFirstMainLast(screen.getByRole('dialog', { name: 'Start the test run?' }), ['Cancel', 'Start test run']);
+  });
+
+  it('"Add finding…": "Cancel", "Add" (primary)', () => {
+    render(<AddFindingDialog catalog={[]} onAdd={noop} onClose={noop} />);
+    expectCancelFirstMainLast(screen.getByRole('dialog', { name: 'Add finding…' }), ['Cancel', 'Add']);
+  });
+
+  it('"Edit expected errors": "Cancel", "Save expected errors" (primary)', () => {
+    render(<ExpectedErrorsDialog state={state()} caseId="1" onApply={noop} onClose={noop} />);
+    expectCancelFirstMainLast(screen.getByRole('dialog', { name: 'Edit expected errors' }), ['Cancel', 'Save expected errors']);
+  });
+
+  it('"Import test cases…": "Cancel", "Choose file…" (primary)', () => {
+    render(<ImportWindow open onChoose={async () => ({ outcome: 'unreadable' } as never)} onDownloadExample={() => ({ fileName: 'x.csv' })} onImport={noop} onClose={noop} />);
+    expectCancelFirstMainLast(screen.getByRole('dialog', { name: 'Import test cases…' }), ['Cancel', 'Choose file…']);
   });
 });

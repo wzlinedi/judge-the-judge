@@ -265,3 +265,33 @@ test.describe('layout of the case window (T331, FR-092)', () => {
     expect(result.ordered).toEqual([]);
   });
 });
+
+test.describe('layout of the dialogs (T338, FR-093)', () => {
+  /** What the user sees of a dialog on a phone: the title and every button in view, the page not scrolled sideways. */
+  async function expectFits(page: Page, name: string) {
+    const dialog = page.getByRole('dialog', { name, exact: true });
+    await expect(dialog.getByRole('heading', { name, exact: true })).toBeInViewport();
+    const buttons = dialog.locator('.dialog-actions button');
+    expect(await buttons.count()).toBeGreaterThan(0);
+    for (const button of await buttons.all()) await expect(button).toBeInViewport();
+    expect(await noPageScroll(page), 'the page scrolls sideways').toBe(true);
+    return dialog;
+  }
+
+  test('at 360 × 640 "Show prompt" and "Second opinion…" keep the title and the buttons in view, and the body scrolls inside', async ({ page }) => {
+    await loadDemo(page, 360, 640);
+    await page.getByRole('button', { name: STEPS[2] }).click();
+    await page.getByRole('row').filter({ hasText: 'Moby-Dick + 3 errors' }).getByRole('button', { name: 'Open' }).click();
+    const win = page.getByRole('dialog', { name: /^Case \d+ / });
+
+    await win.getByRole('button', { name: 'Show prompt' }).click();
+    const prompt = await expectFits(page, 'Complete judge prompt');
+    await prompt.getByRole('button', { name: 'Close' }).click();
+
+    await win.getByRole('button', { name: 'Second opinion…' }).click();
+    const opinion = await expectFits(page, 'Second opinion');
+    const scrolls = await opinion.locator('.dialog-body').evaluate((el) => el.scrollHeight > el.clientHeight);
+    expect(scrolls, 'the body of the dialog scrolls').toBe(true);
+    await expect(opinion.getByRole('button', { name: 'Cancel' })).toBeInViewport();
+  });
+});

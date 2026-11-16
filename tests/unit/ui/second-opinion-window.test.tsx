@@ -8,6 +8,7 @@ import { readTestProject } from '../../../src/core/io/test-project-file';
 import type { TestProject } from '../../../src/core/model';
 import { CaseWindowHarness } from '../../helpers/case-window-harness';
 import { accuracyMetric } from '../../helpers/fixtures';
+import { expectCancelFirstMainLast } from '../../helpers/dialog-actions';
 
 const loaded = readTestProject(readFileSync('examples/demo/test-project.json', 'utf8'));
 if (!loaded.ok) throw new Error('demo not readable');
@@ -32,6 +33,7 @@ describe('the second-opinion window', () => {
     openWindow('14');
     expect(dialog().classList.contains('dialog-wide')).toBe(true);
     expect(within(dialog().querySelector('.dialog-actions') as HTMLElement).getAllByRole('button').map((b) => b.textContent)).toEqual(['Cancel', 'Apply opinion']);
+    expectCancelFirstMainLast(dialog(), ['Cancel', 'Apply opinion']); // T337, FR-093
   });
 
   it('opens a dialog for that case with the line saying what is checked, the prompt with Copy prompt and one box', () => {

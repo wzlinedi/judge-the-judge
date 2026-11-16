@@ -10,6 +10,7 @@ import { reviewEvaluation } from '../../../src/core/evaluation/results';
 import type { TestProject } from '../../../src/core/model';
 import { withoutTestRun } from '../../../src/core/cases/test-run';
 import { accuracyMetric, sampleProject, withRun } from '../../helpers/fixtures';
+import { expectCancelFirstMainLast } from '../../helpers/dialog-actions';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 const fileEnv = { now: () => '2026-01-01T00:00:00.000Z', toolVersion: 'test' };
@@ -293,6 +294,13 @@ describe('moving or closing with a reply that was typed and not saved', () => {
     fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
     expect(screen.getByRole('dialog', { name: /^Case 1/ })).toBeTruthy();
     expect(replyBox().value).toBe('half a reply');
+  });
+
+  it('the warning has "Cancel" first and "Discard reply" last, the only primary (T337, FR-093)', async () => {
+    open();
+    type('half a reply');
+    fireEvent.click(within(windowOf()).getByRole('button', { name: 'Next case' }));
+    expectCancelFirstMainLast(await guard(), ['Cancel', 'Discard reply']);
   });
 
   it('moves on and drops the draft when the user discards it', async () => {

@@ -43,11 +43,12 @@ export function PromptEditor({ id, built, edited, onEdit, rows }: PromptEditorPr
         onClose={() => setAsking(false)}
         actions={
           <>
-            <button type="button" class="primary" onClick={() => setAsking(false)}>
+            <button type="button" onClick={() => setAsking(false)}>
               {labels.cancel}
             </button>
             <button
               type="button"
+              class="primary"
               onClick={() => {
                 setAsking(false);
                 onEdit(undefined);

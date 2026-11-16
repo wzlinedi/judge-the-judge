@@ -7,6 +7,7 @@ import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
 import { sampleProject } from '../../helpers/fixtures';
 import { withoutTestRun } from '../../../src/core/cases/test-run';
+import { expectCancelFirstMainLast } from '../../helpers/dialog-actions';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 export const draftState = (): AppState => {
@@ -73,6 +74,7 @@ describe('parts 1 to 3: the base, the errors to prepare, the prompt', () => {
     expect(within(win()).getByText(/You changed the prompt/)).toBeTruthy();
     fireEvent.click(button('Rebuild prompt'));
     const question = screen.getByRole('dialog', { name: 'Rebuild the prompt?' });
+    expectCancelFirstMainLast(question, ['Cancel', 'Rebuild prompt']); // T337, FR-093
     fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
     expect(prompt().value).toBe('my own prompt');
     fireEvent.click(button('Rebuild prompt'));

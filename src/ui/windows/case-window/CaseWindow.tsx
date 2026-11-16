@@ -282,10 +282,10 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
             onClose={() => setPending(null)}
             actions={
               <>
-                <button type="button" class="primary" onClick={() => setPending(null)}>
+                <button type="button" onClick={() => setPending(null)}>
                   {labels.cancel}
                 </button>
-                <button type="button" onClick={confirmChange}>
+                <button type="button" class="primary" onClick={confirmChange}>
                   {pending?.kind === 'remove' ? 'Remove reply' : 'Change reply'}
                 </button>
               </>
@@ -309,10 +309,10 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
             onClose={() => setLeaving(null)}
             actions={
               <>
-                <button type="button" class="primary" onClick={() => setLeaving(null)}>
+                <button type="button" onClick={() => setLeaving(null)}>
                   {labels.cancel}
                 </button>
-                <button type="button" onClick={discardAndLeave}>
+                <button type="button" class="primary" onClick={discardAndLeave}>
                   Discard reply
                 </button>
               </>

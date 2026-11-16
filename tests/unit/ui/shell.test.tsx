@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/preact';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, edit } from '../../../src/app/store';
 import { labels } from '../../../src/ui/labels';
+import { readFileSync } from 'node:fs';
 import { withRun } from '../../helpers/fixtures';
+import { expectCancelFirstMainLast } from '../../helpers/dialog-actions';
 
 const supportedEnv = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
 
@@ -173,5 +175,25 @@ describe('footer and browser notice', () => {
     const notice = screen.getByRole('alert');
     expect(notice.textContent).toMatch(/Chrome/);
     expect(notice.textContent).toMatch(/Edge/);
+  });
+});
+
+describe('the order of the buttons in the dialogs of the app (T337, FR-093)', () => {
+  it('the load question: "Cancel", "Load the test project only", "Load with the test run", the last one primary (Clarifications 2026-11-16)', async () => {
+    const ports = createFakePorts();
+    renderApp({ ports });
+    ports.opener.next = { name: 'demo-run.json', text: readFileSync('examples/demo/test-project.json', 'utf8') };
+    fireEvent.click(screen.getByRole('button', { name: labels.more }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Load test project…' }));
+    await waitFor(() => expect(ports.opener.next).toBeNull());
+    const question = await screen.findByRole('dialog', { name: 'Load test project' });
+    expectCancelFirstMainLast(question, ['Cancel', 'Load the test project only', 'Load with the test run']);
+  });
+
+  it('"Unsaved changes": "Cancel", "Discard", "Save test project first", the last one primary', () => {
+    renderApp({ initialState: { ...edit(createState(), (e) => withRun(e, { model_note: 'x' })), unsaved: true } });
+    fireEvent.click(screen.getByRole('button', { name: labels.more }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'New test project' }));
+    expectCancelFirstMainLast(screen.getByRole('dialog', { name: 'Unsaved changes' }), ['Cancel', 'Discard', 'Save test project first']);
   });
 });
