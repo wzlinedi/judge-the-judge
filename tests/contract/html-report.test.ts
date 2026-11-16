@@ -65,6 +65,10 @@ describe('the order of the report', () => {
     expect(html).toMatch(/added after the first reply[^<]*[^]*Anna \+ 2 errors/);
   });
 
+  it('names the sample reply in the note about corrected rules (R3)', () => {
+    expect(report(sampleProject(), { judgeVersion: 'bbbbbbbbbbbb' })).toContain('the error rules, the reply mapping, or the sample reply turned a rule on or off');
+  });
+
   it('notes that the rules were corrected after the replies, naming the version in force then', () => {
     const e = sampleProject();
     const html = report(e, { judgeVersion: 'bbbbbbbbbbbb' });

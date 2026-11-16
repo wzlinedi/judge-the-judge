@@ -12,6 +12,8 @@ export interface EffectiveExpected {
   reason?: string;
   /** Findings counted as correct for this error when it is found (at least one). */
   attached: number;
+  /** Keys of those findings: the clear ones, and the partial ones once the error is found. Empty when it was found by hand with no finding. */
+  attachedKeys?: string[];
 }
 
 export interface EffectiveAdditional {
@@ -49,9 +51,10 @@ export function applyDecisions(review: CaseReview, decisions: CaseDecisions | un
       state,
       source: decision ? decision.source : 'automatic',
       ...(state === 'undecided' && e.reason ? { reason: e.reason } : {}),
-      // Findings counted as correct for a found error: those that clearly matched it, else those that
-      // partly matched it (found by hand), and at least one.
+      // Findings counted as correct for a found error: those that clearly matched it and those that partly
+      // matched it (code review R6), and at least one.
       attached: state === 'found' ? (e.clear.length > 0 ? e.clear.length : Math.max(1, e.partial.length)) : 0,
+      attachedKeys: state === 'found' ? [...new Set([...e.clear, ...e.partial])] : [],
     };
   });
   const stateOf = new Map(expected.map((e) => [e.id, e.state]));

@@ -19,6 +19,13 @@ export function normalizeText(text: string): string {
     .trim();
 }
 
+/** One text holds the other on whole words, and the shorter has at least two words (code review R4): "he" is not in "the hero". */
+function contains(finding: string, wanted: string): boolean {
+  if (finding === wanted) return true;
+  const [shorter, longer] = finding.length <= wanted.length ? [finding, wanted] : [wanted, finding];
+  return shorter.includes(' ') && ` ${longer} `.includes(` ${shorter} `);
+}
+
 export function matchLevel(findingText: string, fragment: string, parameters: Partial<MatchParameters> = {}): MatchLevel {
   const p = { ...DEFAULT_MATCH, ...parameters };
   const finding = normalizeText(findingText);
@@ -32,7 +39,7 @@ export function matchLevel(findingText: string, fragment: string, parameters: Pa
     .every((n) => findingWords.has(n));
 
   let level: MatchLevel = 'none';
-  if (finding.includes(wanted) || wanted.includes(finding)) {
+  if (contains(finding, wanted)) {
     level = 'clear';
   } else {
     const words = wanted.split(' ').filter((w) => w.length >= p.match_min_word_length);

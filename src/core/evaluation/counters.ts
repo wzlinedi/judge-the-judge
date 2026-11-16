@@ -72,6 +72,7 @@ export function countAll(inputs: readonly CountInput[], mode: CountingMode = 'pe
 
     let counted = 0;
     let found = 0;
+    const attachedKeys = new Set<string>();
     const categories = new Set<string>();
     const difficulties = new Set<string>();
     for (const e of effective.expected) {
@@ -97,13 +98,17 @@ export function countAll(inputs: readonly CountInput[], mode: CountingMode = 'pe
         c.expected_found++;
         byCategory.expected_found++;
         byDifficulty.expected_found++;
-        correct += e.attached;
+        // Each finding counts once, also when it points at several errors; a found error with no finding counts one (code review R5, R6).
+        if (e.attachedKeys === undefined) correct += e.attached;
+        else if (e.attachedKeys.length === 0) correct += 1;
+        else for (const key of e.attachedKeys) attachedKeys.add(key);
         if (meta?.difficulty === 'subtle') c.subtle_found++;
       } else {
         c.expected_missed++;
         if (meta?.difficulty === 'subtle') c.subtle_missed++;
       }
     }
+    correct += attachedKeys.size;
     if (counted > 0) {
       c.defective_cases_decided++;
       if (found > 0) c.defective_cases_flagged++;

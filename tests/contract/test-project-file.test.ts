@@ -366,3 +366,38 @@ describe('a metric definition inside the file (T243, i)', () => {
     expect(read(file).ok).toBe(false);
   });
 });
+
+// R7 (code review 2026-11-16; FR-076, SC-004): two cases with one id, or two expected errors with one id in a case, are refused.
+describe('readTestProject: repeated ids', () => {
+  const withCases = (cases: unknown[]) => {
+    const file = parsed();
+    file['dataset'].cases = cases;
+    return file;
+  };
+  const messages = (value: unknown) => {
+    const result = read(value);
+    return result.ok ? [] : result.problems.map((p) => `${p.path ?? ''} ${p.message}`);
+  };
+
+  it('rejects two cases with the id 7 and names the id and the path', () => {
+    const [first] = parsed()['dataset'].cases as Array<Record<string, unknown>>;
+    const text = messages(withCases([{ ...first, id: '7' }, { ...first, id: '7' }])).join('\n');
+    expect(text).toContain('7');
+    expect(text).toContain('dataset.cases[');
+    expect(text).toContain('.id');
+  });
+
+  it('rejects a case with two expected errors with the id e1 and names the id and the path', () => {
+    const [first] = parsed()['dataset'].cases as Array<Record<string, unknown>>;
+    const error = { description: 'd', id: 'e1' };
+    const text = messages(withCases([{ ...first, expected_errors: [error, { ...error }] }])).join('\n');
+    expect(text).toContain('e1');
+    expect(text).toContain('expected_errors[');
+    expect(text).toContain('.id');
+  });
+
+  it('still loads a valid file', () => {
+    expect(read(parsed()).ok).toBe(true);
+  });
+});
+

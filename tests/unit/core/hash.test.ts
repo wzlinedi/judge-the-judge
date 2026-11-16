@@ -7,7 +7,7 @@ import type { JudgeSet, TestCase } from '../../../src/core/model';
 const judge: JudgeSet = {
   prompt: 'Judge {{summary}}',
   judged_text: 'summary',
-  sample_reply: '{"claims":[]}',
+  sample_reply: '{"claims":[{"verdict":"bad"}]}',
   reply_mapping: { finding_text: { 'claims[]': 'claims[].text' } },
   error_rules: [{ name: 'r', match: 'any', conditions: [{ field: 'claims[].verdict', comparison: 'equals', value: 'bad' }] }],
   error_catalog: [{ name: 'wrong-number' }],

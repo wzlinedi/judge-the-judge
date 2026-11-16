@@ -227,7 +227,7 @@ export function buildHtmlReport(evaluation: TestProject, results: Results, revie
   }
   if (rulesCorrectedAfterReplies(evaluation.testRun?.reply_judge_version, meta.judgeVersion)) {
     head.push(
-      `<p class="note">The rules were corrected after the replies were received (the error rules or the reply mapping changed). The judge version in force when the replies were received was ${esc(evaluation.testRun?.reply_judge_version)}; the current one is ${esc(meta.judgeVersion)}.</p>`,
+      `<p class="note">The rules were corrected after the replies were received (the error rules, the reply mapping, or the sample reply turned a rule on or off). The judge version in force when the replies were received was ${esc(evaluation.testRun?.reply_judge_version)}; the current one is ${esc(meta.judgeVersion)}.</p>`,
     );
   }
   const mismatch = differenceNote(differences);

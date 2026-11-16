@@ -2,7 +2,7 @@
 // One file holds the whole work: the judge set, the error catalog, the test cases, the metric, the thresholds and,
 // once the test run has started, the `test_run` section with the replies, decisions, model details and results.
 import { measureProblems } from './metric-file';
-import type { MetricRef, ReadResult, TestProject, TestRun } from '../model';
+import type { MetricRef, Problem, ReadResult, TestProject, TestRun } from '../model';
 import { extractJson } from '../judge/extract-json';
 import { recognizeFields } from '../judge/fields';
 import { validateRules } from '../judge/rules';
@@ -79,6 +79,23 @@ export function writeTestProject(project: TestProject, results: Results | null, 
   return JSON.stringify(file, null, 2) + '\n';
 }
 
+/** Two cases with one id, or two expected errors of a case with one id, are refused (code review R7; FR-076). */
+function repeatedIds(cases: ReadonlyArray<{ id: string; expected_errors: ReadonlyArray<{ id?: string | undefined }> }>): Problem[] {
+  const problems: Problem[] = [];
+  const caseIds = new Set<string>();
+  cases.forEach((c, i) => {
+    if (caseIds.has(c.id)) problems.push({ message: `The case id "${c.id}" is used by more than one case. Each case needs its own id.`, path: `dataset.cases[${i}].id` });
+    caseIds.add(c.id);
+    const errorIds = new Set<string>();
+    c.expected_errors.forEach((e, j) => {
+      if (e.id === undefined) return;
+      if (errorIds.has(e.id)) problems.push({ message: `The expected error id "${e.id}" is used twice in case "${c.id}". Each expected error needs its own id.`, path: `dataset.cases[${i}].expected_errors[${j}].id` });
+      errorIds.add(e.id);
+    });
+  });
+  return problems;
+}
+
 /**
  * `isMetricLoaded` lets the caller say which metrics it knows; the core knows none.
  * A metric that is not loaded keeps its stored parameters and the user is told.
@@ -93,6 +110,9 @@ export function readTestProject(text: string, isMetricLoaded: (id: string) => bo
 
   const parsed = testProjectSchema.safeParse(envelope.value);
   if (!parsed.success) return { ok: false, problems: zodProblems(parsed.error, envelope.value) };
+
+  const repeated = repeatedIds(parsed.data.dataset.cases);
+  if (repeated.length > 0) return { ok: false, problems: repeated };
 
   const definitionProblems = parsed.data.metric.definition ? measureProblems(parsed.data.metric.definition.measures, 'metric.definition.measures') : [];
   if (definitionProblems.length > 0) return { ok: false, problems: definitionProblems };

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { countAll, emptyCounters } from '../../../../src/core/evaluation/counters';
+import { applyDecisions } from '../../../../src/core/evaluation/decisions';
+import type { CaseReview } from '../../../../src/core/evaluation/review';
+import type { CaseDecisions } from '../../../../src/core/model';
 import { wilson } from '../../../../src/core/evaluation/wilson';
 import { computeMeasures } from '../../../../src/core/evaluation/measures';
 import { overallResult } from '../../../../src/core/evaluation/overall';
@@ -155,3 +158,37 @@ describe('overallResult', () => {
     expect(r.borderline.join(' ')).toMatch(/Detection rate/);
   });
 });
+
+// R5 and R6 (code review 2026-11-16; research.md 11, "Counting findings"): every finding counts once, a partly matching finding counts
+// when its error is found, and a found error with no finding counts one.
+describe('correct findings, from the review and the decisions', () => {
+  const f = (key: string) => ({ key, text: key, rules: ['r'] });
+  const review = (over: Partial<CaseReview>): CaseReview => ({ readable: true, needsApproval: false, expected: [], additional: [], partialOnly: [], unknown: [], ...over });
+  const none: CaseDecisions = { expected: {}, additional: {}, added_findings: [], approved: false, note: '' };
+  const count = (r: CaseReview, decisions: CaseDecisions = none, falsePositives: string[] = []) => {
+    const eff = applyDecisions(r, decisions);
+    for (const key of falsePositives) eff.additional.push({ key, text: key, rules: ['r'], state: 'false_positive', source: 'manual' });
+    return countAll([kase('A', r.expected.map((e) => ({ id: e.id })), 'fail', eff)]);
+  };
+
+  it('counts a finding once when it clearly matches two expected errors (R5)', () => {
+    const c = count(
+      review({ expected: [{ id: 'e1', state: 'found', clear: ['f1'], partial: [] }, { id: 'e2', state: 'found', clear: ['f1'], partial: [] }] }),
+      none,
+      ['fp'],
+    );
+    expect(c.findings_total).toBe(2);
+    expect(c.false_positives).toBe(1);
+  });
+
+  it('counts a finding that only partly matches a found error, next to the finding that found it (R6)', () => {
+    const c = count(review({ expected: [{ id: 'e1', state: 'found', clear: ['f1'], partial: ['f2'] }], partialOnly: [f('f2')] }));
+    expect(c.findings_total).toBe(2);
+  });
+
+  it('counts one correct finding for an error marked found by hand when no finding points at it (R6)', () => {
+    const c = count(review({ expected: [{ id: 'e1', state: 'undecided', clear: [], partial: [] }] }), { ...none, expected: { e1: { state: 'found', source: 'manual' } } });
+    expect(c.findings_total).toBe(1);
+  });
+});
+

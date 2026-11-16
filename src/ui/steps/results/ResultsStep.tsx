@@ -58,7 +58,7 @@ export function ResultsStep({ results, evaluation, reviewed, onExport, onThresho
       {hasNotices ? (
         <section role="region" aria-label="Notices" class="notices">
           {corrected ? (
-            <p class="notice warn">{`The rules were corrected after the replies were received (the error rules or the reply mapping changed). The judge version in force when the replies were received was ${replyJudgeVersion}; the current one is ${versions.judge}.`}</p>
+            <p class="notice warn">{`The rules were corrected after the replies were received (the error rules, the reply mapping, or the sample reply turned a rule on or off). The judge version in force when the replies were received was ${replyJudgeVersion}; the current one is ${versions.judge}.`}</p>
           ) : null}
           {switchNote ? <p class="notice warn">{switchNote}</p> : null}
           {mismatch ? <p class="notice warn">{mismatch}</p> : null}

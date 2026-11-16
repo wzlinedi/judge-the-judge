@@ -54,3 +54,17 @@ describe('matchLevel', () => {
     expect(matchLevel('A proposal was made', fragment, { match_partial_share: 0.9 })).toBe('none');
   });
 });
+
+// R4 (code review 2026-11-16; research.md 10, point 2): containment counts only on whole words, and the shorter text has at least two words.
+describe('matchLevel: containment on whole words', () => {
+  it('is not clear when a short text is a piece of a word of the longer text', () => {
+    expect(matchLevel('No comparison is given', 'Paris')).not.toBe('clear');
+    expect(matchLevel('he', 'the hero rejects the proposal')).not.toBe('clear');
+  });
+
+  it('is clear when the shorter text is two or more whole words of the longer text', () => {
+    expect(matchLevel('the hero rejects', 'the hero rejects the proposal')).toBe('clear');
+    expect(matchLevel('the hero rejects the proposal', 'hero rejects')).toBe('clear');
+  });
+});
+
