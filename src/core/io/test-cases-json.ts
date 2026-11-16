@@ -4,6 +4,7 @@ import type { ExpectedError, ReadResult, TestCase } from '../model';
 import { extractJson } from '../judge/extract-json';
 import { checkEnvelope } from '../schemas/common';
 import { zodProblems } from '../schemas/messages';
+import { safeParseOwnKeys } from '../schemas/own-record';
 import { assignExpectedIds, ignoredFieldNote, storedCase, testCaseSchema } from '../schemas/test-case';
 import { TEST_CASES_FORMAT, TEST_CASES_KEYS, TEST_CASES_SCHEMA_VERSION } from '../schemas/test-cases';
 import { TEST_PROJECT_FORMAT } from '../schemas/test-project';
@@ -87,9 +88,9 @@ export function readTestCasesJson(text: string): ReadResult<ParsedCases> {
     const position = index + 1;
     const label = isObject(item) && typeof item['name'] === 'string' && item['name'] !== '' ? item['name'] : `Case ${position}`;
     const prepared = isObject(item) && typeof item['id'] === 'number' ? { ...item, id: String(item['id']) } : item;
-    const parsed = importCase.safeParse(prepared);
+    const parsed = safeParseOwnKeys(importCase, prepared);
     if (!parsed.success) {
-      const reason = zodProblems(parsed.error, prepared)
+      const reason = zodProblems(parsed.error, parsed.input)
         .map((p) => (p.path && !p.message.startsWith(p.path) ? `${p.path}: ${p.message}` : p.message))
         .join(' ');
       invalid.push({ position, label, reason });

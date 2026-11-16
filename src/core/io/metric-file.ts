@@ -10,6 +10,7 @@ import { COUNTER_NAMES } from '../metrics/operations';
 import type { MetricDefinition } from '../metrics/types';
 import { checkEnvelope } from '../schemas/common';
 import { zodProblems } from '../schemas/messages';
+import { safeParseOwnKeys } from '../schemas/own-record';
 import { METRIC_FORMAT, METRIC_KEYS, METRIC_SCHEMA_VERSION, metricSchema } from '../schemas/metric';
 
 const REQUIRED = ['detection_rate', 'false_positive_rate'];
@@ -58,8 +59,8 @@ export function readMetric(text: string): ReadResult<MetricDefinition> {
   }
   const envelope = checkEnvelope(extracted.value, { format: METRIC_FORMAT, schemaVersion: METRIC_SCHEMA_VERSION, knownKeys: METRIC_KEYS });
   if (!envelope.ok) return envelope;
-  const parsed = metricSchema.safeParse(envelope.value);
-  if (!parsed.success) return { ok: false, problems: zodProblems(parsed.error, envelope.value) };
+  const parsed = safeParseOwnKeys(metricSchema, envelope.value);
+  if (!parsed.success) return { ok: false, problems: zodProblems(parsed.error, parsed.input) };
 
   const metric = parsed.data;
   const problems: Problem[] = [];

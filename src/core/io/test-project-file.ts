@@ -12,6 +12,7 @@ import { MINIMUM_SAMPLE, type Results } from '../evaluation/results';
 import type { MinimumSample } from '../evaluation/overall';
 import { checkEnvelope } from '../schemas/common';
 import { zodProblems } from '../schemas/messages';
+import { safeParseOwnKeys } from '../schemas/own-record';
 import { cleanJudgeSet } from '../schemas/judge-set';
 import { joinCategoryExamples } from '../cases/catalog';
 import { assignExpectedIds, ignoredFieldNote, storedCase } from '../schemas/test-case';
@@ -108,8 +109,8 @@ export function readTestProject(text: string, isMetricLoaded: (id: string) => bo
   const envelope = checkEnvelope(extracted.value, { format: TEST_PROJECT_FORMAT, schemaVersion: TEST_PROJECT_SCHEMA_VERSION, knownKeys: TEST_PROJECT_KEYS });
   if (!envelope.ok) return envelope;
 
-  const parsed = testProjectSchema.safeParse(envelope.value);
-  if (!parsed.success) return { ok: false, problems: zodProblems(parsed.error, envelope.value) };
+  const parsed = safeParseOwnKeys(testProjectSchema, envelope.value);
+  if (!parsed.success) return { ok: false, problems: zodProblems(parsed.error, parsed.input) };
 
   const repeated = repeatedIds(parsed.data.dataset.cases);
   if (repeated.length > 0) return { ok: false, problems: repeated };

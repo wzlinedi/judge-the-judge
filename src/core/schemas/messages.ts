@@ -1,11 +1,16 @@
 // Plain sentences for validation problems (FR-005, FR-084): the place, then what to fix.
 import type { ZodError, ZodIssue } from 'zod';
 import type { Problem } from '../model';
+import { PROTO_STAND_IN } from './own-record';
+
+/** A key `__proto__` is checked under a stand-in name (own-record.ts); a message names the key as written in the file. */
+const shown = (part: PropertyKey): PropertyKey => (part === PROTO_STAND_IN ? '__proto__' : part);
 
 /** `fields.summary`, `expected_errors[2].description`: keys joined by dots, indexes in brackets. */
 export function pathText(path: ReadonlyArray<PropertyKey>): string {
   let out = '';
-  for (const part of path) {
+  for (const raw of path) {
+    const part = shown(raw);
     if (typeof part === 'number') out += `[${part}]`;
     else out += out ? `.${String(part)}` : String(part);
   }
@@ -15,7 +20,7 @@ export function pathText(path: ReadonlyArray<PropertyKey>): string {
 function valueAt(input: unknown, path: ReadonlyArray<PropertyKey>): unknown {
   let current: unknown = input;
   for (const part of path) {
-    if (current === null || typeof current !== 'object') return undefined;
+    if (current === null || typeof current !== 'object' || !Object.hasOwn(current, part)) return undefined;
     current = (current as Record<PropertyKey, unknown>)[part];
   }
   return current;
@@ -83,7 +88,7 @@ function sentenceFor(issue: ZodIssue, input: unknown): string {
       return `${label} must be one of ${values}${found === undefined ? '' : `, but "${String(found)}" was found`}.`;
     }
     case 'unrecognized_keys':
-      return `${label} has keys the tool does not know: ${(anyIssue['keys'] as string[]).join(', ')}.`;
+      return `${label} has keys the tool does not know: ${(anyIssue['keys'] as string[]).map((k) => String(shown(k))).join(', ')}.`;
     default:
       return where ? `${where}: ${issue.message}` : issue.message;
   }

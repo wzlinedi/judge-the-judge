@@ -46,7 +46,7 @@ export interface Results {
 
 export function matchParameters(evaluation: TestProject, metric: Pick<MetricDefinition, 'parameters'> | undefined): MatchParameters {
   const defaults: Record<string, number> = { ...DEFAULT_MATCH };
-  for (const [name, def] of Object.entries(metric?.parameters ?? {})) defaults[name] = def.default;
+  for (const [name, def] of Object.entries(metric?.parameters ?? {})) setOwn(defaults, name, def.default);
   return { ...DEFAULT_MATCH, ...defaults, ...evaluation.metric.parameters } as MatchParameters;
 }
 

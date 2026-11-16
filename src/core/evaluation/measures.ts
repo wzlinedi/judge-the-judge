@@ -1,5 +1,6 @@
 import type { CountingMode } from '../model';
 import { evaluateMeasure } from '../metrics/operations';
+import { setOwn } from '../cases/test-run';
 import type { MeasureDefinition, MeasureValue, MetricDefinition } from '../metrics/types';
 import type { Counters } from './counters';
 
@@ -19,6 +20,6 @@ export function computeMeasures(counters: Counters, metric: Pick<MetricDefinitio
   const definitions =
     mode === 'per_case' ? [...CASE_LEVEL_MEASURES, ...metric.measures.filter((m) => !PER_ERROR_IDS.includes(m.id) && !CASE_LEVEL_MEASURES.some((x) => x.id === m.id))] : metric.measures;
   const computed: Record<string, MeasureValue> = {};
-  for (const measure of definitions) computed[measure.id] = evaluateMeasure(measure, counters, computed);
+  for (const measure of definitions) setOwn(computed, measure.id, evaluateMeasure(measure, counters, computed));
   return computed;
 }
