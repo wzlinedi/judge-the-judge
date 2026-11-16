@@ -304,7 +304,9 @@ test.describe('reduced motion (T340 (c), FR-094)', () => {
     await page.getByRole('row').filter({ hasText: 'Moby-Dick + 3 errors' }).getByRole('button', { name: 'Open' }).click();
     const win = page.getByRole('dialog', { name: /^Case \d+ / });
     await win.locator('[data-expected="e2"]').getByRole('button', { name: 'Show the issue' }).click();
-    // right after the click, with no wait: the passage is inside the window, and every strong mark has a transition of 0.01 ms at most
+    // the app scrolls in a timer of 0 ms after the click; wait for that one step (the focus lands on the passage), never for an animation
+    await expect.poll(() => page.evaluate(() => document.activeElement?.closest('[data-error="e2"]') !== null && document.activeElement?.closest('[data-error="e2"]') !== undefined)).toBe(true);
+    // then the passage is inside the window at once, and every strong mark has a transition of 0.01 ms at most
     const result = await page.evaluate(() => {
       const passage = document.querySelector('[data-field] .fragment-strong') as HTMLElement | null;
       const box = passage?.getBoundingClientRect();

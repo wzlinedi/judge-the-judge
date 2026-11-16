@@ -165,8 +165,8 @@ Compare step and no result shelf.
 ### Window: the test case window
 
 Opened by **Add test case** and **Open** (FR-038, FR-083, FR-085, FR-086, FR-089,
-FR-090). It fills the screen, has a header that never scrolls and two columns that scroll on
-their own. While something is being added, the header always shows **Close without saving**,
+FR-090). It fills the screen, has a header that never scrolls and one scroll area that holds
+the whole page (FR-092). While something is being added, the header always shows **Close without saving**,
 which asks first when something was pasted or typed.
 
 - **Add test case** first offers three choices, all always available: **From JSON**, **Clean
