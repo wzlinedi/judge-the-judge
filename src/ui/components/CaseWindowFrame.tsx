@@ -28,8 +28,8 @@ export interface CaseWindowFrameProps {
 
 /**
  * The frame shared by the case window of Run, the read-only case view and the test case window
- * (research.md, section 20): fills the screen, a header that never scrolls, two columns that scroll
- * on their own and stack below 760 px.
+ * (research.md, sections 20 and 33.5): fills the screen, a header that never scrolls, and one scroll area
+ * for the whole page; the two columns of the read-only views scroll together and stack below 760 px.
  */
 export function CaseWindowFrame({ title, index, total, left, right, page, onPrevious, onNext, onClose, headerExtra, positionLabel, canPrevious, canNext, overlay }: CaseWindowFrameProps) {
   const first = canPrevious === undefined ? index <= 0 : !canPrevious;
@@ -79,9 +79,11 @@ export function CaseWindowFrame({ title, index, total, left, right, page, onPrev
           <div class="case-page case-page-wide">{page}</div>
         </div>
       ) : (
-        <div class="case-columns">
-          <section class="case-pane">{left}</section>
-          <section class="case-pane">{right}</section>
+        <div class="case-window-body">
+          <div class="case-columns">
+            <section class="case-pane">{left}</section>
+            <section class="case-pane">{right}</section>
+          </div>
         </div>
       )}
       {overlay}

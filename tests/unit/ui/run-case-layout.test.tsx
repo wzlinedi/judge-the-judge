@@ -6,6 +6,8 @@ import { reviewEvaluation } from '../../../src/core/evaluation/results';
 import { markProgress } from '../../../src/core/evaluation/mark-progress';
 import { readTestProject } from '../../../src/core/io/test-project-file';
 import type { TestProject } from '../../../src/core/model';
+import { MarkedFields } from '../../../src/ui/windows/case-window/MarkedFields';
+import { ReadOnlyCaseView } from '../../../src/ui/windows/case-window/ReadOnlyCaseView';
 import { CaseWindowHarness } from '../../helpers/case-window-harness';
 import { accuracyMetric } from '../../helpers/fixtures';
 
@@ -222,5 +224,64 @@ describe('a reply that cannot be read', () => {
     expect(seen.at(-1)?.testRun!.decisions['10']?.approved).toBe(true);
     expect(within(part(2)).getByText(/Pass/)).toBeTruthy();
     expect(within(win()).getByRole('button', { name: 'No more findings' }).getAttribute('aria-pressed')).toBe('true');
+  });
+});
+
+// T330 (FR-055, FR-092; research.md, section 33.5): the header in the order of FR-092, and part 1 in two columns of fields
+describe('the layout of the case window (T330)', () => {
+  /** True when every element comes after the one before it in the DOM. */
+  const inDomOrder = (items: Element[]) => items.every((el, i) => i === 0 || (items[i - 1] as Element).compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+  it('(a) the header holds the case name, Previous case, the position, Next case, the box, the count not saved and Close, in this order', () => {
+    open('12');
+    const header = win().querySelector('.case-window-header') as HTMLElement;
+    const items = [
+      within(header).getByRole('heading', { name: /^Case 12 · Moby-Dick \+ 3 errors$/ }),
+      within(header).getByRole('button', { name: 'Previous case' }),
+      within(header).getByText(/^\d+ of \d+$/),
+      within(header).getByRole('button', { name: 'Next case' }),
+      within(header).getByRole('checkbox', { name: 'Only cases awaiting verification' }),
+      within(header).getByText(/^\d+ not saved$/),
+      within(header).getByRole('button', { name: 'Close' }),
+    ];
+    expect(inDomOrder(items)).toBe(true);
+    const buttons = within(header).getAllByRole('button');
+    expect(buttons.at(-1)?.textContent).toBe('Close');
+    expect(win().querySelector('.case-window-body')?.contains(header)).toBe(false);
+  });
+
+  it('(b) part 1 holds the other fields first and the judged field second, each in its own column', () => {
+    open('12');
+    const fields = part(1).querySelector('.case-fields') as HTMLElement;
+    expect(fields).not.toBeNull();
+    expect(fields.classList.contains('single')).toBe(false);
+    expect([...fields.children].map((c) => c.className)).toEqual(['case-fields-others', 'case-fields-judged']);
+    const names = (box: string) => [...fields.querySelectorAll(`.${box} [data-field]`)].map((f) => f.getAttribute('data-field'));
+    expect(names('case-fields-others')).toEqual(['source_text']);
+    expect(names('case-fields-judged')).toEqual(['summary']);
+  });
+
+  it('(b) the other fields keep the order of the case, and the judged field goes to the second column wherever it stands', () => {
+    render(<MarkedFields testCase={{ fields: { summary: 'S', title: 'T', source_text: 'X' }, expected_errors: [] }} judged="summary" effective={null} columns />);
+    const fields = document.querySelector('.case-fields') as HTMLElement;
+    expect([...fields.querySelectorAll('.case-fields-others [data-field]')].map((f) => f.getAttribute('data-field'))).toEqual(['title', 'source_text']);
+    expect([...fields.querySelectorAll('.case-fields-judged [data-field]')].map((f) => f.getAttribute('data-field'))).toEqual(['summary']);
+  });
+
+  it('(c) a case with only the judged field has one column: the class single and no other fields', () => {
+    render(<MarkedFields testCase={{ fields: { summary: 'Only the summary.' }, expected_errors: [] }} judged="summary" effective={null} columns />);
+    const fields = document.querySelector('.case-fields') as HTMLElement;
+    expect(fields.classList.contains('single')).toBe(true);
+    expect(fields.querySelector('.case-fields-others')).toBeNull();
+    expect(fields.querySelector('.case-fields-judged [data-field="summary"]')).not.toBeNull();
+  });
+
+  it('(d) the read-only case view of Results has the same two columns of fields', () => {
+    render(<ReadOnlyCaseView evaluation={demo} reviewed={reviewEvaluation(demo, accuracyMetric)} caseId="12" onNavigate={() => {}} onClose={() => {}} onOpenOnTestRun={() => {}} />);
+    const view = screen.getByRole('dialog', { name: /^Case 12 / });
+    const fields = view.querySelector('.case-part .case-fields') as HTMLElement;
+    expect(fields).not.toBeNull();
+    expect([...fields.children].map((c) => c.className)).toEqual(['case-fields-others', 'case-fields-judged']);
+    expect(fields.querySelector('.case-fields-judged [data-field="summary"]')).not.toBeNull();
   });
 });

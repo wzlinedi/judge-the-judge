@@ -184,7 +184,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
           <strong>{testCase.expected_errors.length === 0 ? 'Clean' : 'Injected errors'}</strong>
           {testCase.base ? <span class="muted">{` · Base: ${testCase.base}${base ? ` (${base.name})` : ''}`}</span> : null}
         </p>
-        <MarkedFields testCase={testCase} judged={judged} effective={effective} strong={strong} shown={shown} rootRef={textRef} />
+        <MarkedFields testCase={testCase} judged={judged} effective={effective} strong={strong} shown={shown} rootRef={textRef} columns />
         <PromptButtons prompt={prompt} primary={!reply && !notJsonDraft && copied[caseId] !== true} onCopied={() => setCopied((c) => ({ ...c, [caseId]: true }))} />
       </Part>
 

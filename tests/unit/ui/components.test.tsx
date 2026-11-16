@@ -89,12 +89,17 @@ describe('CaseWindowFrame', () => {
     expect(screen.getByRole('button', { name: 'Close' }).closest('.case-window-header')).not.toBeNull();
   });
 
-  it('keeps two columns that scroll on their own', () => {
+  // T329 (gate exception 3 of SC-040, FR-092): the two columns stay, and the window has one scroll area that holds both
+  it('keeps two columns that do not scroll on their own', () => {
     frame();
     const panes = document.querySelectorAll('.case-pane');
     expect(panes).toHaveLength(2);
     expect(panes[0]?.textContent).toBe('left pane');
     expect(panes[1]?.textContent).toBe('right pane');
+    const bodies = document.querySelectorAll('.case-window-body');
+    expect(bodies, 'the window has one scroll area').toHaveLength(1);
+    for (const pane of panes) expect(bodies[0]?.contains(pane), 'the scroll area holds both columns').toBe(true);
+    expect(bodies[0]?.contains(document.querySelector('.case-window-header')), 'the header stays outside the scroll area').toBe(false);
   });
 
   it('moves with the buttons and with Alt + Left and Alt + Right', () => {

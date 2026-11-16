@@ -55,12 +55,14 @@
 .case-window-header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); background: var(--surface); }
 .case-window-title { margin: 0; margin-right: auto; font-size: var(--text-lg); }
 .case-window-nav { display: inline-flex; align-items: center; gap: var(--space-2); }
-.case-columns { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; }
-.case-pane { overflow: auto; padding: var(--space-4); border-right: 1px solid var(--border); }
-.case-pane:last-child { border-right: 0; }
+/* The body is the one scroll area of the window; the header above it never moves, and no part inside it scrolls on its own (FR-092; research.md, 33.5) */
 .case-window-body { flex: 1; min-height: 0; overflow: auto; padding: var(--space-4); }
-.case-page { max-width: 64rem; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-5); }
-.case-page.case-page-wide { max-width: none; }
+.case-page { max-width: var(--content-max); margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-5); }
+.case-columns { max-width: var(--content-max); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.case-pane { overflow: visible; padding: 0 0 var(--space-4); border-bottom: 1px solid var(--border); }
+.case-pane:last-child { border-bottom: 0; }
+/* Part 1: the other fields, then the judged field; side by side from 760 px, one column for a case with one field */
+.case-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
 .frame, .case-part { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); }
 .case-pane > .frame + .frame { margin-top: var(--space-4); }
 .frame > h3:first-child { margin-top: 0; }
@@ -82,10 +84,16 @@
 .form-grid .muted { margin: var(--space-1) 0 0; }
 @media (max-width: 759px) { .form-grid { grid-template-columns: 1fr; } .form-grid > .field-label { margin-top: var(--space-2); } }
 .case-window-footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: var(--surface); }
+@media (min-width: 760px) {
+  .case-columns, .case-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .case-fields.single { grid-template-columns: minmax(0, 1fr); }
+  .case-pane { padding: 0 var(--space-4); border-bottom: 0; border-right: 1px solid var(--border); }
+  .case-pane:first-child { padding-left: 0; }
+  .case-pane:last-child { padding-right: 0; border-right: 0; }
+}
 @media (max-width: 759px) {
-  .case-columns { grid-template-columns: 1fr; overflow: auto; }
   .case-half { grid-template-columns: 1fr; }
-  .case-pane { overflow: visible; border-right: 0; border-bottom: 1px solid var(--border); }
+  .case-pane + .case-pane { padding-top: var(--space-4); }
 }
 
 .json-box textarea { font-size: var(--text-sm); }
@@ -266,7 +274,7 @@ button.fold { background: transparent; border: 0; padding: 0; font: inherit; fon
 .errors-to-prepare td input[type="text"] { min-width: 16rem; }
 .errors-to-prepare td:first-child { min-width: 16rem; }
 .categories-table .button-row { flex-wrap: nowrap; }
-.reply-read { margin: 0 0 var(--space-2); padding: var(--space-3); max-height: 24rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-mono); font-size: var(--text-sm); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); }
+.reply-read { margin: 0 0 var(--space-2); padding: var(--space-3); white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-mono); font-size: var(--text-sm); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); }
 .reply-block { display: block; cursor: pointer; border-left: 4px solid var(--warning); padding-left: var(--space-2); }
 .reply-block.fragment-strong { background: var(--mark-warning); border-left-color: var(--accent); outline: none; font-weight: normal; }
 .pointed { outline: 3px solid var(--accent); outline-offset: 2px; }
