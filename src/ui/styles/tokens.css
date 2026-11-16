@@ -1,34 +1,40 @@
-/* Design tokens: the single source of colors, spacing, type sizes, radii, shadows and motion.
-   Black and red (FR-007; research.md, section 30). Red is the one accent: primary action,
-   current step, focus ring. Every text pair is at least 4.5:1 in both schemes. */
+/* Design tokens: the single source of colors, spacing, type sizes, radii, shadows, widths and motion.
+   Stone and forest green (FR-007, FR-091; research.md, section 33). The accent is the one accent: primary action, current step, links,
+   focus ring. Every text pair is at least 4.5:1 in both schemes (tests/unit/ui/tokens.test.ts computes it from this file). */
 
 :root {
   color-scheme: light dark;
 
-  /* Light scheme (default) */
-  --bg: #ffffff;
-  --surface: #f6f6f7;
-  --surface-2: #ececee;
-  --border: #c9c9ce;
-  --text: #111113;
-  --text-muted: #55555c;
-  --accent: #c8102e;
-  --accent-hover: #a50d26;
+  /* Light scheme (default): Stone and forest green */
+  --bg: #f2f3ed;
+  --surface: #fbfcf8;
+  --surface-2: #e7eae0;
+  /* A soft border for cards and rules (decoration); the strong one is the edge of a control (3:1) */
+  --border: #d5dbd1;
+  --border-strong: #7c8a7b;
+  --text: #202720;
+  --text-muted: #5f6a5e;
+  --accent: #315d48;
+  --accent-hover: #264a39;
   --on-accent: #ffffff;
-  --focus: #c8102e;
-  --success: #1b6e3c;
-  --success-bg: #e4f3ea;
+  --focus: #315d48;
+  --success: #1f6b3f;
+  --success-bg: #e1eee4;
   --warning: #8a5a00;
-  --warning-bg: #fdf1d8;
-  --error: #b00020;
-  --error-bg: #fbe5e9;
+  --warning-bg: #f6ecd0;
+  --error: #a61b2b;
+  --error-bg: #f7e1e1;
   /* Highlights of expected errors (T236): stronger than the soft backgrounds, text stays at 4.5:1 or more */
-  --mark-warning: #ffd966;
-  --mark-success: #a8e0bc;
-  --mark-error: #f7a8b4;
-  --overlay: rgb(0 0 0 / 0.45);
+  --mark-warning: #f1dc8e;
+  --mark-success: #bfe0c8;
+  --mark-error: #f0b9bc;
+  /* The object of a finding in Judge reply: light, and strong once pointed at (research.md, 33.6) */
+  --reply-bg: #e9efe6;
+  --reply-line: #5f7f6c;
+  --reply-strong-bg: #cfe3d6;
+  --overlay: rgb(32 39 32 / 0.45);
 
-  /* Spacing */
+  /* Spacing: steps of 4 px */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -43,60 +49,89 @@
   --text-md: 1rem;
   --text-lg: 1.25rem;
   --text-xl: 1.5rem;
+  /* Only the overall result of Results uses it */
+  --text-2xl: 2rem;
 
-  /* Shape and motion */
+  /* Shape, widths and motion */
   --radius: 6px;
   --radius-lg: 10px;
-  --shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+  --shadow: 0 4px 16px rgb(32 39 32 / 0.12);
+  --control-height: 2.25rem;
+  --content-max: 100rem;
+  --prose-max: 72ch;
   --motion: 150ms ease-out;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0b0b0c;
-    --surface: #161618;
-    --surface-2: #212125;
-    --border: #3a3a40;
-    --text: #f3f3f5;
-    --text-muted: #b4b4bc;
-    --accent: #ff4d63;
-    --accent-hover: #ff7586;
-    --on-accent: #0b0b0c;
-    --focus: #ff4d63;
-    --success: #5fd08a;
-    --success-bg: #12281b;
-    --warning: #f2c14e;
-    --warning-bg: #2d2411;
-    --error: #ff6b7d;
-    --error-bg: #34141a;
-    --mark-warning: #6b5210;
-    --mark-success: #1f6b3d;
-    --mark-error: #7a2634;
+    --bg: #121713;
+    --surface: #1a211c;
+    --surface-2: #242c26;
+    --border: #34403a;
+    --border-strong: #5f6d62;
+    --text: #e6ebe3;
+    --text-muted: #a3aea2;
+    --accent: #7dbe9c;
+    --accent-hover: #98d0b2;
+    --on-accent: #0e1a13;
+    --focus: #7dbe9c;
+    --success: #6fd09a;
+    --success-bg: #14281b;
+    --warning: #e5b94e;
+    --warning-bg: #2b2410;
+    --error: #f2878f;
+    --error-bg: #33191c;
+    --mark-warning: #5a4710;
+    --mark-success: #1f5a38;
+    --mark-error: #6e2a31;
+    --reply-bg: #1f2b24;
+    --reply-line: #6fa487;
+    --reply-strong-bg: #2c4638;
     --overlay: rgb(0 0 0 / 0.65);
-    --shadow: 0 2px 8px rgb(0 0 0 / 0.6);
+    --shadow: 0 4px 16px rgb(0 0 0 / 0.5);
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0b0b0c;
-  --surface: #161618;
-  --surface-2: #212125;
-  --border: #3a3a40;
-  --text: #f3f3f5;
-  --text-muted: #b4b4bc;
-  --accent: #ff4d63;
-  --accent-hover: #ff7586;
-  --on-accent: #0b0b0c;
-  --focus: #ff4d63;
-  --success: #5fd08a;
-  --success-bg: #12281b;
-  --warning: #f2c14e;
-  --warning-bg: #2d2411;
-  --error: #ff6b7d;
-  --error-bg: #34141a;
-  --mark-warning: #6b5210;
-  --mark-success: #1f6b3d;
-  --mark-error: #7a2634;
+  --bg: #121713;
+  --surface: #1a211c;
+  --surface-2: #242c26;
+  --border: #34403a;
+  --border-strong: #5f6d62;
+  --text: #e6ebe3;
+  --text-muted: #a3aea2;
+  --accent: #7dbe9c;
+  --accent-hover: #98d0b2;
+  --on-accent: #0e1a13;
+  --focus: #7dbe9c;
+  --success: #6fd09a;
+  --success-bg: #14281b;
+  --warning: #e5b94e;
+  --warning-bg: #2b2410;
+  --error: #f2878f;
+  --error-bg: #33191c;
+  --mark-warning: #5a4710;
+  --mark-success: #1f5a38;
+  --mark-error: #6e2a31;
+  --reply-bg: #1f2b24;
+  --reply-line: #6fa487;
+  --reply-strong-bg: #2c4638;
   --overlay: rgb(0 0 0 / 0.65);
-  --shadow: 0 2px 8px rgb(0 0 0 / 0.6);
+  --shadow: 0 4px 16px rgb(0 0 0 / 0.5);
+}
+
+/* Porcelain and navy: an accepted alternative, kept only as tokens. Nothing in the tool sets data-palette and there is no switch
+   (FR-007; research.md, 33.3). The other tokens come from the light set above. */
+:root[data-palette="navy"] {
+  --bg: #f2f5f8;
+  --surface: #fcfdff;
+  --surface-2: #e6ebf1;
+  --border: #d6dfe8;
+  --border-strong: #7d8a98;
+  --text: #202832;
+  --text-muted: #5e6b7a;
+  --accent: #345d86;
+  --accent-hover: #284a6b;
+  --on-accent: #ffffff;
+  --focus: #345d86;
 }

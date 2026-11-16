@@ -12,7 +12,12 @@ body {
   min-width: 360px;
 }
 
-h1, h2, h3 { line-height: 1.25; margin: 0 0 var(--space-3); }
+h1, h2, h3 { line-height: 1.3; font-weight: 600; margin: 0 0 var(--space-3); }
+h1 { font-size: var(--text-xl); }
+h2 { font-size: var(--text-lg); }
+h3 { font-size: var(--text-md); }
+/* An h4 or h5 stays in the HTML but looks like an h3: three heading looks (FR-091). A rule of a component may make it a small label. */
+h4, h5 { font-size: var(--text-md); font-weight: 600; line-height: 1.3; }
 p { margin: 0 0 var(--space-3); }
 code, pre, textarea.json { font-family: var(--font-mono); }
 /* A long file name or format name breaks inside its line, so a narrow screen never scrolls sideways */
@@ -24,13 +29,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 button {
   cursor: pointer;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   padding: var(--space-2) var(--space-4);
-  min-height: 2.25rem;
+  min-height: var(--control-height);
 }
-button:hover:not(:disabled) { background: var(--border); }
+button:hover:not(:disabled) { background: var(--surface-2); }
 button:disabled { cursor: not-allowed; opacity: 0.6; }
 button.primary {
   background: var(--accent);
@@ -40,11 +45,11 @@ button.primary {
 }
 button.primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
 /* A primary action that cannot be used yet is quiet, not a pale red; red stays the sign of the action to take (Principle VII) */
-button.primary:disabled { background: var(--surface-2); border-color: var(--border); color: var(--text-muted); opacity: 1; font-weight: 400; }
+button.primary:disabled { background: var(--surface-2); border-color: var(--border-strong); color: var(--text-muted); opacity: 1; font-weight: 400; }
 
 input[type="text"], input:not([type]), textarea, select {
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   padding: var(--space-2) var(--space-3);
   width: 100%;
