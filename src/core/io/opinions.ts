@@ -43,6 +43,9 @@ export function readOpinion(text: string, caseId: string): ReadResult<Verificati
     return { ok: false, problems: [{ message: `This opinion is for case ${id}, but this is case ${caseId}. Nothing changed.`, path: 'opinion.id' }] };
   }
 
+  const rawList = item['list'];
+  const listCode = typeof rawList === 'string' || typeof rawList === 'number' ? String(rawList).trim() : '';
+
   const problems: Problem[] = [];
   const notes: string[] = [];
   const list = (key: string): unknown[] => (Array.isArray(item[key]) ? (item[key] as unknown[]) : []);
@@ -95,5 +98,5 @@ export function readOpinion(text: string, caseId: string): ReadResult<Verificati
   });
 
   if (problems.length > 0) return { ok: false, problems };
-  return { ok: true, value: { id, expected, additional, new: added }, notes };
+  return { ok: true, value: { id, ...(listCode !== '' ? { list: listCode } : {}), expected, additional, new: added }, notes };
 }

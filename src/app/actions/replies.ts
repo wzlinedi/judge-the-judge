@@ -7,6 +7,7 @@ import { decisionsOf, ownValue, updateTestRun, withoutReply } from '../../core/c
 import type { TestProject, Problem } from '../../core/model';
 import { pastedReplySource } from '../../sources/pasted-reply';
 import type { ReplyBatch } from '../../sources/types';
+import { replyTooLongMessage } from '../../core/schemas/limits';
 import type { Ports } from '../ports/types';
 import { edit, recordReplySaved, type AppState } from '../store';
 
@@ -114,6 +115,9 @@ export interface ReplyOutcome {
 
 /** "Save reply": the text of the box becomes the reply of the case. */
 export async function saveReply(state: AppState, caseId: string, text: string, options: { confirmed?: boolean } = {}): Promise<ReplyOutcome> {
+  // a reply above the limit is not saved; the box says how long it is (code review S4)
+  const tooLong = replyTooLongMessage(text.length);
+  if (tooLong !== null) return { state, status: 'refused', message: tooLong };
   const batch = await pastedReplySource.collect({ caseId, text });
   if (batch.items.length === 0) return { state, status: 'empty', message: batch.problems[0]?.message ?? 'The reply is empty.' };
 

@@ -415,11 +415,13 @@
             "type": "object",
             "properties": {
               "prompt": {
-                "type": "string"
+                "type": "string",
+                "maxLength": 1000000
               },
               "reply": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "maxLength": 200000
               }
             },
             "required": [

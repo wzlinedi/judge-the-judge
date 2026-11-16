@@ -1,7 +1,7 @@
 // The second-opinion window (FR-063, SC-028).
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/preact';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/preact';
 import { reviewEvaluation } from '../../../src/core/evaluation/results';
 import { verificationPrompt } from '../../../src/core/generation/verification-prompt';
 import { readTestProject } from '../../../src/core/io/test-project-file';
@@ -156,5 +156,46 @@ describe('the second-opinion window', () => {
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('dialog', { name: 'Second opinion' })).toBeNull();
     expect(seen).toEqual([]);
+  });
+});
+
+// R8 (code review 2026-11-16; FR-063): the list of the prompt has a code, and the findings that wait for an error are in it.
+describe('the second-opinion window: the code of the list (R8)', () => {
+  const waiting = () => {
+    const p = structuredClone(demo);
+    p.dataset.cases.find((c) => c.id === '17')!.expected_errors.push({ id: 'x9', description: 'Gandalf is grey', fragment: 'Gandalf grey' } as never);
+    return p;
+  };
+  const promptText = () => (within(dialog()).getByRole('textbox', { name: 'Verification prompt' }) as HTMLTextAreaElement).value;
+  const codeOfPrompt = () => /"list": "([0-9a-f]{6})"/.exec(promptText())?.[1] as string;
+
+  it('counts the finding that only partly matches an undecided error among the additional findings of the first line', () => {
+    openWindow('17', waiting());
+    expect(within(dialog()).getByText('The LLM checks 4 expected errors and 1 additional finding of this case.')).toBeTruthy();
+    expect(promptText()).toContain('(partly matches E4)');
+  });
+
+  it('keeps Apply opinion disabled for another code and says why under the box', () => {
+    openWindow('17', waiting());
+    paste(JSON.stringify({ opinion: { id: '17', list: 'ffffff', additional: [{ index: 1, real: false }] } }));
+    expect(within(dialog()).getByText('The case changed after this prompt was copied. Copy the prompt again.')).toBeTruthy();
+    expect(apply().disabled).toBe(true);
+  });
+
+  it('enables Apply opinion for the code of the prompt, and for an opinion without a code', () => {
+    openWindow('17', waiting());
+    paste(JSON.stringify({ opinion: { id: '17', list: codeOfPrompt(), additional: [{ index: 1, real: false }] } }));
+    expect(apply().disabled).toBe(false);
+    paste(JSON.stringify({ opinion: { id: '17', additional: [{ index: 1, real: false }] } }));
+    expect(apply().disabled).toBe(false);
+  });
+
+  it('still applies the opinions of the demo, which have no code', () => {
+    for (const id of Object.keys(opinions)) {
+      cleanup();
+      openWindow(id);
+      paste(opinionText(id));
+      expect(apply().disabled).toBe(false);
+    }
   });
 });

@@ -1,10 +1,23 @@
 // The one file of a test project: saving it, and loading it with the question about its test run (T302; FR-019, FR-020, FR-051, FR-076).
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { finishLoad, loadTestProject, saveTestProject, saveTestProjectAs, type FileEnv } from '../../../src/app/actions/files';
+import { FileTooLargeError } from '../../../src/core/schemas/limits';
 import { createFakePorts, type FakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
 import { isStarted } from '../../../src/core/cases/test-run';
 import { notStartedProject, sampleProject, withRun } from '../../helpers/fixtures';
+
+const reader = vi.hoisted(() => ({ throws: false }));
+vi.mock('../../../src/core/io/test-project-file', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../../../src/core/io/test-project-file')>();
+  return {
+    ...original,
+    readTestProject: (...args: Parameters<typeof original.readTestProject>) => {
+      if (reader.throws) throw new RangeError('Maximum call stack size exceeded');
+      return original.readTestProject(...args);
+    },
+  };
+});
 
 const env: FileEnv = { now: () => '2026-01-01T00:00:00.000Z', toolVersion: 'test' };
 const unsavedState = (project = sampleProject()): AppState => ({ ...createState(), project: project, unsaved: true });
@@ -171,5 +184,46 @@ describe('a cancelled picker changes nothing', () => {
     const result = await loadTestProject(state, createFakePorts(), env);
     expect(result.outcome).toBe('cancelled');
     expect(result.state).toBe(state);
+  });
+});
+
+describe('a reader that throws while loading (code review S3)', () => {
+  it('gives the invalid-file message and changes nothing', async () => {
+    const ports = createFakePorts();
+    const text = await fileOf();
+    open(ports, text);
+    const state = unsavedState(notStartedProject());
+    reader.throws = true;
+    try {
+      const result = await loadTestProject(state, ports, env);
+      expect(result.outcome).toBe('invalid');
+      expect(result.state).toBe(state);
+      expect(result.message).toContain('The file could not be read');
+      expect(result.message).toContain('Maximum call stack size exceeded');
+      expect(result.problems?.[0]?.message).toBe(result.message);
+    } finally {
+      reader.throws = false;
+    }
+  });
+});
+
+describe('a file that is too large (code review S4)', () => {
+  it('is explained as an invalid file and changes nothing', async () => {
+    const ports = createFakePorts();
+    ports.opener.open = async () => {
+      throw new FileTooLargeError(72 * 1024 * 1024);
+    };
+    const state = unsavedState(notStartedProject());
+    const result = await loadTestProject(state, ports, env);
+    expect(result.outcome).toBe('invalid');
+    expect(result.state).toBe(state);
+    expect(result.message).toBe('The file is 72 MB; the tool reads files up to 50 MB.');
+  });
+
+  it('refuses a dropped file above the limit with the same message, before its text is used', async () => {
+    const state = unsavedState(notStartedProject());
+    const result = await loadTestProject(state, createFakePorts(), env, { name: 'big.json', text: '{}', size: 61 * 1024 * 1024 });
+    expect(result.outcome).toBe('invalid');
+    expect(result.message).toBe('The file is 61 MB; the tool reads files up to 50 MB.');
   });
 });

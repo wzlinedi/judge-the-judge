@@ -2,6 +2,7 @@
 import type { AdditionalState, CaseDecisions, Difficulty, ExpectedState, TestCase, VerificationOpinion } from '../model';
 import type { Effective, EffectiveSource } from './decisions';
 import { setOwn } from '../cases/test-run';
+import { itemKeys, listCode, type WaitingFinding } from './opinion-items';
 
 export const NO_ANSWER = 'The LLM opinion gave no answer for this item';
 
@@ -44,7 +45,14 @@ export interface OpinionPlan {
   message?: string;
 }
 
-export function opinionPlan(testCase: Pick<TestCase, 'expected_errors'>, effective: Effective, opinion: VerificationOpinion): OpinionPlan {
+export const STALE_LIST = 'The case changed after this prompt was copied. Copy the prompt again.';
+
+/** `waiting` are the findings that the prompt listed after the additional findings (R8); the code of the list is of both. */
+export function opinionPlan(testCase: Pick<TestCase, 'expected_errors'>, effective: Effective, opinion: VerificationOpinion, waiting: readonly WaitingFinding[] = []): OpinionPlan {
+  const itemCount = effective.expected.length + effective.additional.length + waiting.length;
+  if (opinion.list !== undefined && opinion.list !== listCode(itemKeys(effective, waiting))) {
+    return { marks: [], newFindings: [], unanswered: [], notes: [], itemCount, canApply: false, classifiesNone: false, message: STALE_LIST };
+  }
   const marks: PlannedMark[] = [];
   const unanswered: OpinionPlan['unanswered'] = [];
   const notes: string[] = [];
@@ -110,11 +118,34 @@ export function opinionPlan(testCase: Pick<TestCase, 'expected_errors'>, effecti
     });
   });
 
+  waiting.forEach((item, i) => {
+    const label = `A${effective.additional.length + i + 1}`;
+    const entries = opinion.additional.filter((e) => e.index === effective.additional.length + i + 1);
+    const answer = entries.find((e) => typeof e.real === 'boolean');
+    note(label, entries.length);
+    if (!answer) {
+      unanswered.push({ label, undecided: true, reason: entries.length === 0 ? 'The opinion has no entry with this number.' : 'Its entry has no true or false for "real".' });
+      return;
+    }
+    marks.push({
+      label,
+      kind: 'additional',
+      target: item.key,
+      from: { state: 'undecided', source: 'automatic' },
+      to: answer.real ? 'real_error' : 'false_positive',
+      change: 'set',
+      replacesHand: false,
+      replacesOpinion: false,
+      ...(answer.reason ? { reason: answer.reason } : {}),
+      ...(answer.fragment ? { fragment: answer.fragment } : {}),
+    });
+  });
+
   for (const e of opinion.expected) {
     if (e.index > effective.expected.length) notes.push(`The opinion has an entry for E${e.index}, but this case has ${effective.expected.length} expected errors.`);
   }
   for (const a of opinion.additional) {
-    if (a.index > effective.additional.length) notes.push(`The opinion has an entry for A${a.index}, but this case has ${effective.additional.length} additional findings.`);
+    if (a.index > effective.additional.length + waiting.length) notes.push(`The opinion has an entry for A${a.index}, but this case has ${effective.additional.length + waiting.length} additional findings.`);
   }
 
   const newFindings: PlannedNew[] = opinion.new.map((n) => ({
@@ -126,7 +157,6 @@ export function opinionPlan(testCase: Pick<TestCase, 'expected_errors'>, effecti
     ...(n.difficulty ? { difficulty: n.difficulty } : {}),
   }));
 
-  const itemCount = effective.expected.length + effective.additional.length;
   const classifiesNone = marks.length === 0 && newFindings.length === 0;
   return {
     marks,

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { metricDetailsSchema } from './metric';
 import { judgeSetSchema } from './judge-set';
 import { testCasesSchema } from './test-case';
+import { MAX_PROMPT_LENGTH, MAX_REPLY_LENGTH } from './limits';
 
 export const TEST_PROJECT_FORMAT = 'judge-the-judge-test-project';
 /** Version 2 adds the optional `test_run` section and drops `dataset.finalized` (T289). Version 1 is upgraded on load. */
@@ -45,7 +46,7 @@ export const testRunSchema = z.object({
   reply_counted_per: z.enum(['expected_error', 'case']).optional(),
   rules_corrected_after_replies: z.boolean().optional(),
   model_note: z.string().default(''),
-  replies: z.record(z.string(), z.object({ prompt: z.string(), reply: z.string().min(1) })).default({}),
+  replies: z.record(z.string(), z.object({ prompt: z.string().max(MAX_PROMPT_LENGTH), reply: z.string().min(1).max(MAX_REPLY_LENGTH) })).default({}),
   decisions: z.record(z.string(), caseDecisionsSchema).default({}),
   minimum_sample: z.object({ expected_errors: z.number(), clean_cases: z.number() }).optional(),
   results: z.unknown().optional(),

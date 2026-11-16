@@ -141,3 +141,26 @@ describe('typing a reply by hand (R10)', () => {
   });
 });
 
+
+// S4 (code review 2026-11-16): a reply above 200,000 characters is not saved, and the box says why.
+const replyOfLength = (length: number) => {
+  const frame = '{"claims": [], "note": ""}';
+  return `{"claims": [], "note": "${'x'.repeat(length - frame.length)}"}`;
+};
+
+describe('a reply that is too long (S4)', () => {
+  it('is not saved when it is pasted, and the box says how long it is and what the limit is', async () => {
+    open(noReplies());
+    type(replyOfLength(200_001));
+    const length = box().value.length;
+    expect(length).toBe(200_001);
+    await waitFor(() => expect(within(win()).getByText('The reply is 200,001 characters; the tool keeps replies up to 200,000 characters.')).toBeTruthy());
+    expect(win().querySelector('.reply-read')).toBeNull();
+  });
+
+  it('saves a reply of exactly 200,000 characters', async () => {
+    open(noReplies());
+    type(replyOfLength(200_000));
+    await waitFor(() => expect(win().querySelector('.reply-read')).not.toBeNull());
+  });
+});

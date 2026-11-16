@@ -7,6 +7,7 @@ import { resumePoint } from '../../core/evaluation/resume';
 import { readTestProject, writeTestProject, type LoadedTestProject, type TestProjectMeta } from '../../core/io/test-project-file';
 import { judgeVersion } from '../../core/judge/version';
 import type { Problem } from '../../core/model';
+import { FileTooLargeError, isFileTooLarge } from '../../core/schemas/limits';
 import { metricFor, registerEmbeddedMetric, sessionRegistry } from '../metrics';
 import { findMetric } from '../../core/metrics/registry';
 import type { FileHandleLike, Ports } from '../ports/types';
@@ -54,6 +55,11 @@ function describeProblems(problems: readonly Problem[]): string {
     .join(' ');
 }
 
+/** A reader that throws (a text it was not made for) is reported like a file that is not valid; nothing changes (code review S3). */
+export function unreadable(error: unknown): Problem {
+  return { message: `The file could not be read: ${error instanceof Error ? error.message : String(error)}` };
+}
+
 function joinNotes(notes: readonly string[], lead: string): string | undefined {
   return notes.length > 0 ? `${lead} ${notes.join(' ')}` : undefined;
 }
@@ -80,6 +86,8 @@ export type LoadChoice = LoadMode;
 export interface DroppedFile {
   name: string;
   text: string;
+  /** The size in bytes, when the page knows it: a file above the limit is refused (code review S4). */
+  size?: number;
 }
 
 /**
@@ -87,10 +95,24 @@ export interface DroppedFile {
  * The unsaved-work question comes before this call. An invalid file changes nothing and is explained here, before any question.
  */
 export async function loadTestProject(state: AppState, ports: Ports, _env?: FileEnv, dropped?: DroppedFile): Promise<LoadResult> {
-  const picked = dropped ? null : await ports.opener.open();
+  let picked: Awaited<ReturnType<Ports['opener']['open']>> = null;
+  try {
+    if (dropped && isFileTooLarge(dropped.size)) throw new FileTooLargeError(dropped.size as number);
+    picked = dropped ? null : await ports.opener.open();
+  } catch (error) {
+    if (!(error instanceof FileTooLargeError)) throw error;
+    const problem = { message: error.message };
+    return { state, outcome: 'invalid', message: problem.message, problems: [problem], notes: [] };
+  }
   if (!dropped && !picked) return { state, outcome: 'cancelled', notes: [] };
   const text = dropped ? dropped.text : picked!.text;
-  const read = readTestProject(text, (id) => findMetric(sessionRegistry(), id) !== undefined);
+  let read: ReturnType<typeof readTestProject>;
+  try {
+    read = readTestProject(text, (id) => findMetric(sessionRegistry(), id) !== undefined);
+  } catch (error) {
+    const problem = unreadable(error);
+    return { state, outcome: 'invalid', message: problem.message, problems: [problem], notes: [] };
+  }
   if (!read.ok) return { state, outcome: 'invalid', message: describeProblems(read.problems), problems: read.problems, notes: [] };
   const metric = read.value.project.metric;
   registerEmbeddedMetric(metric);

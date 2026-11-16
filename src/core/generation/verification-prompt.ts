@@ -3,6 +3,7 @@
 import type { ReviewedCase } from '../evaluation/results';
 import type { TestProject } from '../model';
 import { repliesOf } from '../cases/test-run';
+import { opinionItems } from '../evaluation/opinion-items';
 
 const fence = (text: string) => `"""\n${text}\n"""`;
 
@@ -34,9 +35,14 @@ export function verificationPrompt(evaluation: TestProject, reviewed: ReviewedCa
   });
 
   const additional = effective?.additional ?? [];
+  const { waiting, code } = opinionItems(reviewed);
   parts.push('', 'ADDITIONAL FINDINGS: findings of the judge that match no expected error. For each one, is it a real error in the data (real: true) or a false positive (real: false)?');
-  if (additional.length === 0) parts.push('There are no additional findings.');
+  if (additional.length === 0 && waiting.length === 0) parts.push('There are no additional findings.');
   additional.forEach((a, i) => parts.push(`A${i + 1}. ${a.text === '' ? 'A finding about the whole reply' : `"${a.text}"`}${a.rules.length > 0 ? ` (rule: ${a.rules.join(', ')})` : ''}`));
+  // findings that only partly match an expected error that is not decided yet follow, numbered on (code review R8)
+  waiting.forEach((w, i) =>
+    parts.push(`A${additional.length + i + 1}. ${w.text === '' ? 'A finding about the whole reply' : `"${w.text}"`}${w.rules.length > 0 ? ` (rule: ${w.rules.join(', ')})` : ''} (partly matches ${w.resembles.join(', ')})`),
+  );
 
   parts.push('', 'THE REPLY OF THE JUDGE:', fence(reply));
   if (review && !review.readable) parts.push('The reply could not be read automatically, so the list of additional findings above may be incomplete.');
@@ -49,6 +55,7 @@ export function verificationPrompt(evaluation: TestProject, reviewed: ReviewedCa
       {
         opinion: {
           id: testCase.id,
+          list: code,
           expected: [{ index: 1, found: true, reason: '…', fragment: '…' }],
           additional: [{ index: 1, real: false, reason: '…', fragment: '…' }],
           new: [{ text: '…', real: true, reason: '…', fragment: '…', category: '…', difficulty: 'obvious' }],
@@ -58,6 +65,7 @@ export function verificationPrompt(evaluation: TestProject, reviewed: ReviewedCa
       2,
     ),
     '',
+    `Repeat the code "${code}" in "list": it tells the tool that your answer is about the list above.`,
     '"found" is true when the judge found the expected error. "real" is true when the finding is a real error in the data and false when it is a false positive.',
     'Put in "new" every finding that the reply contains and that is not in the list above (for example when the reply is not JSON), each with its text, "real" true or false, a reason and, if you can, a category' +
       (categories.length > 0 ? ` (one of: ${categories.join(', ')}, or a new name)` : '') +

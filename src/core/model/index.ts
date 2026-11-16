@@ -164,6 +164,8 @@ export interface CaseDecisions {
 
 export interface VerificationOpinion {
   id: string;
+  /** The code of the list of items the prompt gave; another code is refused, a missing one is read as before (R8). */
+  list?: string;
   expected: { index: number; found?: boolean; reason?: string; fragment?: string }[];
   additional: { index: number; real?: boolean; reason?: string; fragment?: string }[];
   new: {

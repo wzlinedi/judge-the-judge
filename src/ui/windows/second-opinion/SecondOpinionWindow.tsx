@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'preact/hooks';
+import { opinionItems } from '../../../core/evaluation/opinion-items';
 import { NO_ANSWER, opinionPlan, type OpinionPlan, type PlannedMark } from '../../../core/evaluation/opinions';
 import type { ReviewedCase } from '../../../core/evaluation/results';
 import { verificationPrompt } from '../../../core/generation/verification-prompt';
@@ -50,7 +51,8 @@ export function SecondOpinionWindow({ evaluation, reviewed, onApply, onClose }: 
   const [text, setText] = useState('');
   const prompt = useMemo(() => verificationPrompt(evaluation, reviewed), [evaluation, reviewed]);
   const read = useMemo(() => (text.trim() === '' ? null : readOpinion(text, caseId)), [text, caseId]);
-  const plan = useMemo(() => (read?.ok && effective ? opinionPlan(reviewed.testCase, effective, read.value) : null), [read, effective, reviewed.testCase]);
+  const items = useMemo(() => opinionItems(reviewed), [reviewed]);
+  const plan = useMemo(() => (read?.ok && effective ? opinionPlan(reviewed.testCase, effective, read.value, items.waiting) : null), [read, effective, reviewed.testCase, items]);
   if (!effective) return null;
 
   return (
@@ -70,7 +72,7 @@ export function SecondOpinionWindow({ evaluation, reviewed, onApply, onClose }: 
         </>
       }
     >
-      <p>{`The LLM checks ${plural(effective.expected.length, 'expected error', 'expected errors')} and ${plural(effective.additional.length, 'additional finding', 'additional findings')} of this case.`}</p>
+      <p>{`The LLM checks ${plural(effective.expected.length, 'expected error', 'expected errors')} and ${plural(effective.additional.length + items.waiting.length, 'additional finding', 'additional findings')} of this case.`}</p>
 
       <h3>1 · Prompt for your LLM</h3>
       <label class="field-label" for="opinion-prompt">
@@ -84,7 +86,7 @@ export function SecondOpinionWindow({ evaluation, reviewed, onApply, onClose }: 
 
       <h3>3 · What will change</h3>
       {plan === null ? <p class="muted">Nothing is pasted yet. Nothing will change until you press Apply opinion.</p> : null}
-      {plan?.classifiesNone ? <p role="status">{plan.message}</p> : null}
+      {plan?.classifiesNone || (plan && !plan.canApply && plan.message) ? <p role="status">{plan.message}</p> : null}
       {plan && plan.marks.length > 0 ? (
         <ul class="plain-list preview" aria-label="What will change">
           {plan.marks.map((m) => (

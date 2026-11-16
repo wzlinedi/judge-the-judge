@@ -401,3 +401,36 @@ describe('readTestProject: repeated ids', () => {
   });
 });
 
+
+// S4 (code review 2026-11-16; data-model.md): a stored reply is at most 200,000 characters and a stored prompt at most 1,000,000.
+describe('readTestProject: size limits', () => {
+  const withReply = (change: Record<string, unknown>) => {
+    const file = parsed();
+    const id = Object.keys(file['test_run'].replies)[0] as string;
+    file['test_run'].replies[id] = { ...file['test_run'].replies[id], ...change };
+    return { file, id };
+  };
+  const first = (value: unknown) => {
+    const result = read(value);
+    return result.ok ? '' : result.problems.map((p) => `${p.path ?? ''} ${p.message}`).join('\n');
+  };
+
+  it('rejects a reply of 200,001 characters and names its place', () => {
+    const { file, id } = withReply({ reply: 'x'.repeat(200_001) });
+    const text = first(file);
+    expect(text).toContain(`test_run.replies.${id}.reply`);
+    expect(text).toContain('200,000');
+  });
+
+  it('rejects a prompt of 1,000,001 characters and names its place', () => {
+    const { file, id } = withReply({ prompt: 'x'.repeat(1_000_001) });
+    const text = first(file);
+    expect(text).toContain(`test_run.replies.${id}.prompt`);
+    expect(text).toContain('1,000,000');
+  });
+
+  it('reads a reply of exactly 200,000 characters and a prompt of exactly 1,000,000', () => {
+    expect(read(withReply({ reply: 'x'.repeat(200_000) }).file).ok).toBe(true);
+    expect(read(withReply({ prompt: 'x'.repeat(1_000_000) }).file).ok).toBe(true);
+  });
+});

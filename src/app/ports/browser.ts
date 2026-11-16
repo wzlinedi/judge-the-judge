@@ -1,10 +1,11 @@
 // Browser adapters: the File System Access API and the asynchronous clipboard (Chrome and Edge).
 // The environment is passed in, so tests can stub it and the adapters never reach for `window`.
+import { FileTooLargeError, isFileTooLarge } from '../../core/schemas/limits';
 import type { ClipboardReader, ClipboardResult, FileHandleLike, FileOpener, SaveResult, SaveTarget } from './types';
 
 export interface BrowserEnv {
   showSaveFilePicker?: (options: unknown) => Promise<FileHandleLike>;
-  showOpenFilePicker?: (options: unknown) => Promise<Array<FileHandleLike & { getFile(): Promise<{ text(): Promise<string>; arrayBuffer?(): Promise<ArrayBuffer>; name: string }> }>>;
+  showOpenFilePicker?: (options: unknown) => Promise<Array<FileHandleLike & { getFile(): Promise<{ size?: number; text(): Promise<string>; arrayBuffer?(): Promise<ArrayBuffer>; name: string }> }>>;
   navigator?: { clipboard?: { readText?: () => Promise<string> } };
 }
 
@@ -99,6 +100,8 @@ export async function openWithPicker(env: BrowserEnv, kind: 'json' | 'import' = 
     const [picked] = await env.showOpenFilePicker({ types: kind === 'import' ? IMPORT_TYPES : JSON_TYPES, multiple: false });
     if (!picked) return null;
     const file = await picked.getFile();
+    // a file above the limit is refused before its content is read (code review S4)
+    if (isFileTooLarge(file.size)) throw new FileTooLargeError(file.size as number);
     if (kind === 'import' && typeof file.arrayBuffer === 'function') {
       const bytes = new Uint8Array(await file.arrayBuffer());
       return { text: new TextDecoder().decode(bytes), bytes, handle: picked };

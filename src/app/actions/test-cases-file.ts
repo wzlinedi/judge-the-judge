@@ -9,10 +9,11 @@ import { readTestCasesCsv } from '../../core/io/test-cases-csv';
 import { readTestCasesJson, writeTestCases, type DraftRow, type InvalidRow } from '../../core/io/test-cases-json';
 import { findVariables } from '../../core/judge/variables';
 import type { Problem, TestCase } from '../../core/model';
+import { FileTooLargeError } from '../../core/schemas/limits';
 import type { Ports, SaveResult } from '../ports/types';
 import type { AppState } from '../store';
 import { withCases, type CaseEdit } from './cases';
-import type { FileEnv } from './files';
+import { unreadable, type FileEnv } from './files';
 
 export type PreparedImport =
   | { outcome: 'cancelled' }
@@ -32,7 +33,13 @@ export type PreparedImport =
 
 /** Asks for a file, reads all of it and says what the import would do. Changes nothing. */
 export async function prepareImport(state: AppState, ports: Ports): Promise<PreparedImport> {
-  const picked = await ports.opener.open('import');
+  let picked: Awaited<ReturnType<Ports['opener']['open']>>;
+  try {
+    picked = await ports.opener.open('import');
+  } catch (error) {
+    if (!(error instanceof FileTooLargeError)) throw error;
+    return { outcome: 'invalid', problems: [{ message: error.message }] };
+  }
   if (!picked) return { outcome: 'cancelled' };
   const decoded = picked.bytes ? decodeBytes(picked.bytes) : { text: picked.text, encoding: 'utf-8' as const };
   const { judge_set, dataset } = state.project;
@@ -43,15 +50,20 @@ export async function prepareImport(state: AppState, ports: Ports): Promise<Prep
   let invalid: InvalidRow[];
   let ignoredColumns: string[] = [];
   let notes: string[] = [];
-  if (asJson) {
-    const read = readTestCasesJson(decoded.text);
-    if (!read.ok) return { outcome: 'invalid', problems: read.problems };
-    ({ drafts, invalid } = read.value);
-    notes = read.notes;
-  } else {
-    const read = readTestCasesCsv(decoded.text, variables);
-    if (!read.ok) return { outcome: 'invalid', problems: read.problems };
-    ({ drafts, invalid, ignoredColumns } = read.value);
+  try {
+    if (asJson) {
+      const read = readTestCasesJson(decoded.text);
+      if (!read.ok) return { outcome: 'invalid', problems: read.problems };
+      ({ drafts, invalid } = read.value);
+      notes = read.notes;
+    } else {
+      const read = readTestCasesCsv(decoded.text, variables);
+      if (!read.ok) return { outcome: 'invalid', problems: read.problems };
+      ({ drafts, invalid, ignoredColumns } = read.value);
+    }
+  } catch (error) {
+    // a reader that throws is reported like an invalid file; nothing changes (code review S3)
+    return { outcome: 'invalid', problems: [unreadable(error)] };
   }
 
   const plan = planImport(drafts, invalid, { variables, judgedText: judge_set.judged_text, catalog: judge_set.error_catalog, existing: dataset.cases });

@@ -124,6 +124,22 @@ describe('openWithPicker', () => {
     expect(await openWithPicker({ showOpenFilePicker })).toMatchObject({ text: '{"a":1}', handle: { name: 'in.json' } });
   });
 
+  // S4 (code review 2026-11-16): a file above 50 MB is refused before its content is read.
+  it.each(['json', 'import'] as const)('refuses a file of 60 MB before text() or arrayBuffer() is called (%s)', async (kind) => {
+    const text = vi.fn(async () => '{}');
+    const arrayBuffer = vi.fn(async () => new ArrayBuffer(0));
+    const handle = { ...fakeHandle('big.json'), getFile: async () => ({ size: 60 * 1024 * 1024, text, arrayBuffer, name: 'big.json' }) };
+    const showOpenFilePicker = vi.fn(async () => [handle]);
+    await expect(openWithPicker({ showOpenFilePicker }, kind)).rejects.toThrow('The file is 60 MB; the tool reads files up to 50 MB.');
+    expect(text).not.toHaveBeenCalled();
+    expect(arrayBuffer).not.toHaveBeenCalled();
+  });
+
+  it('reads a file of exactly 50 MB, and a file with no size', async () => {
+    const at = { ...fakeHandle('a.json'), getFile: async () => ({ size: 50 * 1024 * 1024, text: async () => '{}', name: 'a.json' }) };
+    expect(await openWithPicker({ showOpenFilePicker: vi.fn(async () => [at]) })).toMatchObject({ text: '{}' });
+  });
+
   it('returns null when the dialog is cancelled', async () => {
     expect(await openWithPicker({ showOpenFilePicker: vi.fn().mockRejectedValue(abort()) })).toBeNull();
   });

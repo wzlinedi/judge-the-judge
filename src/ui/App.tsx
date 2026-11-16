@@ -20,6 +20,7 @@ import { createState, goToStep, recomputeDifferences, startNewTestProject, type 
 import { computeResults, reviewEvaluation } from '../core/evaluation/results';
 import type { TestProject, Problem } from '../core/model';
 import { Dialog } from './components/Dialog';
+import { ErrorBoundary } from './components/ErrorPanel';
 import { ErrorMessage } from './components/ErrorMessage';
 import type { FileAction } from './components/shell/FileMenu';
 import { BrowserNotice } from './components/shell/BrowserNotice';
@@ -205,6 +206,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
 
   return (
     <div class="app">
+      <ErrorBoundary onSave={async () => void (await save(true))}>
       <div class="app-page" inert={windowOpen}>
       {browserSupported(browser) ? null : <BrowserNotice />}
       <Header state={state} onGo={go} onFileAction={onFile} />
@@ -392,6 +394,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
       >
         <p>You have unsaved changes. What do you want to do with them?</p>
       </Dialog>
+      </ErrorBoundary>
     </div>
   );
 }

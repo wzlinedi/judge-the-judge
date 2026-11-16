@@ -281,3 +281,7 @@ button.fold { background: transparent; border: 0; padding: 0; font: inherit; fon
 .reply-block { display: block; cursor: pointer; color: var(--text); background: var(--reply-bg); border-left: 2px solid var(--reply-line); padding-left: var(--space-2); }
 .reply-block.fragment-strong { background: var(--reply-strong-bg); border-left: 4px solid var(--accent); outline: none; font-weight: normal; }
 .pointed { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* The panel shown when something throws while the page is drawn (code review S3). */
+.error-panel { max-width: var(--prose-max); margin: var(--space-6) auto; padding: var(--space-4); background: var(--error-bg); border: 1px solid var(--error); border-radius: var(--radius); }
+.error-panel-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }

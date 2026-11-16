@@ -10,9 +10,14 @@ type Parsed = { ok: true; value: unknown; end: number } | { ok: false; offset: n
 
 const WS = new Set([' ', '\t', '\n', '\r']);
 
+/** Deeper nesting is refused, so a hostile text cannot exhaust the call stack (code review S3). */
+const MAX_DEPTH = 100;
+const TOO_DEEP = `The JSON is nested more than ${MAX_DEPTH} levels deep`;
+
 /** A strict JSON parser that reports the offset of the first problem (JSON.parse messages vary). */
 function parseJson(text: string, from: number): Parsed {
   let i = from;
+  let depth = 0;
   const fail = (offset: number, message: string): Parsed => ({ ok: false, offset, message });
 
   const skip = () => {
@@ -75,7 +80,17 @@ function parseJson(text: string, from: number): Parsed {
     return { ok: true, value: Number(m[0]), end: i };
   };
 
+  const tooDeep = (): Parsed => fail(i, TOO_DEEP);
+
   const array = (): Parsed => {
+    if (depth >= MAX_DEPTH) return tooDeep();
+    depth++;
+    const result = arrayItems();
+    depth--;
+    return result;
+  };
+
+  const arrayItems = (): Parsed => {
     i++;
     const items: unknown[] = [];
     skip();
@@ -102,6 +117,14 @@ function parseJson(text: string, from: number): Parsed {
   };
 
   const object = (): Parsed => {
+    if (depth >= MAX_DEPTH) return tooDeep();
+    depth++;
+    const result = objectMembers();
+    depth--;
+    return result;
+  };
+
+  const objectMembers = (): Parsed => {
     i++;
     const obj: Record<string, unknown> = {};
     skip();
@@ -181,6 +204,7 @@ function balancedEnd(text: string, start: number): number {
 
 function invalid(text: string, offset: number, message: string): ExtractResult {
   const { line, column } = position(text, offset);
+  if (message === TOO_DEEP) return { ok: false, reason: 'invalid', message: `${message} (line ${line}, column ${column}).`, line, column };
   return { ok: false, reason: 'invalid', message: `${message} (line ${line}, column ${column})`, line, column };
 }
 

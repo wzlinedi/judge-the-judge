@@ -1,6 +1,14 @@
 // Reading the pasted opinion of the user's LLM (file-formats.md, section 7; FR-063, FR-084).
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { applyDecisions } from '../../../../src/core/evaluation/decisions';
+import { applyOpinion, opinionPlan } from '../../../../src/core/evaluation/opinions';
+import { opinionItems } from '../../../../src/core/evaluation/opinion-items';
+import { reviewEvaluation } from '../../../../src/core/evaluation/results';
 import { readOpinion } from '../../../../src/core/io/opinions';
+import { readTestProject } from '../../../../src/core/io/test-project-file';
+import type { VerificationOpinion } from '../../../../src/core/model';
+import { accuracyMetric } from '../../../helpers/fixtures';
 
 const inner = { id: '3', expected: [{ index: 1, found: true, reason: 'r', fragment: 'f' }], additional: [{ index: 1, real: false, reason: 'r2', fragment: 'f2' }], new: [] };
 
@@ -89,5 +97,62 @@ describe('readOpinion', () => {
   it('keeps an entry without found or real, which answers nothing', () => {
     const v = ok(JSON.stringify({ id: '3', expected: [{ index: 1, reason: 'unsure' }], additional: [] }));
     expect(v.expected).toEqual([{ index: 1, reason: 'unsure' }]);
+  });
+});
+
+// R8 (code review 2026-11-16; FR-063, contracts/file-formats.md section 7): the code of the list, and the findings that wait for an error.
+describe('readOpinion: the code of the list (R8)', () => {
+  it('keeps the code in `list`, and reads an opinion without it as before', () => {
+    expect(ok(JSON.stringify({ opinion: { ...inner, list: '3f9a2c' } })).list).toBe('3f9a2c');
+    expect('list' in ok(JSON.stringify({ opinion: inner }))).toBe(false);
+  });
+});
+
+describe('opinionPlan: the same list as the prompt (R8)', () => {
+  const loadedDemo = readTestProject(readFileSync('examples/demo/test-project.json', 'utf8'));
+  if (!loadedDemo.ok) throw new Error('demo not readable');
+  const base = structuredClone(loadedDemo.value.project);
+  base.dataset.cases.find((c) => c.id === '17')!.expected_errors.push({ id: 'x9', description: 'Gandalf is grey', fragment: 'Gandalf grey' } as never);
+  const reviewedNow = (project = base) => reviewEvaluation(project, accuracyMetric).find((x) => x.testCase.id === '17')!;
+  const code = (project = base) => opinionItems(reviewedNow(project)).code;
+  const planFor = (opinion: VerificationOpinion, project = base) => {
+    const r = reviewedNow(project);
+    return opinionPlan(r.testCase, r.effective!, opinion, opinionItems(r).waiting);
+  };
+  const empty = (extra: Partial<VerificationOpinion> = {}): VerificationOpinion => ({ id: '17', expected: [], additional: [], new: [], ...extra });
+
+  it('numbers the waiting finding after the additional findings and counts it among the items', () => {
+    const r = reviewedNow();
+    const plan = planFor(empty({ additional: [{ index: 1, real: false, reason: 'no' }] }));
+    expect(plan.itemCount).toBe(r.effective!.expected.length + r.effective!.additional.length + 1);
+    expect(plan.marks).toHaveLength(1);
+    expect(plan.marks[0]).toMatchObject({ label: 'A1', kind: 'additional', target: 'claims[]#2', to: 'false_positive' });
+  });
+
+  it('refuses an opinion with another code, and applies nothing', () => {
+    const plan = planFor(empty({ list: 'ffffff', additional: [{ index: 1, real: false }] }));
+    expect(plan.canApply).toBe(false);
+    expect(plan.message).toBe('The case changed after this prompt was copied. Copy the prompt again.');
+    expect(plan.marks).toEqual([]);
+  });
+
+  it('accepts the code of its own list, and an opinion without a code as before', () => {
+    expect(planFor(empty({ list: code(), additional: [{ index: 1, real: false }] })).canApply).toBe(true);
+    expect(planFor(empty({ additional: [{ index: 1, real: false }] })).canApply).toBe(true);
+  });
+
+  it('keeps an answer for a finding that waits, and it takes effect when the error is decided missed', () => {
+    const r = reviewedNow();
+    const plan = planFor(empty({ expected: [{ index: 4, found: false }], additional: [{ index: 1, real: false }] }));
+    const decisions = applyOpinion(undefined, plan);
+    expect(decisions.additional['claims[]#2']).toEqual({ state: 'false_positive', source: 'llm-approved' });
+    const after = applyDecisions(r.review!, decisions);
+    expect(after.additional.find((a) => a.key === 'claims[]#2')).toMatchObject({ state: 'false_positive', moved: true });
+  });
+
+  it('counts "classifies none" over the same items', () => {
+    const r = reviewedNow();
+    const plan = planFor(empty());
+    expect(plan.message).toBe(`The opinion classifies none of the ${r.effective!.expected.length + r.effective!.additional.length + 1} items of this case. Nothing will change.`);
   });
 });
