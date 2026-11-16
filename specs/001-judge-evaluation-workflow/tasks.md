@@ -1138,7 +1138,7 @@ each task or logical group.
 
 - [X] T386 Run the whole suite (`npx eslint .`, `npx tsc --noEmit`, `npx vitest run`, `npm run build`, e2e in Chrome and Edge) and compare with the baseline of T349: no existing e2e test changed what it checks; the demo and the samples give the same numbers (V1, V9, V12); list every unit assertion that changed with the owner's approval.
   - Done 2026-11-16 on b7a9bd6: eslint 0 problems, tsc 0 errors, vitest 118 files and 1663 tests passed, build ok, e2e 208 passed (Chrome and Edge), the same as the baseline of T349. No file under tests/e2e changed since c7af3bb, so SC-040 holds. Changed unit assertions: verification-prompt.test.ts, the case without findings (approved, R8); hash.test.ts, only the data of the judge fixture (the sample reply now has the field `claims[].verdict`, so its rule stays usable under R3; no assertion changed). Added 75 unit tests.
-- [ ] T387 Manual check V14 of quickstart.md, done once by the owner.
+- [X] T387 Manual check V14 of quickstart.md, done once by the owner. **Done** (2026-11-16): the owner ran V14 against the local preview build and it passed.
 
 ## Phase 26: Convergence
 
