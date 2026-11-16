@@ -1,5 +1,6 @@
 // "Edit expected errors" (T254, FR-089): the JSON of the expected errors of one case, checked as it is edited, and what saving it changes.
 import { extractJson } from '../judge/extract-json';
+import { ownValue } from './test-run';
 import type { CaseDecisions, CaseJsonCheckContext, ExpectedError, Problem } from '../model';
 import { checkCaseJson } from './case-json';
 
@@ -61,7 +62,7 @@ export function planExpectedErrors(before: readonly ExpectedError[], after: read
   const changed = after.filter((e) => was.has(e.id) && !same(was.get(e.id) as ExpectedError, e)).map((e) => e.id);
   const removed = before.filter((e) => !now.has(e.id)).map((e) => e.id);
   const added = after.filter((e) => !was.has(e.id)).length;
-  const marksDropped = [...changed, ...removed].filter((id) => decisions?.expected[id] !== undefined).length;
+  const marksDropped = [...changed, ...removed].filter((id) => ownValue(decisions?.expected, id) !== undefined).length;
   const reordered = before.length === after.length && before.some((e, i) => after[i]?.id !== e.id);
   return { changed, removed, added, marksDropped, nothing: changed.length === 0 && removed.length === 0 && added === 0 && !reordered };
 }

@@ -94,3 +94,50 @@ describe('the reply box', () => {
     expect(box().value).toBe('draft one');
   });
 });
+
+// R10 (code review 2026-11-16, Clarifications 2026-11-16): a reply that is pasted is saved at once; text typed one character at a time is
+// saved when the box loses the focus, so a first "{}" or "1" does not save an empty reply.
+describe('typing a reply by hand (R10)', () => {
+  it('saves nothing while the text is typed one character at a time, even when it already is readable JSON', async () => {
+    open(noReplies());
+    type('{');
+    type('{}');
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(win().querySelector('.reply-read')).toBeNull();
+    expect(box().value).toBe('{}');
+    type('1');
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(win().querySelector('.reply-read')).toBeNull();
+  });
+
+  it('saves the whole text when the box loses the focus and the text is readable JSON', async () => {
+    open(noReplies());
+    type('{}');
+    type('{"claims": []}');
+    fireEvent.blur(box());
+    await waitFor(() => expect(win().querySelector('.reply-read')).not.toBeNull());
+  });
+
+  it('does not save text that is not JSON when the box loses the focus', async () => {
+    open(noReplies());
+    type('half a reply');
+    fireEvent.blur(box());
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(win().querySelector('.reply-read')).toBeNull();
+  });
+
+  it('saves a text that is put in by one change (a paste or a drop), at once', async () => {
+    open(noReplies());
+    type(json);
+    await waitFor(() => expect(win().querySelector('.reply-read')).not.toBeNull());
+  });
+
+  it('asks before leaving the case with text that is readable JSON and not saved yet (FR-055)', () => {
+    open(noReplies());
+    type('{}');
+    fireEvent.click(within(win()).getByRole('button', { name: 'Next case' }));
+    expect(screen.getByRole('dialog', { name: 'The reply in the box is not saved' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Discard reply' })).toBeTruthy();
+  });
+});
+

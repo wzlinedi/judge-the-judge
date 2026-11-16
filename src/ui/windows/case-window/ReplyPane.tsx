@@ -24,6 +24,8 @@ export interface ReplyPaneProps {
   onChangeReply: () => void;
   onSaveReply: () => void;
   onCancel: () => void;
+  /** The box lost the focus: text typed by hand that is readable JSON is saved now (R10). */
+  onBlur: () => void;
   /** The findings of the saved reply, marked in its read-only view. */
   findings: readonly Finding[];
   pointed: string | null;
@@ -42,7 +44,7 @@ function checkReply(text: string): Problem[] {
  * "Judge reply" (FR-055), the left column of part 3. A case without a reply has the box, and a readable JSON is saved as soon as it is in it (FR-056).
  * A saved reply is shown read-only, formatted, with the findings marked (T293); "Change reply" turns the view into the box with "Save reply" and "Cancel".
  */
-export function ReplyPane({ saved, text, onText, copied, onSaveAsText, onPaste, message, editing, onChangeReply, onSaveReply, onCancel, findings, pointed, onPoint }: ReplyPaneProps) {
+export function ReplyPane({ saved, text, onText, copied, onSaveAsText, onPaste, message, editing, onChangeReply, onSaveReply, onCancel, onBlur, findings, pointed, onPoint }: ReplyPaneProps) {
   const dirty = text !== (saved ?? '');
   const readable = text.trim() !== '' && extractJson(text).ok;
   const notJson = dirty && text.trim() !== '' && !readable;
@@ -52,7 +54,7 @@ export function ReplyPane({ saved, text, onText, copied, onSaveAsText, onPaste, 
   return (
     <section class="reply-pane">
       <h4>Judge reply</h4>
-      {reading ? <ReplyView reply={saved} findings={findings} pointed={pointed} onPoint={onPoint} /> : <JsonBox label="Judge reply" value={text} onChange={onText} check={checkReply} rows={8} />}
+      {reading ? <ReplyView reply={saved} findings={findings} pointed={pointed} onPoint={onPoint} /> : <JsonBox label="Judge reply" value={text} onChange={onText} check={checkReply} rows={8} onBlur={onBlur} />}
       {notJson && !editing ? (
         <div class="button-row">
           <p class="muted">This text is not saved yet. Fix it, or keep it as it is.</p>

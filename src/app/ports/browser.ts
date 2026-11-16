@@ -32,8 +32,11 @@ export function createBrowserSaveTarget(env: BrowserEnv, suggestedName: () => st
       await stream.close();
       return { status: 'saved', fileName: target.name };
     } catch {
-      handle = null;
-      needsPermission = false;
+      // only the file in use is forgotten; a file chosen just now that could not be written leaves the one in use alone (R9)
+      if (target === handle) {
+        handle = null;
+        needsPermission = false;
+      }
       return { status: 'no_longer_writable' };
     }
   };

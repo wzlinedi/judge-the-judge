@@ -3,7 +3,7 @@ import { formatIfWholeJson } from '../../core/io/format-json';
 import { composePrompt } from '../../core/judge/compose';
 import { countingModeOf } from '../../core/judge/counting-mode';
 import { judgeVersion } from '../../core/judge/version';
-import { decisionsOf, updateTestRun, withoutReply } from '../../core/cases/test-run';
+import { decisionsOf, ownValue, updateTestRun, withoutReply } from '../../core/cases/test-run';
 import type { TestProject, Problem } from '../../core/model';
 import { pastedReplySource } from '../../sources/pasted-reply';
 import type { ReplyBatch } from '../../sources/types';
@@ -93,7 +93,7 @@ export function attachReplies(evaluation: TestProject, batch: ReplyBatch, option
  * findings. When the last reply goes, the run starts again from nothing, as when the last case with a reply is removed.
  */
 export function removeReply(evaluation: TestProject, caseId: string): TestProject {
-  if (evaluation.testRun?.replies[caseId] === undefined) return evaluation;
+  if (ownValue(evaluation.testRun?.replies, caseId) === undefined) return evaluation;
   return updateTestRun(evaluation, (run) => withoutReply(run, caseId));
 }
 
@@ -108,6 +108,8 @@ export interface ReplyOutcome {
   replaces?: number;
   /** The text that was read from the clipboard, so the question can be answered without reading it again. */
   text?: string;
+  /** The change of this one case, applied to the state as it is when the action ends: the user may have moved or edited meanwhile (R2). */
+  apply?: (current: AppState) => AppState;
 }
 
 /** "Save reply": the text of the box becomes the reply of the case. */
@@ -136,7 +138,28 @@ export async function saveReply(state: AppState, caseId: string, text: string, o
     return { state, status: 'refused', message: attached.problems[0]?.message ?? 'The reply was not saved.' };
   }
   const next = recordReplySaved({ ...state, project: attached.project });
-  return { state: next, status: 'saved' };
+  const done = attached.project.testRun;
+  const apply = (current: AppState): AppState => {
+    if (current === state) return next;
+    const run = current.project.testRun;
+    if (run === undefined || done === undefined || !current.project.dataset.cases.some((c) => c.id === caseId)) return current;
+    const replies = { ...run.replies };
+    const decisions = { ...run.decisions };
+    for (const [target, source] of [[replies, done.replies], [decisions, done.decisions]] as const) {
+      const value = Object.hasOwn(source, caseId) ? (source as Record<string, unknown>)[caseId] : undefined;
+      if (value === undefined) delete (target as Record<string, unknown>)[caseId];
+      else (target as Record<string, unknown>)[caseId] = value;
+    }
+    const merged = {
+      ...run,
+      replies,
+      decisions,
+      ...(run.reply_judge_version === undefined && done.reply_judge_version !== undefined ? { reply_judge_version: done.reply_judge_version } : {}),
+      ...(run.reply_counted_per === undefined && done.reply_counted_per !== undefined ? { reply_counted_per: done.reply_counted_per } : {}),
+    };
+    return recordReplySaved({ ...current, project: { ...current.project, testRun: merged } });
+  };
+  return { state: next, status: 'saved', apply };
 }
 
 /** "Paste reply from clipboard": reads the clipboard and saves the reply in one action (FR-056). */

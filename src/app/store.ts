@@ -90,6 +90,11 @@ export interface ActionResult {
   outcome: SaveResult['status'];
   /** Said to the user when there is something to say. */
   message?: string;
+  /**
+   * What the action changes, applied to the state as it is when the action ends. A save waits for a file, so the user may have
+   * changed the work meanwhile; the whole `state` above would write that change away (R1, research.md 34).
+   */
+  apply?: (current: AppState) => AppState;
 }
 
 const NO_LONGER_WRITABLE = 'The file can no longer be written (it was moved or removed). Your work is still here. Choose a file to save it again.';
@@ -102,10 +107,16 @@ async function saveTestProjectWith(state: AppState, ports: Ports, serialize: Ser
   const result = await write(ports.testProjectTarget, await serialize(state), saveAs);
   if (result.status === 'saved') {
     // The file holds all the work, with its test run when there is one: one indicator, one count (FR-051, FR-059).
-    return { state: { ...state, unsaved: false, repliesSinceSave: 0, testProjectFile: result.fileName, hasFile: true }, outcome: 'saved' };
+    const saved = { ...state, unsaved: false, repliesSinceSave: 0, testProjectFile: result.fileName, hasFile: true };
+    // The work is marked saved only when it is still the work that was written.
+    const apply = (current: AppState): AppState =>
+      current === state
+        ? saved
+        : { ...current, testProjectFile: result.fileName, hasFile: true, ...(current.project === state.project ? { unsaved: false, repliesSinceSave: 0 } : { unsaved: true }) };
+    return { state: saved, outcome: 'saved', apply };
   }
   if (result.status === 'no_longer_writable') {
-    return { state: { ...state, testProjectFile: null }, outcome: result.status, message: NO_LONGER_WRITABLE };
+    return { state: { ...state, testProjectFile: null }, outcome: result.status, message: NO_LONGER_WRITABLE, apply: (current) => ({ ...current, testProjectFile: null }) };
   }
   return { state, outcome: result.status };
 }

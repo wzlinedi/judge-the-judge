@@ -1,6 +1,7 @@
 // What the user settled, laid over the automatic result (data-model.md, CaseDecisions).
 import type { AddedFinding, AdditionalState, CaseDecisions, DecisionSource, Difficulty, ExpectedState } from '../model';
 import type { CaseReview } from './review';
+import { ownValue } from '../cases/test-run';
 
 export type EffectiveSource = 'automatic' | DecisionSource;
 
@@ -41,7 +42,7 @@ export function applyDecisions(review: CaseReview, decisions: CaseDecisions | un
   const stored = decisions ?? { expected: {}, additional: {}, added_findings: [] as AddedFinding[], approved: false, note: '' };
 
   const expected: EffectiveExpected[] = review.expected.map((e) => {
-    const decision = stored.expected[e.id];
+    const decision = ownValue(stored.expected, e.id);
     const state = decision ? decision.state : e.state;
     return {
       id: e.id,
@@ -92,6 +93,6 @@ function undecidedFinding(finding: { key: string; text: string; rules: string[] 
 }
 
 function applyStored(key: string, stored: CaseDecisions): Partial<EffectiveAdditional> {
-  const decision = stored.additional[key];
+  const decision = ownValue(stored.additional, key);
   return decision ? { state: decision.state, source: decision.source } : {};
 }

@@ -95,7 +95,8 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const save = async (as: boolean): Promise<boolean> => {
     const action = as ? saveTestProjectAs : saveTestProject;
     const result = await action(stateRef.current, portsRef.current, fileEnv);
-    setState(result.state);
+    // the work may have changed while the file was written: apply only what the save changed (R1)
+    setState((current) => (result.apply ? result.apply(current) : current));
     say(result.message ?? (result.outcome === 'saved' ? 'The test project was saved.' : result.outcome === 'cancelled' ? 'Nothing was saved.' : undefined));
     return result.outcome === 'saved';
   };
@@ -136,7 +137,8 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   };
 
   const applyReply = (outcome: ReplyOutcome): ReplyOutcome => {
-    setState(outcome.state);
+    // the user may have moved or edited while the clipboard or the hash was awaited: apply only the change of the case (R2)
+    setState((current) => (outcome.apply ? outcome.apply(current) : current));
     return outcome;
   };
   const replyActions = {

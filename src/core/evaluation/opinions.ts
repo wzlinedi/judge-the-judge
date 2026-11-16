@@ -1,6 +1,7 @@
 // The preview of an LLM opinion and its application (FR-063, SC-028). Nothing changes until the user applies it.
 import type { AdditionalState, CaseDecisions, Difficulty, ExpectedState, TestCase, VerificationOpinion } from '../model';
 import type { Effective, EffectiveSource } from './decisions';
+import { setOwn } from '../cases/test-run';
 
 export const NO_ANSWER = 'The LLM opinion gave no answer for this item';
 
@@ -145,9 +146,9 @@ export function applyOpinion(decisions: CaseDecisions | undefined, plan: Opinion
   if (!plan.canApply) return base;
   const next = structuredClone(base);
   for (const m of plan.marks) {
-    if (m.kind === 'expected') next.expected[m.target] = { state: m.to as ExpectedState, source: 'llm-approved' };
+    if (m.kind === 'expected') setOwn(next.expected, m.target, { state: m.to as ExpectedState, source: 'llm-approved' });
     else if (m.added !== undefined && next.added_findings[m.added]) next.added_findings[m.added] = { ...(next.added_findings[m.added] as CaseDecisions['added_findings'][number]), state: m.to as AdditionalState, source: 'llm-approved' };
-    else next.additional[m.target] = { state: m.to as AdditionalState, source: 'llm-approved' };
+    else setOwn(next.additional, m.target, { state: m.to as AdditionalState, source: 'llm-approved' });
   }
   for (const n of plan.newFindings) {
     next.added_findings.push({

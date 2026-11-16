@@ -1,7 +1,7 @@
 // Deciding after a reply: the actions of the list of items beyond the marks (FR-062, FR-063, FR-053).
 // Every function returns a new evaluation, or for a correction of the judge a new state with one sentence.
 import { addCategories, normalizeCategoryName } from '../../core/cases/catalog';
-import { decisionsOf, replyCount, updateTestRun } from '../../core/cases/test-run';
+import { decisionsOf, ownValue, replyCount, updateTestRun } from '../../core/cases/test-run';
 import { applyOpinion, type OpinionPlan } from '../../core/evaluation/opinions';
 import { reviewEvaluation } from '../../core/evaluation/results';
 import type { CaseDecisions, Difficulty, TestProject } from '../../core/model';
@@ -12,7 +12,7 @@ import type { JudgeEdit } from './judge';
 const empty = (): CaseDecisions => ({ expected: {}, additional: {}, added_findings: [], approved: false, note: '' });
 
 function withDecisions(evaluation: TestProject, caseId: string, change: (d: CaseDecisions) => CaseDecisions): TestProject {
-  return updateTestRun(evaluation, (run) => ({ ...run, decisions: { ...run.decisions, [caseId]: change(structuredClone(run.decisions[caseId] ?? empty())) } }));
+  return updateTestRun(evaluation, (run) => ({ ...run, decisions: { ...run.decisions, [caseId]: change(structuredClone(ownValue(run.decisions, caseId) ?? empty())) } }));
 }
 
 /** A category named in a finding joins the catalog when it is new (FR-062). */

@@ -92,6 +92,19 @@ describe('browser SaveTarget', () => {
     expect(target.fileName).toBeNull();
   });
 
+  it('a failed "Save as…" to a new file keeps the file in use, and the next plain save writes to it (R9)', async () => {
+    const good = fakeHandle('A.json');
+    const bad = fakeHandle('locked.json', { failWrite: true });
+    const showSaveFilePicker = vi.fn(async (_options: unknown) => (showSaveFilePicker.mock.calls.length === 1 ? good : bad));
+    const target = createBrowserSaveTarget({ showSaveFilePicker }, () => 'x.json');
+    expect(await target.save('one')).toEqual({ status: 'saved', fileName: 'A.json' });
+    expect(await target.saveAs('two')).toEqual({ status: 'no_longer_writable' });
+    expect(target.fileName).toBe('A.json');
+    expect(await target.save('three')).toEqual({ status: 'saved', fileName: 'A.json' });
+    expect(showSaveFilePicker).toHaveBeenCalledTimes(2);
+    expect(good.written).toEqual(['one', 'three']);
+  });
+
   it('forget drops the current file so the next save asks again', async () => {
     const handle = fakeHandle();
     const showSaveFilePicker = vi.fn(async () => handle);

@@ -99,10 +99,17 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
     settle(outcome, value);
     return outcome;
   };
-  /** A case without a reply: a readable JSON is saved as soon as it is in the box, typed or pasted (FR-056). */
+  /**
+   * A case without a reply: a readable JSON that comes in one change (a paste or a drop) is saved as soon as it is in the box (FR-056).
+   * Text typed one character at a time is saved when the box loses the focus, so a first "{}" or "1" does not save an empty reply (R10).
+   */
   const typed = (value: string) => {
+    const typedByKey = Math.abs(value.length - text.length) <= 1;
     setText(value);
-    if (reply === undefined && value.trim() !== '' && extractJson(value).ok) void saveText(value);
+    if (!typedByKey && reply === undefined && value.trim() !== '' && extractJson(value).ok) void saveText(value);
+  };
+  const boxLeft = () => {
+    if (reply === undefined && !isEditing && text.trim() !== '' && extractJson(text).ok) void saveText(text);
   };
   const pasted = async () => {
     const outcome = await replyActions.paste(caseId, reply !== undefined);
@@ -154,7 +161,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
 
   /** Moving or closing with a reply that was typed and not saved asks first (FR-055). */
   const leave = (go: () => void) => {
-    if (changed && text.trim() !== '' && (isEditing || !extractJson(text).ok)) setLeaving(() => go);
+    if (changed && text.trim() !== '') setLeaving(() => go);
     else {
       clearDraft();
       setMessage('');
@@ -169,7 +176,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
     go?.();
   };
 
-  const notJsonDraft = changed && text.trim() !== '' && !extractJson(text).ok;
+  const unsavedDraft = changed && text.trim() !== '';
 
   const page = (
     <>
@@ -180,7 +187,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
           {testCase.base ? <span class="muted">{` · Base: ${testCase.base}${base ? ` (${base.name})` : ''}`}</span> : null}
         </p>
         <MarkedFields testCase={testCase} judged={judged} effective={effective} strong={strong} shown={shown} rootRef={textRef} columns />
-        <PromptButtons prompt={prompt} primary={!reply && !notJsonDraft && copied[caseId] !== true} onCopied={() => setCopied((c) => ({ ...c, [caseId]: true }))} />
+        <PromptButtons prompt={prompt} primary={!reply && !unsavedDraft && copied[caseId] !== true} onCopied={() => setCopied((c) => ({ ...c, [caseId]: true }))} />
       </Part>
 
       <Part number={2} title="Marking">
@@ -201,6 +208,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
             onChangeReply={() => setEditing(caseId)}
             onSaveReply={saveReplyPressed}
             onCancel={cancelEditing}
+            onBlur={boxLeft}
             findings={current.findings}
             pointed={pointed}
             onPoint={point}
@@ -316,7 +324,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
               </>
             }
           >
-            {isEditing ? <p>The changes to the reply are not saved. Press Save reply to keep them, or go on and they are lost.</p> : <p>The text in the box is not JSON and was not saved. Press Keep as text to keep it, or go on and the text is lost.</p>}
+            {isEditing ? <p>The changes to the reply are not saved. Press Save reply to keep them, or go on and they are lost.</p> : extractJson(text).ok ? <p>The text in the box is JSON that was not saved yet. Click outside the box to save it, or go on and the text is lost.</p> : <p>The text in the box is not JSON and was not saved. Press Keep as text to keep it, or go on and the text is lost.</p>}
           </Dialog>
         </>
       }

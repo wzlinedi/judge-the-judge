@@ -1,23 +1,23 @@
 // Decisions made by hand (data-model.md, CaseDecisions). Every function returns a new evaluation.
-import { updateTestRun } from '../../core/cases/test-run';
+import { ownValue, setOwn, updateTestRun } from '../../core/cases/test-run';
 import type { AdditionalState, CaseDecisions, TestProject, ExpectedState } from '../../core/model';
 
 const empty = (): CaseDecisions => ({ expected: {}, additional: {}, added_findings: [], approved: false, note: '' });
 
 function withCase(evaluation: TestProject, caseId: string, change: (d: CaseDecisions) => CaseDecisions): TestProject {
-  return updateTestRun(evaluation, (run) => ({ ...run, decisions: { ...run.decisions, [caseId]: change(structuredClone(run.decisions[caseId] ?? empty())) } }));
+  return updateTestRun(evaluation, (run) => ({ ...run, decisions: { ...run.decisions, [caseId]: change(structuredClone(ownValue(run.decisions, caseId) ?? empty())) } }));
 }
 
 export function setExpectedMark(evaluation: TestProject, caseId: string, expectedId: string, state: ExpectedState): TestProject {
   return withCase(evaluation, caseId, (d) => {
-    d.expected[expectedId] = { state, source: 'manual' };
+    setOwn(d.expected, expectedId, { state, source: 'manual' });
     return d;
   });
 }
 
 export function setAdditionalMark(evaluation: TestProject, caseId: string, key: string, state: AdditionalState): TestProject {
   return withCase(evaluation, caseId, (d) => {
-    d.additional[key] = { state, source: 'manual' };
+    setOwn(d.additional, key, { state, source: 'manual' });
     return d;
   });
 }

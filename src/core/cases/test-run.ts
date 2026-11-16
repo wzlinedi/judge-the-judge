@@ -14,14 +14,39 @@ export function emptyTestRun(): TestRun {
   return { replies: {}, decisions: {}, model_note: '' };
 }
 
+/**
+ * A case id is any text of the user's file, `constructor` and `__proto__` included (S1). A record read by an id must therefore hold
+ * only the keys of the file: this copy has no prototype, so `record['constructor']` is `undefined` unless the file has that key.
+ * The copy is made once for each stored object.
+ */
+const COPIES = new WeakMap<object, Record<string, unknown>>();
+function ownKeysOnly<T>(stored: Readonly<Record<string, T>>): Readonly<Record<string, T>> {
+  let copy = COPIES.get(stored);
+  if (copy === undefined) {
+    copy = Object.assign(Object.create(null) as Record<string, unknown>, stored);
+    COPIES.set(stored, copy);
+  }
+  return copy as Readonly<Record<string, T>>;
+}
+
+/** The value stored under `key` in a record of the file, or `undefined`; inherited names such as `constructor` are not values (S1). */
+export function ownValue<T>(record: Readonly<Record<string, T>> | undefined, key: string): T | undefined {
+  return record !== undefined && Object.hasOwn(record, key) ? record[key] : undefined;
+}
+
+/** Sets a key of a record of the file as an own value; `record['__proto__'] = …` would set the prototype instead (S1). */
+export function setOwn<T>(record: Record<string, T>, key: string, value: T): void {
+  Object.defineProperty(record, key, { value, enumerable: true, writable: true, configurable: true });
+}
+
 /** The replies by case identifier; none while the test run has not started. */
 export function repliesOf(project: Pick<TestProject, 'testRun'>): Readonly<Record<string, Reply>> {
-  return project.testRun?.replies ?? NO_REPLIES;
+  return project.testRun ? ownKeysOnly(project.testRun.replies) : NO_REPLIES;
 }
 
 /** The decisions by case identifier; none while the test run has not started. */
 export function decisionsOf(project: Pick<TestProject, 'testRun'>): Readonly<Record<string, CaseDecisions>> {
-  return project.testRun?.decisions ?? NO_DECISIONS;
+  return project.testRun ? ownKeysOnly(project.testRun.decisions) : NO_DECISIONS;
 }
 
 /** How many cases have a reply. */

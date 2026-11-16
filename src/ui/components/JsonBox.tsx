@@ -11,6 +11,8 @@ export interface JsonBoxProps {
   rows?: number;
   placeholder?: string;
   readOnly?: boolean;
+  /** Called when the box loses the focus. */
+  onBlur?: () => void;
 }
 
 export function problemText(problem: Problem): string {
@@ -35,7 +37,7 @@ function formatPasted(event: ClipboardEvent, onChange: (text: string) => void) {
 }
 
 /** A box checked as it changes; the text is always kept and problems say where they are (FR-084). */
-export function JsonBox({ label, value, onChange, check, rows = 10, placeholder, readOnly }: JsonBoxProps) {
+export function JsonBox({ label, value, onChange, check, rows = 10, placeholder, readOnly, onBlur }: JsonBoxProps) {
   const id = useId();
   const problems = value.trim() === '' ? [] : check(value);
   return (
@@ -52,6 +54,7 @@ export function JsonBox({ label, value, onChange, check, rows = 10, placeholder,
         aria-invalid={problems.length > 0}
         aria-describedby={`${id}-problems`}
         onInput={(event) => onChange((event.currentTarget as HTMLTextAreaElement).value)}
+        onBlur={onBlur}
         onPaste={readOnly ? undefined : (event) => formatPasted(event, onChange)}
       />
       <ul id={`${id}-problems`} class="problems" aria-live="polite">
