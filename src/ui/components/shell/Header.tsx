@@ -10,15 +10,18 @@ export interface HeaderProps {
   onFileAction: (action: FileAction) => void;
 }
 
-/** The save button is always here, with the name of its file under it; "Save … as…" and the loads are in the More menu, and Help stands beside it (FR-076, T242, T246). */
+/** One row: the tool name, the name of the test project, the save indicator (with the file name), then Save test project, More and Help; the steps are the second row (FR-092, T322). */
 export function Header({ state, onGo, onFileAction }: HeaderProps) {
   return (
     <header class="app-header" role="banner">
       <div class="app-header-top">
         <h1 class="app-name">Judge the Judge</h1>
+        <span class="project-name">{state.project.dataset.name}</span>
         <SaveState state={state} />
         <div class="header-actions">
-          <SaveButton label={labels.saveTestProject} file={state.testProjectFile} onClick={() => onFileAction('save-test-project')} />
+          <button type="button" onClick={() => onFileAction('save-test-project')}>
+            {labels.saveTestProject}
+          </button>
           <FileMenu onAction={onFileAction} />
           <button type="button" class={`help-button${state.step === 'help' ? ' current' : ''}`} aria-current={state.step === 'help' ? 'page' : undefined} onClick={() => onGo('help')}>
             {labels.help}
@@ -27,16 +30,5 @@ export function Header({ state, onGo, onFileAction }: HeaderProps) {
       </div>
       <StepBar current={state.step} onGo={onGo} />
     </header>
-  );
-}
-
-function SaveButton({ label, file, onClick }: { label: string; file: string | null; onClick: () => void }) {
-  return (
-    <div class="save-button">
-      <button type="button" onClick={onClick}>
-        {label}
-      </button>
-      <span class="file-name muted">{file ?? 'no file yet'}</span>
-    </div>
   );
 }

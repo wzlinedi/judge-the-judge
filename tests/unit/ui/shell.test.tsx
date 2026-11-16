@@ -28,6 +28,31 @@ describe('header', () => {
     expect(within(nav).getAllByRole('button').every((b) => b.getAttribute('aria-current') === null)).toBe(true);
   });
 
+  it('puts the tool name, the test project name, the save indicator and the buttons in one row, in that order (T320 (a), FR-092)', () => {
+    const { unmount } = renderApp();
+    const row = screen.getByRole('banner').querySelector('.app-header-top') as HTMLElement;
+    const parts = Array.from(row.children) as HTMLElement[];
+    expect(parts.map((p) => p.className.split(' ')[0])).toEqual(['app-name', 'project-name', 'save-group', 'header-actions']);
+    expect(parts[0]?.textContent).toBe('Judge the Judge');
+    expect(parts[1]?.textContent).toBe('Untitled test cases');
+    expect(within(parts[3] as HTMLElement).getAllByRole('button').map((b) => b.textContent)).toEqual(['Save test project', 'More', 'Help']);
+    unmount();
+    const named = edit(createState(), (e) => ({ ...e, dataset: { ...e.dataset, name: 'Book summaries' } }));
+    renderApp({ initialState: named });
+    expect(screen.getByRole('banner').querySelector('.project-name')?.textContent).toBe('Book summaries');
+  });
+
+  it('shows the name of the demo after "Load demo…" (T320 (a))', async () => {
+    renderApp();
+    expect(screen.getByRole('banner').querySelector('.project-name')?.textContent).toBe('Untitled test cases');
+    fireEvent.click(screen.getByRole('button', { name: labels.more }));
+    fireEvent.click(screen.getByRole('menuitem', { name: labels.loadExample }));
+    await screen.findByRole('status', { name: 'Message' });
+    const name = screen.getByRole('banner').querySelector('.project-name')?.textContent;
+    expect(name).toBeTruthy();
+    expect(name).not.toBe('Untitled test cases');
+  });
+
   it('shows the one indicator: nothing to save, unsaved, all saved with the file name', () => {
     const { unmount } = renderApp();
     expect(screen.getByText('Nothing to save yet')).toBeTruthy();
@@ -58,12 +83,29 @@ describe('header', () => {
     expect(screen.queryByRole('menuitem', { name: 'Save test project' })).toBeNull();
   });
 
-  it('shows the remembered test project file under its button, or "no file yet"', () => {
+  it('shows the remembered test project file beside the save indicator, or "no file yet", and not under the button (T320 (c), Clarifications 2026-11-16)', () => {
     const { unmount } = renderApp();
-    expect(screen.getAllByText(/no file yet/).length).toBe(1);
+    const banner = screen.getByRole('banner');
+    expect(within(banner).getAllByText(/no file yet/)).toHaveLength(1);
+    expect(banner.querySelector('.save-group .file-name')?.textContent).toBe('no file yet');
+    expect(banner.querySelector('.save-button')).toBeNull();
+    expect(banner.querySelector('.header-actions .file-name')).toBeNull();
     unmount();
     renderApp({ initialState: { ...createState(), testProjectFile: 'books.json' } });
-    expect(screen.getByText(/books\.json/)).toBeTruthy();
+    const named = screen.getByRole('banner');
+    expect(within(named).getAllByText(/books\.json/)).toHaveLength(1);
+    expect(named.querySelector('.save-group .file-name')?.textContent).toBe('books.json');
+    expect(named.querySelector('.header-actions .file-name')).toBeNull();
+  });
+
+  it('names the file once when saved: the indicator shows it, and the element file-name is hidden from sight and from screen readers (T320 (b))', () => {
+    renderApp({ initialState: { ...createState(), hasFile: true, testProjectFile: 'run-1.json' } });
+    const banner = screen.getByRole('banner');
+    expect(banner.querySelector('.save-state')?.textContent).toBe('All changes saved (run-1.json)');
+    const element = banner.querySelector('.save-group .file-name') as HTMLElement;
+    expect(element.textContent).toBe('run-1.json');
+    expect(element.classList.contains('visually-hidden')).toBe(true);
+    expect(element.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('opens and closes the menu with the keyboard and Escape', () => {
