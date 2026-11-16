@@ -295,3 +295,32 @@ test.describe('layout of the dialogs (T338, FR-093)', () => {
     await expect(opinion.getByRole('button', { name: 'Cancel' })).toBeInViewport();
   });
 });
+
+test.describe('reduced motion (T340 (c), FR-094)', () => {
+  test('with reduced motion "Show the issue" puts the passage in view at once, and no mark runs a transition', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await loadDemo(page, 1280, 720);
+    await page.getByRole('button', { name: STEPS[2] }).click();
+    await page.getByRole('row').filter({ hasText: 'Moby-Dick + 3 errors' }).getByRole('button', { name: 'Open' }).click();
+    const win = page.getByRole('dialog', { name: /^Case \d+ / });
+    await win.locator('[data-expected="e2"]').getByRole('button', { name: 'Show the issue' }).click();
+    // right after the click, with no wait: the passage is inside the window, and every strong mark has a transition of 0.01 ms at most
+    const result = await page.evaluate(() => {
+      const passage = document.querySelector('[data-field] .fragment-strong') as HTMLElement | null;
+      const box = passage?.getBoundingClientRect();
+      const marks = [...document.querySelectorAll<HTMLElement>('.fragment-strong')];
+      const ms = (value: string) => value.split(',').map((v) => (v.trim().endsWith('ms') ? parseFloat(v) : parseFloat(v) * 1000));
+      return {
+        found: passage !== null,
+        inView: box !== undefined && box.top >= 0 && box.bottom <= window.innerHeight,
+        durations: marks.flatMap((m) => ms(getComputedStyle(m).transitionDuration)),
+        smooth: getComputedStyle(document.documentElement).scrollBehavior,
+      };
+    });
+    expect(result.found, 'the passage in the fields is marked').toBe(true);
+    expect(result.inView, 'the passage is in view right after the click').toBe(true);
+    expect(result.durations.length).toBeGreaterThan(0);
+    for (const d of result.durations) expect(d).toBeLessThanOrEqual(0.01);
+    expect(result.smooth).not.toBe('smooth');
+  });
+});
