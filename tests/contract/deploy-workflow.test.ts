@@ -33,6 +33,26 @@ describe('.github/workflows/deploy.yml', () => {
     expect(workflow).not.toMatch(/contents: write/);
   });
 
+  it('gives the whole workflow read access only; publishing rights are granted in the deploy job alone (S2)', () => {
+    const top = workflow.slice(0, workflow.indexOf('\njobs:'));
+    expect(top).toMatch(/\npermissions:\s*\n\s+contents: read\s*\n(?!\s+(pages|id-token))/);
+    expect(top).not.toMatch(/pages: write|id-token: write/);
+    const deploy = workflow.slice(workflow.indexOf('\n  deploy:'));
+    expect(deploy).toMatch(/permissions:\s*\n\s+contents: read\s*\n\s+pages: write\s*\n\s+id-token: write/);
+    const build = workflow.slice(workflow.indexOf('\n  build:'), workflow.indexOf('\n  deploy:'));
+    expect(build).not.toMatch(/pages: write|id-token: write/);
+  });
+
+  it('pins every action to a full commit SHA and names the version in a comment (S6)', () => {
+    const lines = workflow.split('\n').filter((l) => /^\s*-?\s*uses:/.test(l));
+    expect(lines.length).toBeGreaterThan(0);
+    for (const line of lines) expect(line, line).toMatch(/uses: [\w.-]+\/[\w.-]+@[0-9a-f]{40} # v\d+/);
+  });
+
+  it('does not leave the checkout token in the repository settings of the build job (S7)', () => {
+    expect(workflow).toMatch(/uses: actions\/checkout@[0-9a-f]{40}[^\n]*\n\s+with:\s*\n\s+persist-credentials: false/);
+  });
+
   it('does not publish two runs at once and does not cancel a publication in progress', () => {
     expect(workflow).toMatch(/concurrency:\s*\n\s+group: pages\s*\n\s+cancel-in-progress: false/);
   });

@@ -261,3 +261,26 @@ describe('the order of the buttons in the two reply questions (T337, FR-093)', (
     expectCancelFirstMainLast(await ask('Remove the judge’s reply?'), ['Cancel', 'Remove reply']);
   });
 });
+
+describe('finding keys that are not plain words (S9)', () => {
+  const projectWithList = (list: string): TestProject => {
+    const e = sampleProject();
+    const text = JSON.stringify(e.judge_set).split('claims').join(JSON.stringify(list).slice(1, -1));
+    e.judge_set = JSON.parse(text) as TestProject['judge_set'];
+    const claims = [{ text: 'Anna is a doctor.', verdict: 'contradicted', reason: 'x' }];
+    return withRun(e, { replies: { ...e.testRun!.replies, '2': { prompt: 'p2', reply: pretty({ [list]: claims }) } }, decisions: {} });
+  };
+  for (const list of ['missing facts', 'say"s']) {
+    it(`pressing a block scrolls to the card of its finding when the list is ${JSON.stringify(list)}`, async () => {
+      const scroll = vi.fn();
+      Element.prototype.scrollIntoView = scroll;
+      open('2', projectWithList(list));
+      expect(blocks()).toHaveLength(1);
+      fireEvent.click(blocks()[0]!);
+      await waitFor(() => expect((scroll.mock.contexts as HTMLElement[]).some((c) => c.hasAttribute('data-finding-keys'))).toBe(true));
+      const cards = (scroll.mock.contexts as HTMLElement[]).filter((c) => c.hasAttribute('data-finding-keys'));
+      expect(cards.map((c) => JSON.parse(c.getAttribute('data-finding-keys') ?? '[]'))).toEqual([[`${list}[]#1`]]);
+      expect((right().querySelector('li.pointed') as HTMLElement | null)).not.toBeNull();
+    });
+  }
+});

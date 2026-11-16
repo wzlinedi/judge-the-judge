@@ -246,7 +246,7 @@ export function buildHtmlReport(evaluation: TestProject, results: Results, revie
 
   return [
     '<!doctype html>',
-    '<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">',
+    `<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><meta name="viewport" content="width=device-width, initial-scale=1">`,
     `<title>Judge the Judge report: ${esc(name)}</title>`,
     `<style>${STYLE}</style></head><body>`,
     ...head,

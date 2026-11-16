@@ -51,7 +51,7 @@ function ExpectedItem({ error, index, testCase, judged, judgeSays, onMark, onSho
   const sides = errorSides(testCase, judged, meta ?? {});
   const name = `E${index + 1}`;
   return (
-    <li data-expected={error.id} class={`decide-item${judgeSays.some((m) => m.key === pointed) ? ' pointed' : ''}`} {...(judgeSays.length > 0 ? { 'data-finding-line': judgeSays.map((m) => m.key).join(' ') } : {})}>
+    <li data-expected={error.id} class={`decide-item${judgeSays.some((m) => m.key === pointed) ? ' pointed' : ''}`} {...(judgeSays.length > 0 ? { 'data-finding-line': judgeSays.map((m) => m.key).join(' '), 'data-finding-keys': JSON.stringify(judgeSays.map((m) => m.key)) } : {})}>
       <ErrorCard name={name} title={meta?.description ?? ''} facts={[meta?.category, meta?.difficulty].filter((x): x is NonNullable<typeof x> => !!x)} sides={sides} onShow={() => onShow(showTargetOf(sides, error.id))}>
         <div role="group" aria-label={`Mark for ${name}`} class="marks">
           {EXPECTED_MARKS.map((m) => (
@@ -70,7 +70,7 @@ function AdditionalItem({ item, number, testCase, judged, onMark, onShow, onRemo
   const sides = item.text === '' ? [] : errorSides(testCase, judged, { fragment: item.text });
   const facts = [item.rules.length > 0 ? `Rule: ${item.rules.join(', ')}` : undefined, item.category, item.difficulty].filter((x): x is string => !!x);
   return (
-    <li data-additional={item.key} class={`decide-item${number !== undefined && pointed === item.key ? ' pointed' : ''}`} {...(number !== undefined ? { 'data-finding-line': item.key } : {})}>
+    <li data-additional={item.key} class={`decide-item${number !== undefined && pointed === item.key ? ' pointed' : ''}`} {...(number !== undefined ? { 'data-finding-line': item.key, 'data-finding-keys': JSON.stringify([item.key]) } : {})}>
       <ErrorCard
         title={`${number !== undefined ? `F${number} · ` : ''}${item.text === '' ? 'A finding about the whole reply' : 'Found by the judge'}`}
         facts={facts}

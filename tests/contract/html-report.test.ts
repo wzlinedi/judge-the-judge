@@ -33,6 +33,12 @@ describe('the HTML report is self-contained', () => {
     expect(provisional).not.toMatch(/@import|url\(/);
   });
 
+  it('allows nothing but its own inline styles: a Content-Security-Policy in the head and still no script (S5)', () => {
+    const head = provisional.slice(0, provisional.indexOf('</head>'));
+    expect(head).toContain(`<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">`);
+    expect(provisional).not.toMatch(/<script/i);
+  });
+
   it('escapes every value: a script in a name, a field or the model details stays text', () => {
     const e = sampleProject();
     e.dataset.name = '<script>alert(1)</script>';

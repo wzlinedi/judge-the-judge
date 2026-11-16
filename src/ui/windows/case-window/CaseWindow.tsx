@@ -154,7 +154,17 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   const point = (key: string) => {
     setPointed(key);
     setTimeout(() => {
-      partRef.current?.querySelector<HTMLElement>(`[data-finding-line~="${key}"]`)?.scrollIntoView?.({ block: 'center' });
+      // The card is found in code, not with a selector built from the key: a key may hold spaces or quotes (S9).
+      const cards = partRef.current?.querySelectorAll<HTMLElement>('[data-finding-keys]') ?? [];
+      const card = [...cards].find((c) => {
+        try {
+          const keys: unknown = JSON.parse(c.dataset['findingKeys'] ?? '[]');
+          return Array.isArray(keys) && keys.includes(key);
+        } catch {
+          return false;
+        }
+      });
+      card?.scrollIntoView?.({ block: 'center' });
     }, 0);
   };
   const handMarks = replaceNeedsQuestion(evaluation, caseId).count;
