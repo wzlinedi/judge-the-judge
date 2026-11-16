@@ -46,7 +46,8 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   const [message, setMessage] = useState('');
   /** The case whose saved reply is being changed in the box: "Change reply" opens it, "Save reply" asks (T261) and saves, "Cancel" drops the edits (T293). */
   const [editing, setEditing] = useState<string | null>(null);
-  /** The finding that was pressed, in the reply or on the right: both places mark it for a moment (T293). */
+  /** The finding that was pressed, in the reply or on the right, or that "Show the issue" points at: both places mark it until the next pointing,
+   *  a move to another case or Close (T293; research.md, 33.6). */
   const [pointed, setPointed] = useState<string | null>(null);
   const partRef = useRef<HTMLDivElement>(null);
   /** The change that waits for the answer to "Change the judge’s reply?": a text typed into the box, or a paste. */
@@ -59,11 +60,6 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
     setEditing(null);
     setPointed(null);
   }, [caseId]);
-  useEffect(() => {
-    if (pointed === null) return;
-    const timer = setTimeout(() => setPointed(null), 2500);
-    return () => clearTimeout(timer);
-  }, [pointed]);
   const position = reviewed.findIndex((r) => r.testCase.id === caseId);
   const current = reviewed[position];
   if (!current) return null;

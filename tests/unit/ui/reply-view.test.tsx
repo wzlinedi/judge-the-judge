@@ -1,10 +1,12 @@
 // A saved judge reply is read-only, formatted and marked; "Change reply" opens the box with Save reply and Cancel (T293, FR-055, FR-056).
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
 import { createFakeClipboard, createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
 import type { TestProject } from '../../../src/core/model';
+import { ReplyView } from '../../../src/ui/windows/case-window/ReplyView';
 import { sampleProject, withRun } from '../../helpers/fixtures';
 
 const env = { showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } };
@@ -170,5 +172,71 @@ describe('a case without a reply', () => {
     fireEvent.input(textbox()!, { target: { value: '{"claims":[]}' } });
     await waitFor(() => expect(textbox()).toBeNull());
     expect(left().textContent).toContain('"claims": []');
+  });
+});
+
+// T334 (SC-033, SC-043, SC-044; research.md, 33.6): each finding marks its whole JSON object, with nothing added to the text of the reply
+describe('the marked objects of a JSON reply (T334)', () => {
+  const finding = (key: string) => ({ key, text: '', rules: ['r'] });
+  const css = readFileSync('src/ui/styles/components.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const rule = (selector: string) => css.match(new RegExp(`(?:^|\\})\\s*${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`))?.[1] ?? '';
+
+  it('(a) a block starts at the line of the opening brace of its object and ends after the line of its closing brace', () => {
+    open('2');
+    const reply = left().querySelector('.reply-read')!.textContent ?? '';
+    for (const block of blocks()) {
+      const text = block.textContent ?? '';
+      expect(text.split('\n')[0], 'the first line is the opening brace').toMatch(/^\s*\{$/);
+      expect(text, 'the last line is the closing brace').toMatch(/\n\s*\},?\n$/);
+      // the block is made of whole lines of the reply: it starts at the start of a line
+      const at = reply.indexOf(text);
+      expect(at).toBeGreaterThan(0);
+      expect(reply[at - 1]).toBe('\n');
+    }
+  });
+
+  it('(b) a block holds only the text of the reply: no F number, rule name, category or description', () => {
+    open('2');
+    const reply = withReplies().testRun!.replies['2']!.reply;
+    expect(left().querySelector('.reply-read')!.textContent).toBe(reply);
+    for (const block of blocks()) expect(reply).toContain(block.textContent ?? '');
+  });
+
+  it('(c) a reply kept as text has no block', () => {
+    open('1');
+    expect(left().querySelectorAll('.reply-block')).toHaveLength(0);
+  });
+
+  it('(d) an object that no rule read has no block', () => {
+    open('2');
+    expect(blocks().map((b) => b.textContent).join('')).not.toContain('Anna is a baker.');
+    expect(left().querySelectorAll('.reply-block')).toHaveLength(2);
+  });
+
+  it('(e) a finding inside another marked object marks only the outer object', () => {
+    const reply = pretty({ a: [{ b: [{ x: 1 }, { x: 2 }] }, { b: [] }] });
+    const { container } = render(<ReplyView reply={reply} findings={[finding('a[].b[]#1.2'), finding('a[]#1')]} pointed={null} onPoint={() => {}} />);
+    const marked = [...container.querySelectorAll<HTMLElement>('.reply-block')];
+    expect(marked.map((b) => b.dataset['findingBlock'])).toEqual(['a[]#1']);
+    expect(marked[0]!.textContent).toContain('"x": 2');
+  });
+
+  it('the light mark is a background and a 2 px line; the strong mark a stronger background and a 4 px accent line, in normal weight (research.md, 33.6)', () => {
+    const light = rule('.reply-block');
+    expect(light).toMatch(/background:\s*var\(--reply-bg\)/);
+    expect(light).toMatch(/border-left:\s*2px solid var\(--reply-line\)/);
+    const strong = rule('.reply-block.fragment-strong');
+    expect(strong).toMatch(/background:\s*var\(--reply-strong-bg\)/);
+    expect(strong).toMatch(/border-left:\s*4px solid var\(--accent\)/);
+    expect(strong).toMatch(/outline:\s*none/);
+    expect(strong).toMatch(/font-weight:\s*(normal|400)/);
+  });
+
+  it('the reply is not a Tab stop of its own, now that it does not scroll; each block still is', () => {
+    open('2');
+    const read = left().querySelector('.reply-read') as HTMLElement;
+    expect(read.hasAttribute('tabindex')).toBe(false);
+    expect(read.tabIndex).toBe(-1);
+    for (const block of blocks()) expect(block.tabIndex).toBe(0);
   });
 });

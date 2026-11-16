@@ -7,7 +7,7 @@ export interface ReplyViewProps {
   reply: string;
   /** The findings the error rules read from it, in the order of the reply: F1 is the first. */
   findings: readonly Finding[];
-  /** The finding that was pressed on the right: its block is marked. */
+  /** The finding pointed at (pressed on the right or by "Show the issue"): its block is marked strongly until the next pointing. */
   pointed: string | null;
   /** A highlighted block was pressed: the finding on the right is marked. */
   onPoint: (key: string) => void;
@@ -48,8 +48,10 @@ function wholeLines(reply: string, block: Block): Block {
 }
 
 /**
- * A saved reply, read-only (T293, T311, FR-055): the text as it is kept (formatted when it is JSON), with a bar at the left of each part that an
- * error rule turned into a finding. The bar has no label; the part is highlighted only while its finding is pointed at (T311). A reply kept as text has no bar.
+ * A saved reply, read-only (T293, T311, FR-055): the text as it is kept (formatted when it is JSON). Each whole JSON object that an error rule
+ * turned into a finding has a light background and a thin line at its left, with no label. The object of the finding pointed at is marked
+ * strongly and stays so until another item is pointed at, the case changes or the window closes (research.md, 33.6). A reply kept as text
+ * has no mark. The reply does not scroll on its own, so it is not a Tab stop; each marked object is.
  */
 export function ReplyView({ reply, findings, pointed, onPoint }: ReplyViewProps) {
   const blocks = useMemo(() => {
@@ -66,7 +68,7 @@ export function ReplyView({ reply, findings, pointed, onPoint }: ReplyViewProps)
   if (at < reply.length) parts.push(reply.slice(at));
 
   return (
-    <pre class="reply-read" aria-label="Judge reply" tabIndex={0}>
+    <pre class="reply-read" aria-label="Judge reply">
       {parts.map((part, i) =>
         typeof part === 'string' ? (
           part

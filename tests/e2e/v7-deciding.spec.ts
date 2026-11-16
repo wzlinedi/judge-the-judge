@@ -148,6 +148,6 @@ test('an error shows the words of the source beside the words of the judged text
   await expect(source).toHaveText('lost his leg to a white whale');
   await expect(summary).toContainText('the whale that took his arm');
   await expect(summary).toBeInViewport();
-  // the strong highlight lasts a moment
-  await expect(win.locator('.fragment-strong')).toHaveCount(0, { timeout: 6000 });
+  // the strong highlight of the passage in the fields lasts a moment; the object in Judge reply stays marked (T333, Clarifications 2026-11-16)
+  await expect(win.locator('.marked-fields .fragment-strong')).toHaveCount(0, { timeout: 6000 });
 });
