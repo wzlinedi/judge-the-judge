@@ -37,6 +37,7 @@ export function PromptSection({ state, onEdit, onLoad }: SectionProps) {
       </label>
       <textarea
         id={`${id}-prompt`}
+        class="grows"
         rows={10}
         value={set.prompt}
         readOnly={locked}

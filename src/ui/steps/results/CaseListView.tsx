@@ -39,7 +39,7 @@ export function CaseListView({ reviewed, onOpen }: CaseListViewProps) {
               <th>Id</th>
               <th>Name</th>
               <th>Kind</th>
-              <th>Expected errors</th>
+              <th class="num">Expected errors</th>
               <th>The judge reported</th>
               <th>Status</th>
               <th>Decisions</th>
@@ -56,7 +56,7 @@ export function CaseListView({ reviewed, onOpen }: CaseListViewProps) {
                   <td>{r.testCase.id}</td>
                   <td>{r.testCase.name}</td>
                   <td>{r.testCase.expected_errors.length === 0 ? 'Clean' : 'Injected errors'}</td>
-                  <td>{r.testCase.expected_errors.length}</td>
+                  <td class="num">{r.testCase.expected_errors.length}</td>
                   <td>
                     {reported(r)}
                     {added.map((a) => (

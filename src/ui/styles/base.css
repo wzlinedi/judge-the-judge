@@ -75,9 +75,10 @@ th, td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom
 .pass { color: var(--success); }
 .fail, .error { color: var(--error); }
 .warn { color: var(--warning); }
-.pass::before { content: "✓ "; }
-.fail::before, .error::before { content: "✕ "; }
-.warn::before { content: "⚠ "; }
+/* A text that has no sign of its own gets one here; StatusMark writes its own sign, so it is left out (T324) */
+.pass:not(.status-mark)::before { content: "✓ "; }
+.fail:not(.status-mark)::before, .error:not(.status-mark)::before { content: "✕ "; }
+.warn:not(.status-mark)::before { content: "⚠ "; }
 
 .visually-hidden {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;

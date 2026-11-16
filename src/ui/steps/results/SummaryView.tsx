@@ -11,7 +11,7 @@ function Count({ label, value }: { label: string; value: number }) {
   return (
     <div class="count">
       <dt>{label}</dt>
-      <dd>{value}</dd>
+      <dd class="num">{value}</dd>
     </div>
   );
 }
@@ -74,6 +74,17 @@ export function SummaryView({ results, evaluation, onThreshold, reviewed, onOpen
 
       {c.cases_decided === 0 ? <p class="muted">No case is decided yet, so there is no result to show. Run the cases and decide what awaits you on the Test run step.</p> : null}
 
+      <section role="region" aria-label="Overall result" class="overall">
+        <p class={`overall-result result-${results.overall.result.replace(/\s/g, '-').toLowerCase()}`}>
+          <strong>{results.overall.result}</strong>
+        </p>
+        <ul>
+          {results.overall.reasons.map((reason, i) => (
+            <li key={i}>{reason}</li>
+          ))}
+        </ul>
+      </section>
+
       {perCase ? <p>{PER_CASE_SENTENCE}</p> : null}
 
       <div role="group" aria-label="Counts" class="counts">
@@ -133,17 +144,6 @@ export function SummaryView({ results, evaluation, onThreshold, reviewed, onOpen
         })}
         </dl>
       </div>
-
-      <section role="region" aria-label="Overall result" class="overall">
-        <p class={`overall-result result-${results.overall.result.replace(/\s/g, '-').toLowerCase()}`}>
-          <strong>{results.overall.result}</strong>
-        </p>
-        <ul>
-          {results.overall.reasons.map((reason, i) => (
-            <li key={i}>{reason}</li>
-          ))}
-        </ul>
-      </section>
 
       <section role="region" aria-label="Test size" class="test-size">
         <p>{`A reliable answer needs at least ${MINIMUM_SAMPLE.expected_errors} injected errors and ${MINIMUM_SAMPLE.clean_cases} clean cases.`}</p>

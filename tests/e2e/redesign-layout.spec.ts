@@ -1,4 +1,4 @@
-// Phase 23, step 2 (T321; FR-092, SC-041, SC-047): the layout of the shell at the four sizes of the redesign, measured in the browser.
+// Phase 23, steps 2 and 3 (T321, T327; FR-092, FR-093, SC-041, SC-047): the layout of the shell and of the views at the sizes of the redesign, measured in the browser.
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { installMemoryFiles } from '../helpers/memory-files';
@@ -66,7 +66,7 @@ test.describe('layout of the shell (SC-041)', () => {
     await loadDemo(page, 390, 844);
     await eachView(page, async () => {
       const sideBySide = await page.evaluate(() =>
-        [...document.querySelectorAll<HTMLElement>('.case-half, .form-grid, .judge-work')].flatMap((box) => {
+        [...document.querySelectorAll<HTMLElement>('.case-half, .form-grid, .judge-work-area')].flatMap((box) => {
           const lefts = [...box.children].map((c) => Math.round(c.getBoundingClientRect().left));
           return new Set(lefts).size > 1 ? [`${box.className}: ${lefts.join(',')}`] : [];
         }),
@@ -108,5 +108,63 @@ test.describe('layout of the shell (SC-041)', () => {
     );
     expect(widths.length).toBeGreaterThan(0);
     for (const w of widths) expect(w.width).toBeLessThanOrEqual(w.limit);
+  });
+});
+
+test.describe('layout of the views (T327, FR-093)', () => {
+  test('on Judge at 1280 × 720 the preview of the findings stays in view while a rule is changed', async ({ page }) => {
+    await loadDemo(page, 1280, 720);
+    await page.getByRole('button', { name: STEPS[0] }).click();
+    const lastRule = page.getByRole('group', { name: /^Rule \d+$/ }).last();
+    const value = lastRule.getByLabel(/^Value of condition 1 of rule \d+$/);
+    await value.scrollIntoViewIfNeeded();
+    await value.fill('contradicted');
+    await expect(page.getByRole('table', { name: 'Preview of the findings' })).toBeInViewport();
+    // The preview is the right column of the work area and sticks, so it stays in view when the rules are longer than the screen.
+    const columns = await page.locator('.judge-work-area').evaluate((area) => {
+      const [rules, preview] = [...area.children].map((c) => c.getBoundingClientRect());
+      return { sideBySide: (preview as DOMRect).left >= (rules as DOMRect).right - 1, position: getComputedStyle(area.children[1] as Element).position };
+    });
+    expect(columns).toEqual({ sideBySide: true, position: 'sticky' });
+  });
+
+  test('on Results the overall result is the largest text, and the numbers of a table are right-aligned', async ({ page }) => {
+    await loadDemo(page, 1280, 720);
+    await page.getByRole('button', { name: STEPS[3] }).click();
+    const sizes = await page.evaluate(() => {
+      const own = parseFloat(getComputedStyle(document.querySelector('.overall-result') as Element).fontSize);
+      let largest = 0;
+      for (const el of document.querySelectorAll<HTMLElement>('body *')) {
+        if (el.closest('.overall-result')) continue;
+        const hasText = [...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? '').trim() !== '');
+        if (hasText && el.offsetParent !== null) largest = Math.max(largest, parseFloat(getComputedStyle(el).fontSize));
+      }
+      return { own, largest };
+    });
+    expect(sizes.own).toBeGreaterThan(0);
+    expect(sizes.own, 'no other text on the page is as large as the overall result').toBeGreaterThan(sizes.largest);
+    await page.getByRole('tab', { name: 'Error analysis' }).click();
+    const aligns = await page.locator('td.num').evaluateAll((cells) => cells.map((c) => getComputedStyle(c).textAlign));
+    expect(aligns.length).toBeGreaterThan(0);
+    for (const align of aligns) expect(align).toBe('right');
+  });
+
+  test('on Test run at 1280 × 720 the table spans the content width', async ({ page }) => {
+    await loadDemo(page, 1280, 720);
+    await page.getByRole('button', { name: STEPS[2] }).click();
+    const widths = await page.evaluate(() => {
+      const inner = (el: Element) => {
+        const style = getComputedStyle(el);
+        return el.getBoundingClientRect().width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth);
+      };
+      const main = document.querySelector('.app-main') as Element;
+      const card = (document.querySelector('.table-scroll') as Element).closest('.card') as Element;
+      const frame = (document.querySelector('.table-scroll') as Element);
+      const table = frame.querySelector('table') as Element;
+      return { main: inner(main), card: card.getBoundingClientRect().width, cardInner: inner(card), frame: frame.getBoundingClientRect().width, table: table.getBoundingClientRect().width };
+    });
+    expect(Math.abs(widths.card - widths.main), 'the card fills the content width').toBeLessThanOrEqual(2);
+    expect(Math.abs(widths.frame - widths.cardInner), 'the frame fills the card').toBeLessThanOrEqual(2);
+    expect(Math.abs(widths.table - widths.frame), 'the table fills its frame').toBeLessThanOrEqual(2);
   });
 });

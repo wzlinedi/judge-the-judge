@@ -2,7 +2,9 @@ import type { JudgeEdit } from '../../../app/actions/judge';
 import type { AppState } from '../../../app/store';
 import { countingModeOf } from '../../../core/judge/counting-mode';
 import { readabilityWarnings } from '../../../core/judge/readability';
+import { useId } from 'preact/hooks';
 import { PromptSection } from './PromptSection';
+import { RulePreview } from './RulePreview';
 import { RulesSection } from './RulesSection';
 import { SampleReplySection } from './SampleReplySection';
 
@@ -13,8 +15,9 @@ export interface JudgeStepProps {
   onLoad?: () => void;
 }
 
-/** One judge set: prompt, sample reply and rules. No welcome section and no buttons besides the rule ones (FR-088). */
+/** One judge set: prompt, sample reply and rules, with the preview of the findings beside the rules (T323). No welcome section and no buttons besides the rule ones (FR-088). */
 export function JudgeStep({ state, onEdit, onLoad }: JudgeStepProps) {
+  const id = useId();
   const warnings = readabilityWarnings(state.project.judge_set);
   return (
     <div class="judge-step">
@@ -29,7 +32,13 @@ export function JudgeStep({ state, onEdit, onLoad }: JudgeStepProps) {
       ) : null}
       <PromptSection state={state} onEdit={onEdit} onLoad={onLoad} />
       <SampleReplySection state={state} onEdit={onEdit} />
-      <RulesSection state={state} onEdit={onEdit} />
+      <div class="judge-work-area">
+        <RulesSection state={state} onEdit={onEdit} />
+        <section class="card judge-preview" aria-labelledby={`${id}-preview`}>
+          <h2 id={`${id}-preview`}>Preview</h2>
+          <RulePreview set={state.project.judge_set} />
+        </section>
+      </div>
       {countingModeOf(state.project.judge_set) === 'per_case' ? (
         <p class="notice" role="status" aria-label="Way of counting">
           This judge is evaluated per case: every rule uses only fields outside any list, so it gives one verdict for the whole text. A flagged reply makes every expected error of the case found, and the Summary counts cases.

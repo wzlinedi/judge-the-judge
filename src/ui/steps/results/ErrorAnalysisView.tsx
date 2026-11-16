@@ -12,20 +12,20 @@ function Groups({ label, rows, perCase }: { label: string; rows: GroupRow[]; per
         <thead>
           <tr>
             <th>Group</th>
-            <th>{perCase ? 'Cases with errors' : 'Expected errors'}</th>
-            <th>{perCase ? 'Flagged' : 'Found'}</th>
-            <th>{perCase ? 'Not flagged' : 'Not found'}</th>
-            {perCase ? null : <th>Detection rate</th>}
+            <th class="num">{perCase ? 'Cases with errors' : 'Expected errors'}</th>
+            <th class="num">{perCase ? 'Flagged' : 'Found'}</th>
+            <th class="num">{perCase ? 'Not flagged' : 'Not found'}</th>
+            {perCase ? null : <th class="num">Detection rate</th>}
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => (
             <tr key={r.name}>
               <td>{r.name}</td>
-              <td>{r.expected}</td>
-              <td>{r.found}</td>
-              <td>{r.missed}</td>
-              {perCase ? null : <td>{r.rate === null ? '–' : pct(r.rate)}</td>}
+              <td class="num">{r.expected}</td>
+              <td class="num">{r.found}</td>
+              <td class="num">{r.missed}</td>
+              {perCase ? null : <td class="num">{r.rate === null ? '–' : pct(r.rate)}</td>}
             </tr>
           ))}
         </tbody>
@@ -41,8 +41,8 @@ function Additional({ label, first, rows }: { label: string; first: string; rows
         <thead>
           <tr>
             <th>{first}</th>
-            <th>Genuine errors</th>
-            <th>False positives</th>
+            <th class="num">Genuine errors</th>
+            <th class="num">False positives</th>
           </tr>
         </thead>
         <tbody>
@@ -54,8 +54,8 @@ function Additional({ label, first, rows }: { label: string; first: string; rows
             rows.map((r) => (
               <tr key={r.name}>
                 <td>{r.name}</td>
-                <td>{r.real}</td>
-                <td>{r.fp}</td>
+                <td class="num">{r.real}</td>
+                <td class="num">{r.fp}</td>
               </tr>
             ))
           )}

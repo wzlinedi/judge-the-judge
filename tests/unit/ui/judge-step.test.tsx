@@ -341,3 +341,37 @@ describe('the "what next" line (FR-001)', () => {
     return { ...s, project: { ...s.project, judge_set: { ...s.project.judge_set, prompt } } };
   }
 });
+
+// T323 (FR-093): the rules and their preview are the two children of one work area, after the prompt, the judged text and the sample reply.
+describe('the work area of the rules and the preview (T323)', () => {
+  const follows = (a: Element, b: Element) => expect(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+  it('holds the rules first and the preview second as its only two children', () => {
+    show(accuracy());
+    type('Sample reply', SAMPLE);
+    fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
+    const area = document.querySelector('.judge-work-area') as HTMLElement;
+    expect(area).not.toBeNull();
+    expect(area.children).toHaveLength(2);
+    const [rules, preview] = [area.children[0] as HTMLElement, area.children[1] as HTMLElement];
+    expect(within(rules).getByRole('heading', { name: 'Error rules' })).toBeTruthy();
+    expect(within(rules).queryByRole('table', { name: 'Preview of the findings' })).toBeNull();
+    expect(within(preview).getByRole('heading', { name: 'Preview' })).toBeTruthy();
+    expect(within(preview).getByRole('table', { name: 'Preview of the findings' })).toBeTruthy();
+  });
+
+  it('puts the prompt, the choice of the judged text, the sample reply and the table of fields before the work area, in this order', () => {
+    show(accuracy());
+    type('Sample reply', SAMPLE);
+    const area = document.querySelector('.judge-work-area') as HTMLElement;
+    const parts = [screen.getByLabelText('Judge prompt'), document.querySelector('fieldset.variables') as Element, screen.getByLabelText('Sample reply'), screen.getByRole('table', { name: 'Fields of the sample reply' }), area];
+    for (let i = 0; i < parts.length - 1; i += 1) follows(parts[i] as Element, parts[i + 1] as Element);
+  });
+
+  it('shows the preview also while there is no rule, so the column does not jump', () => {
+    show(accuracy());
+    const area = document.querySelector('.judge-work-area') as HTMLElement;
+    expect(area.children).toHaveLength(2);
+    expect(within(area.children[1] as HTMLElement).getByRole('heading', { name: 'Preview' })).toBeTruthy();
+  });
+});

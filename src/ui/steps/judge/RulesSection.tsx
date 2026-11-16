@@ -7,7 +7,6 @@ import type { Comparison, ErrorRule } from '../../../core/model';
 import { Explain } from '../../components/Explain';
 import { labels } from '../../labels';
 import type { SectionProps } from './PromptSection';
-import { RulePreview } from './RulePreview';
 
 const COMPARISONS: ReadonlyArray<[Comparison, string]> = [
   ['equals', 'equals'],
@@ -117,8 +116,6 @@ export function RulesSection({ state, onEdit }: SectionProps) {
       <button type="button" onClick={() => onEdit(addRule(state))}>
         {labels.addRule}
       </button>
-      <h3>Preview</h3>
-      <RulePreview set={set} />
     </section>
   );
 }

@@ -43,7 +43,7 @@ export function JsonBox({ label, value, onChange, check, rows = 10, placeholder,
       <label for={id}>{label}</label>
       <textarea
         id={id}
-        class="json"
+        class="json grows"
         rows={rows}
         value={value}
         placeholder={placeholder}

@@ -1,6 +1,6 @@
 // T229: one vertical layout for every way of adding a case (FR-040, FR-041, FR-083, FR-085, FR-090).
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/preact';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
 import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState, type AppState } from '../../../src/app/store';
@@ -177,5 +177,34 @@ describe('From JSON: only the box and the expected errors', () => {
     fireEvent.input(box(), { target: { value: '{ nope' } });
     expect(within(win()).getByText('The JSON is not valid yet, so there is no list to show.')).toBeTruthy();
     expect(within(win()).getByText('Fix the problems listed under the JSON to save.')).toBeTruthy();
+  });
+});
+
+// T326 (FR-092, FR-093): the window of a test case is one page, top to bottom: the form, the JSON editor, the preview, the list of expected
+// errors. An editor grows with its text. ("Error categories" collapsed or open is asserted in error-categories.test.tsx.)
+describe('the test case window, top to bottom (T326)', () => {
+  const follows = (a: Element, b: Element) => expect(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+  it('From JSON: the form, the JSON editor, the preview of what is saved, then the list of expected errors', () => {
+    start('From JSON');
+    fireEvent.input(box(), { target: { value: json('Anna is a doctor. She bought a second oven in 1998.', [doctor]) } });
+    const parts = [win().querySelector('.form-grid'), box(), win().querySelector('.check-status'), within(win()).getByRole('list', { name: 'Expected errors' })];
+    for (const part of parts) expect(part).not.toBeNull();
+    for (let i = 0; i < parts.length - 1; i += 1) follows(parts[i] as Element, parts[i + 1] as Element);
+  });
+
+  it('the JSON editor is a textarea that grows with its text (class grows), in From JSON and in Case with errors', () => {
+    start('From JSON');
+    expect(box().tagName).toBe('TEXTAREA');
+    expect(box().classList.contains('grows')).toBe(true);
+    cleanup();
+    start('Case with errors');
+    expect(box().classList.contains('grows')).toBe(true);
+  });
+
+  it('the prompt for the LLM is an editor that grows too', () => {
+    start('Case with errors');
+    const prompt = within(win()).getByLabelText('Prompt for your LLM') as HTMLTextAreaElement;
+    expect(prompt.classList.contains('grows')).toBe(true);
   });
 });

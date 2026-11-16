@@ -103,11 +103,11 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
                 <th>Id</th>
                 <th>Name</th>
                 <th>Kind</th>
-                <th>Expected errors</th>
-                <th>Additional findings</th>
-                <th>Added by hand</th>
+                <th class="num">Expected errors</th>
+                <th class="num">Additional findings</th>
+                <th class="num">Added by hand</th>
                 <th>Status</th>
-                <th>Items to decide</th>
+                <th class="num">Items to decide</th>
                 <th>
                   <span class="visually-hidden">Actions</span>
                 </th>
@@ -124,13 +124,13 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
                     {r.testCase.changed_after_first_reply ? <span class="muted">{` (${r.testCase.changed_after_first_reply} after first reply)`}</span> : null}
                   </td>
                   <td>{r.testCase.expected_errors.length === 0 ? 'Clean' : 'Injected errors'}</td>
-                  <td>{r.testCase.expected_errors.length}</td>
-                  <td>{counts.additional}</td>
-                  <td>{counts.byHand}</td>
+                  <td class="num">{r.testCase.expected_errors.length}</td>
+                  <td class="num">{counts.additional}</td>
+                  <td class="num">{counts.byHand}</td>
                   <td>
                     <StatusMark status={r.status} />
                   </td>
-                  <td>{itemsToDecide(r)}</td>
+                  <td class="num">{itemsToDecide(r)}</td>
                   <td>
                     <button type="button" onClick={() => onOpen(r.testCase.id)} disabled={!started}>
                       {labels.open}

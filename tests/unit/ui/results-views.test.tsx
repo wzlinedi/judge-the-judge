@@ -325,3 +325,55 @@ describe('the read-only case view', () => {
     expect(within(list).queryAllByRole('button', { name: /Found|Missed|Ignored/ })).toHaveLength(0);
   });
 });
+
+// T325 (FR-093): the numbers of the tables are right-aligned through the class num, and the overall result leads the Summary.
+describe('the layout of the views of Results (T325)', () => {
+  const cellsOf = (table: HTMLElement) =>
+    within(table)
+      .getAllByRole('row')
+      .slice(1)
+      .map((row) => within(row).queryAllByRole('cell'))
+      .filter((cells) => cells.length > 1);
+
+  it('gives every numeric cell of the tables of Error analysis the class num', () => {
+    show(decided);
+    tab('Error analysis');
+    const tables = screen.getAllByRole('table');
+    expect(tables.length).toBeGreaterThan(0);
+    for (const table of tables) {
+      const rows = cellsOf(table);
+      expect(rows.length).toBeGreaterThan(0);
+      for (const cells of rows) for (const cell of cells.slice(1)) expect(cell.classList.contains('num'), `${table.getAttribute('aria-label')}: ${cell.textContent}`).toBe(true);
+      for (const cells of rows) expect(cells[0]?.classList.contains('num'), 'the name cell is text').toBe(false);
+    }
+  });
+
+  it('gives the number of expected errors in the Test case list the class num, and no text cell', () => {
+    show(decided);
+    tab('Test case list');
+    const rows = cellsOf(screen.getByRole('table'));
+    expect(rows.length).toBeGreaterThan(1);
+    for (const cells of rows) {
+      expect(cells[3]?.classList.contains('num')).toBe(true);
+      expect(cells[1]?.classList.contains('num')).toBe(false);
+      expect(cells[2]?.classList.contains('num')).toBe(false);
+    }
+  });
+
+  it('puts the overall result in the Summary before the counts, with its word and a sign from the style', () => {
+    show(decided);
+    const overall = document.querySelector('.overall-result') as HTMLElement;
+    const counts = screen.getByRole('group', { name: 'Counts' });
+    expect(overall).not.toBeNull();
+    expect(overall.compareDocumentPosition(counts) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(overall.textContent).toMatch(/^(Works|Does not work|Inconclusive)$/i);
+    const kind = [...overall.classList].find((c) => c.startsWith('result-')) as string;
+    const css = readFileSync('src/ui/styles/components.css', 'utf8');
+    expect(css, kind).toMatch(new RegExp(`\\.${kind}::before\\s*\\{[^}]*content:\\s*"[✓✕…]`));
+  });
+
+  it('keeps the views in the order Summary, Error analysis, Test case list', () => {
+    show(decided);
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Summary', 'Error analysis', 'Test case list']);
+  });
+});

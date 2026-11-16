@@ -1,4 +1,5 @@
 // US7 on the Run step and in the case window of Run (FR-054 to FR-059, FR-084).
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/preact';
 import { App } from '../../../src/ui/App';
@@ -326,5 +327,50 @@ describe('the reminder in the case window', () => {
     const win = windowOf();
     expect(within(win).getByText('25 not saved')).toBeTruthy();
     expect(within(win).getByRole('alert').textContent).toContain('Save test project');
+  });
+});
+
+// T324 (FR-093, FR-094): the table of Test run. The status is one sign and one word; the table scrolls in its own frame and keeps the full width.
+describe('the table of Test run (T324)', () => {
+  const evaluation = sampleProject();
+  const props = { evaluation, reviewed: reviewEvaluation(evaluation, accuracyMetric), repliesSinceSave: 0, onOpen: vi.fn(), onAdd: vi.fn(), onModelDetails: vi.fn() };
+  const statusCells = () => within(screen.getByRole('table')).getAllByRole('row').slice(1).map((row) => within(row).getAllByRole('cell')[6] as HTMLElement);
+
+  it('shows every status as its own sign and its word, once', () => {
+    render(<RunStep {...props} />);
+    const cells = statusCells();
+    expect(cells.length).toBeGreaterThan(0);
+    for (const cell of cells) {
+      expect(cell.textContent?.trim()).toMatch(/^(✓ Pass|✕ Fail|… Awaiting verification|– Not run)$/);
+      expect((cell.textContent?.match(/[✓✕…–⚠]/g) ?? []).length).toBe(1);
+    }
+  });
+
+  it('does not let a style add a second sign before the status (base.css leaves .status-mark alone)', () => {
+    const css = readFileSync('src/ui/styles/base.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selector: (m[1] as string).trim(), body: m[2] as string }));
+    const signs = rules.filter((r) => /::before/.test(r.selector) && /content:\s*"[✓✕⚠…]/.test(r.body));
+    expect(signs.length).toBeGreaterThan(0);
+    for (const rule of signs) for (const part of rule.selector.split(',')) expect(part.trim(), part).toMatch(/:not\(\.status-mark\)/);
+  });
+
+  it('puts the table in its own scroll frame, after the filters and Add test case…', () => {
+    render(<RunStep {...props} />);
+    const frame = screen.getByRole('table').closest('.table-scroll') as HTMLElement;
+    expect(frame).not.toBeNull();
+    for (const control of [screen.getByRole('combobox', { name: /Show/ }), screen.getByRole('button', { name: 'Add test case…' })]) {
+      expect(control.compareDocumentPosition(frame) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+    const options = within(screen.getByRole('combobox', { name: /Show/ })).getAllByRole('option').map((o) => o.textContent);
+    expect(options).toEqual(['All cases', 'Awaiting verification first', 'Only awaiting verification']);
+  });
+
+  it('keeps the four counts as four columns and right-aligns the numbers (class num)', () => {
+    render(<RunStep {...props} />);
+    const headers = within(screen.getByRole('table')).getAllByRole('columnheader').map((h) => h.textContent);
+    expect(headers.filter((h) => ['Expected errors', 'Additional findings', 'Added by hand', 'Items to decide'].includes(h ?? ''))).toHaveLength(4);
+    const first = within(screen.getByRole('table')).getAllByRole('row')[1] as HTMLElement;
+    const cells = within(first).getAllByRole('cell');
+    for (const index of [3, 4, 5, 7]) expect(cells[index]?.classList.contains('num'), `column ${index}`).toBe(true);
   });
 });

@@ -26,7 +26,7 @@ export function PromptEditor({ id, built, edited, onEdit, rows }: PromptEditorPr
         Prompt for your LLM
       </label>
       <div>
-        <textarea id={id} class="json" rows={rows} value={text} onInput={(event) => onEdit((event.currentTarget as HTMLTextAreaElement).value)} />
+        <textarea id={id} class="json grows" rows={rows} value={text} onInput={(event) => onEdit((event.currentTarget as HTMLTextAreaElement).value)} />
         {edited !== undefined ? <p class="muted">You changed the prompt, so changes in the parts above no longer change it.</p> : null}
         <div class="button-row">
           <CopyButton text={text} label={labels.copyPrompt} />
