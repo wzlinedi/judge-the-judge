@@ -9,7 +9,7 @@ describe('Help (Principle VIII)', () => {
   it('has the sections written so far, in plain headings', () => {
     render(<HelpStep />);
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Finalizing, and editing before the first reply', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Marking after each reply: Add finding, Remove, the second opinion and Ignore', 'Files: the test project and the evaluation', 'Files and their formats', 'Privacy and saving', 'Examples and demo data', 'Metrics and check settings', 'Reading the results', 'Judges that give only a verdict (for example bias: yes or no)', 'Overall result and thresholds', 'Exporting the report, and what provisional means']);
+    expect(headings).toEqual(['What the tool does', 'How big a test needs to be', 'The four steps', 'Variables and the judged text', 'Sample reply, fields and error rules', 'Adding test cases', 'Importing test cases from a file', 'Error categories', 'Starting the test run', 'Working by hand: copy, run, paste', 'Pasting replies from the clipboard, and replacing a reply', 'Marking after each reply: Add finding, Remove, the second opinion and Ignored', 'Files: the test project', 'Files and their formats', 'Privacy and saving', 'Examples and demo data', 'Metrics and check rules', 'Reading the results', 'Judges that give only a verdict (for example bias: yes or no)', 'Overall result and thresholds', 'Exporting the report']);
   });
 
   it('quotes the numbers of the demo from the demo files, so they cannot drift', () => {
@@ -29,15 +29,18 @@ describe('Help (Principle VIII)', () => {
   it('names the buttons as they are labeled in the tool', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
-    for (const label of ['Load demo…', 'Continue', 'Approve', 'Issue: missed', 'Issue: false positive', 'Real error']) expect(text).toContain(label);
+    for (const label of ['Load demo…', 'Continue', 'No more findings', 'Not found', 'False positive', 'Genuine error']) expect(text).toContain(label);
   });
 
-  it('explains the two files, the indicator, "… as" and running the same test with another LLM', () => {
+  it('explains the one file, the indicator, "… as" and running the same test with another LLM', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
-    for (const label of ['Save test project', 'Save evaluation', 'Save evaluation as', 'Load test project', 'Load evaluation', 'All changes saved', 'Unsaved changes']) expect(text).toContain(label);
+    for (const label of ['Save test project', 'Save test project as', 'Load test project', 'Load with the test run', 'Load the test project only', 'All changes saved', 'Unsaved changes']) expect(text).toContain(label);
     expect(text).toMatch(/another LLM/);
-    expect(text).toMatch(/replies are kept only by/i);
+    expect(text).toMatch(/one file of your own: the test project/);
+    expect(text).toMatch(/also holds the test run: the replies, your decisions and the model details/);
+    expect(text).toMatch(/name of the test project/); // the header shows it (FR-007, T320)
+    expect(text).toMatch(/All changes saved<?[^.]*with the file name/);
   });
 
   it('explains privacy and saving: Chrome and Edge, the permission prompt, nothing leaves the browser, save often', () => {
@@ -70,7 +73,7 @@ describe('Help (Principle VIII)', () => {
   it('explains the two kinds of case, From JSON, Clean case, the case JSON layout and the row buttons', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
-    for (const label of ['Add test case', 'From JSON', 'Clean case', 'Show JSON', 'Clone', 'Rename', 'Remove', 'Open']) expect(text).toContain(label);
+    for (const label of ['Add test case', 'From JSON', 'Clean case', 'Rename', 'Remove', 'Open']) expect(text).toContain(label);
     expect(text).toMatch(/clean case/i);
     expect(text).toMatch(/case with injected errors/i);
     expect(text).toContain('expected_errors');
@@ -81,8 +84,8 @@ describe('Help (Principle VIII)', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
     expect(text).toMatch(/no file of its own/);
-    expect(text).toContain('Add categories');
-    expect(text).toContain('Load metric definition…');
+    expect(text).toContain('Add category');
+    expect(text).toContain('Load test project…'); // the metric of your own comes in the test project file
     expect(text).toContain('docs/how-to-add-a-metric.md');
     expect(text).toMatch(/graded ratings/);
     expect(text).toMatch(/30 expected errors and 10 clean cases/);
@@ -102,7 +105,7 @@ describe('Help for running by hand (US7)', () => {
   it('names the buttons, the new conversation, the model details and the reminder at 25 replies', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
-    for (const label of ['Copy prompt', 'Paste reply', 'Save reply', 'Model details', 'Next case', 'Save evaluation']) expect(text).toContain(label);
+    for (const label of ['Copy prompt', 'Paste reply', 'Save reply', 'Change reply', 'Keep as text', 'Model details', 'Next case', 'Save test project']) expect(text).toContain(label);
     expect(text).toMatch(/new conversation/);
     expect(text).toMatch(/every 25|25 replies/);
     expect(text).toMatch(/Alt \+ Right/);
@@ -112,7 +115,7 @@ describe('Help for running by hand (US7)', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
     expect(text).toMatch(/not JSON/);
-    expect(text).toMatch(/Approve/);
+    expect(text).toContain('No more findings');
     expect(text).toMatch(/asks before replacing/i);
     expect(text).toMatch(/Ctrl \+ V/);
   });
@@ -132,30 +135,30 @@ describe('Help for running by hand (US7)', () => {
   });
 });
 
-describe('Help for finalizing (US11)', () => {
-  it('names the buttons, what is fixed and what can still change, and when Reopen test cases is offered', () => {
+describe('Help for starting the test run (US11, T285)', () => {
+  it('names the button, what is fixed with no way back, what can still change, and how to test another judge', () => {
     render(<HelpStep />);
-    const section = screen.getByRole('heading', { name: 'Finalizing, and editing before the first reply' }).closest('section')!;
+    const section = screen.getByRole('heading', { name: 'Starting the test run' }).closest('section')!;
     const text = section.textContent ?? '';
-    for (const label of ['Finalize test cases', 'Reopen test cases', 'Add test case', 'New evaluation', 'Edit expected errors', 'Run again with a new judge…']) expect(text).toContain(label);
+    for (const label of ['Start test run', 'Add test case', 'Edit expected errors', 'Load the test project only']) expect(text).toContain(label);
     expect(text).toMatch(/10 cases imported from a file and 2 cases you add by hand make one test project of 12 cases/);
     expect(text).toMatch(/30 injected errors and 10 clean cases/);
-    expect(text).toMatch(/After the first reply it is no longer offered/);
+    expect(text).toMatch(/no way back/);
     expect(text).toMatch(/warns you before the page is closed/);
   });
 });
 
 describe('Help for testing another version of the judge (US12)', () => {
-  it('explains Run again with a new judge… and the same test with another LLM, in the files section', () => {
+  it('explains "Load the test project only" and the same test with another LLM, in the files section', () => {
     render(<HelpStep />);
-    const section = screen.getByRole('heading', { name: 'Files: the test project and the evaluation' }).closest('section')!;
+    const section = screen.getByRole('heading', { name: 'Files: the test project' }).closest('section')!;
     const text = (section.textContent ?? '').replace(/\s+/g, ' ');
     expect(within(section).getByText('Testing another version of the judge.')).toBeTruthy();
     expect(within(section).getByText('Running the same test with another LLM.')).toBeTruthy();
-    for (const label of ['Run again with a new judge…', 'Save evaluation first', 'Discard', 'Cancel', 'Load test project', 'Save evaluation as']) expect(text).toContain(label);
-    expect(text).toMatch(/replies and decisions are cleared/);
-    expect(text).toMatch(/test cases are kept/);
-    expect(text).toMatch(/ask for a file again/);
+    for (const label of ['Load the test project only', 'Save test project first', 'Discard', 'Cancel', 'Load test project', 'Save test project as']) expect(text).toContain(label);
+    expect(text).toMatch(/replies and decisions are left out/);
+    expect(text).toMatch(/test cases stay exactly as they were/);
+    expect(text).toMatch(/asks for a file/);
     expect(text).toMatch(/same judge version and the same test cases version/);
   });
 });
@@ -163,7 +166,7 @@ describe('Help for testing another version of the judge (US12)', () => {
 describe('Help for reproducing and auditing a result (US13)', () => {
   it('explains the recomputation on load, what is compared and what is shown when it differs', () => {
     render(<HelpStep />);
-    const section = screen.getByRole('heading', { name: 'Files: the test project and the evaluation' }).closest('section')!;
+    const section = screen.getByRole('heading', { name: 'Files: the test project' }).closest('section')!;
     const text = (section.textContent ?? '').replace(/\s+/g, ' ');
     expect(within(section).getByText('Reproducing and auditing a result.')).toBeTruthy();
     expect(text).toMatch(/recalculates the numbers/);
@@ -192,7 +195,8 @@ describe('Help for marking after each reply (US8)', () => {
   it('names the buttons and what each one does', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
-    for (const label of ['Add finding…', 'Remove', 'Second opinion…', 'Apply opinion', 'Ignore', 'Note', 'Approve', 'Issue: false positive', 'Real error']) expect(text).toContain(label);
+    for (const label of ['Add finding…', 'Remove', 'Second opinion…', 'Apply opinion', 'Ignored', 'Not found', 'False positive', 'Genuine error', 'No more findings']) expect(text).toContain(label);
+    expect(text).toMatch(/until you point at another/); // the mark of a finding in Judge reply (T341, FR-055)
     expect(text).toMatch(/replaces a mark set by hand/);
     expect(text).toMatch(/classifies none/);
     expect(text).toMatch(/one case at a time/);
@@ -214,10 +218,10 @@ describe('Help for marking after each reply (US8)', () => {
 });
 
 describe('Help for the Results step (US9)', () => {
-  it('explains the overall result, the thresholds in Details and Load check settings', () => {
+  it('explains the overall result and the thresholds in Details', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
-    for (const label of ['Details', 'Load check settings', 'Works', 'Does not work', 'Inconclusive', 'borderline', '95% interval']) expect(text).toContain(label);
+    for (const label of ['Details', 'Works', 'Does not work', 'Inconclusive', 'borderline', '95% interval']) expect(text).toContain(label);
     expect(text).toMatch(/at least 80%/);
     expect(text).toMatch(/at most 10%/);
     expect(text).toMatch(/minimum test size is fixed/i);
@@ -226,22 +230,10 @@ describe('Help for the Results step (US9)', () => {
   it('explains the three views, the read-only case view and what the report holds, and that files contain your data', () => {
     render(<HelpStep />);
     const text = document.body.textContent ?? '';
-    for (const label of ['Export HTML report', 'Error analysis', 'Test case list', 'Open on Run', 'provisional', 'counts only']) expect(text).toContain(label);
+    for (const label of ['Export HTML report', 'Error analysis', 'Test case list', 'Open on Test run', 'not decided yet']) expect(text).toContain(label);
+    expect(text).toMatch(/detection rate of every group/);
     expect(text).toMatch(/contain your data/i);
     expect(text).toMatch(/print/i);
-  });
-
-  it('quotes the example of check settings from examples/metrics', () => {
-    render(<HelpStep />);
-    const example = JSON.stringify(JSON.parse(readFileSync('examples/metrics/checks-example.json', 'utf8')));
-    const pre = [...document.querySelectorAll('pre.example')].map((p) => {
-      try {
-        return JSON.stringify(JSON.parse(p.textContent ?? ''));
-      } catch {
-        return undefined;
-      }
-    });
-    expect(pre).toContain(example);
   });
 });
 
@@ -281,15 +273,15 @@ describe('Help is complete before the first release (T195, FR-006, contracts/ui-
     const text = help();
     const names = [
       // adding and correcting test cases
-      'From JSON', 'Clean case', 'Case with errors', 'Show JSON', 'Clone', 'Edit expected errors', 'Reopen test cases', 'Finalize test cases',
+      'From JSON', 'Clean case', 'Case with errors', 'Edit expected errors', 'Start test run',
       // loading
-      'Import test cases', 'Load check settings', 'Load example', 'Load metric definition',
-      // marks of Run, the second opinion
-      'Found', 'Issue: missed', 'Issue: false positive', 'Real error', 'Ignore', 'Add finding…', 'Second opinion', 'Apply opinion',
-      // the two files, Continue, per case
-      'Save test project', 'Save evaluation', 'Load test project', 'Load evaluation', 'Continue', 'evaluated per case',
+      'Import test cases', 'Load demo…',
+      // marks of Test run, the second opinion
+      'Found', 'Not found', 'False positive', 'Genuine error', 'Ignored', 'Add finding…', 'Second opinion', 'Apply opinion',
+      // the one file, Continue, per case
+      'Save test project', 'Load test project', 'Continue', 'evaluated per case',
       // results
-      'Summary', 'Error analysis', 'provisional', 'Inconclusive', 'thresholds',
+      'Summary', 'Error analysis', 'Inconclusive', 'thresholds',
     ];
     expect(names.filter((name) => !text.includes(name))).toEqual([]);
   });
@@ -313,7 +305,7 @@ describe('Help is complete before the first release (T195, FR-006, contracts/ui-
   it('lists every file format of docs/schemas with its format name, the JSON Schema and the example file', () => {
     const text = help();
     const schemas = readdirSync('docs/schemas').filter((f) => f.endsWith('.schema.json'));
-    expect(schemas.length).toBe(6);
+    expect(schemas.length).toBe(4);
     for (const file of schemas) {
       const schema = JSON.parse(readFileSync(`docs/schemas/${file}`, 'utf8')) as { properties: { format?: { const: string } } };
       expect(text, `${file} is not described in Help`).toContain(file);
@@ -339,5 +331,61 @@ describe('Help is complete before the first release (T195, FR-006, contracts/ui-
     expect(text).toMatch(/Chrome/);
     expect(text).toMatch(/Edge/);
     expect(text).toMatch(/other browsers the tool shows a notice/i);
+  });
+});
+
+// T225, T269, T341: the Help follows the tool as it is now.
+describe('Help follows the tool (T225, T269, T341)', () => {
+  const help = () => {
+    render(<HelpStep />);
+    return document.body.textContent ?? '';
+  };
+  const sectionHeadings = () => [...document.querySelectorAll('section[aria-labelledby] > h3[id]')] as HTMLElement[];
+
+  it('starts with a list of its sections, and each entry links to the heading of one section, in order (T225)', () => {
+    render(<HelpStep />);
+    const nav = screen.getByRole('navigation', { name: 'Help sections' });
+    const links = within(nav).getAllByRole('link');
+    const headings = sectionHeadings();
+    expect(links.length).toBe(headings.length);
+    expect(links.map((l) => l.getAttribute('href'))).toEqual(headings.map((h) => `#${h.id}`));
+    expect(links.map((l) => l.textContent)).toEqual(headings.map((h) => h.textContent));
+    expect(nav.compareDocumentPosition(headings[0]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy(); // the list is above the first section
+  });
+
+  it('shows no name of the old flow, of removed buttons or of the old look (T225, T269, T341)', () => {
+    const text = help();
+    const stale = [
+      'Save evaluation', 'Load evaluation', 'New evaluation', 'evaluation file', 'Finalize', 'Reopen test cases', 'Run again with a new judge',
+      'Load check settings', 'check settings', 'check configuration', 'checks-example', 'judge-the-judge-checks', 'Load metric definition',
+      'Approve', 'provisional', 'Provisional', 'Show JSON', 'Clone', 'File menu', 'Issue: missed', 'Issue: false positive', 'Real error',
+      'Add categories', 'Open on Run', 'Judge’s reply', 'finalized',
+    ];
+    expect(stale.filter((word) => text.includes(word))).toEqual([]);
+    expect(text).not.toMatch(/\bRun\b/); // the step is "Test run"
+    expect(text).not.toMatch(/Part \d of \d/); // the window of a case is one page
+    expect(text).not.toMatch(/\bNote\b/); // the per-case Note button is gone (T231)
+  });
+
+  it('names the check rules, not a check file: the thresholds are in Details and saved with the test project (T269)', () => {
+    const text = help();
+    expect(text).toMatch(/check rules/);
+    expect(text).toMatch(/saved with the test project/);
+    expect(text).not.toMatch(/judge-the-judge-checks/);
+  });
+
+  it('says that the field of an error rule is chosen in each rule, not once under the sample reply (T232)', () => {
+    expect(help()).toMatch(/Where the error is/);
+  });
+
+  it('names the parts of the case window of Test run as they are, and the mark of a finding in Judge reply (T341, FR-055)', () => {
+    const text = help();
+    for (const label of ['Verify the judge reply', 'Show the issue']) expect(text).toContain(label);
+    expect(text).toMatch(/whole JSON object/);
+    expect(text).toMatch(/until you point at another/);
+  });
+
+  it('says that the demo opens on Judge (T243)', () => {
+    expect(help()).toMatch(/opens on the Judge step/);
   });
 });

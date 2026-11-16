@@ -5,7 +5,6 @@ import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { checkCaseJson } from '../../src/core/cases/case-json';
 import { planImport } from '../../src/core/cases/validate-test-cases';
-import { readChecks } from '../../src/core/io/checks-file';
 import { readMetric } from '../../src/core/io/metric-file';
 import { readOpinion } from '../../src/core/io/opinions';
 import { readTestCasesCsv } from '../../src/core/io/test-cases-csv';
@@ -18,7 +17,6 @@ const files = (directory: string): string[] =>
   readdirSync(directory, { withFileTypes: true }).flatMap((entry) => (entry.isDirectory() ? files(join(directory, entry.name)) : [join(directory, entry.name)]));
 
 const VARIABLES = ['source_text', 'summary'];
-const MEASURES = (JSON.parse(text('src/core/metrics/builtin/checks.default.json')) as { rules: Array<{ measure: string }> }).rules.map((r) => r.measure);
 
 /** What a reader gives back: nothing but `ok`, and the notes it wrote. */
 interface Outcome {
@@ -62,10 +60,6 @@ const readers: Record<string, { read: (path: string) => Outcome; allowedNotes?: 
   },
   'examples/metrics/bias-example.json': { read: (p) => readMetric(text(p)) },
   'examples/metrics/bias-verdict-example.json': { read: (p) => readMetric(text(p)) },
-  'examples/metrics/checks-example.json': {
-    read: (p) => readChecks(text(p), MEASURES),
-    allowedNotes: /minimum test size is fixed/i, // the example shows the key on purpose: the tool says it is fixed
-  },
   // The numbers of the demo are checked against the recomputation in tests/integration/demo.test.ts.
   'examples/demo/expected-results.json': { read: (p) => ({ ok: typeof JSON.parse(text(p)) === 'object' }) },
 };

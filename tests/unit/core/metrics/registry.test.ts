@@ -54,7 +54,7 @@ describe('operations', () => {
   });
 });
 
-describe('check configuration', () => {
+describe('check rules', () => {
   it('the bundled default holds the four rules and the fixed minimum test size', () => {
     expect(checksDefault.rules).toEqual([
       { measure: 'detection_rate', comparison: 'at_least', value: 0.8 },

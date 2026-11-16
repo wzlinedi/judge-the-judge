@@ -77,11 +77,6 @@ export function setThresholds(state: AppState, checks: CheckConfiguration): AppS
   return edit(state, (e) => ({ ...e, checks }));
 }
 
-/** Check settings loaded from a file with "Load check settings". */
-export function loadCheckSettings(state: AppState, checks: CheckConfiguration): AppState {
-  return edit(state, (e) => ({ ...e, checks }));
-}
-
 /** A reply was saved: it counts towards the reminder and is unsaved work. */
 export function recordReplySaved(state: AppState): AppState {
   return { ...state, unsaved: true, repliesSinceSave: state.repliesSinceSave + 1 };

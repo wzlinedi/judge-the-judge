@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "case.schema.json",
   "title": "Judge the Judge: one test case",
-  "description": "The case JSON: what \"Paste JSON\", \"Show JSON\" and \"Copy JSON\" use (file-formats.md, section 2).",
+  "description": "The case JSON: what \"From JSON\" and the JSON editor of the case window use (file-formats.md, section 2).",
   "type": "object",
   "properties": {
     "name": {

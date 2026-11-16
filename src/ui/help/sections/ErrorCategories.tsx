@@ -10,13 +10,13 @@ export function ErrorCategories() {
         it has no file of its own.
       </p>
       <p>
-        Add categories by typing or pasting one per line, optionally as <code>name - description</code>, and press <strong>{labels.addCategory}</strong>. Names are
-        written in lower case with dashes, and names already in the catalog are skipped and reported. A category in a case you paste joins the catalog when the case
-        is saved.
+        Press <strong>{labels.addOneCategory}</strong>, type the name of the category in lower case with dashes and, if you like, what this kind of error is with an
+        example, then press <strong>Add</strong>. A name already in the catalog is refused, and the message says why. A category in a case you paste joins the catalog
+        when the case is saved.
       </p>
       <p>
         Each category shows how many test cases use it. <strong>{labels.rename}</strong> changes the name in every expected error that uses it, also after the
-        test cases are finalized. <strong>{labels.remove}</strong> works at once for an unused category; for a used one it is disabled and the sentence beside it
+        test run has started. <strong>{labels.remove}</strong> works at once for an unused category; for a used one it is disabled and the sentence beside it
         says how to go on. The tool never adds, renames or removes a category by itself, and your judge does not have to use the catalog.
       </p>
     </section>

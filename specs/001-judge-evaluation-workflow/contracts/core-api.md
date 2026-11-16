@@ -70,7 +70,7 @@ returns text.
 | `decodeBytes(bytes)` | Text and the encoding used (UTF-8, or Windows-1250 as fallback). |
 | `exampleCsv(variables)` | The file of "Download example file", built from the current variables (FR-030). |
 | `readOpinion(text, caseId)` | Section 7: the verification opinion for one case; refuses a list of several opinions and an opinion for another case, and a JSON that cannot be read (line and column), with the reason. |
-| `readMetricDefinition(text)` / `readCheckConfiguration(text)` | metric-and-checks.md. The tool no longer reads a check configuration from the Results step (T266); the reader goes with its format in T225. |
+| `readMetricDefinition(text)` | metric-and-checks.md. The check rules have no file of their own: they are read with the test project (T266, T269). |
 | `buildHtmlReport(project, results, now, toolVersion)` | Section 8: one self-contained HTML document as text, every value escaped; says at the top how many cases are not decided yet (not run, awaiting verification) when there are any; no "provisional" mark (T267). |
 
 ## Prompts for the user's LLM (`core/generation`)

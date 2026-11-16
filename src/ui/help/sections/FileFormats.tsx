@@ -6,16 +6,16 @@ interface Format {
   schema: string;
   example: string;
   use: string;
+  /** What follows the name of the button. */
+  note?: string;
 }
 
 /** The files the tool reads, with the name each carries in its `format` key (contracts/file-formats.md). docs/schemas holds one JSON Schema for each. */
 const FORMATS: readonly Format[] = [
   { what: 'Test project', format: 'judge-the-judge-test-project', schema: 'test-project.schema.json', example: 'examples/demo/test-project.json', use: labels.loadTestProject },
-  { what: 'Evaluation', format: 'judge-the-judge-evaluation', schema: 'evaluation.schema.json', example: 'examples/demo/evaluation.json', use: labels.loadEvaluation },
   { what: 'Test cases', format: 'judge-the-judge-test-cases', schema: 'test-cases.schema.json', example: 'examples/files/test-cases-example.json', use: labels.importTestCases },
   { what: 'One test case', format: '', schema: 'case.schema.json', example: 'examples/files/case-example.json', use: 'Paste JSON' },
-  { what: 'Metric definition', format: 'judge-the-judge-metric', schema: 'metric.schema.json', example: 'examples/metrics/bias-example.json', use: labels.loadMetricDefinition },
-  { what: 'Check settings', format: 'judge-the-judge-checks', schema: 'checks.schema.json', example: 'examples/metrics/checks-example.json', use: labels.loadCheckSettings },
+  { what: 'Metric definition', format: 'judge-the-judge-metric', schema: 'metric.schema.json', example: 'examples/metrics/bias-example.json', use: labels.loadTestProject, note: ', as the metric of a test project file (docs/how-to-add-a-metric.md)' },
 ];
 
 export function FileFormats() {
@@ -37,7 +37,7 @@ export function FileFormats() {
             ) : (
               <>: no <code>format</code> key, it is the case itself</>
             )}
-            , opened with <strong>{f.use}</strong>. Example: <code>{f.example}</code>. Layout: <code>docs/schemas/{f.schema}</code>.
+            , opened with <strong>{f.use}</strong>{f.note ?? ''}. Example: <code>{f.example}</code>. Layout: <code>docs/schemas/{f.schema}</code>.
           </li>
         ))}
         <li>

@@ -8,11 +8,11 @@ export function ImportingCases() {
     <section aria-labelledby="help-import">
       <h3 id="help-import">Importing test cases from a file</h3>
       <p>
-        <strong>{labels.importTestCases}</strong> in the File menu adds many test cases at once from one CSV or JSON file. The whole file is checked first and you read a
+        <strong>{labels.importTestCases}</strong> in the More menu adds many test cases at once from one CSV or JSON file. The whole file is checked first and you read a
         summary before anything is added: how many cases can be imported (clean and with injected errors), the invalid rows with their position and reason, fields that
         match no variable of the judge prompt, variables that have no field, categories that are not in the catalog and the identifiers that were already used. Then you
-        import the valid cases or cancel, and a cancelled or failed import changes nothing. The cases are added to the ones you already have, also after the test cases
-        are finalized; they then start as Not run and are marked &ldquo;added after first reply&rdquo; once replies exist. A test project may hold at most 500 cases.
+        import the valid cases or cancel, and a cancelled or failed import changes nothing. The cases are added to the ones you already have, also after the test run
+        has started; they then start as Not run and are marked &ldquo;added after first reply&rdquo; once replies exist. A test project may hold at most 500 cases.
       </p>
       <p>
         <strong>The CSV.</strong> A spreadsheet is the easy way to bring in many clean cases. It has an optional <code>name</code> column and one column{' '}
@@ -29,7 +29,7 @@ export function ImportingCases() {
       <pre class="example">{jsonExample.trimEnd()}</pre>
       <p>
         <strong>{labels.exportTestCases}</strong> writes every case, clean ones included, to a JSON file that <strong>{labels.importTestCases}</strong> reads back. It asks for
-        a file name every time. It is an export, not a save: it does not clear the indicator of unsaved changes, and only the test project and the evaluation save the
+        a file name every time. It is an export, not a save: it does not clear the indicator of unsaved changes, and only <strong>{labels.saveTestProject}</strong> saves the
         whole work.
       </p>
     </section>

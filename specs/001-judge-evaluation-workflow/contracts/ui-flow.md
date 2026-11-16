@@ -369,6 +369,7 @@ leads to the case window.
   result and thresholds; exporting, and what the cases not decided yet mean for the numbers; files and their formats, with
   examples; examples and demo data; metrics and thresholds; the supported browsers (Chrome and
   Edge); privacy (nothing is stored or sent; exported files contain your data).
+- **The list of sections** (T225): under the title **Help**, a navigation "Help sections" with one link for each section, in the order of the page; each link goes to the heading of its section.
 - Examples are the files in `examples/`, the same ones the contract tests validate.
 - Each section is written together with the feature it describes (Principle VIII); the Help is
   complete before the first public release.

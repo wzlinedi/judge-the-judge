@@ -14,8 +14,8 @@ export function VerdictJudges() {
       <p>
         When every error rule uses only fields outside any list, the tool knows this and says on the Judge step that the judge is <strong>evaluated per case</strong>. There is no place
         in the reply to match, so a case is decided as a whole: when the reply is flagged (a rule holds), every expected error of the case is <strong>Found</strong>, also one without a
-        fragment; when it is not flagged, every one is <strong>Issue: missed</strong>. Both marks have the source <em>Automatic</em> and you can still change them. On a clean case a flag is an
-        additional finding, and you decide it as always: <strong>Issue: false positive</strong> or <strong>Real error</strong>.
+        fragment; when it is not flagged, every one is <strong>{labels.issueMissed}</strong>. Both marks have the source <em>Automatic</em> and you can still change them. On a clean case a flag is an
+        additional finding, and you decide it as always: <strong>{labels.issueFalsePositive}</strong> or <strong>{labels.realError}</strong>.
       </p>
       <p>
         The Summary then counts cases, not errors, because the judge does not say which error it found. Its two rates are the <strong>Case detection rate</strong> (decided cases with errors

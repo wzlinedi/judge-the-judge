@@ -30,7 +30,6 @@ open the files the Help names (T220).
 | `judge-the-judge-test-cases` | Test cases alone: "Import test cases" and "Export test cases" | yes | yes |
 | (CSV, no `format`) | Clean cases as a spreadsheet ("Import test cases") | yes | example only |
 | `judge-the-judge-metric` | Metric definition | yes | example only |
-| `judge-the-judge-checks` | Check configuration | yes | example only |
 | (HTML) | Report for people | no | yes |
 
 The user works with one file of their own: the test project (section 1). There is no separate
@@ -110,7 +109,7 @@ the test cases, the active metric, the thresholds and, once the test run has sta
   the session (T243); it replaces a loaded metric with the same id, the default Accuracy file
   included (T274). A file that names a
   metric which is not loaded and carries no definition of it is refused with a plain message
-  (T274). `checks` has the layout of the check configuration (metric-and-checks.md, section 2)
+  (T274). `checks` has the layout of the check rules (metric-and-checks.md, section 2)
   without `format`; the fixed minimum test size is not stored at the top level (see
   `test_run.minimum_sample`).
 - **Loading** (FR-020, FR-051, FR-073, FR-076), in this order:
@@ -401,7 +400,7 @@ project" writes it whole. It is never written to a file of its own.
   drops it (section 1). "Save test project" writes the whole file to one chosen file and
   overwrites it on later saves (research.md, sections 25 and 32; FR-076).
 
-## 6. Metric definition and check configuration
+## 6. Metric definition and check rules
 
 See [metric-and-checks.md](./metric-and-checks.md).
 

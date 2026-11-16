@@ -6,15 +6,15 @@ import { labels } from '../../../src/ui/labels';
 
 const required = [
   'Load test project…', 'Save test project', 'Save test project as…', 'Save test project first', 'Discard', 'Import test cases…', 'Export test cases…', 'Load demo…',
-  'Load metric definition…', 'Continue', 'Explain', 'More', 'Add test case…', 'From JSON',
+  'Continue', 'Explain', 'More', 'Add test case…', 'From JSON',
   'Clean case', 'Case with errors', 'Save case', 'Close without saving', 'Open',
-  'Rename', 'Show JSON', 'Rebuild prompt', 'Add category', 'Show the issue', 'Edit expected errors',
-  'Paste reply', 'Save reply', 'Add finding…', 'Second opinion…', 'Apply opinion', 'Approve',
+  'Rename', 'Rebuild prompt', 'Add category', 'Show the issue', 'Edit expected errors',
+  'Paste reply', 'Save reply', 'Add finding…', 'Second opinion…', 'Apply opinion', 'No more findings',
   // the rest of FR-008
-  'New test project', 'Add rule', 'Add condition', 'Remove', 'Add categories',
-  'Start test run', 'Download example file', 'Next', 'Copy prompt', 'Add error', 'Previous case',
+  'New test project', 'Add rule', 'Add condition', 'Remove',
+  'Start test run', 'Download example file', 'Copy prompt', 'Add error', 'Previous case',
   'Next case', 'Found', 'Not found', 'False positive', 'Genuine error', 'Ignored', 'Cancel',
-  'Summary', 'Error analysis', 'Test case list', 'Export HTML report…', 'Load check settings…',
+  'Summary', 'Error analysis', 'Test case list', 'Export HTML report…',
   'Help',
 ];
 
@@ -51,9 +51,8 @@ describe('labels (FR-008)', () => {
 });
 
 // T304 (f): the words of the old two-file flow are gone from the labels and the components.
-// Not scanned: src/ui/help, and the legacy label keys that Help still reads (both go with the Help update, T225).
+// Not scanned: src/ui/help (its words are checked in help.test.tsx).
 describe('no word of the old flow (T304 f)', () => {
-  const legacyKeys = ['finalizeTestCases', 'editTestCases', 'editJudgeAndRunAgain', 'loadEvaluation', 'saveEvaluation', 'saveEvaluationAs', 'saveEvaluationFirst', 'startNewEvaluation'];
   const banned = /evaluation file|Run again with a new judge|Reopen test cases|Finalize|Edit test cases|Save evaluation|Load evaluation|New evaluation|Open on Run/i;
 
   const sourceFiles = (dir: string): string[] =>
@@ -64,8 +63,7 @@ describe('no word of the old flow (T304 f)', () => {
     });
 
   it('the labels outside the legacy keys use none of them', () => {
-    const live = Object.entries(labels).filter(([key]) => !legacyKeys.includes(key));
-    for (const [key, value] of live) expect(value, key).not.toMatch(banned);
+    for (const [key, value] of Object.entries(labels)) expect(value, key).not.toMatch(banned);
   });
 
   it('no file under src/ui (outside help) or src/app shows them in a string', () => {
@@ -80,6 +78,11 @@ describe('no word of the old flow (T304 f)', () => {
       });
     }
     expect(offenders).toEqual([]);
+  });
+
+  it('has no label that only the Help used: the keys of the old two-file flow and of the old windows are gone (T225, T269)', () => {
+    const gone = ['loadMetricDefinition', 'startNewEvaluation', 'loadEvaluation', 'saveEvaluation', 'saveEvaluationAs', 'saveEvaluationFirst', 'next', 'back', 'addCategory', 'clone', 'finalizeTestCases', 'editTestCases', 'editJudgeAndRunAgain', 'showJson', 'approve', 'loadCheckSettings'];
+    expect(Object.keys(labels).filter((key) => gone.includes(key))).toEqual([]);
   });
 
   it('names the step "Test run" and the new menu item "New test project"', () => {

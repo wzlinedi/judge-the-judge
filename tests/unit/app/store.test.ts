@@ -3,7 +3,6 @@ import {
   applyLoadedTestProject,
   createState,
   edit,
-  loadCheckSettings,
   recordReplySaved,
   saveTestProject,
   saveTestProjectAs,
@@ -35,10 +34,9 @@ describe('store actions', () => {
     expect(edit(createState(), (e) => withRun(e, { model_note: 'x' })).unsaved).toBe(true);
   });
 
-  it('a threshold change and loaded check settings set it too', () => {
+  it('a threshold change sets it too', () => {
     const rules = [{ measure: 'detection_rate', comparison: 'at_least' as const, value: 0.9 }];
     expect(setThresholds(createState(), { rules }).unsaved).toBe(true);
-    expect(loadCheckSettings(createState(), { rules }).unsaved).toBe(true);
     expect(setThresholds(createState(), { rules }).project.checks.rules[0]?.value).toBe(0.9);
   });
 

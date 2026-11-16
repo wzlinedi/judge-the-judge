@@ -10,8 +10,9 @@ export function SampleReplyRules() {
       </p>
       <p>
         The tool lists the fields it finds with their paths, such as <code>claims[].verdict</code> (a field of each item of the list <code>claims</code>), the
-        kind of value and the values seen. For each list, choose the field that holds the text of a finding: the words of the judged text the judge points at.
-        The tool proposes the most likely one.
+        kind of value and the values seen. In each rule, <strong>Where the error is</strong> names the field of a list item that holds the words of the judged text the judge points at. The
+        tool proposes the most likely one and you can change it. It is shown only when the items have more than one text field, and a rule about the whole
+        reply has none.
       </p>
       <p>
         An <strong>error rule</strong> says when the judge has reported an error. Press <strong>{labels.addRule}</strong>, name it, and use{' '}

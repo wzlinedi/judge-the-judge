@@ -2,11 +2,10 @@
 // reads them, so extra keys stay allowed and a key with a default is optional.
 import { z } from 'zod';
 import { importCase } from '../src/core/io/test-cases-json';
-import { CHECKS_FORMAT, CHECKS_SCHEMA_VERSION } from '../src/core/schemas/checks';
 import { METRIC_FORMAT, METRIC_SCHEMA_VERSION, metricSchema } from '../src/core/schemas/metric';
 import { testCaseSchema } from '../src/core/schemas/test-case';
 import { TEST_CASES_FORMAT, TEST_CASES_SCHEMA_VERSION } from '../src/core/schemas/test-cases';
-import { checksSchema, TEST_PROJECT_FORMAT, TEST_PROJECT_SCHEMA_VERSION, testProjectSchema } from '../src/core/schemas/test-project';
+import { TEST_PROJECT_FORMAT, TEST_PROJECT_SCHEMA_VERSION, testProjectSchema } from '../src/core/schemas/test-project';
 
 export const SCHEMA_DIRECTORY = 'docs/schemas';
 
@@ -23,13 +22,8 @@ const caseJson = z.object({
 const sources: Record<string, { title: string; description: string; schema: z.ZodType }> = {
   'case.schema.json': {
     title: 'Judge the Judge: one test case',
-    description: 'The case JSON: what "Paste JSON", "Show JSON" and "Copy JSON" use (file-formats.md, section 2).',
+    description: 'The case JSON: what "From JSON" and the JSON editor of the case window use (file-formats.md, section 2).',
     schema: caseJson,
-  },
-  'checks.schema.json': {
-    title: 'Judge the Judge: check configuration',
-    description: 'The thresholds of the checks (metric-and-checks.md, section 2). `minimum_sample` is read and ignored: the minimum test size is fixed.',
-    schema: z.object({ ...envelope(CHECKS_FORMAT, CHECKS_SCHEMA_VERSION), rules: checksSchema.shape.rules.min(1), minimum_sample: z.unknown().optional() }),
   },
   'metric.schema.json': {
     title: 'Judge the Judge: metric definition',

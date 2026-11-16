@@ -19,7 +19,7 @@ export function Variables() {
         written. Rephrase it, for example with a space between the braces.
       </p>
       <p>
-        Once the test cases are finalized the prompt is fixed, so that every reply is judged by the same prompt. The judge version shown under the prompt
+        Once the test run has started the prompt is fixed, so that every reply is judged by the same prompt. The judge version shown under the prompt
         changes whenever the prompt, the rules or the reading of the reply change.
       </p>
     </section>

@@ -13,7 +13,6 @@ describe('docs/schemas', () => {
   it('has a schema for every file format the tool reads, and the case JSON', () => {
     expect(Object.keys(generated).sort()).toEqual([
       'case.schema.json',
-      'checks.schema.json',
       'metric.schema.json',
       'test-cases.schema.json',
       'test-project.schema.json',
@@ -37,12 +36,18 @@ describe('docs/schemas', () => {
     ['test-project.schema.json', 'judge-the-judge-test-project', 2],
     ['test-cases.schema.json', 'judge-the-judge-test-cases', 1],
     ['metric.schema.json', 'judge-the-judge-metric', 1],
-    ['checks.schema.json', 'judge-the-judge-checks', 1],
   ])('%s requires format "%s" and schema_version %i, which the readers check', (name, format, version) => {
     const schema = JSON.parse(published(name)) as Schema;
     expect(schema.properties?.['format']?.const).toBe(format);
     expect(schema.properties?.['schema_version']?.const).toBe(version);
     expect(schema.required).toEqual(expect.arrayContaining(['format', 'schema_version']));
+  });
+
+  it('the check configuration format is gone: no schema, no example, no reader, no store action (T269)', async () => {
+    for (const path of ['docs/schemas/checks.schema.json', 'examples/metrics/checks-example.json', 'src/core/io/checks-file.ts', 'src/core/schemas/checks.ts', 'tests/contract/checks-file.test.ts']) expect(existsSync(path), path).toBe(false);
+    expect(Object.keys(generated)).not.toContain('checks.schema.json');
+    const store = (await import('../../src/app/store')) as Record<string, unknown>;
+    expect(store['loadCheckSettings']).toBeUndefined();
   });
 
   it('the evaluation format is gone: no schema, no export of it (T289)', () => {
@@ -85,7 +90,6 @@ describe('docs/schemas', () => {
       ['examples/files/case-example.json', 'case.schema.json'],
       ['examples/metrics/bias-example.json', 'metric.schema.json'],
       ['examples/metrics/bias-verdict-example.json', 'metric.schema.json'],
-      ['examples/metrics/checks-example.json', 'checks.schema.json'],
     ];
     for (const [example, name] of examples) {
       const file = JSON.parse(readFileSync(example, 'utf8')) as Record<string, unknown>;

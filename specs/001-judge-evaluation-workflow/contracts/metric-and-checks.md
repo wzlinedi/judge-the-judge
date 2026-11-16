@@ -1,4 +1,4 @@
-# Contract: Metric Definitions and Check Configuration
+# Contract: Metric Definitions and Check Rules
 
 **Date**: 2026-11-11 | **Plan**: [../plan.md](../plan.md) | **Constitution**: Principle VI
 
@@ -103,7 +103,7 @@ judge, with or without a loaded definition; a definition may list them but does 
 | `case_detection_rate` | `ratio` of `defective_cases_flagged` to `defective_cases_decided`, `wilson95`, higher is better |
 | `clean_case_false_positive_rate` | `ratio` of `clean_cases_with_false_positive` to `clean_cases_decided`, `wilson95`, lower is better |
 
-The check configuration holds rules for them as for any measure (section 2); the bundled default
+The check rules hold rules for them as for any measure (section 2); the bundled default
 gives them the same defaults as the per-error rates. Only the rules whose measure is in use apply:
 in this mode the rules on `case_detection_rate` and `clean_case_false_positive_rate`, otherwise the
 rules on `detection_rate` and `false_positive_rate`. Nothing in code maps one rule onto another.
@@ -174,8 +174,7 @@ Since T266 and constitution 2.0.0 there is no file for the thresholds on their o
 - The two rules that apply are shown and editable in the collapsed "Details" section of the Summary
   view, the only thing that can be changed on the Results step (FR-069). There is no "Load check
   settings" (T266): the two defaults are edited there, and the separate checks file format, its
-  schema and `examples/metrics/checks-example.json` are removed together with the Help rows that
-  name them (T225). The rules in use are stored in every test project file.
+  schema and `examples/metrics/checks-example.json` were removed with the Help rows that named them (T269). The rules in use are stored in every test project file.
 - Invalid rules in a loaded test project file (unknown measure, value out of range, unknown comparison) are rejected with a plain message and the rules in use stay unchanged.
 
 ## 3. Registry
