@@ -66,6 +66,69 @@ describe('ErrorBoundary', () => {
   });
 });
 
+describe('ErrorBoundary with an error outside drawing (T391, Constitution IX, FR-084)', () => {
+  it('shows the panel when a click handler throws', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const swallow = (e: ErrorEvent) => e.preventDefault();
+    window.addEventListener('error', swallow);
+    try {
+      render(
+        <ErrorBoundary onSave={async () => {}} onReload={() => {}}>
+          <button
+            type="button"
+            onClick={() => {
+              throw new Error('The click failed');
+            }}
+          >
+            Do it
+          </button>
+        </ErrorBoundary>,
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Do it' }));
+      await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('The click failed'));
+    } finally {
+      window.removeEventListener('error', swallow);
+    }
+  });
+
+  it('shows the panel when an action\'s promise is rejected and nobody catches it', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(
+      <ErrorBoundary onSave={async () => {}} onReload={() => {}}>
+        <p>All fine</p>
+      </ErrorBoundary>,
+    );
+    const event = new Event('unhandledrejection') as Event & { reason: unknown };
+    event.reason = new Error('The action failed');
+    window.dispatchEvent(event);
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('The action failed'));
+    expect(screen.getByRole('button', { name: 'Save test project as…' })).toBeTruthy();
+  });
+
+  it('ignores a browser error event with no error object (a foreign "Script error." or a ResizeObserver note)', async () => {
+    render(
+      <ErrorBoundary onSave={async () => {}}>
+        <p>All fine</p>
+      </ErrorBoundary>,
+    );
+    window.dispatchEvent(new ErrorEvent('error', { message: 'ResizeObserver loop completed with undelivered notifications.' }));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.getByText('All fine')).toBeTruthy();
+  });
+
+  it('stops listening once it is gone', () => {
+    const remove = vi.spyOn(window, 'removeEventListener');
+    const view = render(
+      <ErrorBoundary onSave={async () => {}}>
+        <p>All fine</p>
+      </ErrorBoundary>,
+    );
+    view.unmount();
+    expect(remove.mock.calls.map((c) => c[0])).toEqual(expect.arrayContaining(['error', 'unhandledrejection']));
+  });
+});
+
 describe('App with a step that throws', () => {
   it('shows the panel instead of a white page, and "Save test project as…" writes the work held in the state', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});

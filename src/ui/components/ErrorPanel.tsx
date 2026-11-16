@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact';
-import { useErrorBoundary } from 'preact/hooks';
+import { useEffect, useErrorBoundary, useState } from 'preact/hooks';
 
 export interface ErrorBoundaryProps {
   /** Opens "Save test project as…" for the work held in the state; the page below it is gone, the work is not. */
@@ -28,8 +28,27 @@ export function ErrorPanel({ error, onSave, onReload }: { error: unknown } & Pic
   );
 }
 
+/**
+ * Shows the panel for an error while drawing, and also for one that Preact does not catch: an error thrown in an event handler
+ * or a promise of an action that is rejected and caught by nobody (Constitution IX, FR-084, T391).
+ */
 export function ErrorBoundary({ onSave, onReload, children }: ErrorBoundaryProps) {
-  const [error] = useErrorBoundary();
-  if (error !== undefined) return <ErrorPanel error={error} onSave={onSave} {...(onReload ? { onReload } : {})} />;
+  const [drawError] = useErrorBoundary();
+  const [outsideError, setOutsideError] = useState<{ error: unknown } | null>(null);
+  useEffect(() => {
+    // An event with no error object is not ours: a foreign "Script error." or a browser note such as the ResizeObserver loop.
+    const onError = (event: ErrorEvent) => {
+      if (event.error !== undefined && event.error !== null) setOutsideError({ error: event.error });
+    };
+    const onRejection = (event: PromiseRejectionEvent) => setOutsideError({ error: event.reason });
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onRejection);
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onRejection);
+    };
+  }, []);
+  const error = drawError !== undefined ? drawError : outsideError?.error;
+  if (drawError !== undefined || outsideError !== null) return <ErrorPanel error={error} onSave={onSave} {...(onReload ? { onReload } : {})} />;
   return <>{children}</>;
 }

@@ -2,6 +2,7 @@
 // status is Pass or Fail. Ignored items are left out of every counter except the two "ignored" ones.
 import type { CountingMode, TestCase } from '../model';
 import type { Effective } from './decisions';
+import { ownValue, setOwn } from '../cases/test-run';
 import type { CaseStatus } from './status';
 
 export interface CountInput {
@@ -39,6 +40,15 @@ export interface Counters {
   /** For a judge evaluated per case: cases with expected errors, once in each category and difficulty their errors have. */
   case_per_category: Record<string, { cases: number; flagged: number }>;
   case_per_difficulty: Record<string, { cases: number; flagged: number }>;
+}
+
+/** The entry under `key`, created as an own entry when it is not there; a name such as `__proto__` or `constructor` is only a name (S1, Constitution IX). */
+function entry<T>(record: Record<string, T>, key: string, make: () => T): T {
+  const found = ownValue(record, key);
+  if (found !== undefined) return found;
+  const created = make();
+  setOwn(record, key, created);
+  return created;
 }
 
 export const NO_CATEGORY = '(no category)';
@@ -87,8 +97,8 @@ export function countAll(inputs: readonly CountInput[], mode: CountingMode = 'pe
       const difficulty = meta?.difficulty ?? NOT_SET;
       categories.add(category);
       difficulties.add(difficulty);
-      const byCategory = (c.per_category[category] ??= { expected_total: 0, expected_found: 0 });
-      const byDifficulty = (c.per_difficulty[difficulty] ??= { expected_total: 0, expected_found: 0 });
+      const byCategory = entry(c.per_category, category, () => ({ expected_total: 0, expected_found: 0 }));
+      const byDifficulty = entry(c.per_difficulty, difficulty, () => ({ expected_total: 0, expected_found: 0 }));
       c.expected_total++;
       byCategory.expected_total++;
       byDifficulty.expected_total++;
@@ -115,7 +125,7 @@ export function countAll(inputs: readonly CountInput[], mode: CountingMode = 'pe
       if (mode === 'per_case') {
         for (const [groups, names] of [[c.case_per_category, categories], [c.case_per_difficulty, difficulties]] as const) {
           for (const name of names) {
-            const group = (groups[name] ??= { cases: 0, flagged: 0 });
+            const group = entry(groups, name, () => ({ cases: 0, flagged: 0 }));
             group.cases++;
             if (found > 0) group.flagged++;
           }
@@ -138,10 +148,10 @@ export function countAll(inputs: readonly CountInput[], mode: CountingMode = 'pe
         falsePositive = true;
       }
       const side = real ? 'real' : 'fp';
-      (c.additional_per_category[a.category ?? NO_CATEGORY] ??= { real: 0, fp: 0 })[side]++;
-      (c.additional_per_difficulty[a.difficulty ?? NOT_SET] ??= { real: 0, fp: 0 })[side]++;
+      entry(c.additional_per_category, a.category ?? NO_CATEGORY, () => ({ real: 0, fp: 0 }))[side]++;
+      entry(c.additional_per_difficulty, a.difficulty ?? NOT_SET, () => ({ real: 0, fp: 0 }))[side]++;
       for (const rule of a.rules.length > 0 ? a.rules : [ADDED_BY_HAND]) {
-        (c.per_rule[rule] ??= { real_errors: 0, false_positives: 0 })[real ? 'real_errors' : 'false_positives']++;
+        entry(c.per_rule, rule, () => ({ real_errors: 0, false_positives: 0 }))[real ? 'real_errors' : 'false_positives']++;
       }
     }
     if (falsePositive) {

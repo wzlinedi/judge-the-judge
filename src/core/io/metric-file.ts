@@ -84,7 +84,7 @@ export function readMetric(text: string): ReadResult<MetricDefinition> {
   }
   set.clean_base_cases.forEach((c, i) => {
     for (const variable of variables) {
-      if ((c.fields[variable] ?? '').trim() === '') problems.push({ message: `The clean case "${c.name}" has no text for the variable "${variable}".`, path: `judge_set.clean_base_cases[${i}].fields.${variable}` });
+      if ((Object.hasOwn(c.fields, variable) ? c.fields[variable] ?? '' : '').trim() === '') problems.push({ message: `The clean case "${c.name}" has no text for the variable "${variable}".`, path: `judge_set.clean_base_cases[${i}].fields.${variable}` });
     }
     if (c.expected_errors.length > 0) problems.push({ message: `The clean case "${c.name}" must have no expected_errors.`, path: `judge_set.clean_base_cases[${i}].expected_errors` });
   });

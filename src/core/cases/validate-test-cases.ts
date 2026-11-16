@@ -115,7 +115,7 @@ export function planImport(rows: readonly DraftRow[], preInvalid: readonly Inval
     newIdentifiers: replaced,
     missingCategories: unique(cases.flatMap((c) => c.expected_errors.map((e) => e.category ?? '')).filter((c) => c !== '' && !context.catalog.some((k) => k.name === c))),
     unmatchedFields: unique(cases.flatMap((c) => Object.keys(c.fields)).filter((f) => !context.variables.includes(f))),
-    missingVariables: context.variables.filter((v) => cases.some((c) => !(v in c.fields))),
+    missingVariables: context.variables.filter((v) => cases.some((c) => !Object.hasOwn(c.fields, v))),
     duplicateNames,
     ...(found > MAX_CASES ? { tooMany: { limit: MAX_CASES, found } } : {}),
     notes,

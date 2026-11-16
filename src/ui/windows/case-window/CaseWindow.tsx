@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { addFinding, applyOpinionTo, removeFinding } from '../../../app/actions/decide';
 import { approveCase, setAddedMark, setAdditionalMark, setExpectedMark } from '../../../app/actions/decisions';
 import { reminderDue, removeReply, replaceNeedsQuestion, type ReplyOutcome } from '../../../app/actions/replies';
-import { repliesOf } from '../../../core/cases/test-run';
+import { ownValue, repliesOf } from '../../../core/cases/test-run';
 import type { ReviewedCase } from '../../../core/evaluation/results';
 import { composePrompt } from '../../../core/judge/compose';
 import { extractJson } from '../../../core/judge/extract-json';
@@ -76,13 +76,13 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   const prompt = reply?.prompt ?? composePrompt(evaluation.judge_set.prompt, testCase).text;
   const base = testCase.base ? reviewed.find((r) => r.testCase.id === testCase.base)?.testCase : undefined;
 
-  const text = drafts[caseId] ?? reply?.reply ?? '';
+  const text = ownValue(drafts, caseId) ?? reply?.reply ?? '';
   const changed = text !== (reply?.reply ?? '');
   const setText = (value: string) => setDrafts((d) => ({ ...d, [caseId]: value }));
   /** Forgets the draft of this case; with `only`, only while the box still holds that text (the user may have typed on). */
   const clearDraft = (only?: string) =>
     setDrafts((d) => {
-      if (!(caseId in d) || (only !== undefined && d[caseId] !== only)) return d;
+      if (!Object.hasOwn(d, caseId) || (only !== undefined && d[caseId] !== only)) return d;
       const { [caseId]: _gone, ...rest } = d;
       return rest;
     });
@@ -197,7 +197,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
           {testCase.base ? <span class="muted">{` · Base: ${testCase.base}${base ? ` (${base.name})` : ''}`}</span> : null}
         </p>
         <MarkedFields testCase={testCase} judged={judged} effective={effective} strong={strong} shown={shown} rootRef={textRef} columns />
-        <PromptButtons prompt={prompt} primary={!reply && !unsavedDraft && copied[caseId] !== true} onCopied={() => setCopied((c) => ({ ...c, [caseId]: true }))} />
+        <PromptButtons prompt={prompt} primary={!reply && !unsavedDraft && ownValue(copied, caseId) !== true} onCopied={() => setCopied((c) => ({ ...c, [caseId]: true }))} />
       </Part>
 
       <Part number={2} title="Marking">
@@ -210,7 +210,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
             saved={reply?.reply}
             text={text}
             onText={onText}
-            copied={copied[caseId] === true}
+            copied={ownValue(copied, caseId) === true}
             onSaveAsText={() => void saveText(text)}
             onPaste={pasteReply}
             message={message}

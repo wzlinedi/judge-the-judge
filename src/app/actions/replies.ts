@@ -3,7 +3,7 @@ import { formatIfWholeJson } from '../../core/io/format-json';
 import { composePrompt } from '../../core/judge/compose';
 import { countingModeOf } from '../../core/judge/counting-mode';
 import { judgeVersion } from '../../core/judge/version';
-import { decisionsOf, ownValue, updateTestRun, withoutReply } from '../../core/cases/test-run';
+import { decisionsOf, ownValue, setOwn, updateTestRun, withoutReply } from '../../core/cases/test-run';
 import type { TestProject, Problem } from '../../core/model';
 import { pastedReplySource } from '../../sources/pasted-reply';
 import type { ReplyBatch } from '../../sources/types';
@@ -60,7 +60,7 @@ export function attachReplies(evaluation: TestProject, batch: ReplyBatch, option
     }
     // a reply that is valid JSON is kept formatted (T292): the same data, other spaces
     const text = formatIfWholeJson(item.reply);
-    const had = replies[item.case_id]?.reply;
+    const had = ownValue(replies, item.case_id)?.reply;
     if (had !== undefined && formatIfWholeJson(had) === text) {
       result.unchanged.push(item.case_id);
       continue;
@@ -70,7 +70,7 @@ export function attachReplies(evaluation: TestProject, batch: ReplyBatch, option
       result.needsConfirmation.push({ caseId: item.case_id, count: question.count });
       continue;
     }
-    replies[item.case_id] = { prompt: composePrompt(evaluation.judge_set.prompt, testCase).text, reply: text };
+    setOwn(replies, item.case_id, { prompt: composePrompt(evaluation.judge_set.prompt, testCase).text, reply: text });
     delete decisions[item.case_id];
     result.saved.push(item.case_id);
   }
@@ -152,7 +152,7 @@ export async function saveReply(state: AppState, caseId: string, text: string, o
     for (const [target, source] of [[replies, done.replies], [decisions, done.decisions]] as const) {
       const value = Object.hasOwn(source, caseId) ? (source as Record<string, unknown>)[caseId] : undefined;
       if (value === undefined) delete (target as Record<string, unknown>)[caseId];
-      else (target as Record<string, unknown>)[caseId] = value;
+      else setOwn(target as Record<string, unknown>, caseId, value);
     }
     const merged = {
       ...run,

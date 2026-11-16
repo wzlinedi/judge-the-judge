@@ -36,7 +36,7 @@ export function validateCase(testCase: Omit<TestCase, 'id'> & { id?: string }, c
     }
   }
   for (const variable of context.variables) {
-    const value = fields[variable];
+    const value = Object.hasOwn(fields, variable) ? fields[variable] : undefined;
     if (value === undefined) warnings.push({ message: `The case has no field for the variable "${variable}"; it will be empty in the prompt.`, path: `fields.${variable}` });
     else if (value.trim() === '' && Object.values(fields).some((v) => v.trim() !== '')) {
       problems.push({ message: `The field "${variable}" is empty.`, path: `fields.${variable}` });

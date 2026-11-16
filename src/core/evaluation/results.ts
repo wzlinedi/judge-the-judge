@@ -1,6 +1,6 @@
 // Everything the Results step and the files show, in one value (core-api.md, computeResults).
 import type { CaseDecisions, TestProject, TestCase } from '../model';
-import { decisionsOf, repliesOf } from '../cases/test-run';
+import { decisionsOf, repliesOf, setOwn } from '../cases/test-run';
 import { findFindings, type Finding } from '../judge/findings';
 import { recognizeFields } from '../judge/fields';
 import { countingModeOf } from '../judge/counting-mode';
@@ -79,11 +79,11 @@ export function computeResults(evaluation: TestProject, metric: MetricDefinition
 
   const cases: Record<string, CaseResult> = {};
   for (const r of reviewed) {
-    cases[r.testCase.id] = {
+    setOwn(cases, r.testCase.id, {
       status: r.status,
       expected: (r.effective?.expected ?? []).map((e) => ({ id: e.id, state: e.state, source: e.source })),
       additional: (r.effective?.additional ?? []).map((a) => ({ key: a.key, text: a.text, rules: a.rules, state: a.state, source: a.source })),
-    };
+    });
   }
   const undecided = counters.cases_awaiting + counters.cases_not_run;
   return {

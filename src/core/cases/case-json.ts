@@ -2,6 +2,7 @@
 import { extractJson } from '../judge/extract-json';
 import type { CaseJsonCheck, CaseJsonCheckContext, Difficulty, ExpectedError, Problem, TestCase } from '../model';
 import { findFragment } from './fragments';
+import { setOwn } from './test-run';
 import { defaultCaseName } from './identifiers';
 import { validateCase } from './validate';
 
@@ -76,11 +77,11 @@ export function checkCaseJson(input: string, context: CaseJsonCheckContext): Cas
   // fields: only text
   const fields: Record<string, string> = {};
   for (const [key, value] of Object.entries(raw['fields'])) {
-    if (typeof value === 'string') fields[key] = value;
+    if (typeof value === 'string') setOwn(fields, key, value);
     else problems.push({ message: 'The field must be text.', path: `fields.${key}` });
   }
   for (const variable of context.variables) {
-    if (!(variable in (raw['fields'] as object))) problems.push({ message: `The field for the variable "${variable}" is missing.`, path: `fields.${variable}` });
+    if (!Object.hasOwn(raw['fields'] as object, variable)) problems.push({ message: `The field for the variable "${variable}" is missing.`, path: `fields.${variable}` });
   }
 
   // expected errors

@@ -1,6 +1,7 @@
 // Reading the shortened CSV (file-formats.md, section 4; FR-027, FR-031): every row is a clean case.
 import Papa from 'papaparse';
 import type { ReadResult } from '../model';
+import { setOwn } from '../cases/test-run';
 import type { DraftRow, InvalidRow } from './test-cases-json';
 
 export const MAX_FIELD_LENGTH = 100_000;
@@ -61,12 +62,12 @@ export function readTestCasesCsv(text: string, variables: readonly string[]): Re
     const label = name !== '' ? name : `Row ${position}`;
     const fields: Record<string, string> = {};
     fieldColumns.forEach((column, i) => {
-      fields[names[i] as string] = row[column] ?? '';
+      setOwn(fields, names[i] as string, row[column] ?? '');
     });
     const long = Object.entries(fields).find(([, value]) => value.length > MAX_FIELD_LENGTH);
     if (long) return void invalid.push({ position, label, reason: `The field "${long[0]}" is longer than 100,000 characters, which is the limit.` });
     if (!Object.values(fields).some((value) => value.trim() !== '')) return void invalid.push({ position, label, reason: 'The row has no text in any field.' });
-    const empty = variables.find((v) => v in fields && (fields[v] as string).trim() === '');
+    const empty = variables.find((v) => Object.hasOwn(fields, v) && (fields[v] as string).trim() === '');
     if (empty) return void invalid.push({ position, label, reason: `The field "${empty}" is empty.` });
     drafts.push({ position, draft: { name, fields, expected_errors: [] } });
   });

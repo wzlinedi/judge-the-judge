@@ -6,6 +6,7 @@ import { readTestProject } from '../../../../src/core/io/test-project-file';
 import { computeResults, reviewEvaluation } from '../../../../src/core/evaluation/results';
 import { buildHtmlReport } from '../../../../src/core/io/html-report';
 import { decisionsOf, ownValue, repliesOf, setOwn } from '../../../../src/core/cases/test-run';
+import { attachReplies } from '../../../../src/app/actions/replies';
 import { accuracyMetric } from '../../../helpers/fixtures';
 
 const NAMES = ['constructor', 'toString', '__proto__', 'hasOwnProperty'];
@@ -57,6 +58,26 @@ describe('a case id that is a built-in JavaScript name', () => {
     expect(repliesOf(project)['toString']).toBeUndefined();
     expect(decisionsOf(project)['hasOwnProperty']).toBeUndefined();
     expect(reviewEvaluation(project, accuracyMetric)[0]!.status).not.toBe('not_run');
+  });
+});
+
+describe('writing under a case id that is a built-in JavaScript name (T388, T390)', () => {
+  it.each(NAMES)('%s: a pasted reply is stored as that case\'s own reply, and the prototype is unchanged', (name) => {
+    const project = projectWithIds([name]);
+    const result = attachReplies(project, { items: [{ case_id: name, reply: '{"claims": []}' }], problems: [] }, { judgeVersion: 'j' });
+    expect(result.saved).toEqual([name]);
+    const replies = result.project.testRun!.replies;
+    expect(Object.hasOwn(replies, name)).toBe(true);
+    expect(Object.getPrototypeOf(replies)).toBe(Object.prototype);
+    expect(ownValue(repliesOf(result.project), name)?.reply).toContain('claims');
+  });
+
+  it.each(NAMES)('%s: the results hold the case as their own key', (name) => {
+    const project = projectWithIds([name]);
+    const results = computeResults(project, accuracyMetric);
+    expect(Object.hasOwn(results.cases, name)).toBe(true);
+    expect(Object.getPrototypeOf(results.cases)).toBe(Object.prototype);
+    expect(Object.keys(results.cases)).toHaveLength(project.dataset.cases.length);
   });
 });
 
