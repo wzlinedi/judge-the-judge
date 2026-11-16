@@ -187,7 +187,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
         <DecideBar reviewed={current} effective={effective ?? null} onAddFinding={() => setAdding(true)} onSecondOpinion={() => setOpinionOpen(true)} />
       </Part>
 
-      <Part number={3} title="Judge reply and errors">
+      <Part number={3} title="Verify the judge reply">
         <div class="case-half" ref={partRef}>
           <ReplyPane
             saved={reply?.reply}

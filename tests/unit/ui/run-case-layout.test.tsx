@@ -33,7 +33,7 @@ describe('the case window of Run: three parts from top to bottom', () => {
     expect(win().querySelector('.case-window-body > .case-page')).not.toBeNull();
     expect(win().querySelector('.case-columns')).toBeNull();
     const headings = [...win().querySelectorAll('.case-part > h3')].map((h) => (h.textContent ?? '').replace(/^\d\. /, ''));
-    expect(headings).toEqual(['Case', 'Marking', 'Judge reply and errors']);
+    expect(headings).toEqual(['Case', 'Marking', 'Verify the judge reply']);
   });
 
   it('uses the whole width of the screen, and "Show prompt" opens the standard large dialog with its button at the bottom (T247)', () => {

@@ -260,7 +260,7 @@ test('the case window of Test run is one page: the fields, the actions row, then
   const heading = (n: number) => win.locator('.case-part > h3').nth(n - 1);
   await expect(heading(1)).toHaveText('1. Case');
   await expect(heading(2)).toHaveText('2. Marking');
-  await expect(heading(3)).toHaveText('3. Judge reply and errors');
+  await expect(heading(3)).toHaveText('3. Verify the judge reply');
   const tops = await Promise.all([1, 2, 3].map(async (n) => (await heading(n).boundingBox())!.y));
   expect(tops[0]!).toBeLessThan(tops[1]!);
   expect(tops[1]!).toBeLessThan(tops[2]!);
