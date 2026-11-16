@@ -51,16 +51,8 @@ function ExpectedItem({ error, index, testCase, judged, judgeSays, onMark, onSho
   const sides = errorSides(testCase, judged, meta ?? {});
   const name = `E${index + 1}`;
   return (
-    <li data-expected={error.id} class="decide-item">
+    <li data-expected={error.id} class={`decide-item${judgeSays.some((m) => m.key === pointed) ? ' pointed' : ''}`} {...(judgeSays.length > 0 ? { 'data-finding-line': judgeSays.map((m) => m.key).join(' ') } : {})}>
       <ErrorCard name={name} title={meta?.description ?? ''} facts={[meta?.category, meta?.difficulty].filter((x): x is NonNullable<typeof x> => !!x)} sides={sides} onShow={() => onShow(showTargetOf(sides, error.id))}>
-        {judgeSays.map((m) => {
-          const said = `F${m.number} · Judge: ${m.text === '' ? 'the whole reply' : `“${m.text}”`} (${m.kind === 'clear' ? 'matches' : 'partly matches'})`;
-          return (
-            <p key={m.key} class={`judge-says${pointed === m.key ? ' pointed' : ''}`} data-finding-line={m.key}>
-              {said}
-            </p>
-          );
-        })}
         <div role="group" aria-label={`Mark for ${name}`} class="marks">
           {EXPECTED_MARKS.map((m) => (
             <button key={m.state} type="button" aria-pressed={error.state === m.state} class={error.state === m.state ? 'pressed' : ''} onClick={() => onMark(m.state)}>

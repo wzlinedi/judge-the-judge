@@ -48,24 +48,23 @@ describe('a saved reply that is JSON', () => {
     Element.prototype.scrollIntoView = vi.fn();
     open('2');
     expect(blocks().some((b) => b.classList.contains('fragment-strong'))).toBe(false);
-    const card = right().querySelector('[data-finding-line="claims[]#1"]')!.closest('li') as HTMLElement;
+    const card = right().querySelector('[data-finding-line~="claims[]#1"]')!.closest('li') as HTMLElement;
     fireEvent.click(within(card).getByRole('button', { name: 'Show the issue' }));
     expect(blocks().filter((b) => b.classList.contains('fragment-strong')).map((b) => b.dataset['findingBlock'])).toEqual(['claims[]#1']);
   });
 
-  it('numbers the findings in the right column the same way', () => {
+  it('each finding has its card in the right column, found by its key (T347)', () => {
     open('2');
     const lines = [...right().querySelectorAll<HTMLElement>('[data-finding-line]')];
-    expect(lines.map((l) => l.dataset['findingLine'])).toEqual(['claims[]#1', 'claims[]#3']);
-    expect(lines[0]!.textContent).toContain('F1');
-    expect(lines[1]!.textContent).toContain('F2');
+    expect(lines.flatMap((l) => (l.dataset['findingLine'] ?? '').split(' ')).sort()).toEqual(['claims[]#1', 'claims[]#3']);
+    expect(right().textContent).not.toMatch(/Judge: |\(matches\)/);
   });
 
   it('a finding on the right is no button: it cannot be pressed to mark its block (owner trial 2026-11-16)', () => {
     Element.prototype.scrollIntoView = vi.fn();
     open('2');
-    expect(right().querySelectorAll('[data-finding-line] button, button[data-finding-line]')).toHaveLength(0);
-    fireEvent.click(right().querySelector('[data-finding-line="claims[]#3"]') as HTMLElement);
+    expect(right().querySelectorAll('button[data-finding-line]')).toHaveLength(0);
+    fireEvent.click(right().querySelector('[data-finding-line~="claims[]#3"]') as HTMLElement);
     expect(blocks().some((b) => b.classList.contains('fragment-strong'))).toBe(false);
   });
 
@@ -73,8 +72,8 @@ describe('a saved reply that is JSON', () => {
     Element.prototype.scrollIntoView = vi.fn();
     open('2');
     fireEvent.click(blocks()[0]!);
-    expect((right().querySelector('[data-finding-line="claims[]#1"]') as HTMLElement).classList.contains('pointed')).toBe(true);
-    expect((right().querySelector('[data-finding-line="claims[]#3"]') as HTMLElement).classList.contains('pointed')).toBe(false);
+    expect((right().querySelector('[data-finding-line~="claims[]#1"]') as HTMLElement).classList.contains('pointed')).toBe(true);
+    expect((right().querySelector('[data-finding-line~="claims[]#3"]') as HTMLElement).classList.contains('pointed')).toBe(false);
   });
 });
 

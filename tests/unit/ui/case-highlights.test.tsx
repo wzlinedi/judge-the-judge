@@ -88,15 +88,16 @@ describe('findings in the reply', () => {
 });
 
 describe('the case window of Run', () => {
-  it('each expected error says which words of the judge match it, and there is no list of the findings in the reply (T258)', () => {
+  it('the card of an expected error carries the keys of the findings that match it, shows no line of the judge, and there is no list of the findings in the reply (T258, T347)', () => {
     const e = sampleProject();
     const reviewed = reviewEvaluation(e, accuracyMetric).find((r) => r.testCase.id === '2')!;
     const noop = () => undefined;
     const { container, queryByRole } = render(<ErrorsPane reviewed={reviewed} effective={reviewed.effective!} onExpected={noop} onAdditional={noop} onApprove={noop} onShowInText={noop} judged={undefined} onRemove={noop} />);
     expect(queryByRole('list', { name: 'Findings in the reply' })).toBeNull();
-    const says = [...container.querySelectorAll('[data-expected] .judge-says')].map((p) => p.textContent);
-    expect(says).toContain('F1 · Judge: “Anna is a doctor.” (matches)');
-    expect(says).toContain('F2 · Judge: “She bought a second oven in 2005.” (matches)');
+    expect(container.querySelectorAll('.judge-says')).toHaveLength(0);
+    expect(container.textContent).not.toMatch(/Judge: |\(matches\)|\(partly matches\)/);
+    const keys = [...container.querySelectorAll('[data-expected][data-finding-line]')].flatMap((li) => (li.getAttribute('data-finding-line') ?? '').split(' '));
+    expect(keys).toEqual(['claims[]#1', 'claims[]#2']);
   });
 });
 
@@ -112,7 +113,7 @@ describe('the mark of a finding in the reply stays until the next pointing (T335
   };
   const win = () => screen.getByRole('dialog', { name: /^Case / });
   const strong = () => [...win().querySelectorAll<HTMLElement>('.reply-read [data-finding-block].fragment-strong')].map((b) => b.dataset['findingBlock']);
-  const line = (key: string) => win().querySelector(`.decide-pane [data-finding-line="${key}"]`) as HTMLElement;
+  const line = (key: string) => win().querySelector(`.decide-pane [data-finding-line~="${key}"]`) as HTMLElement;
   const block = (key: string) => win().querySelector(`.reply-read [data-finding-block="${key}"]`) as HTMLElement;
   const wait = (ms: number) =>
     act(() => {
@@ -191,13 +192,13 @@ describe('the mark of a finding in the reply stays until the next pointing (T335
     expect(win().querySelectorAll('.marked-fields .fragment-strong')).toHaveLength(0);
   });
 
-  it('(f) the card of an error has no button that marks an object: the line of the judge is text, and "Show the issue" is the one way from the card (owner trial 2026-11-16)', () => {
+  it('(f) the card of an error has no button that marks an object and no line of the judge; pressing a block marks the card (T347)', () => {
     const decide = win().querySelector('.decide-pane') as HTMLElement;
     expect(decide.querySelectorAll('.judge-says button')).toHaveLength(0);
     expect(within(decide).queryByRole('button', { name: /^F\d · Judge/ })).toBeNull();
     expect(within(decide).queryByRole('button', { name: /in the reply$/ })).toBeNull();
-    expect(line('claims[]#1').textContent).toMatch(/^F1 · Judge: “Anna is a doctor\.” \(matches\)$/);
-    // the line still takes the mark when its block is pressed
+    expect(decide.textContent).not.toMatch(/Judge: |\(matches\)/);
+    // the card takes the mark when its block is pressed
     fireEvent.click(block('claims[]#1'));
     expect(line('claims[]#1').classList.contains('pointed')).toBe(true);
   });

@@ -236,7 +236,6 @@ button.fold { background: transparent; border: 0; padding: 0; font: inherit; fon
 .error-state { margin: 0; font-weight: 600; }
 .errors-summary { margin: 0 0 var(--space-3); font-weight: 600; }
 .base-fields { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; }
-.judge-says { margin: 0; }
 .field-name { margin: var(--space-2) 0 var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
 
 /* US7: the Test run step and the reply pane of the case window */

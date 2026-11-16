@@ -147,7 +147,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   const point = (key: string) => {
     setPointed(key);
     setTimeout(() => {
-      partRef.current?.querySelector<HTMLElement>(`[data-finding-line="${key}"]`)?.scrollIntoView?.({ block: 'center' });
+      partRef.current?.querySelector<HTMLElement>(`[data-finding-line~="${key}"]`)?.scrollIntoView?.({ block: 'center' });
     }, 0);
   };
   const handMarks = replaceNeedsQuestion(evaluation, caseId).count;
