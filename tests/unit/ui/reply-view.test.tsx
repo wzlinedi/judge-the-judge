@@ -61,12 +61,12 @@ describe('a saved reply that is JSON', () => {
     expect(lines[1]!.textContent).toContain('F2');
   });
 
-  it('pressing a finding on the right scrolls to and marks its block in the reply', () => {
+  it('a finding on the right is no button: it cannot be pressed to mark its block (owner trial 2026-11-16)', () => {
     Element.prototype.scrollIntoView = vi.fn();
     open('2');
-    expect(blocks().some((b) => b.classList.contains('fragment-strong'))).toBe(false);
+    expect(right().querySelectorAll('[data-finding-line] button, button[data-finding-line]')).toHaveLength(0);
     fireEvent.click(right().querySelector('[data-finding-line="claims[]#3"]') as HTMLElement);
-    expect(blocks().filter((b) => b.classList.contains('fragment-strong')).map((b) => b.dataset['findingBlock'])).toEqual(['claims[]#3']);
+    expect(blocks().some((b) => b.classList.contains('fragment-strong'))).toBe(false);
   });
 
   it('pressing a highlighted block marks its finding on the right', () => {

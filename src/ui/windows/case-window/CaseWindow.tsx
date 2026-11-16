@@ -143,12 +143,11 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
       await pasted();
     }
   };
-  /** A finding was pressed in the reply or on the right: mark it in both places and bring the other place into view (T293). */
-  const point = (key: string, from: 'reply' | 'errors') => {
+  /** A block was pressed in the reply: mark it and its line on the right, and bring that line into view (T293). */
+  const point = (key: string) => {
     setPointed(key);
     setTimeout(() => {
-      const target = partRef.current?.querySelector<HTMLElement>(from === 'reply' ? `[data-finding-line="${key}"]` : `[data-finding-block="${key}"]`);
-      target?.scrollIntoView?.({ block: 'center' });
+      partRef.current?.querySelector<HTMLElement>(`[data-finding-line="${key}"]`)?.scrollIntoView?.({ block: 'center' });
     }, 0);
   };
   const handMarks = replaceNeedsQuestion(evaluation, caseId).count;
@@ -204,7 +203,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
             onCancel={cancelEditing}
             findings={current.findings}
             pointed={pointed}
-            onPoint={(key) => point(key, 'reply')}
+            onPoint={point}
           />
           {reply && effective ? (
             <ErrorsPane
@@ -217,7 +216,6 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
               judged={judged}
               onRemove={(item) => item.added !== undefined && onChange(removeFinding(evaluation, caseId, item.added))}
               pointed={pointed}
-              onPoint={isEditing ? undefined : (key) => point(key, 'errors')}
               onHighlight={isEditing ? undefined : setPointed}
             />
           ) : (

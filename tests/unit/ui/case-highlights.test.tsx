@@ -113,6 +113,7 @@ describe('the mark of a finding in the reply stays until the next pointing (T335
   const win = () => screen.getByRole('dialog', { name: /^Case / });
   const strong = () => [...win().querySelectorAll<HTMLElement>('.reply-read [data-finding-block].fragment-strong')].map((b) => b.dataset['findingBlock']);
   const line = (key: string) => win().querySelector(`.decide-pane [data-finding-line="${key}"]`) as HTMLElement;
+  const block = (key: string) => win().querySelector(`.reply-read [data-finding-block="${key}"]`) as HTMLElement;
   const wait = (ms: number) =>
     act(() => {
       vi.advanceTimersByTime(ms);
@@ -129,17 +130,17 @@ describe('the mark of a finding in the reply stays until the next pointing (T335
   });
   afterEach(() => vi.useRealTimers());
 
-  it('(a) a finding pressed on the right marks its object, and the mark is still there after 5 seconds', async () => {
-    fireEvent.click(line('claims[]#1'));
+  it('(a) a block pressed in the reply is marked strongly, and the mark is still there after 5 seconds', async () => {
+    fireEvent.click(block('claims[]#1'));
     expect(strong()).toEqual(['claims[]#1']);
     await wait(5000);
     expect(strong()).toEqual(['claims[]#1']);
   });
 
-  it('(b) pressing another finding moves the strong mark to its object', async () => {
-    fireEvent.click(line('claims[]#1'));
+  it('(b) pressing another block moves the strong mark to it', async () => {
+    fireEvent.click(block('claims[]#1'));
     await wait(100);
-    fireEvent.click(line('claims[]#3'));
+    fireEvent.click(block('claims[]#3'));
     expect(strong()).toEqual(['claims[]#3']);
   });
 
@@ -161,7 +162,7 @@ describe('the mark of a finding in the reply stays until the next pointing (T335
   it('(d) a move to another case and Close clear the mark', async () => {
     const title = () => within(win()).getByRole('heading', { level: 2 }).textContent;
     // case 2 is the last case of the sample, so the move goes to case 1 and back with Next case
-    fireEvent.click(line('claims[]#1'));
+    fireEvent.click(block('claims[]#1'));
     fireEvent.click(within(win()).getByRole('button', { name: 'Previous case' }));
     await wait(0);
     expect(title()).not.toMatch(/^Case 2 /);
@@ -169,7 +170,7 @@ describe('the mark of a finding in the reply stays until the next pointing (T335
     await wait(0);
     expect(title()).toMatch(/^Case 2 /);
     expect(strong()).toEqual([]);
-    fireEvent.click(line('claims[]#1'));
+    fireEvent.click(block('claims[]#1'));
     expect(strong()).toEqual(['claims[]#1']);
     fireEvent.click(within(win()).getByRole('button', { name: 'Close' }));
     await wait(0);
@@ -188,5 +189,16 @@ describe('the mark of a finding in the reply stays until the next pointing (T335
     expect(win().querySelectorAll('.marked-fields .fragment-strong').length).toBeGreaterThan(0);
     await wait(2600);
     expect(win().querySelectorAll('.marked-fields .fragment-strong')).toHaveLength(0);
+  });
+
+  it('(f) the card of an error has no button that marks an object: the line of the judge is text, and "Show the issue" is the one way from the card (owner trial 2026-11-16)', () => {
+    const decide = win().querySelector('.decide-pane') as HTMLElement;
+    expect(decide.querySelectorAll('.judge-says button')).toHaveLength(0);
+    expect(within(decide).queryByRole('button', { name: /^F\d · Judge/ })).toBeNull();
+    expect(within(decide).queryByRole('button', { name: /in the reply$/ })).toBeNull();
+    expect(line('claims[]#1').textContent).toMatch(/^F1 · Judge: “Anna is a doctor\.” \(matches\)$/);
+    // the line still takes the mark when its block is pressed
+    fireEvent.click(block('claims[]#1'));
+    expect(line('claims[]#1').classList.contains('pointed')).toBe(true);
   });
 });

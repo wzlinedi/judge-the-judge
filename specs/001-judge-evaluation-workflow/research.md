@@ -883,7 +883,7 @@ numbers cannot drift.
 - **Decision**: in the read-only reply, every JSON object that an error rule turned into a finding
   carries the light background `--reply-bg` and a 2 px vertical line `--reply-line` at its left, from
   its opening brace to its closing brace. There is no label, rule name, category or description (the
-  work of T311). When the user presses an item of the Errors column, or **Show the issue**, the object of that finding
+  work of T311). When the user presses **Show the issue** or the block itself, the object of that finding
   gets `--reply-strong-bg`, a 4 px `--accent` line and is scrolled into view; it stays so until
   the user points at another item, closes the window or moves to another case. The timer of
   2500 ms in `CaseWindow.tsx` (T311) goes. The passage in the case fields (Part 1) keeps its mark for about 2

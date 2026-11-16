@@ -439,9 +439,10 @@ phone).
 - Each JSON object that an error rule turned into a finding has a light background and a thin line
   at its left, from its opening to its closing brace. There is no label, rule name, category or
   description.
-- The object of the item pointed at (a finding pressed on the right, or **Show the issue**) is marked
+- The object of the item pointed at (**Show the issue**, or the block pressed itself) is marked
   strongly: a stronger background and a wider accent line. It stays so until another item is pointed
-  at, the case changes or the window closes.
+  at, the case changes or the window closes. The card of an error has no button that marks an object:
+  the line "F1 · Judge: “…” (matches)" is text, and a finding with no expected error has no such line.
 - A reply kept as text and JSON that no rule read have no mark.
 - The reply has no scroll area of its own: it grows with its text, and the page scrolls. The same
   holds for the base case shown in "Case with errors".

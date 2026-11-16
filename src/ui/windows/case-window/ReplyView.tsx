@@ -7,7 +7,7 @@ export interface ReplyViewProps {
   reply: string;
   /** The findings the error rules read from it, in the order of the reply: F1 is the first. */
   findings: readonly Finding[];
-  /** The finding pointed at (pressed on the right or by "Show the issue"): its block is marked strongly until the next pointing. */
+  /** The finding pointed at (pressed itself or by "Show the issue"): its block is marked strongly until the next pointing. */
   pointed: string | null;
   /** A highlighted block was pressed: the finding on the right is marked. */
   onPoint: (key: string) => void;
