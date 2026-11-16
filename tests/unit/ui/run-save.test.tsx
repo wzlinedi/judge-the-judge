@@ -117,7 +117,10 @@ describe('loading', () => {
   it('an invalid file shows a message with where the problem is and changes nothing', async () => {
     const ports = createFakePorts();
     renderApp(ports, stateOn('judge', sampleProject(), { testProjectFile: 'mine.json' }));
-    await loadFile(ports, 'Load test project…', '{ "format": ');
+    ports.opener.next = { name: 'chosen.json', text: '{ "format": ' };
+    menu('Load test project…');
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Replace the current work?' })).getByRole('button', { name: 'Load test project' })); // T343
+    await waitFor(() => expect(ports.opener.next).toBeNull());
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toMatch(/not readable JSON/);
     expect(alert.textContent).toMatch(/line 1/);

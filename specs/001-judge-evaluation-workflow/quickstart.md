@@ -66,7 +66,7 @@ be tried yet: the page has no drop zone until the interface redesign (T310).
 
 ### V1. First run with demo data (SC-001, SC-009, SC-010, User Stories 1 and 9)
 
-1. Open the tool; in the More menu choose "Load demo…". The demo is loaded at once, with its test run and no load question, and the Judge step opens; go on to Test run.
+1. Open the tool; in the More menu choose "Load demo…". The project is empty, so there is no "Replace the current work?" question: the demo is loaded at once, with its test run and no load question, and the Judge step opens; go on to Test run.
 2. On Results choose "Export HTML report". Then press "Continue" in the "what next" line and
    decide each case it opens. Open Results and export again.
 
@@ -251,7 +251,7 @@ button and one indicator, which says "All changes saved" with the file name afte
 project", also while replies exist. There is no "Save evaluation", "Load evaluation…" or "Export
 JSON". On Results the case opens read-only with Previous and Next, and only the threshold can be
 changed. The loaded file shows identical numbers, judge version and test cases version, and the
-report can be generated from it. The warning before "Load demo…" offers "Save test project first",
+report can be generated from it. When nothing is unsaved but the project has work, "Load demo…", "Load test project…" and "New test project" ask "Replace the current work?" with "Cancel" and the action's name (T343); an empty project asks nothing. The warning before "Load demo…" offers "Save test project first",
 "Discard" and "Cancel", and the first saves before continuing. The dropped file loads but does not
 become the save file: "Save test project" asks for a file. "Close without saving" asks first; no
 file save action is reachable while the window is open. The report follows the three views,

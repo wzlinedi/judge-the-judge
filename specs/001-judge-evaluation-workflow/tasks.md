@@ -1048,3 +1048,14 @@ each task or logical group.
 
 - [X] T342 The owner does the manual check M4 of `specs/001-judge-evaluation-workflow/quickstart.md` ("Look at four screen sizes and in the dark scheme") on the built site in Chrome, at 1440 × 900, 1280 × 720, 768 × 1024, 390 × 844 and 360 × 740, and in the dark scheme at 1280 × 720 and 390 × 844. Write what does not match as a note under this task (SC-041 to SC-047).
   - Done 2026-11-16: the owner reported the check M4 as done; no notes were given, so no gaps are recorded.
+
+## Phase 24: Replace-work question (owner request, 2026-11-16)
+
+**Goal**: "Load demo…", "Load test project…" and "New test project" ask "Replace the current work?" when the session has work and nothing is unsaved (FR-051, FR-093; Clarifications 2026-11-16).
+
+- [X] T343 Tests first (they failed before the code): `tests/unit/ui/replace-warning.test.tsx` (the dialog, its buttons by `expectCancelFirstMainLast`, Cancel, the action, "Unsaved changes" alone, an empty project, `hasWork`, `replaceQuestion`) and `tests/unit/ui/run-save.test.tsx` (an invalid file now meets the question first).
+  - Done 2026-11-16: 17 tests failed first (all new ones except the vacuous ones, plus the old "asks nothing" tests rewritten and the invalid-file test). The unsaved-changes tests of the file only lock the existing behaviour and passed at once.
+- [X] T344 `src/app/guard.ts`: `hasWork(state)` (a non-blank prompt, a case, an error rule or catalog entry, a started test run, or `hasFile`) and `replaceQuestion(state, action)`; `src/ui/App.tsx`: the dialog "Replace the current work?" ("Cancel", then the action's name as the only `primary`). `guardFor` is unchanged, so "Unsaved changes" stays alone.
+- [X] T345 Docs: `spec.md` (FR-051, Clarifications 2026-11-16, the edge case of a load during a test run), `contracts/ui-flow.md` ("Replacing work"), `quickstart.md` (V1 step 1, V9 expected text).
+- [X] T346 SC-040 exception, approved by the owner (2026-11-16): the old tests that said "asks nothing" or "only with unsaved changes" (`replace-warning.test.tsx`, 7 tests; `run-save.test.tsx`, 1 test) and 5 e2e files (`v11-invalid-files` lines 47, 69, 78, 131 and 143, `v10-another-judge:38`, `v5-load-file:51`, `v9-save-continue:118`, each in `chromium` and `msedge`). In e2e only the new question is answered by the helper `confirmReplaceIfAsked` in `tests/helpers/test-run-flow.ts`; no assertion was changed.
+  - Help, on the owner's request (2026-11-16): `src/ui/help/sections/Files.tsx` ("Replacing work") now names "Replace the current work?", the three actions and the empty project; new test in `tests/unit/ui/help.test.tsx`.

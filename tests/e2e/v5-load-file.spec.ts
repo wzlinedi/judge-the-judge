@@ -4,13 +4,14 @@ import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { installMemoryFiles, type MemoryFiles } from '../helpers/memory-files';
 import { startFromAccuracy } from '../helpers/start-project';
-import { loadTestProject, saveButton, startTestRun, TEST_RUN_STEP } from '../helpers/test-run-flow';
+import { loadTestProject, saveButton, startTestRun, TEST_RUN_STEP, confirmReplaceIfAsked } from '../helpers/test-run-flow';
 
 const importWindow = (page: Page) => page.getByRole('dialog', { name: 'Import test cases…' });
 const rows = (page: Page) => page.getByRole('row');
 const menu = async (page: Page, item: string) => {
   await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: item, exact: true }).click();
+  await confirmReplaceIfAsked(page, item); // T343
 };
 const startAccuracy = (page: Page, memory: MemoryFiles) => startFromAccuracy(page, memory);
 const csv = (lines: string[]) => `name,field:source_text,field:summary\n${lines.join('\n')}\n`;

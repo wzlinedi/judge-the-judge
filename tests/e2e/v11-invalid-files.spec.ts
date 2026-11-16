@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { installMemoryFiles, type MemoryFiles } from '../helpers/memory-files';
 import { accuracyStarterProject, startFromAccuracy } from '../helpers/start-project';
-import { loadQuestion, loadTestProject, TEST_RUN_STEP } from '../helpers/test-run-flow';
+import { loadQuestion, loadTestProject, TEST_RUN_STEP, confirmReplaceIfAsked } from '../helpers/test-run-flow';
 import { invalidFiles } from '../../scripts/invalid-files';
 
 const demoProject = readFileSync('examples/demo/test-project.json', 'utf8');
@@ -23,6 +23,7 @@ async function snapshot(page: Page) {
 const menu = async (page: Page, item: string) => {
   await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: item, exact: true }).click();
+  await confirmReplaceIfAsked(page, item); // T343
 };
 
 async function openDemo(page: Page): Promise<MemoryFiles> {

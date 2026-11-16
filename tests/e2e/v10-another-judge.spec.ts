@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { installMemoryFiles } from '../helpers/memory-files';
-import { loadTestProject, saveButton, startTestRun, TEST_RUN_STEP } from '../helpers/test-run-flow';
+import { loadTestProject, saveButton, startTestRun, TEST_RUN_STEP, confirmReplaceIfAsked } from '../helpers/test-run-flow';
 
 const demo = JSON.parse(readFileSync('examples/demo/test-project.json', 'utf8')) as { dataset: { cases: Array<{ id: string }> }; test_run: { replies: Record<string, { reply: string }> } };
 const firstId = demo.dataset.cases[0]!.id;
@@ -19,6 +19,7 @@ async function versions(page: Page): Promise<{ judge: string; cases: string }> {
 async function file(page: Page, item: string) {
   await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: item, exact: true }).click();
+  await confirmReplaceIfAsked(page, item); // T343
 }
 async function enterFirstReply(page: Page) {
   await next(page).getByRole('button', { name: 'Continue' }).click();

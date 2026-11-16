@@ -9,7 +9,7 @@ import type { CaseEdit } from '../app/actions/cases';
 import type { CatalogEdit } from '../app/actions/catalog';
 import type { JudgeEdit } from '../app/actions/judge';
 import { finishLoad, loadTestProject, saveTestProject, saveTestProjectAs, type FileEnv, type PendingLoad } from '../app/actions/files';
-import { guardFor, installBeforeUnload, type GuardedAction } from '../app/guard';
+import { guardFor, installBeforeUnload, replaceQuestion, type GuardedAction, type ReplaceQuestion } from '../app/guard';
 import { metricFor } from '../app/metrics';
 import { browserSupported, type BrowserEnv } from '../app/ports/browser';
 import { createBrowserPorts } from '../app/ports';
@@ -57,6 +57,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const browser = env ?? (globalThis as unknown as BrowserEnv);
   const [state, setState] = useState<AppState>(initialState ?? createState());
   const [pending, setPending] = useState<FileAction | null>(null);
+  const [replacing, setReplacing] = useState<{ action: FileAction; question: ReplaceQuestion } | null>(null);
   const [onlyAwaiting, setOnlyAwaiting] = useState(false);
   const [notice, setNotice] = useState('');
   /** True when the message says that something was not done: it is shown as a refusal, with a word and a sign. */
@@ -170,7 +171,11 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   const onFile = (action: FileAction) => {
     const guard = guardFor(state, action as GuardedAction);
     if (guard) setPending(action);
-    else perform(action);
+    else {
+      const question = replaceQuestion(state, action as GuardedAction);
+      if (question) setReplacing({ action, question });
+      else perform(action);
+    }
   };
 
   const loadDemo = () => {
@@ -322,6 +327,31 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
         }
       >
         <p>{`${loadQuestion?.fileName ?? 'This file'} holds a test run. Load it with the test run, or load the test project only: the same test cases and judge for a new test run?`}</p>
+      </Dialog>
+      <Dialog
+        open={replacing !== null}
+        title={replacing?.question.title ?? 'Replace the current work?'}
+        onClose={() => setReplacing(null)}
+        actions={
+          <>
+            <button type="button" onClick={() => setReplacing(null)}>
+              {labels.cancel}
+            </button>
+            <button
+              type="button"
+              class="primary"
+              onClick={() => {
+                const action = replacing?.action;
+                setReplacing(null);
+                if (action) perform(action);
+              }}
+            >
+              {replacing?.question.confirm}
+            </button>
+          </>
+        }
+      >
+        <p>{replacing?.question.text}</p>
       </Dialog>
       <Dialog
         open={pending !== null}

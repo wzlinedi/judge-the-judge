@@ -214,6 +214,7 @@ the steps, actions, labels, checks, confirmations, file formats and results stay
 - Q: (UI redesign 2026-11-16) Which name stands next to the tool name in the header? → A: The name of the test project (`dataset.name`, for example "Book summaries"). The file name moves from under "Save test project" into the save indicator ("All changes saved · books.json", or "no file yet"), so each name is shown once (FR-092).
 - Q: (UI redesign 2026-11-16) SC-030 and SC-031 ask for no page scrolling at 1280 × 720, but the case window now scrolls as one page; what do they require? → A: SC-030: one action moves to the next case, and the header, the case name and the start of part 1 are in view without scrolling; the rest is further down the same page, with the header in view. SC-031: "Show the issue" of each of up to five errors scrolls to its passage, not hidden under the header, and the list of errors has no scroll area of its own. This replaces the "without scrolling" wording of both (SC-030, SC-031).
 - Q: (UI redesign 2026-11-16) The load question has two equal actions; which one is the main action, placed last? → A: "Load with the test run", because continuing the work is the usual case. The order is "Cancel", "Load the test project only", "Load with the test run", as built today (FR-093, FR-020).
+- Q: (Owner request 2026-11-16, T343) "Load demo…", "Load test project…" and "New test project" replace the current work at once when nothing is unsaved; should they ask first? → A: Yes, whenever the session has work. The dialog is "Replace the current work?"; it says that the judge, the test cases and the test run in the app will be reset and that saving the test project first keeps them. "Cancel" is first and the action's name last (the only `primary`, FR-093). With unsaved changes the existing "Unsaved changes" warning stays alone; an empty project asks nothing. A loaded or saved file counts as work (FR-051).
 - Q: (UI redesign 2026-11-16) The case window has five heading levels in its HTML; what does "at most three levels of heading" count? → A: The looks of a heading. h4 and h5 stay in the HTML, for screen readers and tests, but look like an h3 (16 px, 600) or a small label (14 px, 600, secondary text). There is no fourth size (FR-091).
 - Q: (UI redesign 2026-11-16) Below 760 px the header of the case window wraps; does "Close" move to the first row? → A: No. The header wraps naturally in the order of FR-092, with "Close" last, and nothing is moved with CSS, so the order of Tab is the order on screen (FR-092).
 - Q: (UI redesign 2026-11-16) The saved reply and the base case of "Case with errors" scroll inside their frames today; do they keep that? → A: No. Both grow with their text and the page scrolls, so "Show the issue" scrolls the page and the header stays above the passage (FR-092, SC-031).
@@ -1004,7 +1005,7 @@ case and confirm the new case has the same fields and expected errors.
   test project" asks for a file, so the loaded file and its test run are never overwritten.
 - Every expected error of a case is ignored: its expected errors are left out of the counts; the
   case is still not a clean case, and its status follows only its additional findings (FR-064).
-- A saved test project is loaded while another test run is in progress: the warning of FR-051 comes first.
+- A saved test project is loaded while another test run is in progress: the warning of FR-051 comes first ("Unsaved changes" when there are unsaved changes, otherwise "Replace the current work?"; T343).
 - The page stops responding after many replies were entered: work since the last "Save test project"
   is lost, so the tool shows how many replies are not saved to a file and reminds the user to save
   after every 25 (FR-059).
@@ -1444,7 +1445,14 @@ case and confirm the new case has the same fields and expected errors.
   to the test project, also after the start of the test run (FR-053).
 - **FR-051**: The system MUST show, in the header, whether there are unsaved changes, and MUST warn
   before a load, "New test project" or "Load demo…" would replace work that has unsaved changes,
-  with three choices: "Save test project first", "Discard" and "Cancel". There is one indicator.
+  with three choices: "Save test project first", "Discard" and "Cancel". When there is work but
+  nothing unsaved, the same three actions ask "Replace the current work?" instead (T343): the judge,
+  the test cases and the test run in the app will be reset, and the user should save the test project
+  first to keep them. The buttons are "Cancel" and, last and the only `primary`, the name of the
+  action ("Load test project", "Load demo" or "New test project"). With unsaved changes only the
+  warning above shows, never two dialogs. An empty project asks nothing. "Work" is any of: a judge
+  prompt that is not blank, a test case, an error rule or catalog entry, a started test run, or a file
+  that was loaded or saved. There is one indicator.
   Any change sets it, including a threshold changed in "Details" (FR-020, FR-069). "Save test
   project" or "Save test project as…" clears it, because the one file holds all the work (FR-076).
 - **FR-052**: Users MUST be able to start the test run with "Start test run", a button at the top of

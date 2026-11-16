@@ -40,6 +40,12 @@ Chrome and Microsoft Edge (FR-003).
 - **The indicator** clears after **Save test project** and **Save test project as…** (FR-051).
 - **Replacing work** (FR-051): before a load, **New test project** and **Load demo…**, when there
   are unsaved changes, one warning offers **Save test project first**, **Discard** and **Cancel**.
+  With work but nothing unsaved (a judge prompt, a test case, an error rule or catalog entry, a
+  started test run, or a loaded or saved file), the dialog **Replace the current work?** asks
+  instead (T343): the judge, the test cases and the test run in the app will be reset, and saving the
+  test project first keeps them. Buttons: **Cancel**, then the name of the action as the only
+  `primary` (**Load test project**, **Load demo** or **New test project**). Never both dialogs; an
+  empty project asks nothing.
   Leaving or reloading the page with unsaved changes triggers the browser's own warning.
 - **The load question** (FR-020, T289): after the file is picked and validated, a file with a
   test run asks, in a small dialog "Load test project", **Load with the test run** (the work comes

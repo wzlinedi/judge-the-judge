@@ -163,6 +163,17 @@ describe('Help for testing another version of the judge (US12)', () => {
   });
 });
 
+describe('Help for replacing work (T343)', () => {
+  it('names the question "Replace the current work?" and the three actions that ask it', () => {
+    render(<HelpStep />);
+    const section = screen.getByRole('heading', { name: 'Files: the test project' }).closest('section')!;
+    const text = (section.textContent ?? '').replace(/\s+/g, ' ');
+    expect(text).toContain('Replace the current work?');
+    for (const label of ['Load demo…', 'Load test project…', 'New test project']) expect(text).toContain(label);
+    expect(text).toMatch(/An empty project asks nothing/);
+  });
+});
+
 describe('Help for reproducing and auditing a result (US13)', () => {
   it('explains the recomputation on load, what is compared and what is shown when it differs', () => {
     render(<HelpStep />);

@@ -21,8 +21,10 @@ export function Files() {
       </p>
       <p>
         <strong>Replacing work.</strong> Before anything that would replace unsaved work, the tool asks: <strong>{labels.saveTestProjectFirst}</strong>,{' '}
-        <strong>{labels.discard}</strong> or <strong>{labels.cancel}</strong>. A file that cannot be read changes nothing, and the message says what is wrong and
-        where.
+        <strong>{labels.discard}</strong> or <strong>{labels.cancel}</strong>. When nothing is unsaved but the project holds work, <strong>{labels.loadExample}</strong>,{' '}
+        <strong>{labels.loadTestProject}</strong> and <strong>{labels.startNewTestProject}</strong> ask <strong>Replace the current work?</strong> first: the judge,
+        the test cases and the test run in the app will be reset. To keep them, choose <strong>{labels.cancel}</strong> and save the test project first. An empty
+        project asks nothing. A file that cannot be read changes nothing, and the message says what is wrong and where.
       </p>
       <p>
         <strong>Reproducing and auditing a result.</strong> Loading a test project with its test run recalculates the numbers from the judge, the cases, the replies and

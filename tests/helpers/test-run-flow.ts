@@ -31,9 +31,22 @@ export async function loadTestProject(page: Page, memory: MemoryFiles, name: str
   memory.chooseOpenName(name);
   await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Load test project…' }).click();
+  await confirmReplaceIfAsked(page, 'Load test project…');
   if (answer === 'none') return;
   await loadQuestion(page).getByRole('button', { name: answer === 'with' ? LOAD_WITH_TEST_RUN : LOAD_PROJECT_ONLY }).click();
   await expect(loadQuestion(page)).toHaveCount(0);
+}
+
+/**
+ * T343: "Load demo…", "Load test project…" and "New test project" ask "Replace the current work?" when the session
+ * has work and nothing unsaved. Answers it with the action's name; does nothing when the question is not asked.
+ */
+export async function confirmReplaceIfAsked(page: Page, item: string): Promise<void> {
+  const confirm = item.replace('…', '');
+  if (!['Load demo', 'Load test project', 'New test project'].includes(confirm)) return;
+  const question = page.getByRole('dialog', { name: 'Replace the current work?' });
+  const asked = await question.waitFor({ timeout: 300 }).then(() => true, () => false);
+  if (asked) await question.getByRole('button', { name: confirm, exact: true }).click();
 }
 
 /** The one save button of the header. */
