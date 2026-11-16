@@ -12,6 +12,7 @@
     "e2e": "playwright test",
     "lint": "eslint .",
     "demo": "tsx scripts/make-demo.ts",
+    "samples": "tsx scripts/make-samples.ts",
     "examples": "tsx scripts/make-example-files.ts",
     "invalid-files": "tsx scripts/make-invalid-files.ts",
     "schemas": "tsx scripts/generate-json-schemas.ts"

@@ -1,0 +1,283 @@
+{
+  "format": "judge-the-judge-test-project",
+  "schema_version": 2,
+  "tool_version": "1.0.0",
+  "judge_set": {
+    "prompt": "You are a careful editor. Read the SOURCE and the SUMMARY.\nList every important fact of the SOURCE that the SUMMARY leaves out. If the summary is complete, return an empty list.\nAnswer only with JSON in this form:\n{\"missing_facts\": [{\"text\": \"the fact, in the words of the source\", \"reason\": \"one sentence\"}]}\n\nSOURCE:\n{{source_text}}\n\nSUMMARY:\n{{summary}}",
+    "judged_text": "source_text",
+    "sample_reply": "{\"missing_facts\":[{\"text\":\"ends in June\",\"reason\":\"The summary does not say when the work ends.\"}]}",
+    "reply_mapping": {
+      "finding_text": {
+        "missing_facts[]": "missing_facts[].text"
+      }
+    },
+    "error_rules": [
+      {
+        "name": "Missing fact",
+        "match": "all",
+        "conditions": [
+          {
+            "field": "missing_facts[].text",
+            "comparison": "is_not_empty"
+          }
+        ]
+      }
+    ],
+    "error_catalog": [
+      {
+        "name": "omitted-date",
+        "description": "A date or a time that the summary leaves out. Example: the work ends in June."
+      },
+      {
+        "name": "omitted-number",
+        "description": "A number or an amount that the summary leaves out. Example: the project costs 2 million euros."
+      },
+      {
+        "name": "omitted-event",
+        "description": "A thing that happens or a rule that the summary leaves out. Example: entry is free on Sundays."
+      },
+      {
+        "name": "omitted-outcome",
+        "description": "A result or a conclusion that the summary leaves out. Example: the effect was strongest in people over 60."
+      }
+    ]
+  },
+  "dataset": {
+    "name": "Completeness, 10 cases",
+    "version": "dc7e1b708fc4",
+    "cases": [
+      {
+        "id": "1",
+        "name": "Library rules",
+        "fields": {
+          "source_text": "The library opens at 8 a.m. and closes at 6 p.m. on weekdays. Members can borrow up to five books for three weeks. Late returns cost 20 cents per day.",
+          "summary": "The library is open from 8 a.m. to 6 p.m. on weekdays. Members may borrow five books for three weeks. Each late day costs 20 cents."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "2",
+        "name": "Bike lane",
+        "fields": {
+          "source_text": "The city council approved the new bike lane on Main Street. Work starts in March and ends in June. The project costs 2 million euros.",
+          "summary": "The city council approved a new bike lane on Main Street. Work starts in March."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "omitted-date",
+            "fragment": "ends in June",
+            "description": "The summary does not say when the work ends.",
+            "difficulty": "subtle"
+          },
+          {
+            "id": "e2",
+            "category": "omitted-number",
+            "fragment": "costs 2 million euros",
+            "description": "The summary leaves out the cost.",
+            "difficulty": "obvious"
+          }
+        ]
+      },
+      {
+        "id": "3",
+        "name": "Career of Maria",
+        "fields": {
+          "source_text": "Maria joined the company in 2019 as a designer. In 2022 she became the head of the design team. She now leads six people.",
+          "summary": "Maria joined as a designer in 2019, became head of the design team in 2022 and now leads six people."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "4",
+        "name": "Museum reopening",
+        "fields": {
+          "source_text": "The museum reopens on 4 May after two years of repairs. Entry is free on the first Sunday of each month. A new hall shows paintings from the 19th century.",
+          "summary": "The museum reopens on 4 May after two years of repairs. A new hall shows paintings."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "omitted-event",
+            "fragment": "Entry is free on the first Sunday of each month",
+            "description": "The summary leaves out the free entry.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e2",
+            "category": "omitted-date",
+            "fragment": "from the 19th century",
+            "description": "The summary does not say the age of the paintings.",
+            "difficulty": "subtle"
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "name": "Train to Kraków",
+        "fields": {
+          "source_text": "The train to Kraków leaves at 7:15 from platform 3. The trip takes two hours and ten minutes. Tickets can be bought in the app.",
+          "summary": "The 7:15 train to Kraków leaves from platform 3, takes two hours and ten minutes, and tickets are sold in the app."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "6",
+        "name": "Walking study",
+        "fields": {
+          "source_text": "The study followed 400 adults for five years. People who walked daily had fewer heart problems. The effect was strongest in people over 60.",
+          "summary": "A study followed 400 adults for five years and found that daily walking goes with fewer heart problems."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "omitted-outcome",
+            "fragment": "strongest in people over 60",
+            "description": "The summary leaves out which group gained most.",
+            "difficulty": "subtle"
+          }
+        ]
+      },
+      {
+        "id": "7",
+        "name": "Bakery",
+        "fields": {
+          "source_text": "The bakery sells bread, cakes and coffee. It opens at 6 a.m. every day except Monday. Cash is not accepted; customers pay by card.",
+          "summary": "The bakery sells bread, cakes and coffee and opens at 6 a.m."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "omitted-date",
+            "fragment": "except Monday",
+            "description": "The summary does not say the bakery is closed on Monday.",
+            "difficulty": "obvious"
+          },
+          {
+            "id": "e2",
+            "category": "omitted-event",
+            "fragment": "Cash is not accepted",
+            "description": "The summary leaves out the payment rule.",
+            "difficulty": "obvious"
+          }
+        ]
+      },
+      {
+        "id": "8",
+        "name": "Software update",
+        "fields": {
+          "source_text": "The software update fixes a login bug. It also makes the app start faster. Users must restart the app after the update.",
+          "summary": "The update fixes a login bug and speeds up the start of the app; users need to restart afterwards."
+        },
+        "expected_errors": []
+      },
+      {
+        "id": "9",
+        "name": "School trip",
+        "fields": {
+          "source_text": "The school trip goes to the science park on Friday. Pupils need a packed lunch and warm clothes. Parents must sign the form by Wednesday.",
+          "summary": "The school trip goes to the science park on Friday and pupils need a packed lunch."
+        },
+        "expected_errors": [
+          {
+            "id": "e1",
+            "category": "omitted-event",
+            "fragment": "warm clothes",
+            "description": "The summary leaves out the clothes.",
+            "difficulty": "subtle"
+          },
+          {
+            "id": "e2",
+            "category": "omitted-date",
+            "fragment": "sign the form by Wednesday",
+            "description": "The summary leaves out the form and its date.",
+            "difficulty": "obvious"
+          }
+        ]
+      },
+      {
+        "id": "10",
+        "name": "Company results",
+        "fields": {
+          "source_text": "The company reported a profit of 3 million euros in 2023. Sales grew by 8 percent. The board plans to hire 40 new people.",
+          "summary": "The company reported a profit of 3 million euros in 2023, and sales grew by 8 percent. The board plans to hire 40 new people."
+        },
+        "expected_errors": []
+      }
+    ]
+  },
+  "metric": {
+    "id": "completeness",
+    "parameters": {
+      "match_clear_share": 0.6,
+      "match_partial_share": 0.3,
+      "match_min_word_length": 4
+    },
+    "definition": {
+      "name": "Completeness",
+      "description": "Checks that the judge finds every fact of a source text that a summary leaves out.",
+      "limitations": "Measures only the kinds of omission injected into the test data.",
+      "output_format": "A JSON object with a list of the missing facts, each with its text (in the words of the source) and a reason.",
+      "parameters": {
+        "match_clear_share": {
+          "default": 0.6,
+          "description": "Share of the fragment's words a finding must contain to count as a clear match."
+        },
+        "match_partial_share": {
+          "default": 0.3,
+          "description": "Share above which a finding counts as a partial match."
+        },
+        "match_min_word_length": {
+          "default": 4,
+          "description": "Shorter words are ignored when comparing."
+        }
+      },
+      "measures": [
+        {
+          "id": "detection_rate",
+          "name": "Detection rate",
+          "description": "Injected errors the judge found.",
+          "operation": "ratio",
+          "numerator": "expected_found",
+          "denominator": "expected_total",
+          "interval": "wilson95",
+          "better": "higher"
+        },
+        {
+          "id": "false_positive_rate",
+          "name": "False-positive rate",
+          "description": "Findings that are not errors, out of all findings.",
+          "operation": "ratio",
+          "numerator": "false_positives",
+          "denominator": "findings_total",
+          "interval": "wilson95",
+          "better": "lower"
+        }
+      ]
+    }
+  },
+  "checks": {
+    "rules": [
+      {
+        "measure": "detection_rate",
+        "comparison": "at_least",
+        "value": 0.8
+      },
+      {
+        "measure": "false_positive_rate",
+        "comparison": "at_most",
+        "value": 0.1
+      },
+      {
+        "measure": "case_detection_rate",
+        "comparison": "at_least",
+        "value": 0.8
+      },
+      {
+        "measure": "clean_case_false_positive_rate",
+        "comparison": "at_most",
+        "value": 0.1
+      }
+    ]
+  }
+}

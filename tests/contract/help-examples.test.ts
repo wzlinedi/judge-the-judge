@@ -31,6 +31,8 @@ interface Outcome {
  */
 const readers: Record<string, { read: (path: string) => Outcome; allowedNotes?: RegExp }> = {
   'examples/demo/test-project.json': { read: (p) => readTestProject(text(p)) },
+  'examples/samples/completeness-test-project.json': { read: (p) => readTestProject(text(p)) },
+  'examples/samples/bias-test-project.json': { read: (p) => readTestProject(text(p)) },
   'examples/files/test-cases-example.json': {
     read: (p) => {
       const read = readTestCasesJson(text(p));
