@@ -225,6 +225,8 @@ test('every action is reachable with the keyboard alone: the More menu, a dialog
   await page.keyboard.press('Enter');
   const caseWindow = page.getByRole('dialog', { name: /^Case \d+ / });
   await expect(caseWindow).toBeVisible();
+  // the window takes the focus in an effect after it is drawn; Escape is read from inside the window, so wait for that
+  await expect.poll(() => page.evaluate(() => document.activeElement?.closest('[role="dialog"]') !== null)).toBe(true);
   await page.keyboard.press('Escape');
   await expect(caseWindow).toHaveCount(0);
   // the focus comes back after the window is gone, so wait for it

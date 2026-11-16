@@ -13,7 +13,10 @@ const next = (page: Page) => page.getByRole('region', { name: 'What next' });
 const caseWindow = (page: Page) => page.getByRole('dialog', { name: /^Case \d+ / });
 
 async function versions(page: Page): Promise<{ judge: string; cases: string }> {
-  const [judge, cases] = await page.getByRole('region', { name: 'Judge being run' }).locator('code').allTextContents();
+  const codes = page.getByRole('region', { name: 'Judge being run' }).locator('code');
+  // a version shows "…" until its hash is computed; read it only after both are there
+  await expect.poll(async () => (await codes.allTextContents()).filter((t) => t !== '…').length).toBe(2);
+  const [judge, cases] = await codes.allTextContents();
   return { judge: judge!, cases: cases! };
 }
 async function file(page: Page, item: string) {
