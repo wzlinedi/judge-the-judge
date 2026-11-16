@@ -22,7 +22,10 @@ own window with a preview and **Apply opinion**. Prototype v17 is now the refere
 2026-11-15 for the owner trial (T288, T289): one file, the test project, which holds the test run
 once it has started; **Start test run** in place of finalizing, with no way back; the load question
 **Load with the test run** or **Load the test project only** in place of "Run again with a new
-judge…"; the step "Run" is named "Test run".
+judge…"; the step "Run" is named "Test run". Updated on 2026-11-16 for the UI redesign (slice 10;
+research.md, section 33): a calm look in stone and forest green, a wider layout at four screen sizes,
+and the whole JSON object marked in Judge reply until the next pointing. The redesign changes no
+data, no file format, no action and no label.
 
 ## Summary
 
@@ -68,8 +71,9 @@ sections 6 and 25).
 
 **Target Platform**: Static site for any static host served over HTTPS (GitHub Pages first),
 used in current Google Chrome and Microsoft Edge only (FR-003; research.md, section 26), at phone
-and desktop widths. Other browsers get a notice. The case window of Run and the test case window
-show both columns without page scrolling from 1280 x 720 pixels (SC-030, SC-031).
+and desktop widths. Other browsers get a notice. SC-030 and SC-031 set what the case window shows
+at 1280 x 720 pixels; since the UI redesign the window scrolls as one page with a header that stays
+(FR-092), and SC-030 and SC-031 were reworded for it (Clarifications 2026-11-16).
 
 **Project Type**: Single-project static web application (no backend).
 
@@ -83,9 +87,9 @@ characters per field; WCAG AA contrast, full keyboard operation, light and dark 
 English; the tool never calls an LLM (FR-002). Clipboard reading and the save file need a secure
 context (HTTPS or `localhost`) and a click by the user.
 
-**Scale/Scope**: One user, one judge and one test project at a time; 90 numbered functional
-requirements, of which 85 are active (FR-018, FR-074 and FR-082 removed, FR-035 and FR-042 merged), 15
-user stories, 39 success criteria; five screens (four steps and Help), three windows on one frame
+**Scale/Scope**: One user, one judge and one test project at a time; 94 numbered functional
+requirements, of which 89 are active (FR-018, FR-074 and FR-082 removed, FR-035 and FR-042 merged), 15
+user stories, 47 success criteria; five screens (four steps and Help), three windows on one frame
 (the test case window; the case window of Test run; the read-only case view of Results) and two
 small dialogs (Second opinion; the load question of a test project with a test run); six JSON,
 CSV or HTML file formats (test project, test cases as JSON and as CSV, metric, check configuration,
@@ -104,7 +108,7 @@ contracts/file-formats.md.
 | IV. Portable File-Based Data | Open formats with documented, versioned schemas and validating loaders; no hidden state; mock data | PASS: six JSON, CSV or HTML formats (test project, test cases as JSON and as CSV, metric, check configuration until T225, report; the thresholds are saved in and loaded with the test project file, with no file of their own) plus the one case JSON layout, each JSON format with `format` and `schema_version`, defined once as schemas and published as JSON Schema; the whole state is rebuilt from one test project file, and the same file loaded with "Load the test project only" rebuilds the same test (judge, catalog, cases, metric, thresholds) for a new test run (T289); the schema version of the test project becomes 2 and version 1 is upgraded on load; a fixed demo set doubles as test fixtures; the chosen save file is a file on the user's device, not browser storage. **Note**: constitution 3.1.1 (PATCH, 2026-11-15) drops "and evaluation" from Principle IV, because the evaluation file no longer exists; the rule itself is unchanged |
 | V. Transparent and Reproducible | Same inputs give the same results; each result records what produced it | PASS: evaluation functions are pure and deterministic; the counting mode follows from the rules and is recorded, and a change of it is named; the test run section of the test project file stores the judge version (the judge set is in the same file), the judge version in force when replies were received, the model note, the test cases version, the cases added or corrected after the first reply, the tool version and the thresholds; on load the results are recomputed and any difference is reported; a report made while cases are undecided says how many are not decided yet (T267) |
 | VI. Extensible Metrics and Configurable Checks | One metric contract and registry; declarative definition files; checks in configuration; guide, example, contract tests | PASS: see [contracts/metric-and-checks.md](./contracts/metric-and-checks.md). No metric is built in (constitution 3.0.0): Accuracy is the default metric file that a new test project starts with, registered like any loaded file and replaceable by one with the same id; every other metric loads from a file at run time, and a file that names a metric which is not loaded is refused (T274). Thresholds are bundled defaults, read from `checks.default.json` (T273), editable in Results › Details, and travel in the test project file (constitution 2.0.0; since T266 there is no file of their own; since T289 there is no evaluation file). Judges evaluated per case use two built-in case-level measures from two added counters, with no change to the contract's operations. The minimum test size (30 errors, 10 clean cases) is data in the bundled default configuration, but the spec fixes it, so a loaded configuration cannot change it |
-| VII. Modern, Clear UI | One purpose and one next action per screen; shared design tokens; responsive, accessible, light and dark; designed empty and error states | PASS: four-step flow with one "what next" line and one primary action each (FR-001); a fixed list of action names, every row and window action a visible button with no "More actions" menu (FR-008); a single token stylesheet with the black-and-red scheme in light and dark, red never the only sign of an error (FR-007, research.md section 30); axe-core and contrast checks in end-to-end tests; designed states for an empty or refused clipboard, an unwritable save file and an empty start |
+| VII. Modern, Clear UI | One purpose and one next action per screen; shared design tokens; responsive, accessible, light and dark; designed empty and error states | PASS: four-step flow with one "what next" line and one primary action each (FR-001); a fixed list of action names, every row and window action a visible button with no "More actions" menu (FR-008); a single token stylesheet with the black-and-red scheme in light and dark, red never the only sign of an error (FR-007, research.md section 30), replaced on 2026-11-16 by stone and forest green in light and dark (research.md, section 33), every status with a word or sign; axe-core and contrast checks in end-to-end tests; designed states for an empty or refused clipboard, an unwritable save file and an empty start |
 | VIII. Living Help | Help inside the application, plain language, examples valid against the schemas | PASS: Help is a screen of the application; its examples are the same files that the contract tests validate, so they cannot drift. Each phase writes the Help section of the feature it builds (including pasting from the clipboard, the second opinion per case, the one file with its load question and **Start test run** (T225, T289), "Continue", judges evaluated per case and the supported browsers), and nothing is published before the Help is complete (constitution 3.0.0: the Help may be updated in one pass after an owner trial, T225, and must be complete before the next public release) |
 | Constraints | English everywhere; simplest solution; no data to third parties | PASS: three runtime dependencies (Preact, Zod, Papa Parse) plus Vite as the build tool, each justified in research.md; the clipboard and the save file use built-in browser features, with no new dependency; a Content Security Policy blocks all outgoing connections. This revision removes more than it adds: no Compare, no result shelf, no batch files, no combined score |
 
@@ -131,7 +135,14 @@ explain again, and the whole state is still rebuilt from one file (Principle IV)
 section keeps every reply, decision and version, and is recomputed on load (Principle V); the lock
 after **Start test run** is visible, with its reason and the way to test another prompt (Principle
 VII); the Help is updated in the one pass of T225, before any release (Principle VIII). The only
-finding was the stale file name in Principle IV, fixed by constitution 3.1.1.
+finding was the stale file name in Principle IV, fixed by constitution 3.1.1. Re-checked on
+2026-11-16 for the UI redesign (slice 10), before and after the design: every color, space, radius
+and shadow stays in `tokens.css` (Principle VII); light and dark both remain, and every text pair is
+4.5:1 with the ratios computed in research.md, section 33 (Principle VII); the redesign changes no
+data, file or schema (Principle IV) and no result (Principle V); every change starts with a failing
+test, and the one end-to-end test that checks the old red accent is rewritten before the tokens
+change (Principle I); no file of the Help changes now, and the Help is brought up to date in the one
+pass of T225 and T269 before any release (Principle VIII). No finding.
 
 ## Project Structure
 
@@ -275,6 +286,86 @@ evaluation file, finalizing, Run); slice 9 replaces them (research.md, section 3
    - the demo regenerated as one test project with its test run, and the end-to-end scenarios
      rewritten (quickstart V5, V9, V10, V11).
    The Help follows in the one pass of T225.
+10. **UI redesign (FR-007, FR-055, FR-091 to FR-094; SC-033, SC-040 to SC-047)**, test first. The
+    values come from research.md, section 33; the layout of each view from contracts/ui-flow.md,
+    "Layout of each view". The redesign changes only how things look and where they sit. It changes no
+    data, no file format and no schema, so `data-model.md` and `contracts/file-formats.md` stay as
+    they are. It changes no action, label, order of actions, check, confirmation or result.
+
+    **Gate (SC-040)**: every end-to-end test passes before the first step and after every step,
+    with no change to what it checks. Three known tests check what the redesign changes on purpose.
+    Each is rewritten first, in the step named, before the code changes:
+    - `tests/e2e/v13-privacy-a11y.spec.ts`, "the accent is red …": checks the old colors. Step 1
+      makes it check the forest green accent and the light and dark backgrounds.
+    - `tests/e2e/v7-deciding.spec.ts`, line 152: waits until no `.fragment-strong` is left in the
+      whole window. The passage in the case fields still clears, but the object in Judge reply now
+      stays marked (Clarifications 2026-11-16). Step 5 limits the check to the case fields.
+    - `tests/unit/ui/components.test.tsx`, "keeps two columns that scroll on their own": the case
+      window now has one scroll area (FR-092). Step 4 makes it check that the columns have no
+      scroll of their own.
+    Any other e2e test that fails is a regression, not a test to adjust. Unit tests that name a
+    CSS class may follow a renamed class; their assertions stay the same. A unit test may change an
+    assertion only where an answer of the Clarifications of 2026-11-16 requires it (tasks T320 (c)
+    and T337).
+
+    The steps, in this order. Each step starts with its failing tests:
+
+    1. **Tokens.** Tests: a new unit test `tests/unit/ui/tokens.test.ts` that reads
+       `src/ui/styles/tokens.css` and computes every contrast pair of research.md 33.1 to 33.3 in the
+       light, dark and navy blocks; a new unit test `tests/unit/ui/styles.test.ts` that finds any
+       color, radius or shadow outside `tokens.css`, any margin, padding or gap not taken from the
+       space scale, and any media query width other than 760 px; the rewritten accent test in
+       `tests/e2e/v13-privacy-a11y.spec.ts`. Code: `src/ui/styles/tokens.css` (light, dark,
+       `data-palette="navy"`, `--border-strong`, `--reply-*`, `--text-2xl`, `--content-max`,
+       `--prose-max`, `--control-height`), `src/ui/styles/base.css` (type, headings, buttons,
+       inputs, focus ring, status signs including "– Not run").
+    2. **Layout and shell.** Tests: `tests/unit/ui/shell.test.tsx` (the order of the header row,
+       the file name in the row), a new e2e `tests/e2e/redesign-layout.spec.ts` (SC-041: the width
+       used at 1440 × 900 is more than 1280 px; no sideways page scroll at 1280, 768 and 360; one
+       column below 760; the steps scroll sideways at 360). Code: `src/ui/styles/components.css`
+       (`.app-main`, header, step bar, "what next" line, footer, `.table-scroll`, `.num`),
+       `src/ui/components/shell/Header.tsx`, `FileMenu.tsx`, `SaveState.tsx`, `StepBar.tsx`,
+       `NextBar.tsx`.
+    3. **Views.** Tests: `tests/unit/ui/judge-step.test.tsx` (rules and preview in one area),
+       `run-step.test.tsx` (the status word and sign of each row, "– Not run"),
+       `results-views.test.tsx` (numbers in `.num`, the overall result at the largest size),
+       `test-case-layout.test.tsx` (form, JSON editor, preview, expected errors in this order);
+       e2e in `redesign-layout.spec.ts` (the preview is in view while a rule is edited at
+       1280 × 720). Code: `components.css`, `src/ui/steps/judge/*.tsx` (`RulesSection`,
+       `RulePreview`, `JudgeStep`), `src/ui/steps/cases/CasesStep.tsx`, `CasesTable.tsx`,
+       `src/ui/steps/run/RunStep.tsx`, `src/ui/steps/results/*View.tsx`, `src/ui/components/JsonBox.tsx`
+       (an editor that grows), `src/ui/windows/test-case/*` (the order of the window).
+    4. **Case window.** Tests: `tests/unit/ui/run-case-layout.test.tsx` (the header items of
+       FR-092 in their order; the fields in `.case-fields-others` and `.case-fields-judged`; the
+       class `single` for one field), e2e in `redesign-layout.spec.ts` (SC-042: the header stays in
+       view while the page of the window scrolls, at the four sizes; Alt + Left and Alt + Right;
+       one column below 760 with the judged field last). Code: `src/ui/components/CaseWindowFrame.tsx`,
+       `CasePart.tsx`, `src/ui/windows/case-window/CaseWindow.tsx`, `MarkedFields.tsx`,
+       `ReadOnlyCaseView.tsx`, `components.css` (one scroll area; `.case-pane` loses its own scroll).
+    5. **Judge reply.** Tests: `tests/unit/ui/reply-view.test.tsx` (SC-043: each marked object runs
+       from its opening to its closing brace, with no label; SC-044: no mark on a text reply or on
+       JSON that no rule read), `run-decide.test.tsx` or `case-highlights.test.tsx` (SC-045: the
+       object pointed at stays strong after 5 seconds of fake time and loses it when another item
+       is pointed at, on Close and on Next case; the passage in the fields still clears after
+       about 2 seconds); e2e in `tests/e2e/v6-run.spec.ts` or `v7-deciding.spec.ts` only if a new
+       check is added, never by changing an old one. Code: `ReplyView.tsx` (light background and
+       2 px line), `CaseWindow.tsx` (the 2500 ms timer of `pointed` goes), `components.css`
+       (`.reply-block`, `.reply-block.fragment-strong`).
+    6. **Dialogs.** Tests: `tests/unit/ui/components.test.tsx` (the button order: "Cancel" first,
+       the main action last, for each dialog that has both), e2e in `redesign-layout.spec.ts` (at
+       360 × 640 the content of the large dialog scrolls and its buttons stay in view). Code:
+       `src/ui/components/Dialog.tsx`, the dialogs that list their buttons
+       (`StartTestRunDialog.tsx`, `AddFindingDialog.tsx`, `ExpectedErrorsDialog.tsx`,
+       `SecondOpinionWindow.tsx`, `ImportWindow.tsx`, the replace warning), `components.css`.
+    7. **Close.** The whole suite (lint, types, unit, build, e2e in Chrome) passes. SC-046: the demo
+       and the examples give the same checks, statuses, decisions and Results numbers as before
+       (the existing tests of V1, V9 and V12 already check them). SC-047: Tab reaches every control
+       with a visible focus ring, and the contrast tests pass in both schemes. The manual check M4
+       of quickstart.md is done once by the owner.
+
+    **Help**: the redesign changes no file under `src/ui/help/`. The Help texts that describe the
+    old look (for example the red accent, or a mark that fades) are rewritten in the one pass of
+    T225 and T269, at the end, before any release.
 
 ## Complexity Tracking
 

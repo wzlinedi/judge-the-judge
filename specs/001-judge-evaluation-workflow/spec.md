@@ -109,7 +109,7 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Prototype v13 review) Which colors help the user verify the data in the case windows? → A: Highlights in the texts, always with a number or a word beside the color (FR-077). In the case window of Run and the read-only view: each expected error is highlighted in the judged text with its number, and the judge's findings in its reply are green when they hit an expected error, amber when only partly, red when they match none. In the window for adding a case: the fragments of the expected errors in the text, with their numbers, and the warnings in the warning color.
 - Q: (Prototype v13 review) Can test cases be copied, and how are they named? → A: There is no "Clone" (removed in the owner review of 2026-11-14; see the answer about "Clone" below). A copy is made by hand with "Show JSON", "Copy JSON" and "From JSON". Test case names are unique, compared without regard to case and surrounding spaces: a new case cannot take a used name (the tool says which case has it), while an import or a loaded file that produces a duplicate is kept and marked with a warning (FR-078, FR-079).
 - Q: (Prototype v13 review) Are "Load demo data", "Start from an example" and "Load metric definition" separate steps? → A: No. The demo and an example are only ways to fill the test project; loading a file leads to the same state and there is no second route to it. The example and a loaded metric definition are part of the test project configuration (judge, catalog, metric), not stages of their own. "Load demo data" stays one entry in the More menu.
-- Q: (Prototype v11 review) What should the interface look like? → A: Modern, in black and red, and still easy to read: red is the one accent color on a black background (dark scheme) or a white one (light scheme), contrast meets WCAG AA, and red alone never means an error or "Fail" (FR-007).
+- Q: (Prototype v11 review) What should the interface look like? → A: Modern, in black and red, and still easy to read: red is the one accent color on a black background (dark scheme) or a white one (light scheme), contrast meets WCAG AA, and red alone never means an error or "Fail" (FR-007). The colors were replaced by the answers of Session 2026-11-16 (UI redesign).
 
 ### Session 2026-11-13
 
@@ -195,7 +195,26 @@ place; requirement numbers were kept and retired requirements carry a note.
 - Q: (Owner trial 2026-11-15, T290) Are "Add finding" and "Second opinion…" hidden before the judge’s reply is saved? → A: No. They are shown disabled, with the reason "Paste the judge’s reply first" beside them, and become enabled when a reply is saved (FR-055).
 - Q: (Owner trial 2026-11-15, T291) What does emptying the reply box of a saved reply do? → A: It removes the reply, after asking: "Remove the judge’s reply?", naming the marks by hand that are lost. The case is then "Not run" again, with no reply, no decisions and no added findings. Before this, an emptied box saved nothing and the old reply stayed (FR-056).
 - Q: (Owner trial 2026-11-15, T292) Should a pasted JSON be formatted? → A: Yes, everywhere the tool reads JSON (the sample reply on the Judge step, the case JSON, the reply box of Test run, the second opinion, "Edit expected errors"): when the whole text of the box is valid JSON after a paste, it is shown with new lines and an indent of 2 spaces. Invalid text, fenced JSON and JSON with other text around it stay as pasted. The judge’s reply is stored formatted (FR-084).
-- Q: (Owner trial 2026-11-15, T293) How is a saved judge reply shown on Test run? → A: Read-only and formatted, not in a text box. Each part that an error rule turned into a finding is highlighted, labelled with the rule and its number ("F1") in the right column; pressing a finding on the right scrolls to and marks its block, and pressing a block marks its finding. "Change reply" turns the view into the box with "Save reply" (asks first, as FR-056; an emptied box removes the reply, T291) and "Cancel". "Paste reply" still saves at once, so a case takes no more than three actions (SC-002). A reply kept as text has no highlights (FR-055, FR-056).
+- Q: (Owner trial 2026-11-15, T293) How is a saved judge reply shown on Test run? → A: Read-only and formatted, not in a text box. Each part that an error rule turned into a finding is highlighted, labelled with the rule and its number ("F1") in the right column; pressing a finding on the right scrolls to and marks its block, and pressing a block marks its finding. "Change reply" turns the view into the box with "Save reply" (asks first, as FR-056; an emptied box removes the reply, T291) and "Cancel". "Paste reply" still saves at once, so a case takes no more than three actions (SC-002). A reply kept as text has no highlights (FR-055, FR-056). The labels in the reply were replaced by the answer "(UI redesign 2026-11-16, Judge reply)".
+
+### Session 2026-11-16
+
+UI redesign brief of the owner. It changes how the tool looks, not what it does or what it stores:
+the steps, actions, labels, checks, confirmations, file formats and results stay as they are.
+
+- (UI redesign 2026-11-16, Judge reply, decided in the brief and built in T311) How does the case window of Test run mark the findings in a saved JSON reply? → A: Each finding marks the **whole JSON object** that holds it (with `text`, `verdict`, `reason` and its other fields), not only its text. The mark is a light background and a thin vertical line at the left of all the lines of the object. The reply shows no "F1" label, no rule name, no category and no description of an error: these stay in "Errors". A block is marked strongly when its item is pointed at ("Show the issue", the item on the right, or the block itself; see the next answer for how long). A reply kept as text, and JSON that no rule turned into a finding, have no marks. This replaces the labels of the answer on T293 (FR-055, SC-033).
+- Q: (UI redesign 2026-11-16) The new palette replaces black and red, but only its light colors are given; what happens to the dark scheme? → A: It stays and follows the system setting, with dark tokens derived from the forest green palette and 4.5:1 contrast; there is no theme switch (FR-007).
+- Q: (UI redesign 2026-11-16) "Show the issue" scrolls to the fields of the case, so the finding's block in the reply is out of view; how long is that block marked? → A: Until another item is pointed at. The passage in the fields of the case is still marked for about two seconds, but the block in the reply stays strongly marked, so the user sees it on scrolling down. This replaces the timed mark of the block (T311) (FR-055).
+- Q: (UI redesign 2026-11-16) A case can have any number of fields; how does part 1 of the case window lay them out? → A: From 760 px up, in two columns: the judged field on the right, every other field stacked on the left. A case with one field shows it over the full width. Below 760 px all fields are stacked and the judged field is last. This replaces "the fields, over the full width" (FR-055).
+- Q: (UI redesign 2026-11-16) The main content is at most 1280 px wide, which leaves empty margins on a wide screen; what limit applies? → A: The main content and the case window are at most 1600 px wide, so at 1440 × 900 they fill the width less the side margins. Paragraphs of text (descriptions, messages, Help) are at most about 72 characters wide; tables and JSON use the full width (FR-092).
+- (UI redesign 2026-11-16, decided in the brief) What else does the redesign set? → A: A calm, plain look built from tokens (FR-091), the layout of each step, the case window and the dialogs at four screen sizes (FR-092, FR-093), and the keyboard and contrast rules (FR-094), with acceptance criteria SC-040 to SC-047. No action, label, check, confirmation, file format or result changes, and no theme switch is added. The Help texts that describe the old look are rewritten with the Help (T225), not in this change.
+- Q: (UI redesign 2026-11-16) The secondary text colors of the brief, `#687267` (green) and `#667381` (navy), are 4.49:1 and 4.43:1 on their backgrounds, below 4.5:1; which colors apply? → A: `#5F6A5E` and `#5E6B7A`, the nearest shades that meet 4.5:1 on the background, the surface and the quiet button (5.07:1 and 4.97:1). This replaces the two values of the brief (FR-007).
+- Q: (UI redesign 2026-11-16) Which name stands next to the tool name in the header? → A: The name of the test project (`dataset.name`, for example "Book summaries"). The file name moves from under "Save test project" into the save indicator ("All changes saved · books.json", or "no file yet"), so each name is shown once (FR-092).
+- Q: (UI redesign 2026-11-16) SC-030 and SC-031 ask for no page scrolling at 1280 × 720, but the case window now scrolls as one page; what do they require? → A: SC-030: one action moves to the next case, and the header, the case name and the start of part 1 are in view without scrolling; the rest is further down the same page, with the header in view. SC-031: "Show the issue" of each of up to five errors scrolls to its passage, not hidden under the header, and the list of errors has no scroll area of its own. This replaces the "without scrolling" wording of both (SC-030, SC-031).
+- Q: (UI redesign 2026-11-16) The load question has two equal actions; which one is the main action, placed last? → A: "Load with the test run", because continuing the work is the usual case. The order is "Cancel", "Load the test project only", "Load with the test run", as built today (FR-093, FR-020).
+- Q: (UI redesign 2026-11-16) The case window has five heading levels in its HTML; what does "at most three levels of heading" count? → A: The looks of a heading. h4 and h5 stay in the HTML, for screen readers and tests, but look like an h3 (16 px, 600) or a small label (14 px, 600, secondary text). There is no fourth size (FR-091).
+- Q: (UI redesign 2026-11-16) Below 760 px the header of the case window wraps; does "Close" move to the first row? → A: No. The header wraps naturally in the order of FR-092, with "Close" last, and nothing is moved with CSS, so the order of Tab is the order on screen (FR-092).
+- Q: (UI redesign 2026-11-16) The saved reply and the base case of "Case with errors" scroll inside their frames today; do they keep that? → A: No. Both grow with their text and the page scrolls, so "Show the issue" scrolls the page and the header stays above the passage (FR-092, SC-031).
 
 ## Glossary
 
@@ -534,9 +553,10 @@ reply.
    the judge version, the test project name and version and the judged text.
 2. **Given** the list, **When** the user presses the button at a case, **Then** a window opens that
    fills the screen as one page of three parts (see the Clarifications, Owner review 2026-11-14,
-   Case window of Test run): the fields of the case with highlighted fragments; a row with "Add
+   Case window of Test run): the fields of the case, the judged field on the right from 760 px up, with no
+   highlight until "Show the issue"; a row with "Add
    finding", "Second opinion…", "Marked N of M" and the status; then, in two equal columns, "Judge
-   reply" (the box for the reply, saved as soon as it is readable JSON, with "Paste reply" below it; once a reply is saved, the reply read-only with its findings marked, T293) and the errors.
+   reply" (the box for the reply, saved as soon as it is readable JSON, with "Paste reply" below it; once a reply is saved, the reply read-only, where each finding marks its whole JSON object with a line at the left and no label, UI redesign 2026-11-16) and the errors.
 3. **Given** the window of a case, **When** the user presses "Next case" or "Previous case" (or the matching keys), **Then** the window shows that case at once, with its position
    ("case 7 of 20"), without going back to the list.
 4. **Given** the judge's answer copied in the user's LLM, **When** the user presses "Paste reply", **Then** the reply is read from the clipboard and saved in one action, kept
@@ -1040,13 +1060,17 @@ case and confirm the new case has the same fields and expected errors.
   of unsaved changes and "Continue"; judges that give only a verdict and are evaluated per
   case, with a worked example; and how to read and export the results, with
   examples that are valid for the current file formats.
-- **FR-007**: The interface MUST be modern, clear, responsive, accessible, and present helpful
-  empty and error states. Its color scheme MUST be black and red: in the dark scheme a black or
-  near-black background with red as the one accent color (primary action, current step, focus); in
-  the light scheme a white or near-white background with black text and the same red accent. Text
-  and controls MUST meet WCAG AA contrast in both schemes. Because red is the accent, a failure, an
-  error or a "Fail" status MUST never be shown by red alone: each MUST also carry a word or an icon,
-  and "Pass" and "Fail" MUST be told apart without relying on color.
+- **FR-007**: The interface MUST be clear, responsive and accessible, with helpful empty and error
+  states (UI redesign 2026-11-16; the look is set by FR-091). All colors MUST come from one set of tokens. The main
+  palette is **Stone and forest green**: background `#F2F3ED`, surface `#FBFCF8`, text `#202720`,
+  secondary text `#5F6A5E`, border `#D5DBD1`, accent `#315D48`. The accent is the one accent color
+  (primary action, current step, focus). **Porcelain and navy** (background `#F2F5F8`, surface
+  `#FCFDFF`, text `#202832`, secondary text `#5E6B7A`, border `#D6DFE8`, accent `#345D86`) is an
+  accepted alternative kept only as a set of tokens; the interface has no theme switch. The dark
+  scheme follows the system setting, with dark tokens derived from the forest green palette. Text
+  MUST meet 4.5:1 contrast in both schemes. "Pass", "Awaiting verification" and "Fail" MUST each have
+  their own color and also a word or an icon, so no state is told by color alone. This replaces the
+  black and red scheme.
 - **FR-008**: Every action MUST have a name that says what it does, and the same action MUST carry
   the same name wherever it appears. Names are in sentence case, a verb and a noun; a name ends with
   "…" when the button opens a dialog or a file picker (T245). Text pasted into a box that is checked
@@ -1461,7 +1485,9 @@ case and confirm the new case has the same fields and expected errors.
   are not repeated there; they are on the Judge step.
 - **FR-055**: Each case in the list MUST have an "Open" button that opens the **case window**. It
   MUST fill the screen and be one page of three numbered parts, from top to bottom. Part 1 shows
-  the case, as the read-only view of FR-086 does: the kind, the fields, over the full width,
+  the case, as the read-only view of FR-086 does: the kind and the base, then the fields in two
+  columns from 760 px up, the judged field on the right and all other fields stacked on the left (one field takes the full
+  width; below 760 px all fields are stacked and the judged field is last; UI redesign 2026-11-16),
   with no highlight until "Show the issue" points at an error (T257), then "Show prompt" (a dialog with
   the whole prompt and only "Close") and "Copy prompt". Each part is in a frame. Part 2 is one row: "Add finding", "Second
   opinion…", the meter "Marked N of M" and the status of the case. Before the reply is saved the two buttons are
@@ -1469,9 +1495,12 @@ case and confirm the new case has the same fields and expected errors.
   same width (stacked below 760 px). The left column, "Judge reply", holds, for a case without a reply, the box for the JSON reply with "Paste reply" below it, checked as the text changes (FR-084) with only the problems said ("This is
   not JSON" and its place, an empty or refused clipboard); a reply that is readable JSON is saved as soon as it is in the box. Once
   a reply is saved, the column shows it **read-only**, as it is kept (formatted when it is JSON, FR-084), not in a box (T293): each
-  part that an error rule turned into a finding is highlighted, labelled with the rule and the number of the finding in the right
-  column ("F1"); pressing a finding on the right scrolls to and marks its block in the reply, and pressing a highlighted block marks
-  its finding; a reply kept as text is shown without highlights. "Change reply" turns the view into the box with "Save reply" and
+  finding that an error rule made from the reply marks the **whole JSON object** that holds it, with a light background and a
+  thin vertical line at the left of all its lines; the reply shows no "F1" label, rule name, category or description of an error,
+  which stay in "Errors" (UI redesign 2026-11-16). Pressing an item on the right, or its "Show the issue", marks its block
+  strongly until another item is pointed at, and pressing a block marks its item; "Show the issue" still scrolls to the passage in
+  part 1 and marks it there for about two seconds. A reply kept as text, and JSON that no rule turned into a finding, are shown
+  without marks. "Change reply" turns the view into the box with "Save reply" and
   "Cancel": "Save reply" saves the edited text (asking first as FR-056 says, and an emptied box removes the reply) and returns to the
   read-only view; "Cancel" drops the edits. "Paste reply" saves at once and shows the read-only view, so a case still takes no more than three actions (SC-002). The right column, "Errors", lists
   the expected errors from the start, before any reply, with their description, fragment, category,
@@ -1882,6 +1911,51 @@ case and confirm the new case has the same fields and expected errors.
   will have: a clean case when it has no expected errors, a case with injected errors when it has at
   least one. "Save case" saves it as that kind.
 
+- **FR-091**: The interface MUST look like a calm, plain work tool (UI redesign 2026-11-16). The look comes from type,
+  alignment, spacing and proportion, not from decoration. Every color, space, radius and shadow MUST come from the
+  tokens of FR-007 and the plan. The rules: surfaces are flat, with a thin border; a shadow is used only on dialogs and
+  menus, and it is light. There are two corner radii, a small one for controls and a larger one for cards and dialogs,
+  the same for every element of a kind. Spaces come from one scale in steps of 4 px. A page has at most three levels of
+  heading, counted by their look: an h4 or h5 stays in the HTML but looks like an h3 or a small label; the name of the view and the current task are the most visible, and statuses and help text are smaller but
+  meet 4.5:1. Buttons of the same size have the same height and gap. In one context only the main action is a primary
+  button; the others are secondary. Colored surfaces and frames are few, so that prompts, JSON, errors and decisions get
+  the attention. Gradients, gold accents, heavy shadows, large radii and large empty areas are not used.
+- **FR-092**: The layout MUST work at four sizes: 1440 × 900, 1280 × 720, a tablet about 768 px wide and a phone 360
+  to 430 px wide (UI redesign 2026-11-16). The page header is one compact row: the tool name and the name of the
+  test project (`dataset.name`), the save indicator with the file name ("no file yet" before the first save), "Save
+  test project", "More" and "Help". The four steps (Judge, Test cases, Test run,
+  Results) are all visible on a wide screen and scroll sideways on a narrow one. The main content and the case window
+  are at most 1600 px wide; paragraphs of text are at most about 72 characters wide; tables and JSON use the full
+  width. Below 760 px every two-column layout becomes one column. A table that does not fit scrolls sideways in its
+  own frame, never the page. Buttons, error messages, the save indicator and case names MUST never be cut off: they
+  wrap. The page scrolls as a whole; a JSON box or a card has no scroll area of its own unless its function needs one
+  (a long editor in a dialog). The header of the case window stays visible while the page scrolls. It holds the case
+  name and number, "Previous case", the position ("case 7 of 20"), "Next case", the box "Only cases awaiting
+  verification", the count of replies not saved to a file and "Close".
+- **FR-093**: Each view MUST keep all its functions and show them in this order (UI redesign 2026-11-16):
+  - **Judge**: the prompt and its variables, the choice of the judged text, the sample reply, the table of fields
+    found, the rules with their conditions and the preview of findings. The rules and the preview are in one work area,
+    so that a change of a rule is seen in the preview without scrolling at 1280 × 720.
+  - **Test cases**: one table with its filters, search and row actions; "Error categories" is collapsed by default when
+    the project has cases; "Add test case" keeps "From JSON", "Clean case" and "Case with errors". In the window of a
+    case the order of work is: the form, the JSON editor, the preview and the list of expected errors; the editor
+    grows with its text, so the user does not scroll a small box inside the page.
+  - **Test run**: the table of cases uses the full width of the content, with its counts, its filters ("All cases",
+    "Awaiting verification first", "Only awaiting verification"), "Add test case…" and the status of each case as a
+    word with a symbol. The four counts of T263 stay apart.
+  - **Case window**: the three parts of FR-055.
+  - **Results**: "Summary", "Error analysis" and "Test case list" with their measures, statuses, thresholds, the HTML
+    report and "Open". Numbers in tables are right-aligned, and the overall result is the most visible line.
+  - **Dialogs**: the title, the context, the content or editor, the errors or preview, then the buttons ("Cancel"
+    first, the main action last). In the load question of a test project with a test run the order is "Cancel", "Load
+    the test project only", "Load with the test run", and "Load with the test run" is the main action. On a small
+    screen the content scrolls inside the dialog and the buttons stay visible.
+- **FR-094**: Every control MUST be usable from the keyboard, with a focus ring that is always visible and meets 3:1
+  against its background, and every control and region MUST have a label that says what it is (UI redesign
+  2026-11-16). Motion (scrolling to a passage, a strong mark that fades) MUST be instant when the user asks for reduced
+  motion. A state (Pass, Awaiting verification, Fail, Not run, a mark of an error) MUST be shown by a word or an icon as
+  well as a color.
+
 ### Key Entities
 
 - **Test Project** (formerly "test set"; also replaces "dataset"): the user's whole test, saved and
@@ -2027,17 +2101,21 @@ case and confirm the new case has the same fields and expected errors.
 - **SC-029**: A test run saved part-way and loaded in a later session has identical content in
   100% of cases, and the user can continue within 1 minute of choosing the file.
 - **SC-030**: A user can move from one test case to the next on Test run, or in the read-only view of
-  a case, with a single action and see the next case's data and prompt, or its reply and marks,
-  without scrolling the page, on a screen of 1280 x 720 pixels or larger.
+  a case, with a single action. On a screen of 1280 x 720 pixels or larger the header of the window,
+  the case name and the start of part 1 are in view without scrolling. The rest of the case (its
+  data and prompt, or its reply and marks) is on the same page further down, and the header stays
+  in view while the page scrolls (FR-092; UI redesign 2026-11-16).
 - **SC-031**: A case with up to five expected errors can be read, with every expected error shown
-  by "Show the issue", in the read-only view and the case window of Test run without
-  scrolling the list of expected errors, on a screen of 1280 x 720 pixels or larger.
+  by "Show the issue", in the read-only view and the case window of Test run. "Show the issue" of
+  each error scrolls the page to its passage, which is not hidden under the header. The list of
+  expected errors has no scroll area of its own (FR-092; UI redesign 2026-11-16).
 - **SC-032**: A user who has entered replies never has more than 25 replies unsaved to a file
   without having been reminded to save.
 - **SC-033**: In the case window of Test run, for a case with up to five expected errors whose
-  fragments occur in the judged text, 100% of the fragments are highlighted with their numbers,
-  and every finding in a JSON reply is marked as matching, partly matching or matching no
-  expected error, each with its label.
+  fragments occur in the judged text, 100% of the fragments can be shown with "Show the issue",
+  every finding in a JSON reply is listed in "Errors" as matching, partly matching or matching no
+  expected error, and 100% of those findings mark their whole JSON object in the reply, with no
+  label in the reply (UI redesign 2026-11-16).
 
 - **SC-034**: A case like a saved one is made in at most four actions besides changing its JSON ("Export test cases",
   "Add test case…", "From JSON", "Save case"), and no two test cases share a name unless an import or a
@@ -2061,6 +2139,25 @@ case and confirm the new case has the same fields and expected errors.
 - **SC-039**: In 100% of cases with a JSON reply, every expected error of the case has a mark or the
   reason it is undecided right after the reply is saved, and every finding that matches no expected
   error is in the list as an additional finding.
+
+**UI redesign (2026-11-16)**
+
+- **SC-040**: After the redesign, 100% of the steps, actions and labels of FR-008 are still present, with the same
+  names, the same order of buttons and the same effects; the end-to-end scenarios pass with no change of what they check.
+- **SC-041**: At 1440 × 900 the main content and the case window are wider than 1280 px, and at 1280 × 720, 768 px and
+  360 px no page scrolls sideways; below 760 px every two-column layout is one column.
+- **SC-042**: In the case window, at every size of FR-092, the header with "Previous case", the position, "Next case",
+  the box "Only cases awaiting verification", the count of unsaved replies and "Close" stays visible while the page
+  scrolls, and "Previous case" and "Next case" work from the keyboard.
+- **SC-043**: For a JSON reply, 100% of the findings made by rules mark their whole JSON object (every line from its
+  opening to its closing brace), and the reply shows no "F" label, rule name, category or error description.
+- **SC-044**: A reply kept as text, and JSON that no rule turned into a finding, have no mark in 100% of cases.
+- **SC-045**: In 100% of cases "Show the issue" scrolls to the passage in the fields of the case and marks the whole
+  JSON object of the linked finding until another item is pointed at.
+- **SC-046**: The JSON checks and their messages, the statuses, the decisions, the confirmations, "Second opinion…" and
+  every number of Results are the same before and after the redesign for the demo and the example files.
+- **SC-047**: Every control is reachable with Tab and shows a visible focus; 100% of text meets 4.5:1 in both schemes;
+  tables and dialogs at 360 px show every column name, message and button without cutting text.
 
 ## Assumptions
 

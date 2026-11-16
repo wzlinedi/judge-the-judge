@@ -1,6 +1,6 @@
 # Contract: Screens and Flow
 
-**Date**: 2026-11-13 | **Plan**: [../plan.md](../plan.md) | **Spec**: FR-001, FR-007, FR-008, Principle VII
+**Date**: 2026-11-13, layout updated 2026-11-16 | **Plan**: [../plan.md](../plan.md) | **Spec**: FR-001, FR-007, FR-008, Principle VII
 
 What each screen is for, its one primary action, when it is available, and the states it must
 design for. Action names in **bold** are fixed by FR-008 and are used exactly as written; all
@@ -20,8 +20,9 @@ Chrome and Microsoft Edge (FR-003).
   it is taller than the screen).
   The current step and how far the user has got are always visible.
 - **The header holds the one save button** (FR-076, T242, T289). It shows the one indicator of
-  unsaved changes ("Unsaved changes", or "All changes saved" with the file name; FR-051), **Save
-  test project** with the name of its file (or "no file yet") under it, and a **More** menu holding
+  unsaved changes ("Unsaved changes", or "All changes saved · books.json" with the file name, or
+  "no file yet" before the first save; FR-051, FR-092), **Save test project** (since the UI redesign
+  of 2026-11-16 the file name is in the indicator, not under the button), and a **More** menu holding
   **Load test project…**, **Save test project as…**, **Import test cases…**, **Export test
   cases…**, **Load demo…** and **New test project**. No other screen has a save button.
 - **Load demo…** loads the demo (a test project of book summaries with a test run in progress) at
@@ -236,18 +237,20 @@ which asks first when something was pasted or typed.
 
 Opened by **Open** (FR-055, FR-060).
 
-- **Fills the screen.** A header that never scrolls: **Previous case**, **Next case**,
-  the position, the checkbox "only cases awaiting verification", the case name with its
-  identifier, "N not saved" (with the reminder from 25: "Close the window and press Save test project at the top"), **Close**.
+- **Fills the screen.** A header that never scrolls holds, in this order (FR-092, UI redesign
+  2026-11-16): the case name with its identifier, **Previous case**, the position ("case 7 of 20"),
+  **Next case**, the checkbox "only cases awaiting verification", "N not saved" (with the reminder
+  from 25: "Close the window and press Save test project at the top"), **Close**. The names of the
+  items do not change.
   Alt + Left and Alt + Right do the same as the two buttons. The status is in part 2.
 - **One vertical page of three numbered parts** (the same page layout as the test case window;
   Owner review 2026-11-14, Case window of Run). The page scrolls as a whole.
 
 | Part | Content |
 |---|---|
-| **1. Case** | Kind and base; every field of the case, over the full width, with no highlight until **Show the issue** (T257), which highlights the passages of that error for a moment with its number (and, after a reply, found, missed, undecided or ignored); then **Show prompt** (a dialog with the whole prompt and only **Close**) and **Copy prompt** (primary until pressed). |
+| **1. Case** | Kind and base; the fields of the case in two columns from 760 px, the judged field on the right and the others stacked on the left (one field takes the full width; below 760 px the judged field comes last), with no highlight until **Show the issue** (T257), which highlights the passages of that error for a moment with its number (and, after a reply, found, missed, undecided or ignored); then **Show prompt** (a dialog with the whole prompt and only **Close**) and **Copy prompt** (primary until pressed). |
 | **2. Marking** | One row: **Add finding** (text, optional category, optional difficulty), **Second opinion…**, the meter "Marked N of M" and the status of the case (Awaiting verification, Pass, Fail). **Without a reply** the two buttons are disabled with the reason "Paste the judge’s reply first" beside them (T290); the meter is not shown. There is no **Approve**. |
-| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: for a case without a reply the box, checked as it changes with line and column, and **Paste reply** below it (primary once **Copy prompt** was pressed); a reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. For a case with a saved reply (T293) the reply is shown **read-only**, as it is kept (formatted when it is JSON, T292), not in a box: each part that an error rule turned into a finding is highlighted, labelled with the rule and the number of the finding on the right ("F1 · Rule name"), by `locateFinding` (`src/core/judge/locate-finding.ts`); a reply kept as text has no highlight. Pressing a highlighted block marks its finding on the right, and pressing a finding on the right ("F1 · Judge: …", "Show F3 in the reply") scrolls to and marks its block. Under the view: **Change reply** and **Paste reply**. **Change reply** turns the view into the box with **Save reply** (primary) and **Cancel**: typing saves nothing; **Save reply** asks "Change the judge’s reply?" when the text changed (an emptied box asks "Remove the judge’s reply?", T291) and then returns to the read-only view; **Cancel** drops the edits. **Paste reply** over a saved reply asks the same question and then saves at once. **Right, "Errors"**: without a reply the expected errors of the case at once, each by the shared error component with **Show the issue** but with no marks and no "Judge: …" line, and the line "The judge’s findings and the marks appear when its reply is saved." ("No expected errors." for a clean case; T264); with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; two groups (T252), each item shown by the shared error component (below): **Expected errors**, each with the words of the judge that match it ("F1 · Judge: “…” (matches)" or "(partly matches)", T258, T293) and its marks (**Found**, **Not found**, **Ignored**), the reason for anything undecided and the source of every mark; **Additional errors**, each with its marks (**Genuine error**, **False positive**, **Ignored**; a finding with no text has no passage and no **Show the issue**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**. There is no list "Findings in the reply" (T258). |
+| **3. Judge reply and errors** | Two columns of the same width (stacked below 760 px). **Left, "Judge reply"**: for a case without a reply the box, checked as it changes with line and column, and **Paste reply** below it (primary once **Copy prompt** was pressed); a reply that is readable JSON is saved as soon as it is in the box (typed or pasted); text that is not JSON shows "This is not JSON" with the line and column, and **Keep as text** (primary) keeps it. For a case with a saved reply (T293) the reply is shown **read-only**, as it is kept (formatted when it is JSON, T292), not in a box: each JSON object that an error rule turned into a finding, found by `locateFinding` (`src/core/judge/locate-finding.ts`), has a light background and a thin line at its left, from its opening to its closing brace, with no label, rule name, category or description (T311; UI redesign 2026-11-16, FR-055); a reply kept as text and JSON that no rule read have no mark. Pressing a marked object marks its finding on the right, and pressing a finding on the right, or **Show the issue**, scrolls to its object and marks it strongly until another item is pointed at. Under the view: **Change reply** and **Paste reply**. **Change reply** turns the view into the box with **Save reply** (primary) and **Cancel**: typing saves nothing; **Save reply** asks "Change the judge’s reply?" when the text changed (an emptied box asks "Remove the judge’s reply?", T291) and then returns to the read-only view; **Cancel** drops the edits. **Paste reply** over a saved reply asks the same question and then saves at once. **Right, "Errors"**: without a reply the expected errors of the case at once, each by the shared error component with **Show the issue** but with no marks and no "Judge: …" line, and the line "The judge’s findings and the marks appear when its reply is saved." ("No expected errors." for a clean case; T264); with a reply, for a reply that cannot be read the message with the reason and, next to it, **No more findings** (primary while the case awaits verification; it confirms that the findings added by hand are all); for a judge evaluated per case one line saying so; two groups (T252), each item shown by the shared error component (below): **Expected errors**, each with the words of the judge that match it ("F1 · Judge: “…” (matches)" or "(partly matches)", T258, T293) and its marks (**Found**, **Not found**, **Ignored**), the reason for anything undecided and the source of every mark; **Additional errors**, each with its marks (**Genuine error**, **False positive**, **Ignored**; a finding with no text has no passage and no **Show the issue**); a finding added by hand or by an applied opinion shows its category and difficulty and has **Remove**. There is no list "Findings in the reply" (T258). |
 
 - **The shared error component** (T251) shows an error the same way in Test cases (Open and the
   windows for adding a case), in Test run and in Results: its number (E1 …) for an expected error, what is
@@ -370,6 +373,95 @@ leads to the case window.
 - Each section is written together with the feature it describes (Principle VIII); the Help is
   complete before the first public release.
 
+## Layout of each view (UI redesign, 2026-11-16)
+
+Where things sit at the four sizes of FR-092: wide (1440 × 900 and 1280 × 720), tablet (about 768
+px) and phone (360 to 430 px). The values (widths, the 760 px breakpoint, tokens) are in
+research.md, section 33. The names, the actions and their order are those of the sections above;
+this section changes none of them.
+
+**Every view**
+
+- The page scrolls as a whole. A box or a card has no scroll area of its own, except a table that is
+  too wide (it scrolls sideways in its own frame) and the content of a dialog.
+- The main content and the case window are at most 1600 px wide and centered. Paragraphs of text are
+  at most about 72 characters wide. Tables, JSON and prompts use the full width.
+- From 760 px up a view may use two columns; below 760 px every view is one column, in the order of
+  the DOM.
+- Buttons, error messages, the save indicator and case names wrap; they are never cut off.
+
+**Header** (one compact row, then the steps)
+
+| Size | Layout |
+|---|---|
+| Wide | Row 1: tool name, the name of the test project (`dataset.name`), the save indicator with the file name (or "no file yet"), **Save test project**, **More**, **Help** at the right. Row 2: the four steps, all visible. |
+| Tablet | The same; row 1 wraps after the name of the test project when it does not fit. |
+| Phone | Row 1 wraps: tool name and the name of the test project, then the indicator and the three buttons. Row 2: the steps in one line that scrolls sideways; the current step is scrolled into view. |
+
+Under the header, on every step: the "what next" line (a plain surface with a thin border, its
+sentence at most 72 characters wide, its one primary button at the right, or under the sentence on a
+phone).
+
+**Step 1: Judge** (FR-093)
+
+1. The prompt and its detected variables, then the choice of the judged text.
+2. The sample reply, then the table of fields found.
+3. One work area: the rules on the left and the preview of findings on the right from 760 px. The
+   preview stays in view while the user scrolls the rules (it is sticky), so a change of a rule shows
+   in the preview without scrolling at 1280 × 720. Below 760 px the preview follows the rules.
+
+**Step 2: Test cases** (FR-093)
+
+1. The "what next" line with **Start test run** (before the start).
+2. The table of test cases over the full width, with its filters, search and the buttons of each row.
+3. "Error categories", collapsed by default when the project has cases.
+4. The test case window: the form, the JSON editor (it grows with its text), the preview, the list of
+   expected errors, one under the other; the two columns of the case view follow the case window
+   rules below.
+
+**Step 3: Test run** (FR-093)
+
+- The table of cases over the full content width, with its filters ("All cases", "Awaiting
+  verification first", "Only awaiting verification") and **Add test case…** above it.
+- The status of each case is a word with a sign. The four counts of T263 stay in four columns. On a
+  phone the table scrolls sideways in its frame; the page does not.
+
+**Case window of Test run** (FR-055, FR-092)
+
+| Size | Layout |
+|---|---|
+| Wide | The header in one row, in the order given in "Window: the case window of Test run". Part 1: the fields in two columns, the judged field on the right. Part 2: one row. Part 3: "Judge reply" on the left and "Errors" on the right, the same width. The three parts are one page with one scroll; the header stays in view. |
+| Tablet (768 px) | The same two columns, narrower; the header wraps when needed, in the same order. |
+| Phone | The header wraps naturally in the order above, with **Close** last; the order on screen is the order of Tab (no CSS `order`). Part 1: the fields one under the other, the judged field last. Part 3: "Judge reply", then "Errors". |
+
+**Judge reply** (FR-055)
+
+- Each JSON object that an error rule turned into a finding has a light background and a thin line
+  at its left, from its opening to its closing brace. There is no label, rule name, category or
+  description.
+- The object of the item pointed at (a finding pressed on the right, or **Show the issue**) is marked
+  strongly: a stronger background and a wider accent line. It stays so until another item is pointed
+  at, the case changes or the window closes.
+- A reply kept as text and JSON that no rule read have no mark.
+- The reply has no scroll area of its own: it grows with its text, and the page scrolls. The same
+  holds for the base case shown in "Case with errors".
+
+**Step 4: Results** (FR-093)
+
+- "Summary" first, with the overall result as the most visible line on the page (the largest text,
+  with its sign). Then "Error analysis" and "Test case list".
+- Numbers in tables are right-aligned, with digits of the same width.
+- **Export HTML report** is the one primary action, in the "what next" line.
+
+**Dialogs** (FR-093)
+
+- From top to bottom: the title, the context (one sentence), the content or editor, the errors or the
+  preview, then the bar of buttons: **Cancel** (or **Close**) first, the main action last, at the
+  right.
+- The content scrolls inside the dialog; the title and the bar of buttons stay in view, also at 360
+  px.
+- The standard large dialog keeps about 90% of the screen; a short question keeps the small dialog.
+
 ## Rules for every screen (Principle VII)
 
 - One obvious primary action per step, in the "what next" line; the only other primary-colored
@@ -381,15 +473,22 @@ leads to the case window.
 - Action names follow FR-008: taking text from the clipboard is "Paste … from clipboard", keeping
   something is "Save …", removing is "Remove"; the same action has the same name everywhere. Text
   pasted into a box is read as it changes, with no "Read …" button.
-- All colors, spacing, type sizes and radii come from `tokens.css`; no one-off values.
-- Black and red (FR-007): red is the one accent color (primary action, current step, focus); the
-  dark scheme has a black background, the light scheme a white or near-white one with black text.
-  Light and dark follow the system setting and there is no switch in the tool; contrast meets WCAG AA in both.
-- Because red is the accent, an error, a failure or "Fail" always carries a word or a sign
-  (✕, ✓) as well; "Pass" and "Fail" differ without color.
+- All colors, spacing, type sizes, radii and shadows come from `tokens.css`; no one-off values
+  (FR-091; values in research.md, section 33).
+- Stone and forest green (FR-007, UI redesign 2026-11-16; this replaces the black-and-red scheme):
+  the forest green accent is the one accent color (primary action, current step, links, focus). The
+  light scheme has a light stone background; the dark scheme is derived from the same green. Light
+  and dark follow the system setting and there is no switch in the tool; every text pair meets
+  4.5:1 in both. Porcelain and navy exists only as a set of tokens.
+- Every state carries a word or a sign as well as its color: "✓ Pass", "… Awaiting verification",
+  "✕ Fail", "– Not run", and the marks of errors (FR-094). Because the accent is green, green alone
+  never means "Pass".
+- Flat surfaces with a thin border; a light shadow only on dialogs and menus; two corner radii;
+  at most three levels of heading; one primary button per context (FR-091).
 - Everything works with the keyboard alone; focus is visible; windows trap and return focus; status
   is never shown by color alone.
-- Usable from 360 px wide; wide tables scroll inside their own container.
+- Usable from 360 px wide; wide tables scroll inside their own container. The layout of each view at
+  the four sizes is in "Layout of each view" below (FR-092, FR-093).
 - Every empty and error state is a designed message with a suggested next step.
 - Long operations (loading a large file) show progress and never freeze the page for more than two
   seconds.

@@ -604,6 +604,8 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
 
 ## 30. A simpler, black-and-red interface
 
+*The colors and the look of this section were replaced on 2026-11-16 by section 33.*
+
 - **Decision** (review of v11; FR-001, FR-007, FR-008): the design tokens define a black-and-red
   scheme. Red is the one accent (primary action, current step, focus ring); the dark scheme has a
   black background, the light scheme a near-white one with black text; success, warning and error
@@ -676,3 +678,231 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
   a visible lock); reading old evaluation files (not needed: the tool is not released); refusing
   version 1 test project files (added here: the upgrade is one dropped key, and the owner's trial
   files keep working).
+
+## 33. UI redesign: calm look, wider layout, whole-object mark (2026-11-16)
+
+This section replaces section 30 (the black-and-red scheme) for colors and look. The rest of
+section 30 stays: one "what next" line per step, one primary action, a word or sign with every
+status. The spec sets the rules (FR-007, FR-055, FR-091 to FR-094, SC-033, SC-040 to SC-047). This
+section sets the values the spec left to the plan. The redesign changes no action, label, check,
+confirmation, file format or result (SC-040, SC-046). All values live in `src/ui/styles/tokens.css`;
+no other file holds a color, a radius or a shadow.
+
+Contrast ratios are WCAG 2.x, computed from the hex values (relative luminance, (L1 + 0.05) /
+(L2 + 0.05)). A unit test (a task of the redesign phase) computes them again from the CSS file, so these
+numbers cannot drift.
+
+### 33.1 Colors, light scheme: Stone and forest green (FR-007)
+
+| Token | Value | Use | Ratio |
+|---|---|---|---|
+| `--bg` | `#F2F3ED` | page background | – |
+| `--surface` | `#FBFCF8` | cards, header, dialogs, inputs | – |
+| `--surface-2` | `#E7EAE0` | hover, selected row, quiet buttons | – |
+| `--border` | `#D5DBD1` | thin rules around cards and between rows (decoration) | 1.26 on `--bg` |
+| `--border-strong` | `#7C8A7B` | the edge of an input, a select and a secondary button | 3.26 on `--bg` |
+| `--text` | `#202720` | body text | 13.71 on `--bg`, 14.85 on `--surface`, 12.56 on `--surface-2` |
+| `--text-muted` | `#5F6A5E` | secondary text, labels, help text | 5.07 on `--bg`, 5.49 on `--surface`, 4.65 on `--surface-2` |
+| `--accent` | `#315D48` | primary button, current step, links, focus ring | 6.75 on `--bg`, 7.31 on `--surface` |
+| `--accent-hover` | `#264A39` | hover of the primary button | 9.90 with `--on-accent` |
+| `--on-accent` | `#FFFFFF` | text on the accent | 7.53 on `--accent` |
+| `--focus` | `#315D48` | the focus ring (3 px, offset 2 px) | 6.75 on `--bg` (needs 3:1, FR-094) |
+| `--success` / `--success-bg` | `#1F6B3F` / `#E1EEE4` | Pass | 5.43 on its background, 5.82 on `--bg` |
+| `--warning` / `--warning-bg` | `#8A5A00` / `#F6ECD0` | Awaiting verification, "Unsaved changes" | 5.03, 5.31 |
+| `--error` / `--error-bg` | `#A61B2B` / `#F7E1E1` | Fail, refusals | 5.98, 6.69 |
+| `--mark-warning` | `#F1DC8E` | a passage of an expected error not yet decided | 11.20 with `--text` |
+| `--mark-success` | `#BFE0C8` | a passage found | 10.72 with `--text` |
+| `--mark-error` | `#F0B9BC` | a passage missed | 9.01 with `--text` |
+| `--reply-bg` | `#E9EFE6` | the marked object in Judge reply (light) | 13.08 with `--text` |
+| `--reply-line` | `#5F7F6C` | its thin vertical line | 3.97 on `--bg`, 3.79 on `--reply-bg` |
+| `--reply-strong-bg` | `#CFE3D6` | the same object once pointed at | 11.37 with `--text`, 5.60 with `--accent` |
+| `--overlay` | `rgb(32 39 32 / 0.45)` | behind a dialog | – |
+
+- **Decision**: the palette of FR-007 is used as it is. `--text-muted` is `#5F6A5E`, not
+  `#687267` from the brief.
+- **Rationale**: `#687267` on `#F2F3ED` is 4.49:1, which is below the 4.5:1 that FR-091 asks of
+  secondary text. `#5F6A5E` is the nearest value that passes on the background, the surface and the
+  quiet-button surface. The owner accepted both values on 2026-11-16 (Clarifications), and FR-007 now names them.
+- **Decision**: a second edge token, `--border-strong`, is used for inputs, selects and secondary
+  buttons. `--border` stays for decoration.
+- **Rationale**: a form control needs its edge at 3:1 to be found (WCAG 1.4.11); the soft border
+  of the palette is 1.26:1. Cards and rules keep the soft border, so the page stays calm.
+- **Decision**: Pass is `#1F6B3F` (a green close to the accent), always with "✓ Pass". Awaiting
+  verification is amber with "… Awaiting verification". Fail is red with "✕ Fail". Not run is muted
+  with "– Not run".
+- **Rationale**: the accent is green, so green alone cannot say "Pass"; the word and sign do.
+  Amber and red keep their own colors, as FR-007 asks.
+- **Alternatives considered**: keeping `--text-muted` at `#687267` and relying on the surface (4.86
+  there, but 4.49 on the page background, where most text sits; rejected); one border token at
+  3:1 (every card would look boxed, against FR-091; rejected).
+
+### 33.2 Colors, dark scheme (follows the system; no switch)
+
+| Token | Value | Ratio |
+|---|---|---|
+| `--bg` / `--surface` / `--surface-2` | `#121713` / `#1A211C` / `#242C26` | – |
+| `--border` / `--border-strong` | `#34403A` / `#5F6D62` | – / 3.33 on `--bg` |
+| `--text` | `#E6EBE3` | 14.99 on `--bg`, 13.58 on `--surface`, 11.86 on `--surface-2` |
+| `--text-muted` | `#A3AEA2` | 7.89, 7.15, 6.24 |
+| `--accent` / `--accent-hover` | `#7DBE9C` / `#98D0B2` | 8.39 on `--bg`, 7.60 on `--surface` |
+| `--on-accent` | `#0E1A13` | 8.26 on `--accent`, 10.21 on `--accent-hover` |
+| `--focus` | `#7DBE9C` | 8.39 on `--bg` |
+| `--success` / `--success-bg` | `#6FD09A` / `#14281B` | 8.28 on its background |
+| `--warning` / `--warning-bg` | `#E5B94E` / `#2B2410` | 8.35 |
+| `--error` / `--error-bg` | `#F2878F` / `#33191C` | 6.66 |
+| `--mark-warning` / `--mark-success` / `--mark-error` | `#5A4710` / `#1F5A38` / `#6E2A31` | 7.41 / 6.73 / 8.51 with `--text` |
+| `--reply-bg` / `--reply-line` / `--reply-strong-bg` | `#1F2B24` / `#6FA487` / `#2C4638` | 12.14 with `--text`; line 5.13 on `--reply-bg`; 4.76 for `--accent` on strong |
+| `--overlay` | `rgb(0 0 0 / 0.65)` | – |
+
+- **Decision**: the dark tokens are derived from the same forest-green hue (Clarifications, Session
+  2026-11-16): a near-black green background, light green accent, and each status color lightened
+  until it passes 4.5:1 on all three surfaces. The scheme switches with `prefers-color-scheme` and
+  the existing `data-theme` attribute, which the tool never sets; it is a hook for tests.
+- **Rationale**: a dark accent (`#315D48`) fails on a dark background (about 2.3:1), so the accent
+  must become light in the dark scheme; the on-accent text becomes dark in the same step.
+- **Alternatives considered**: neutral grey dark scheme (the owner chose the green one); pure black
+  background (glare and halation with light text; rejected).
+
+### 33.3 Porcelain and navy, the accepted alternative
+
+- **Decision**: a block `:root[data-palette="navy"]` in `tokens.css` holds the light navy tokens:
+  `--bg #F2F5F8`, `--surface #FCFDFF`, `--text #202832`, `--accent #345D86`, `--on-accent #FFFFFF`,
+  `--border #D6DFE8`, `--border-strong #7D8A98`, and `--text-muted #5E6B7A`. Nothing in the tool sets
+  `data-palette`; there is no switch. A unit test checks that the block passes the same contrast
+  pairs as the main palette.
+- **Rationale**: the owner accepted it as an alternative kept only as tokens. `#667381` from the
+  brief is 4.43:1 on `#F2F5F8`, so `#5E6B7A` (4.97:1) is used, for the same reason as in 33.1. The text
+  is 13.60:1, the white on the accent 6.87:1 and the strong border 3.22:1. Three more navy values
+  are derived so the set passes alone (T319): `--surface-2 #E6EBF1` (the muted text is 4.54:1 on it; on
+  the green `#E7EAE0` it would be 4.47:1), `--accent-hover #284A6B` (9.20:1 with white) and `--focus
+  #345D86` (the accent). A dark navy set is not
+  defined until the owner picks navy; then it is derived as in 33.2.
+- **Alternatives considered**: no navy block (loses the tested fallback); a switch (refused in FR-007).
+
+### 33.4 Space, shape, type, controls
+
+- **Space**: the scale stays at six values, all multiples of 4 px: `--space-1` 4, `--space-2` 8,
+  `--space-3` 12, `--space-4` 16, `--space-5` 24, `--space-6` 32. A margin, padding or gap uses
+  only these. *Why*: the scale already exists and fits FR-091; a test finds literal values.
+- **Radius**: two values: `--radius` 6 px for controls and small boxes, `--radius-lg` 10 px for
+  cards and dialogs. The round step number, the 4 px and 2 px radii of old rules go. *Why*: FR-091
+  asks for two radii, the same for every element of a kind.
+- **Type**: one family (the system sans-serif), one monospace for JSON and prompts. Sizes:
+  `--text-sm` 14 px (status, help, labels), `--text-md` 16 px (body), `--text-lg` 20 px, `--text-xl`
+  24 px, and `--text-2xl` 32 px used only for the overall result. Weights: 400 for text, 600 for
+  headings, the primary button and a status word; 700 and 800 go. Line height 1.5 for text, 1.3 for
+  headings. *Why*: three heading levels (FR-091) need three clear steps (24, 20, 16), and a single
+  larger size gives the overall result the most visible line (FR-093).
+- **Headings**: h1 is the name of the view (24 px, 600); h2 is a section or a part (20 px, 600); h3
+  is a group inside it (16 px, 600). An h4 or h5 stays in the HTML, so screen readers and tests
+  keep the structure, but it looks like an h3 (16 px, 600) or like a small label (14 px, 600,
+  `--text-muted`); there is no fourth size. *Why*: FR-091 counts the looks of a heading, not the
+  HTML levels (Clarifications 2026-11-16).
+- **Alternative to heading looks**: turning h4 and h5 into h3 or plain text (it breaks the e2e tests
+  that find "Judge reply" as a heading, against SC-040; rejected).
+- **Buttons**: every button is `--control-height` 2.25 rem (36 px) high, with a gap of `--space-2`
+  between buttons. The primary button is the accent with `--on-accent` text; a secondary button has
+  `--surface` and `--border-strong`. A disabled primary stays quiet (as today). *Why*: one height
+  and one gap (FR-091); 36 px is above the 24 px minimum target of WCAG 2.2.
+- **Shadow**: one token, `--shadow: 0 4px 16px rgb(32 39 32 / 0.12)` (dark: `0 4px 16px rgb(0 0 0 /
+  0.5)`). It is used only by `.dialog` and `.menu`. The banner of a message (`.notice-line.has-message`)
+  and the case window header lose their shadow and keep a border. *Why*: FR-091 allows a light
+  shadow only on dialogs and menus.
+- **Flat surfaces**: the "what next" line loses its colored left edge and the tabs and steps use a
+  2 px accent underline only for the current one. *Why*: FR-091 wants few colored frames, so prompts,
+  JSON and decisions get the attention.
+- **Motion**: `--motion` 150 ms for hover and focus. Scrolling to a passage and the fade of a mark are
+  instant under `prefers-reduced-motion` (already forced in `base.css`, FR-094).
+
+### 33.5 Widths, breakpoints, columns
+
+- **Widths**: `--content-max: 100rem` (1600 px) for `.app-main`, `.case-window` content and the test
+  case window; `--prose-max: 72ch` for paragraphs of text (descriptions, messages, "what next"
+  sentence). Tables, JSON boxes and the prompt use the full width. Side gutter `--space-4` below 760
+  px and `--space-5` from 760 px. *Why*: FR-092 and the Clarifications of 2026-11-16.
+  The old limits (80 rem, 64 rem) go.
+- **Breakpoints**: one, 760 px. From 760 px up the two-column layouts apply (`min-width: 760px`);
+  below it every layout is one column. The four sizes of FR-092 fall on it as: 1440 and 1280 (wide),
+  768 (still two columns, tight) and 360 to 430 (one column). *Why*: the spec fixes 760 px, and a
+  media query cannot read a custom property, so the value is written once as a literal and a test
+  checks that no other width appears in a media query. 768 px keeps two columns because the spec
+  says "below 760"; its columns are `minmax(0, 1fr)` so they shrink and wrap, never push the page.
+- **Header**: one row: tool name, then the name of the test project (`dataset.name`), then the save
+  indicator with the file name ("All changes saved · books.json", or "no file yet"), then the buttons
+  **Save test project**, **More**, **Help** (the order of the shell test is kept). The file name moves
+  from under the button into the indicator (Clarifications 2026-11-16). The four steps are a second
+  row of the header; they stay visible on a wide screen and scroll sideways below 760 px (`overflow-x:
+  auto`, no wrap, the current step scrolled into view). *Why*: FR-092 asks for a compact row; one row
+  with a stacked button is two lines high. Each name is shown once.
+- **Two columns of case fields** (Part 1 of the case window, FR-055): a wrapper `.case-fields` holds
+  two children, `.case-fields-others` (every field except the judged one, stacked) and
+  `.case-fields-judged` (the judged field), in this DOM order. From 760 px the wrapper is a grid of
+  two equal columns, others on the left and judged on the right; below it the grid is one column and
+  the judged field comes last, which is the DOM order. A case with one field only gets the class
+  `single` and the judged field takes the full width. *Why*: it needs no inline style (the Content
+  Security Policy forbids them) and no CSS ordering trick, so the reading order and the visual
+  order are the same for a screen reader.
+- **Case window frame**: the window stays a full-screen layer with a flex column: a header that does
+  not move, then one scroll area (`.case-window-body`) for the whole page, then the footer when the
+  window has one. The two inner scroll areas of today (`.case-pane`) go; the two columns of Part 3
+  scroll together. SC-030 and SC-031 were reworded for this on 2026-11-16 (Clarifications).
+  *Why*: FR-092 asks for one page scroll and a header that stays; a header that is
+  outside the scroll area never covers the passage that **Show the issue** scrolls to. The header holds
+  the items of FR-092 in this order: the case name and number, **Previous case**, the position, **Next
+  case**, the box "Only cases awaiting verification", the count of replies not saved, **Close**. Below
+  760 px it wraps naturally in this order, with **Close** last. No item has a CSS `order`, so the
+  order of Tab is the order on screen (WCAG 2.4.3; Clarifications 2026-11-16).
+- **No scroll inside the reply or the base**: `.reply-read` (the saved reply, today at most 24 rem
+  high) and `.base-fields` (the base case of "Case with errors", today at most 12 rem) lose their
+  `max-height` and `overflow`. They grow with their text, and the page scrolls. *Why*: FR-092
+  allows no scroll area of its own here, and **Show the issue** must scroll the page so the header
+  stays above the passage (SC-031; Clarifications 2026-11-16).
+- **Alternative to the fixed frame**: a `position: sticky` header in a scrolling window (same look,
+  but anchored scrolling needs `scroll-padding-top` for a header whose height changes when it wraps;
+  rejected).
+- **Editors grow**: a JSON box or prompt box uses `field-sizing: content` with a `min-height` of 8 rem,
+  so the user does not scroll a small box inside the page (FR-092, FR-093). *Why*: the tool supports
+  current Chrome and Edge only (FR-003), which support it. A dialog keeps one scroll area for its
+  content, which is the allowed exception.
+- **Judge step**: the rules and the preview of findings sit in two columns from 760 px; the preview
+  column is `position: sticky; top: var(--space-4)`, so a change of a rule shows in the preview without
+  scrolling at 1280 × 720 (FR-093). Below 760 px the preview follows the rules. *Why*: the preview must stay
+  in view while the user moves down the rules.
+- **Tables**: the table of Test run uses the full content width; a table that does not fit scrolls in
+  `.table-scroll`. Numbers use the class `num` (right-aligned, `font-variant-numeric: tabular-nums`).
+  The overall result in Results is the only text at `--text-2xl`.
+- **Dialogs**: unchanged structure (title, body that scrolls, bar of buttons that stays). The buttons
+  are ordered **Cancel** first and the main action last (FR-093); the task list audits each dialog.
+  In the load question the main action is **Load with the test run**, after **Load the test project
+  only** (Clarifications 2026-11-16; already so in `App.tsx`).
+
+### 33.6 Judge reply: the whole object, marked until the next pointing
+
+- **Decision**: the reply has no scroll area of its own (33.5), so pointing at an item scrolls the
+  page (`.case-window-body`) to the object, not a frame inside it.
+- **Decision**: in the read-only reply, every JSON object that an error rule turned into a finding
+  carries the light background `--reply-bg` and a 2 px vertical line `--reply-line` at its left, from
+  its opening brace to its closing brace. There is no label, rule name, category or description (the
+  work of T311). When the user presses an item of the Errors column, or **Show the issue**, the object of that finding
+  gets `--reply-strong-bg`, a 4 px `--accent` line and is scrolled into view; it stays so until
+  the user points at another item, closes the window or moves to another case. The timer of
+  2500 ms in `CaseWindow.tsx` (T311) goes. The passage in the case fields (Part 1) keeps its mark for about 2
+  seconds, as before (`useShowIssue.ts`).
+- **Rationale**: the owner trial found that a block that fades after 2.5 s is gone when the eye gets
+  to it. A mark that stays until the next pointing answers "which block is this finding?" at any time.
+  The strong state differs from the light one by the background (11.37 with text), the line width and
+  the accent, not by color alone (WCAG 1.4.1).
+- **Alternatives considered**: keeping the timer and making it longer (still disappears); marking all
+  objects strongly at once (loses the answer to "which one"); a label on each object (refused in the
+  brief and in FR-055).
+- **Text replies and unrelated JSON**: no mark of either kind (SC-044). The marked objects never
+  overlap: when a finding sits inside another marked object the outer object is used, as in T311.
+
+### 33.7 What does not change
+
+- Labels, actions, order of actions, checks, confirmations, Second opinion, statuses, results, file
+  formats and the data model (SC-040, SC-046). `data-model.md` and `contracts/file-formats.md` are not
+  touched.
+- The Help texts that describe the old look (for example "red") are rewritten in the one pass of T225
+  and T269. No file under `src/ui/help/` is changed by the redesign.
+- Everything that follows the old rules stays valid as history: section 30 is not rewritten; it gets one pointer to this section.

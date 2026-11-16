@@ -183,7 +183,7 @@ other cases are kept.
 
 **Expected**: the Test run step shows one summary line (judge version, test project name, test cases
 version, judged text) with no prompt or rules, a multi-line "Model details" box whose lines are
-kept, and no save button of its own: "Save test project" is in the page header, with its file name under it. The window fills the screen at 1280 x 720 as one page of three parts (the case with its
+kept, and no save button of its own: "Save test project" is in the page header, and the file name is in the save indicator beside it. The window fills the screen at 1280 x 720 as one page of three parts (the case with its
 highlights; a row with "Add finding", "Second opinion…", "Marked N of M" and the status; then "Judge
 reply" with the box (or, once a reply is saved, the reply read-only with its findings marked) and "Paste reply" below it on the left and the errors on the right), which scrolls as a whole; "Copy prompt" (part 1) is the primary
 button until it is pressed, then "Paste reply"; the reply box of a case without a reply is always visible and
@@ -330,8 +330,9 @@ say which way was counted before and after.
 connections); nothing remains after the page is closed; automated accessibility checks pass in
 light and dark schemes; every action is reachable by keyboard; the case window stacks its columns
 on a narrow screen; the action row of the second-opinion dialog stays visible; in an unsupported
-browser a notice says the tool supports Chrome and Edge. The accent is red on a black background
-(dark) or near-white one (light); every text pair meets 4.5:1; every error and "Fail" carries a
+browser a notice says the tool supports Chrome and Edge. The accent is forest green on a light
+stone background (light) or a light green on a dark green-black one (dark; UI redesign 2026-11-16,
+research.md section 33); every text pair meets 4.5:1; every error and "Fail" carries a
 word or a sign besides its color; each step has exactly one primary action in its "what next"
 line.
 
@@ -411,12 +412,54 @@ Check in particular:
 - The step names are Judge, Test cases, Test run and Results. No screen says "evaluation",
   "Finalize", "Reopen" or "File menu".
 - Before the start, Test run explains why its buttons are disabled ("Start the test run first").
-- The reply of the judge shows a bar at the left of each finding, with no text highlight; "Show
-  the issue" highlights the block for a moment.
+- The reply of the judge marks each whole JSON object of a finding with a light background and a
+  thin line at its left, with no label; "Show the issue" marks the object strongly until another
+  item is pointed at (UI redesign 2026-11-16).
 - First-time use (SC-001, SC-010): give the tool to a person who has not seen it, and time how
   long they need to go from the demo to the exported report.
 
-The look (colors, layout) is redone in the interface redesign; note only what blocks understanding.
+The look (colors, layout) is checked in M4.
+
+### M4. Look at four screen sizes and in the dark scheme (UI redesign, SC-041 to SC-047)
+
+Use the built site in Chrome with the developer tools open (device toolbar for the sizes; Rendering
+› "Emulate CSS prefers-color-scheme" for the scheme). Load the demo with **Load demo…**. Do the list
+below at each size: 1440 × 900, 1280 × 720, 768 × 1024 and 390 × 844 (and once at 360 × 740). Then do
+the list once more at 1280 × 720 and at 390 × 844 in the dark scheme.
+
+1. Open each step: Judge, Test cases, Test run, Results, and Help.
+2. On Test cases, open one case with **Open**, then press **Add test case…** and **Case with errors**.
+3. On Test run, open a case with a reply and a case without one. Use **Next case** and **Previous
+   case**, and scroll down to "Errors". Press a finding, then **Show the issue** on another one.
+4. Open **Second opinion…**, **Show prompt**, the **More** menu and the load question (**Load test
+   project…** with the demo file saved before).
+5. Move through one step and the case window with Tab only.
+
+**Expected**:
+
+- At 1440 × 900 the content uses more than 1280 px of the width; nothing is wider than 1600 px.
+  Paragraphs stay at about 72 characters (SC-041).
+- At no size does the page scroll sideways. A wide table scrolls in its own frame. Below 760 px every
+  view is one column; the steps scroll sideways in their row (SC-041).
+- Nothing is cut off: buttons, messages, the save indicator and case names wrap (SC-047).
+- The case window header (case name and number, **Previous case**, the position, **Next case**, the
+  box "Only cases awaiting verification", the count not saved, **Close**) stays in view while the
+  page of the window scrolls. In part 1 the judged field is on the right from 760 px and last below it
+  (SC-042).
+- In Judge reply each marked object runs from its opening to its closing brace, with no label. The
+  object pointed at stays strongly marked until you point at another item. A text reply has no mark
+  (SC-043 to SC-045).
+- On Judge at 1280 × 720 the preview of findings stays in view while you edit a rule lower in the
+  list (FR-093).
+- On Results the overall result is the most visible line, and numbers line up at the right.
+- In each dialog the buttons stay in view at 390 × 844, with **Cancel** first.
+- The surfaces are flat with thin borders; only dialogs and menus have a shadow; there is one primary
+  button in each context (FR-091).
+- In both schemes all text reads well, the focus ring is always visible, and each status shows a word
+  or sign as well as its color (SC-047).
+- The labels, the actions and the numbers are the same as before the redesign (SC-040, SC-046).
+
+Write what does not match as a note under the closing task of the redesign in `tasks.md`.
 
 ## Performance checks
 
