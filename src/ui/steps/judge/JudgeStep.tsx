@@ -7,6 +7,7 @@ import { PromptSection } from './PromptSection';
 import { RulePreview } from './RulePreview';
 import { RulesSection } from './RulesSection';
 import { SampleReplySection } from './SampleReplySection';
+import { Eyebrow, EYEBROWS } from '../../components/Eyebrow';
 
 export interface JudgeStepProps {
   state: AppState;
@@ -35,6 +36,7 @@ export function JudgeStep({ state, onEdit, onLoad }: JudgeStepProps) {
       <div class="judge-work-area">
         <RulesSection state={state} onEdit={onEdit} />
         <section class="card judge-preview" aria-labelledby={`${id}-preview`}>
+          <Eyebrow text={EYEBROWS.livePreview} />
           <h2 id={`${id}-preview`}>Preview</h2>
           <RulePreview set={state.project.judge_set} />
         </section>

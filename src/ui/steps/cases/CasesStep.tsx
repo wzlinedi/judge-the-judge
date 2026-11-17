@@ -7,6 +7,7 @@ import { testProjectFeedback } from '../../../core/cases/feedback';
 import { CasesTable } from './CasesTable';
 import { ErrorCategoriesSection } from './ErrorCategoriesSection';
 import { TestProjectCard } from './TestProjectCard';
+import { Eyebrow, EYEBROWS } from '../../components/Eyebrow';
 
 export interface CasesStepProps {
   state: AppState;
@@ -26,6 +27,7 @@ export function CasesStep({ state, onAdd, onOpen, onEdit, categoriesOpen, onTogg
     <div class="cases-step">
       <ErrorCategoriesSection state={state} open={categoriesOpen} onToggle={onToggleCategories} onEdit={onCatalogEdit} />
       <TestProjectCard state={state} />
+      <Eyebrow text={EYEBROWS.dataset} />
       <div class="list-head">
         <h2>Test cases</h2>
         <button type="button" onClick={onAdd} disabled={full}>

@@ -4,6 +4,7 @@ import { MINIMUM_SAMPLE } from '../../../core/evaluation/results';
 import type { TestProject } from '../../../core/model';
 import { PER_CASE_SENTENCE } from '../../../core/evaluation/counting-note';
 import { DetailsSection } from './DetailsSection';
+import { Eyebrow, EYEBROWS } from '../../components/Eyebrow';
 
 const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
 
@@ -64,6 +65,7 @@ export function SummaryView({ results, evaluation, onThreshold, reviewed, onOpen
 
   return (
     <div class="summary-view">
+      <Eyebrow text={EYEBROWS.verdict} />
       <h2 class="visually-hidden">Summary</h2>
       <DetailsSection results={results} rules={evaluation.checks.rules} onThreshold={onThreshold} />
       {results.provisional ? (

@@ -10,6 +10,7 @@ import { JudgeSummary } from './JudgeSummary';
 import { SaveReminder } from './SaveReminder';
 import { useVersions } from './useVersions';
 import { TableScroll } from '../../components/TableScroll';
+import { Eyebrow, EYEBROWS } from '../../components/Eyebrow';
 
 export interface RunStepProps {
   evaluation: TestProject;
@@ -74,6 +75,7 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
       </section>
 
       <section class="card" aria-label="Progress">
+        <Eyebrow text={EYEBROWS.runProgress} />
         <h2>Progress</h2>
         <p>{`${received} of ${reviewed.length} replies received`}</p>
         <p>{`${decided} of ${reviewed.length} cases decided`}</p>
@@ -83,6 +85,7 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
       </section>
 
       <section class="card" aria-label="Cases">
+        <Eyebrow text={EYEBROWS.caseQueue} />
         <div class="list-head">
           <h2>Cases</h2>
           <button type="button" onClick={onAdd} disabled={capacity.full || !started}>

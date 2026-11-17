@@ -5,6 +5,7 @@ import { findVariables } from '../../../core/judge/variables';
 import { judgeVersion } from '../../../core/judge/version';
 import { labels } from '../../labels';
 import { Explain } from '../../components/Explain';
+import { Eyebrow, EYEBROWS } from '../../components/Eyebrow';
 
 export interface SectionProps {
   state: AppState;
@@ -31,6 +32,7 @@ export function PromptSection({ state, onEdit, onLoad }: SectionProps) {
 
   return (
     <section class="card" aria-labelledby={`${id}-h`}>
+      <Eyebrow text={EYEBROWS.instructions} />
       <h2 id={`${id}-h`}>Prompt and variables</h2>
       <label for={`${id}-prompt`} class="field-label">
         Judge prompt

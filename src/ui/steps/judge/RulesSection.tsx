@@ -7,6 +7,7 @@ import type { Comparison, ErrorRule } from '../../../core/model';
 import { Explain } from '../../components/Explain';
 import { labels } from '../../labels';
 import type { SectionProps } from './PromptSection';
+import { Eyebrow, EYEBROWS } from '../../components/Eyebrow';
 
 const COMPARISONS: ReadonlyArray<[Comparison, string]> = [
   ['equals', 'equals'],
@@ -30,6 +31,7 @@ export function RulesSection({ state, onEdit }: SectionProps) {
 
   return (
     <section class="card" aria-labelledby={`${id}-h`}>
+      <Eyebrow text={EYEBROWS.detectionLogic} />
       <h2 id={`${id}-h`}>Error rules</h2>
       <Explain>A rule says when the judge has reported an error. The judge has reported an error when at least one rule holds. The fields come from the sample reply, but a rule can use any value, not only the values seen in the sample.</Explain>
       {set.error_rules.map((rule, r) => {

@@ -1,11 +1,17 @@
-/* Shell and shared components. Tokens only; no inline styles (the policy forbids them). */
+/* Shell and shared components. Tokens only; no inline styles (the policy forbids them). Editorial Literary A (research.md, 35.4). */
 .app { min-height: 100vh; display: flex; flex-direction: column; }
 .app-main { flex: 1; padding: var(--space-4); max-width: var(--content-max); width: 100%; margin: 0 auto; }
-@media (min-width: 760px) { .app-main { padding: var(--space-5); } }
+@media (min-width: 760px) { .app-main { padding: var(--space-5) var(--space-6); } }
+/* Names of views and sections, and the title of the case window: the display font, which has only the weight 400. A dialog opened from a step
+   sits inside .app-main, so every dialog title keeps the Inter look below (research.md, 35.4). */
+.app-main h2:not(.dialog h2), .case-window-title { font-family: var(--font-display); font-weight: 400; font-size: var(--text-2xl); line-height: 1.15; letter-spacing: -0.01em; }
+.dialog h2 { font-family: var(--font); font-weight: 600; font-size: var(--text-lg); letter-spacing: -0.01em; }
 
-.app-header { position: relative; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--border); padding: var(--space-3) var(--space-4); }
+.app-header { position: relative; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--border); padding: var(--space-3) var(--space-4); }
+@media (min-width: 760px) { .app-header { padding: var(--space-3) var(--space-6); } }
 .app-header-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
-.app-name { font-size: var(--text-lg); margin: 0; }
+.app-name { font-family: var(--font-display); font-weight: 400; font-size: var(--text-xl); letter-spacing: -0.01em; margin: 0; display: inline-flex; align-items: center; gap: var(--space-2); }
+.app-name::before { content: ""; width: 0.5rem; height: 0.5rem; border-radius: var(--radius); background: var(--mark-success-line); }
 .project-name { min-width: 0; overflow-wrap: anywhere; color: var(--text-muted); }
 .save-group { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); min-width: 0; margin-right: auto; }
 .save-state { font-size: var(--text-sm); }
@@ -13,32 +19,41 @@
 .save-unsaved::before { content: "● "; }
 .save-saved::before { content: "✓ "; }
 .muted { color: var(--text-muted); }
+/* The small label above a main section of a step (FR-091, SC-049; research.md, 35.5): hidden from assistive technology in the markup */
+.eyebrow { font-family: var(--font-mono); font-weight: 400; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin: 0 0 var(--space-1); }
 
 .step-bar { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: var(--space-2); margin-top: var(--space-3); padding-bottom: var(--space-1); }
-.step { display: inline-flex; flex: none; align-items: center; gap: var(--space-2); background: transparent; }
-.step.current { border-bottom: 2px solid var(--accent); font-weight: 600; }
-.step-number { display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: var(--radius); background: var(--surface-2); font-size: var(--text-sm); }
-.step.current .step-number { background: var(--accent); color: var(--on-accent); }
+.step { display: inline-flex; flex: none; align-items: baseline; gap: var(--space-2); background: transparent; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: var(--space-2) var(--space-3); color: var(--text-secondary); }
+.step:hover:not(:disabled) { background: transparent; color: var(--text); }
+.step.current { border-bottom: 2px solid var(--accent); font-weight: 600; color: var(--text); }
+/* "01" to "04": the leading zero is generated content with empty alternative text, so the name of the button stays "1 Judge" (SC-049) */
+.step-number { font-family: var(--font-mono); font-weight: 400; font-size: var(--text-xs); letter-spacing: 0.06em; color: var(--text-muted); }
+.step-number::before { content: "0" / ""; }
+.step.current .step-number { font-weight: 400; color: var(--text); }
 .help-button.current { border-bottom: 2px solid var(--accent); font-weight: 600; }
 
 .file-menu { position: relative; display: inline-flex; align-items: center; gap: var(--space-2); }
 .file-name { font-size: var(--text-sm); }
 .header-actions { display: inline-flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-start; }
-.menu { position: absolute; top: 100%; right: 0; z-index: 10; min-width: 14rem; max-width: calc(100vw - 2rem); max-height: calc(100vh - 8rem); overflow-y: auto; display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: var(--space-1); }
+.menu { position: absolute; top: 100%; right: 0; z-index: 10; min-width: 14rem; max-width: calc(100vw - 2rem); max-height: calc(100vh - 8rem); overflow-y: auto; display: flex; flex-direction: column; background: var(--surface); border: 0; border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: var(--space-1); }
 .menu.menu-left { right: auto; left: 0; }
 .menu button { text-align: left; border: 0; background: transparent; }
 .menu button:hover, .menu button:focus-visible { background: var(--surface-2); }
 
-.next-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-4); }
+.next-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); background: var(--surface-2); border: 0; border-radius: var(--radius-lg); padding: var(--space-4) var(--space-5); margin-bottom: var(--space-5); }
 .next-sentence, .next-detail { margin: 0; }
+/* The "what next" sentence reads as text, in Newsreader */
+.next-sentence { font-family: var(--font-body); font-weight: 400; font-size: var(--text-body); line-height: 1.4; }
+.next-detail, .next-note { color: var(--text-secondary); }
 .next-sentence, .next-detail, .next-note, p.muted, .error-message { max-width: var(--prose-max); }
 .step-gate { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); }
 .step-gate p { margin: 0; }
 
 .browser-notice { background: var(--warning-bg); color: var(--text); border-bottom: 2px solid var(--warning); padding: var(--space-3) var(--space-4); }
-.app-footer { color: var(--text-muted); font-size: var(--text-sm); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); }
+.app-footer { color: var(--text-muted); font-size: var(--text-sm); padding: var(--space-4); border-top: 1px solid var(--border); }
+@media (min-width: 760px) { .app-footer { padding: var(--space-4) var(--space-6); } }
 
-.dialog { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg); color: var(--text); padding: 0; max-width: min(40rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); box-shadow: var(--shadow); }
+.dialog { border: 0; border-radius: var(--radius-lg); background: var(--surface); color: var(--text); padding: 0; max-width: min(40rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); box-shadow: var(--shadow); }
 .dialog::backdrop { background: var(--overlay); }
 .dialog.dialog-wide { width: 90vw; height: 90vh; max-width: 90vw; max-height: 90vh; }
 .dialog-wide .dialog-body { flex: 1; min-height: 0; }
@@ -48,12 +63,12 @@
 .dialog-wide .dialog-frame { height: 100%; max-height: none; }
 .dialog-frame h2 { padding: var(--space-4) var(--space-4) 0; }
 .dialog-body { padding: var(--space-3) var(--space-4); overflow: auto; flex: 1; }
-.dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: var(--surface); }
+.dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: var(--bg); }
 .example-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
 
 .case-window { position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; background: var(--bg); }
-.case-window-header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); background: var(--surface); }
-.case-window-title { margin: 0; margin-right: auto; font-size: var(--text-lg); }
+.case-window-header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); background: var(--bg); }
+.case-window-title { margin: 0; margin-right: auto; }
 .case-window-nav { display: inline-flex; align-items: center; gap: var(--space-2); }
 /* The body is the one scroll area of the window; the header above it never moves, and no part inside it scrolls on its own (FR-092; research.md, 33.5) */
 .case-window-body { flex: 1; min-height: 0; overflow: auto; padding: var(--space-4); }
@@ -67,7 +82,8 @@
 .case-pane > .frame + .frame { margin-top: var(--space-4); }
 .frame > h3:first-child { margin-top: 0; }
 .prompt-full { width: 100%; }
-.case-part h3 { margin: 0 0 var(--space-2); font-size: var(--text-lg); }
+/* The title of a part is a small mono label (research.md, 35.4) */
+.case-part h3 { margin: 0 0 var(--space-3); font-family: var(--font-mono); font-weight: 400; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
 .case-part textarea, .case-part select { max-width: 100%; }
 .case-half { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); align-items: start; }
 .case-half > section { min-width: 0; }
@@ -83,7 +99,7 @@
 .form-grid > div > :is(input[type="text"], select, textarea) { width: 100%; max-width: 100%; }
 .form-grid .muted { margin: var(--space-1) 0 0; }
 @media (max-width: 759px) { .form-grid { grid-template-columns: 1fr; } .form-grid > .field-label { margin-top: var(--space-2); } }
-.case-window-footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: var(--surface); }
+.case-window-footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: var(--bg); }
 @media (min-width: 760px) {
   .case-columns, .case-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .case-fields.single { grid-template-columns: minmax(0, 1fr); }
@@ -102,6 +118,11 @@
 .link-button:hover:not(:disabled) { background: transparent; color: var(--accent-hover); }
 .explain-body { background: var(--surface); border-radius: var(--radius); padding: var(--space-3); margin-top: var(--space-2); }
 .status-mark { white-space: nowrap; }
+/* In a table a status is a mono pill on the background of its state; the sign and the word stay (Principle VII) */
+td .status-mark { display: inline-block; font-family: var(--font-mono); font-weight: 400; font-size: var(--text-xs); line-height: 1.5; padding: 0 var(--space-2); border-radius: var(--radius-lg); background: var(--surface-2); }
+td .status-mark.pass { background: var(--success-bg); }
+td .status-mark.fail { background: var(--error-bg); }
+td .status-mark.warn { background: var(--warning-bg); }
 .empty-state { text-align: center; padding: var(--space-6) var(--space-4); border: 1px dashed var(--border); border-radius: var(--radius); }
 .error-message { background: var(--error-bg); border: 1px solid var(--error); border-radius: var(--radius); padding: var(--space-3); }
 .copy-status { font-size: var(--text-sm); color: var(--success); margin-left: var(--space-2); }
@@ -112,9 +133,11 @@
 /* A message is a banner that stays in view when the page is scrolled; a refusal is red and says "Not done" */
 .notice-line.has-message { position: sticky; top: 0; z-index: 10; margin: var(--space-2) var(--space-4); padding: var(--space-2) var(--space-3); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: var(--text-md); }
 .notice-line.refusal { background: var(--error-bg); border-color: var(--error); }
+/* From 760 px the banner lines up with the header and the content, whose side padding is --space-6 (owner, after M5, 2026-11-17) */
+@media (min-width: 760px) { .notice-line.has-message { margin: var(--space-2) var(--space-6); } }
 .run-step, .results-step { display: flex; flex-direction: column; gap: var(--space-4); }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); }
-.card h2 { font-size: var(--text-lg); }
+/* A card of a step is a flat section: no fill and no frame, a hairline at its top (research.md, 35.4) */
+.card { background: transparent; border: 0; border-top: 1px solid var(--border); border-radius: 0; padding: var(--space-5) 0 var(--space-3); }
 .card p { margin: 0 0 var(--space-2); }
 .button-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .cases-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
@@ -127,12 +150,14 @@ select { width: auto; }
 .inline-check { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); }
 .inline-check input { width: auto; }
 .field-block h4 { margin: var(--space-3) 0 var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
-.field-text { white-space: pre-wrap; margin: 0; }
-.fragment { background: var(--mark-warning); color: var(--text); border-bottom: 4px solid var(--warning); padding: 0 var(--space-1); border-radius: var(--radius); }
-.fragment-found { background: var(--mark-success); border-bottom-color: var(--success); }
-.fragment-missed { background: var(--mark-error); border-bottom-color: var(--error); }
-.fragment sup { font-size: 0.75em; margin-right: var(--space-1); font-weight: 600; }
-.field-label { display: block; margin: var(--space-3) 0 var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
+/* The texts of a case read as text, in Newsreader (research.md, 35.4) */
+.field-text { white-space: pre-wrap; margin: 0; font-family: var(--font-body); font-weight: 400; font-size: var(--text-body); line-height: 1.55; }
+.fragment { background: var(--mark-warning); color: var(--text); border-bottom: 2px solid var(--mark-warning-line); padding: 0 var(--space-1); border-radius: var(--radius); }
+.fragment-found { background: var(--mark-success); border-bottom-color: var(--mark-success-line); }
+.fragment-missed { background: var(--mark-error); border-bottom-color: var(--mark-error-line); }
+.fragment sup { font-size: 0.75em; margin-right: var(--space-1); font-weight: 400; }
+/* A field label is a small muted mono label in capitals, like a table head (research.md, 35.4) */
+.field-label { display: block; margin: var(--space-3) 0 var(--space-1); font-family: var(--font-mono); font-weight: 400; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
 textarea.json { font-size: var(--text-sm); }
 
 .decide-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
@@ -151,21 +176,26 @@ textarea.json { font-size: var(--text-sm); }
 .decide-pane h4 { margin: var(--space-4) 0 var(--space-2); }
 
 .tabs { display: flex; gap: var(--space-2); border-bottom: 1px solid var(--border); }
-.tab { border-radius: var(--radius) var(--radius) 0 0; background: transparent; }
-.tab.current { border-bottom: 2px solid var(--accent); font-weight: 600; }
+.tab { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--text-secondary); }
+.tab:hover:not(:disabled) { background: transparent; color: var(--text); }
+.tab.current { border-bottom: 2px solid var(--accent); font-weight: 600; color: var(--text); }
 .counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: var(--space-3); }
 .count-group { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3); background: var(--surface); }
 .count-group h3 { font-size: var(--text-md); }
 .count-group dl, .rates { margin: 0; }
 .count, .rate { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-1) 0; }
 .count dt, .rate dt { color: var(--text-muted); }
-.count dd, .rate dd { margin: 0; font-weight: 600; }
+.count dd, .rate dd { margin: 0; }
+/* Counts in Inter with figures of one width; rates in the display font, below the overall result (research.md, 35.4) */
+.count dd { font-family: var(--font); font-weight: 600; font-variant-numeric: tabular-nums; }
+.rate dd { font-family: var(--font-display); font-weight: 400; font-size: var(--text-xl); line-height: 1.2; }
 .rates { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--space-3); margin-top: var(--space-4); }
 .rate { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3); }
-.overall { border: 2px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); margin-top: var(--space-4); }
+.overall { background: var(--surface-2); border: 0; border-radius: var(--radius-lg); padding: var(--space-5); margin-top: var(--space-4); }
 .genuine-errors { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-4); margin-top: var(--space-3); }
 .genuine-errors h3 { margin: 0 0 var(--space-1); }
-.overall-result { font-size: var(--text-2xl); font-weight: 600; line-height: 1.3; margin: 0 0 var(--space-2); }
+/* The overall result stays the largest text of Results, above the display headings at --text-2xl (redesign-layout.spec.ts) */
+.overall-result { font-family: var(--font-display); font-weight: 400; font-size: var(--text-3xl); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 var(--space-2); }
 .overall-result strong { font-weight: inherit; }
 .result-works::before { content: "✓ "; color: var(--success); }
 .result-does-not-work::before { content: "✕ "; color: var(--error); }
@@ -192,9 +222,9 @@ textarea.json { font-size: var(--text-sm); }
 textarea.grows { field-sizing: content; min-height: 8rem; }
 .plain-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .variables { border: 1px solid var(--border); border-radius: var(--radius); margin-top: var(--space-3); }
-.rule { border: 1px solid var(--border); border-radius: var(--radius); margin: 0 0 var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); }
+.rule { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin: 0 0 var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); }
 .rule-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
-.rule-head label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
+.rule-head label { display: flex; flex-direction: column; gap: var(--space-1); font-family: var(--font-mono); font-weight: 400; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
 .condition { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .condition input[type="text"] { width: auto; min-width: 12rem; }
 .explain { margin-left: var(--space-2); }
@@ -210,12 +240,13 @@ tr.clickable:hover { background: var(--surface-2); }
 
 /* Error categories */
 button.fold { background: transparent; border: 0; padding: 0; font: inherit; font-weight: 600; color: inherit; min-height: 0; text-align: left; }
-.category { display: grid; gap: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3); margin-bottom: var(--space-2); }
-.category label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
+.category { display: grid; gap: var(--space-2); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3); margin-bottom: var(--space-2); }
+.category label { display: flex; flex-direction: column; gap: var(--space-1); font-family: var(--font-mono); font-weight: 400; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
 
 /* Test case window: case with injected errors, case view, highlights (FR-077, FR-080, FR-085) */
 .fragment-ignored { background: var(--surface-2); border-bottom-color: var(--text-muted); }
-.fragment-strong { outline: 3px solid var(--accent); outline-offset: 1px; font-weight: 600; }
+/* A passage pointed at keeps the weight of its text (Newsreader has no bold file); its outline and background tell it */
+.fragment-strong { outline: 3px solid var(--accent); outline-offset: 1px; }
 .check-line { margin: 0 0 var(--space-2); font-weight: 600; }
 .check-line.agree { color: var(--success); }
 .not-in-text { font-size: var(--text-sm); font-weight: 600; }
@@ -230,7 +261,7 @@ button.fold { background: transparent; border: 0; padding: 0; font: inherit; fon
 .error-facts { margin: 0; font-size: var(--text-sm); }
 .error-sides { margin: var(--space-1) 0; display: grid; grid-template-columns: max-content 1fr; column-gap: var(--space-3); row-gap: var(--space-1); }
 .error-side { display: contents; }
-.error-side dt { color: var(--text-muted); font-family: var(--font-mono, monospace); font-size: var(--text-sm); }
+.error-side dt { color: var(--text-muted); font-family: var(--font-mono); font-weight: 400; font-size: var(--text-sm); }
 .error-side dd { margin: 0; }
 .error-side.not-found dt { color: var(--warning); font-family: inherit; }
 .error-state { margin: 0; font-weight: 600; }
@@ -258,6 +289,11 @@ button.fold { background: transparent; border: 0; padding: 0; font: inherit; fon
 .import-another { margin: var(--space-4) 0 0; }
 .why-disabled { font-size: var(--text-sm); color: var(--text-muted); }
 
+/* A table sits in a frame with the large radius; its head is on the quiet surface (research.md, 35.4) */
+.table-scroll { border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.table-scroll thead th { background: var(--surface-2); }
+.table-scroll tbody tr:last-child > * { border-bottom: 0; }
+
 /* The table of test cases: header texts on one line at the same height, the actions of a row side by side (T210) */
 .cases-table th { white-space: nowrap; vertical-align: bottom; }
 .cases-table .sort-button { min-height: 0; line-height: inherit; }
@@ -276,7 +312,7 @@ button.fold { background: transparent; border: 0; padding: 0; font: inherit; fon
 .errors-to-prepare td input[type="text"] { min-width: 16rem; }
 .errors-to-prepare td:first-child { min-width: 16rem; }
 .categories-table .button-row { flex-wrap: nowrap; }
-.reply-read { margin: 0 0 var(--space-2); padding: var(--space-3); white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-mono); font-size: var(--text-sm); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); }
+.reply-read { margin: 0 0 var(--space-2); padding: var(--space-3); white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-mono); font-weight: 400; font-size: var(--text-sm); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); }
 /* Each object of a finding: a light background and a thin line; the object pointed at: a stronger background and a wide accent line, until the next pointing (research.md, 33.6) */
 .reply-block { display: block; cursor: pointer; color: var(--text); background: var(--reply-bg); border-left: 2px solid var(--reply-line); padding-left: var(--space-2); }
 .reply-block.fragment-strong { background: var(--reply-strong-bg); border-left: 4px solid var(--accent); outline: none; font-weight: normal; }

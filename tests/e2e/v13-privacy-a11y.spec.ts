@@ -120,14 +120,14 @@ for (const scheme of ['light', 'dark'] as const) {
     expect(problems).toEqual([]);
   });
 
-  test(`the accent is forest green, on ${scheme === 'dark' ? 'a dark green-black' : 'a light stone'} background, with text that reads against it (${scheme} scheme)`, async ({ page }) => {
+  test(`the accent is near-black on a warm light background (light) or warm light on a warm dark one (dark), with text that reads against it (${scheme} scheme)`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
     await page.goto('/');
     await loadDemo(page);
     const { page: background, text, accent } = await colors(page);
     expect(accent, 'the Test run step has a primary action').not.toBeNull();
-    // research.md, section 33: #315D48 on the light scheme, #7DBE9C on the dark one
-    expect(accent).toEqual(scheme === 'dark' ? [125, 190, 156] : [49, 93, 72]);
+    // research.md, section 35: #1C1917 on the light scheme, #EEE9E3 on the dark one
+    expect(accent).toEqual(scheme === 'dark' ? [238, 233, 227] : [28, 25, 23]);
     if (scheme === 'dark') {
       expect(luminance(background)).toBeLessThan(0.02);
       expect(luminance(text)).toBeGreaterThan(0.75);

@@ -385,17 +385,24 @@ leads to the case window.
 Where things sit at the four sizes of FR-092: wide (1440 × 900 and 1280 × 720), tablet (about 768
 px) and phone (360 to 430 px). The values (widths, the 760 px breakpoint, tokens) are in
 research.md, section 33. The names, the actions and their order are those of the sections above;
-this section changes none of them.
+this section changes none of them. The Editorial redesign of 2026-11-17 changes the look and the
+width only; its values are in research.md, section 35.
 
 **Every view**
 
 - The page scrolls as a whole. A box or a card has no scroll area of its own, except a table that is
   too wide (it scrolls sideways in its own frame) and the content of a dialog.
-- The main content and the case window are at most 1600 px wide and centered. Paragraphs of text are
+- The main content and the case window are at most 1560 px wide and centered (1600 px before the
+  Editorial redesign of 2026-11-17). Paragraphs of text are
   at most about 72 characters wide. Tables, JSON and prompts use the full width.
 - From 760 px up a view may use two columns; below 760 px every view is one column, in the order of
   the DOM.
 - Buttons, error messages, the save indicator and case names wrap; they are never cut off.
+- A section label (Editorial redesign) is a small line in capitals above some section headings, for
+  example "Step 01 / Instructions" above "Prompt and variables". It is hidden from screen readers and
+  changes no name of a heading, button or region (SC-049). The list of labels is in research.md,
+  35.5: four on Judge, one on Test cases, two on Test run, and one at the top of each view of Results
+  ("Step 04 / Verdict", "Step 04 / Error analysis", "Step 04 / Case list").
 
 **Header** (one compact row, then the steps)
 
@@ -481,16 +488,17 @@ phone).
 - Action names follow FR-008: taking text from the clipboard is "Paste … from clipboard", keeping
   something is "Save …", removing is "Remove"; the same action has the same name everywhere. Text
   pasted into a box is read as it changes, with no "Read …" button.
-- All colors, spacing, type sizes, radii and shadows come from `tokens.css`; no one-off values
-  (FR-091; values in research.md, section 33).
-- Stone and forest green (FR-007, UI redesign 2026-11-16; this replaces the black-and-red scheme):
-  the forest green accent is the one accent color (primary action, current step, links, focus). The
-  light scheme has a light stone background; the dark scheme is derived from the same green. Light
-  and dark follow the system setting and there is no switch in the tool; every text pair meets
-  4.5:1 in both. Porcelain and navy exists only as a set of tokens.
+- All colors, fonts, spacing, type sizes, radii and shadows come from `tokens.css`; no one-off values
+  (FR-091; values in research.md, section 35, which replaces the colors and type of section 33).
+- Editorial Literary A (FR-007, Editorial redesign 2026-11-17; this replaces Stone and forest green):
+  the near-black accent is the one accent color (primary action, current step, links, focus). The
+  light scheme has a warm off-white background; the dark scheme is a warm dark version of the same
+  palette with a light accent. Light and dark follow the system setting and there is no switch in the
+  tool; every text pair meets 4.5:1 in both. No other palette is kept. Four fonts, served by the site:
+  Instrument Serif, Newsreader, Inter and JetBrains Mono (FR-091, SC-048).
 - Every state carries a word or a sign as well as its color: "✓ Pass", "… Awaiting verification",
-  "✕ Fail", "– Not run", and the marks of errors (FR-094). Because the accent is green, green alone
-  never means "Pass".
+  "✕ Fail", "– Not run", and the marks of errors (FR-094). Color alone never means a state: the
+  truth color (teal) of "Pass" always comes with "✓ Pass".
 - Flat surfaces with a thin border; a light shadow only on dialogs and menus; two corner radii;
   at most three levels of heading; one primary button per context (FR-091).
 - Everything works with the keyboard alone; focus is visible; windows trap and return focus; status

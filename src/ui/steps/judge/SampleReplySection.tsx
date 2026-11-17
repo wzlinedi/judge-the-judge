@@ -5,6 +5,7 @@ import { Explain } from '../../components/Explain';
 import { JsonBox } from '../../components/JsonBox';
 import type { SectionProps } from './PromptSection';
 import { TableScroll } from '../../components/TableScroll';
+import { Eyebrow, EYEBROWS } from '../../components/Eyebrow';
 
 /** The sample reply is read as soon as it changes; the fields of the last readable one stay while the text is broken (FR-011, SC-037). */
 export function SampleReplySection({ state, onEdit }: SectionProps) {
@@ -19,6 +20,7 @@ export function SampleReplySection({ state, onEdit }: SectionProps) {
 
   return (
     <section class="card" aria-labelledby={`${id}-h`}>
+      <Eyebrow text={EYEBROWS.sampleOutput} />
       <h2 id={`${id}-h`}>Sample reply and fields</h2>
       <JsonBox
         label="Sample reply"

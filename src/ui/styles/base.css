@@ -1,4 +1,5 @@
-/* Resets and shared rules (Principle VII). Uses only tokens from tokens.css. */
+/* Resets and shared rules (Principle VII). Uses only tokens from tokens.css. Editorial Literary A (research.md, 35.3 and 35.4): Inter for
+   the interface; a rule in the display, body or mono font sets the weight 400, because only Inter has a bold file. */
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -12,18 +13,20 @@ body {
   min-width: 360px;
 }
 
-h1, h2, h3 { line-height: 1.3; font-weight: 600; margin: 0 0 var(--space-3); }
+h1, h2, h3 { line-height: 1.3; font-weight: 600; margin: 0 0 var(--space-3); letter-spacing: -0.01em; }
 h1 { font-size: var(--text-xl); }
 h2 { font-size: var(--text-lg); }
 h3 { font-size: var(--text-md); }
 /* An h4 or h5 stays in the HTML but looks like an h3: three heading looks (FR-091). A rule of a component may make it a small label. */
 h4, h5 { font-size: var(--text-md); font-weight: 600; line-height: 1.3; }
 p { margin: 0 0 var(--space-3); }
-code, pre, textarea.json { font-family: var(--font-mono); }
+code, pre, textarea.json { font-family: var(--font-mono); font-weight: 400; }
 /* A long file name or format name breaks inside its line, so a narrow screen never scrolls sideways */
 code { overflow-wrap: anywhere; }
 
-a { color: var(--accent); }
+/* The accent is the color of the text, so a link keeps its underline: color alone never marks it (WCAG 1.4.1) */
+a { color: var(--accent); text-decoration: underline; text-underline-offset: 0.15em; }
+a:hover { color: var(--accent-hover); }
 
 button, input, select, textarea { font: inherit; color: inherit; }
 
@@ -34,6 +37,8 @@ button {
   border-radius: var(--radius);
   padding: var(--space-2) var(--space-4);
   min-height: var(--control-height);
+  font-size: var(--text-sm);
+  line-height: 1.3;
 }
 button:hover:not(:disabled) { background: var(--surface-2); }
 button:disabled { cursor: not-allowed; opacity: 0.6; }
@@ -53,6 +58,11 @@ input[type="text"], input:not([type]), textarea, select {
   border-radius: var(--radius);
   padding: var(--space-2) var(--space-3);
   width: 100%;
+  /* The typed text is Inter at --text-sm; a label that holds its input must not pass on its mono capitals (research.md, 35.4) */
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 /* Visible focus ring on every interactive element */
@@ -69,6 +79,9 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
 pre.example { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3); font-size: var(--text-sm); }
 table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border); vertical-align: top; }
+/* A table head is a small label in JetBrains Mono; the cells stay in Inter (FR-091) */
+th { font-family: var(--font-mono); font-weight: 400; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+td { font-size: var(--text-sm); }
 
 /* Status marks always carry a sign besides their color (Principle VII, FR-007) */
 .pass, .fail, .error, .warn { font-weight: 600; }

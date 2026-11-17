@@ -203,15 +203,15 @@ UI redesign brief of the owner. It changes how the tool looks, not what it does 
 the steps, actions, labels, checks, confirmations, file formats and results stay as they are.
 
 - (UI redesign 2026-11-16, Judge reply, decided in the brief and built in T311) How does the case window of Test run mark the findings in a saved JSON reply? → A: Each finding marks the **whole JSON object** that holds it (with `text`, `verdict`, `reason` and its other fields), not only its text. The mark is a light background and a thin vertical line at the left of all the lines of the object. The reply shows no "F1" label, no rule name, no category and no description of an error: these stay in "Errors". A block is marked strongly when its item is pointed at ("Show the issue" or the block itself; see the next answers for how long and for what was removed). A reply kept as text, and JSON that no rule turned into a finding, have no marks. This replaces the labels of the answer on T293 (FR-055, SC-033).
-- Q: (UI redesign 2026-11-16) The new palette replaces black and red, but only its light colors are given; what happens to the dark scheme? → A: It stays and follows the system setting, with dark tokens derived from the forest green palette and 4.5:1 contrast; there is no theme switch (FR-007).
+- Q: (UI redesign 2026-11-16, look replaced on 2026-11-17) The new palette replaces black and red, but only its light colors are given; what happens to the dark scheme? → A: It stays and follows the system setting, with 4.5:1 contrast; there is no theme switch. Its colors are now the warm dark Editorial tokens (Editorial redesign 2026-11-17, FR-007).
 - Q: (UI redesign 2026-11-16) "Show the issue" scrolls to the fields of the case, so the finding's block in the reply is out of view; how long is that block marked? → A: Until another item is pointed at. The passage in the fields of the case is still marked for about two seconds, but the block in the reply stays strongly marked, so the user sees it on scrolling down. This replaces the timed mark of the block (T311) (FR-055).
 - Q: (Owner trial 2026-11-16, case 15) The error card has buttons that mark the object in Judge reply ("F1 · Judge: “…” (matches)" and "Show F2 in the reply"), and "Show the issue" marks it too; do all of them stay? → A: No. The two buttons go, because they repeat "Show the issue" and crowd the card. The marks stay: "Show the issue" and pressing the block itself mark the object. The line "F1 · Judge: “…” (matches)" stays as text, because it says which words of the judge match the error, and pressing a block still marks its line (FR-055, SC-045).
 - Q: (Owner trial 2026-11-16, after case 15) Does the line "F1 · Judge: “…” (matches)" stay in the error card? → A: No. The line goes; a partial match is still explained by the reason of the undecided mark. Pressing a block in Judge reply now marks and scrolls to the card of the expected error that the finding matches, and the card of a finding with no expected error as before (FR-055, SC-045; T347). Replaces the end of the answer above and the "words of the judge" part of FR-055 (T258).
 - Q: (Owner trial 2026-11-16, case 15) Part 3 of the case window of Test run is called "Judge reply and errors", which names the two columns, not the work; what is it called? → A: "Verify the judge reply". The left column keeps its label "Judge reply" and the right column keeps "Errors". This is the one change of a label made by the redesign, at the owner's request (FR-055; SC-040 gate exception 4, the e2e test of `v6-run.spec.ts`).
 - Q: (UI redesign 2026-11-16) A case can have any number of fields; how does part 1 of the case window lay them out? → A: From 760 px up, in two columns: the judged field on the right, every other field stacked on the left. A case with one field shows it over the full width. Below 760 px all fields are stacked and the judged field is last. This replaces "the fields, over the full width" (FR-055).
-- Q: (UI redesign 2026-11-16) The main content is at most 1280 px wide, which leaves empty margins on a wide screen; what limit applies? → A: The main content and the case window are at most 1600 px wide, so at 1440 × 900 they fill the width less the side margins. Paragraphs of text (descriptions, messages, Help) are at most about 72 characters wide; tables and JSON use the full width (FR-092).
+- Q: (UI redesign 2026-11-16; the limit is 1560 px since the Editorial redesign 2026-11-17, FR-092) The main content is at most 1280 px wide, which leaves empty margins on a wide screen; what limit applies? → A: The main content and the case window are at most 1600 px wide, so at 1440 × 900 they fill the width less the side margins. Paragraphs of text (descriptions, messages, Help) are at most about 72 characters wide; tables and JSON use the full width (FR-092).
 - (UI redesign 2026-11-16, decided in the brief) What else does the redesign set? → A: A calm, plain look built from tokens (FR-091), the layout of each step, the case window and the dialogs at four screen sizes (FR-092, FR-093), and the keyboard and contrast rules (FR-094), with acceptance criteria SC-040 to SC-047. No action, label, check, confirmation, file format or result changes, and no theme switch is added. The Help texts that describe the old look are rewritten with the Help (T225), not in this change.
-- Q: (UI redesign 2026-11-16) The secondary text colors of the brief, `#687267` (green) and `#667381` (navy), are 4.49:1 and 4.43:1 on their backgrounds, below 4.5:1; which colors apply? → A: `#5F6A5E` and `#5E6B7A`, the nearest shades that meet 4.5:1 on the background, the surface and the quiet button (5.07:1 and 4.97:1). This replaces the two values of the brief (FR-007).
+- Q: (UI redesign 2026-11-16, palette replaced on 2026-11-17 by Editorial, FR-007) The secondary text colors of the brief, `#687267` (green) and `#667381` (navy), are 4.49:1 and 4.43:1 on their backgrounds, below 4.5:1; which colors apply? → A: `#5F6A5E` and `#5E6B7A`, the nearest shades that meet 4.5:1 on the background, the surface and the quiet button (5.07:1 and 4.97:1). This replaces the two values of the brief (FR-007).
 - Q: (UI redesign 2026-11-16) Which name stands next to the tool name in the header? → A: The name of the test project (`dataset.name`, for example "Book summaries"). The file name moves from under "Save test project" into the save indicator ("All changes saved · books.json", or "no file yet"), so each name is shown once (FR-092).
 - Q: (UI redesign 2026-11-16) SC-030 and SC-031 ask for no page scrolling at 1280 × 720, but the case window now scrolls as one page; what do they require? → A: SC-030: one action moves to the next case, and the header, the case name and the start of part 1 are in view without scrolling; the rest is further down the same page, with the header in view. SC-031: "Show the issue" of each of up to five errors scrolls to its passage, not hidden under the header, and the list of errors has no scroll area of its own. This replaces the "without scrolling" wording of both (SC-030, SC-031).
 - Q: (UI redesign 2026-11-16) The load question has two equal actions; which one is the main action, placed last? → A: "Load with the test run", because continuing the work is the usual case. The order is "Cancel", "Load the test project only", "Load with the test run", as built today (FR-093, FR-020).
@@ -233,6 +233,13 @@ the steps, actions, labels, checks, confirmations, file formats and results stay
 
 - Q: (Converge 2026-11-17, T416) What happens when the test project is too large to fit in a 50 MB file? → A: The save checks the size of the file before it writes it. A file over 50 MB is not written: the message says "The test project would be 96 MB; the tool saves files up to 50 MB. Nothing was saved. Remove test cases or shorten long texts, then save again." The work stays in the page. This applies to "Save test project", "Save test project as…" and the save in the error panel. The read limit stays 50 MB, so every saved file opens again (FR-084, Clarifications 2026-11-16 S4).
 - Q: (Converge 2026-11-17, T417) When the user marks an expected error "Not found" but a judge finding clearly matched it, what happens to that finding? → A: It becomes an additional finding, undecided, as a partly matching finding already does. The case awaits verification until the user marks it "Genuine error", "False positive" or "Ignored", and it counts in the findings of FR-067. When the user marks the error "Found" again, it is a correct finding again (FR-060, FR-067).
+- (Editorial redesign 2026-11-17, decided in the brief and accepted on the before/after preview) What does the Editorial redesign change? → A: Only the look, as the redesign of 2026-11-16 did: the palette, the fonts and the type scale of the brief "Editorial Literary A" replace Stone and forest green (FR-007, FR-091). The steps, actions, labels, checks, confirmations, file formats and results stay as they are (SC-040, SC-046). Scope B: the tokens and styles, plus the markup of the components where the editorial type needs it. The main content and the case window are at most 1560 px wide, as in the brief (FR-092). The new parts of the prototype (the floating dock, tiles, category bars) are not part of it.
+- Q: (Editorial redesign 2026-11-17) The muted text `#8A847D` (3.49:1) and the warning text `#B45309` (4.28:1 on its background) of the brief are below 4.5:1; which colors apply? → A: `#6F6A64` (5.05:1 on the canvas, 4.68:1 on the surface) and `#9A4A08` (5.33:1 on the warning background), for all uses, as in the accepted preview. This replaces the two values of the brief (FR-007).
+- Q: (Editorial redesign 2026-11-17) The brief and the preview give only light colors, and Principle VII requires a dark scheme; how does Editorial look in the dark scheme? → A: A warm dark version of the same palette: canvas `#1A1816`, surface `#24211E`, text `#EEE9E3`, muted text `#A39C94` (6.53:1), a light accent `#EEE9E3` with dark text on the primary button, and lighter state colors (truth `#5EC4B6`, error `#F38BA0`, warning `#E8A75A`, each at least 6.6:1 on its own background). Same fonts and layout; it follows the system setting (FR-007).
+- Q: (Editorial redesign 2026-11-17) Does the Help page take the Editorial look? → A: Yes, but only through the shared styles and tokens: Help has no styles of its own, and no file under `src/ui/help` and no text of Help changes for the redesign. Help names no color or font, so its text stays correct (FR-091).
+- Q: (Editorial redesign 2026-11-17) Where do the fonts of the brief (Instrument Serif, Newsreader, Inter, JetBrains Mono) come from, when the CSP allows fonts only from the app itself? → A: From the app: WOFF2 files in the repository under the SIL Open Font License, with the license text, Latin and Latin Extended characters (texts of cases may be Polish) and `font-display: swap`, with Georgia, the system sans and the system monospace as fallbacks. The CSP does not change and nothing is loaded from Google (FR-091, SC-048).
+- Q: (Editorial redesign 2026-11-17) How are the small labels over the section headings ("Step 01 / Instructions") made, which the preview added with a script? → A: As an element in the markup of the component, before the heading, hidden from screen readers (`aria-hidden`), so the names of the headings and the end-to-end checks do not change. The labels are those of the preview; the labels of Results are set in the plan (FR-091, SC-049).
+- Q: (Editorial redesign 2026-11-17, after the plan) Which of the open choices of research.md 35.1 and 35.7 apply? → A: The truth background is `rgba(13, 148, 136, 0.11)`, stored as `#E0EDE9` (4.55:1 with `#0F766E`), not 0.12 (4.5009:1); FR-007 says so. The assertion changes Z1 to Z5 (`tokens.test.ts`: light, dark, navy, `--content-max`; `v13-privacy-a11y.spec.ts`: the accent) are approved. Option O1 (weight 500) and option O2 (mono h4 labels) are not taken, so `styles.test.ts` stays unchanged.
 
 ## Glossary
 
@@ -1095,16 +1102,23 @@ case and confirm the new case has the same fields and expected errors.
   case, with a worked example; and how to read and export the results, with
   examples that are valid for the current file formats.
 - **FR-007**: The interface MUST be clear, responsive and accessible, with helpful empty and error
-  states (UI redesign 2026-11-16; the look is set by FR-091). All colors MUST come from one set of tokens. The main
-  palette is **Stone and forest green**: background `#F2F3ED`, surface `#FBFCF8`, text `#202720`,
-  secondary text `#5F6A5E`, border `#D5DBD1`, accent `#315D48`. The accent is the one accent color
-  (primary action, current step, focus). **Porcelain and navy** (background `#F2F5F8`, surface
-  `#FCFDFF`, text `#202832`, secondary text `#5E6B7A`, border `#D6DFE8`, accent `#345D86`) is an
-  accepted alternative kept only as a set of tokens; the interface has no theme switch. The dark
-  scheme follows the system setting, with dark tokens derived from the forest green palette. Text
-  MUST meet 4.5:1 contrast in both schemes. "Pass", "Awaiting verification" and "Fail" MUST each have
-  their own color and also a word or an icon, so no state is told by color alone. This replaces the
-  black and red scheme.
+  states (UI redesign 2026-11-16, look replaced by the Editorial redesign 2026-11-17; the look is set by FR-091).
+  All colors MUST come from one set of tokens. The palette is **Editorial Literary A**: canvas `#FAF8F5`,
+  surface `#F3EFEA`, raised surface (dialogs, menus) `#FFFFFF`, text `#1C1917`, secondary text `#57534E`,
+  muted text (labels, metadata) `#6F6A64`, hairline border `rgba(28, 25, 23, 0.09)`, accent `#1C1917`
+  with text `#FAF8F5` on it. The accent is the one accent color (primary action, current step, focus).
+  Three state colors, each with a background, a border and a text color: truth (Pass, Found, a clear match)
+  `rgba(13, 148, 136, 0.11)`, `#0D9488`, `#0F766E`; error (Fail, Not found) `rgba(225, 29, 72, 0.11)`,
+  `#E11D48`, `#BE123C`; warning (Awaiting verification, a partial match, unsaved changes)
+  `rgba(217, 119, 6, 0.13)`, `#D97706`, `#9A4A08`. The muted text and the warning text are shifted from the
+  brief (`#8A847D`, 3.49:1, and `#B45309`, 4.28:1) to meet 4.5:1 on the canvas, the surface and the warning
+  background. The interface has no theme switch, and no other palette is kept: Stone and forest green and
+  Porcelain and navy are removed. The dark scheme follows the system setting and is a warm dark version of the
+  same palette: canvas `#1A1816`, surface `#24211E`, text `#EEE9E3`, secondary text `#C9C2BA`, muted text
+  `#A39C94`, accent `#EEE9E3` with text `#1A1816` on it (a light primary button with dark text), and lighter
+  state text colors: truth `#5EC4B6`, error `#F38BA0`, warning `#E8A75A`. The fonts and the layout are the same
+  in both schemes. Text MUST meet 4.5:1 contrast in both schemes. "Pass", "Awaiting verification" and "Fail" MUST each have their own color and also a word
+  or an icon, so no state is told by color alone.
 - **FR-008**: Every action MUST have a name that says what it does, and the same action MUST carry
   the same name wherever it appears. Names are in sentence case, a verb and a noun; a name ends with
   "…" when the button opens a dialog or a file picker (T245). Text pasted into a box that is checked
@@ -1969,12 +1983,26 @@ case and confirm the new case has the same fields and expected errors.
   meet 4.5:1. Buttons of the same size have the same height and gap. In one context only the main action is a primary
   button; the others are secondary. Colored surfaces and frames are few, so that prompts, JSON, errors and decisions get
   the attention. Gradients, gold accents, heavy shadows, large radii and large empty areas are not used.
+  The type is editorial (Editorial redesign 2026-11-17): **Instrument Serif** for the names of the views and
+  sections, the title of the case window and the overall result; **Newsreader** for the texts of a case and the
+  sentence of "What next"; **Inter** for controls, forms, tables and metadata; **JetBrains Mono** for JSON, prompts,
+  ids and small labels. The four fonts are WOFF2 files served by the app itself under the SIL Open Font License,
+  with its license text, Latin and Latin Extended characters and `font-display: swap`; Georgia, the system sans and
+  the system monospace are the fallbacks. No font, style or other file is loaded from another site, and the
+  Content Security Policy does not change (`font-src 'self'`, `style-src 'self'`).
+  Each main section of a step has a small label above its heading in the monospace font, such as "Step 01 /
+  Instructions" over "Prompt and variables" (Judge: Instructions, Sample output, Detection logic and "Live preview";
+  Test cases: Dataset; Test run: Run progress and Case queue; the labels of Results are set in the plan). The label is
+  part of the markup of the component and hidden from screen readers (`aria-hidden`), so the name of every heading
+  stays as it is. Corners are 8 px for controls and 12 px for cards and dialogs.
+  Help takes the same look only from the shared styles (Editorial redesign 2026-11-17): no file of Help (`src/ui/help`)
+  and no text of Help changes for the redesign.
 - **FR-092**: The layout MUST work at four sizes: 1440 × 900, 1280 × 720, a tablet about 768 px wide and a phone 360
   to 430 px wide (UI redesign 2026-11-16). The page header is one compact row: the tool name and the name of the
   test project (`dataset.name`), the save indicator with the file name ("no file yet" before the first save), "Save
   test project", "More" and "Help". The four steps (Judge, Test cases, Test run,
   Results) are all visible on a wide screen and scroll sideways on a narrow one. The main content and the case window
-  are at most 1600 px wide; paragraphs of text are at most about 72 characters wide; tables and JSON use the full
+  are at most 1560 px wide (1600 px before the Editorial redesign 2026-11-17); paragraphs of text are at most about 72 characters wide; tables and JSON use the full
   width. Below 760 px every two-column layout becomes one column. A table that does not fit scrolls sideways in its
   own frame, never the page. Buttons, error messages, the save indicator and case names MUST never be cut off: they
   wrap. The page scrolls as a whole; a JSON box or a card has no scroll area of its own unless its function needs one
@@ -2207,6 +2235,15 @@ case and confirm the new case has the same fields and expected errors.
   every number of Results are the same before and after the redesign for the demo and the example files.
 - **SC-047**: Every control is reachable with Tab and shows a visible focus; 100% of text meets 4.5:1 in both schemes;
   tables and dialogs at 360 px show every column name, message and button without cutting text.
+
+**Editorial redesign (2026-11-17)**
+
+- **SC-048**: With the network to other sites cut off, every view shows the four Editorial fonts; the page makes
+  no request to another origin, and the Content Security Policy of `index.html` is the same as before.
+- **SC-049**: After the Editorial redesign the name of every heading, button and region is the same as before, the
+  section labels are hidden from screen readers, and the end-to-end scenarios pass with no change of what they check,
+  except the check of the accent color in `v13-privacy-a11y.spec.ts`, which the new palette changes (Z5, approved by
+  the owner on 2026-11-17).
 
 ## Assumptions
 

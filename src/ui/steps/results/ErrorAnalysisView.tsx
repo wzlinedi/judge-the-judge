@@ -2,6 +2,7 @@ import { errorAnalysis, SMALL_GROUP_NOTE, type AdditionalRow, type GroupRow } fr
 import { PER_CASE_WHY } from '../../../core/evaluation/counting-note';
 import type { Results } from '../../../core/evaluation/results';
 import { TableScroll } from '../../components/TableScroll';
+import { Eyebrow, EYEBROWS } from '../../components/Eyebrow';
 
 const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
 
@@ -71,6 +72,7 @@ export function ErrorAnalysisView({ results }: { results: Results }) {
   const a = errorAnalysis(results.counters, perCase);
   return (
     <div class="analysis-view">
+      <Eyebrow text={EYEBROWS.errorAnalysis} />
       <h2 class="visually-hidden">Error analysis</h2>
       <h3>By category</h3>
       <Groups label="By category" rows={a.byCategory} perCase={perCase} />

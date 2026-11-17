@@ -25,7 +25,10 @@ once it has started; **Start test run** in place of finalizing, with no way back
 judge…"; the step "Run" is named "Test run". Updated on 2026-11-16 for the UI redesign (slice 10;
 research.md, section 33): a calm look in stone and forest green, a wider layout at four screen sizes,
 and the whole JSON object marked in Judge reply until the next pointing. The redesign changes no
-data, no file format, no action and no label.
+data, no file format, no action and no label. Updated on 2026-11-17 for the Editorial redesign
+(slice 12; research.md, section 35): the Editorial Literary A palette in light and warm dark, four
+fonts served by the site, section labels hidden from screen readers, and a content width of 1560 px.
+It changes no data, no file format, no action, no label and no name of a heading, button or region.
 
 ## Summary
 
@@ -84,12 +87,14 @@ recalculate after any change without visible delay.
 **Constraints**: Works offline after load; no network requests with user data (enforced by a
 Content Security Policy with `connect-src 'none'`); at most 500 cases per test project and 100,000
 characters per field; WCAG AA contrast, full keyboard operation, light and dark schemes; all text in
-English; the tool never calls an LLM (FR-002). Clipboard reading and the save file need a secure
+English; the tool never calls an LLM (FR-002). The four fonts of FR-091 are WOFF2 files served by
+the site itself (`public/fonts/`), so the Content Security Policy (`font-src 'self'`) does not change
+(SC-048; research.md, section 35.3). Clipboard reading and the save file need a secure
 context (HTTPS or `localhost`) and a click by the user.
 
 **Scale/Scope**: One user, one judge and one test project at a time; 94 numbered functional
 requirements, of which 89 are active (FR-018, FR-074 and FR-082 removed, FR-035 and FR-042 merged), 15
-user stories, 47 success criteria; five screens (four steps and Help), three windows on one frame
+user stories, 49 success criteria; five screens (four steps and Help), three windows on one frame
 (the test case window; the case window of Test run; the read-only case view of Results) and two
 small dialogs (Second opinion; the load question of a test project with a test run); six JSON,
 CSV or HTML file formats (test project, test cases as JSON and as CSV, metric,
@@ -103,14 +108,15 @@ contracts/file-formats.md.
 | Principle | Gate | Status |
 |---|---|---|
 | I. Test-First | Every production module is preceded by failing tests; nothing is imported from `prototypes/`; prototype logic is re-derived from tests | PASS: core is a pure library tested with Vitest; tasks will pair each implementation task with a preceding test task; every phase starts with its end-to-end scenario and its tests; the save file and the clipboard are reached only through two ports with fakes, so the actions that use them are tested first like any other; prototype v17 is reference only. The first prototype and v6 to v16 have answered their questions and are removed in the setup tasks; v17 is removed when the production tool reaches parity |
-| II. Static-First, Hosting-Ready | Builds to plain files; deployable from the first release; no secrets; manual stage 1 | PASS: Vite static build with relative paths, GitHub Pages workflow (HTTPS, as the clipboard and the save file need), no keys, every prompt is copied and every reply pasted by hand, now in one click from the clipboard (FR-002, FR-056, FR-059) |
+| II. Static-First, Hosting-Ready | Builds to plain files; deployable from the first release; no secrets; manual stage 1 | PASS: Vite static build with relative paths, GitHub Pages workflow (HTTPS, as the clipboard and the save file need), no keys, every prompt is copied and every reply pasted by hand, now in one click from the clipboard (FR-002, FR-056, FR-059). Since 2026-11-17 the four fonts are files of the site, in `public/fonts/`, and their URLs are rewritten relative to the built CSS, so the site still works from any folder (research.md, 35.3) |
 | III. Separated Core and Pluggable Judge Source | Core independent of the interface; one interface for the source of judge replies | PASS: `src/core` has no DOM access; `JudgeReplySource` has one adapter in this version (a reply pasted for one case). A batch-file adapter and a live LLM adapter can be added later without touching evaluation code |
 | IV. Portable File-Based Data | Open formats with documented, versioned schemas and validating loaders; no hidden state; mock data | PASS: six JSON, CSV or HTML formats (test project, test cases as JSON and as CSV, metric, report; the thresholds are saved in and loaded with the test project file, with no file of their own) plus the one case JSON layout, each JSON format with `format` and `schema_version`, defined once as schemas and published as JSON Schema; the whole state is rebuilt from one test project file, and the same file loaded with "Load the test project only" rebuilds the same test (judge, catalog, cases, metric, thresholds) for a new test run (T289); the schema version of the test project becomes 2 and version 1 is upgraded on load; a fixed demo set doubles as test fixtures; the chosen save file is a file on the user's device, not browser storage. **Note**: constitution 3.1.1 (PATCH, 2026-11-15) drops "and evaluation" from Principle IV, because the evaluation file no longer exists; the rule itself is unchanged |
 | V. Transparent and Reproducible | Same inputs give the same results; each result records what produced it | PASS: evaluation functions are pure and deterministic; the counting mode follows from the rules and is recorded, and a change of it is named; the test run section of the test project file stores the judge version (the judge set is in the same file), the judge version in force when replies were received, the model note, the test cases version, the cases added or corrected after the first reply, the tool version and the thresholds; on load the results are recomputed and any difference is reported; a report made while cases are undecided says how many are not decided yet (T267) |
 | VI. Extensible Metrics and Configurable Checks | One metric contract and registry; declarative definition files; checks in configuration; guide, example, contract tests | PASS: see [contracts/metric-and-checks.md](./contracts/metric-and-checks.md). No metric is built in (constitution 3.0.0): Accuracy is the default metric file that a new test project starts with, registered like any loaded file and replaceable by one with the same id; every other metric loads from a file at run time, and a file that names a metric which is not loaded is refused (T274). Thresholds are bundled defaults, read from `checks.default.json` (T273), editable in Results › Details, and travel in the test project file (constitution 2.0.0; since T266 there is no file of their own; since T289 there is no evaluation file). Judges evaluated per case use two built-in case-level measures from two added counters, with no change to the contract's operations. The minimum test size (30 errors, 10 clean cases) is data in the bundled default configuration, but the spec fixes it, so a loaded configuration cannot change it |
-| VII. Modern, Clear UI | One purpose and one next action per screen; shared design tokens; responsive, accessible, light and dark; designed empty and error states | PASS: four-step flow with one "what next" line and one primary action each (FR-001); a fixed list of action names, every row and window action a visible button with no "More actions" menu (FR-008); a single token stylesheet with the black-and-red scheme in light and dark, red never the only sign of an error (FR-007, research.md section 30), replaced on 2026-11-16 by stone and forest green in light and dark (research.md, section 33), every status with a word or sign; axe-core and contrast checks in end-to-end tests; designed states for an empty or refused clipboard, an unwritable save file and an empty start |
-| VIII. Living Help | Help inside the application, plain language, examples valid against the schemas | PASS: Help is a screen of the application; its examples are the same files that the contract tests validate, so they cannot drift. Each phase writes the Help section of the feature it builds (including pasting from the clipboard, the second opinion per case, the one file with its load question and **Start test run** (T225, T289), "Continue", judges evaluated per case and the supported browsers), and nothing is published before the Help is complete (constitution 3.0.0: the Help may be updated in one pass after an owner trial, T225, and must be complete before the next public release) |
-| Constraints | English everywhere; simplest solution; no data to third parties | PASS: three runtime dependencies (Preact, Zod, Papa Parse) plus Vite as the build tool, each justified in research.md; the clipboard and the save file use built-in browser features, with no new dependency; a Content Security Policy blocks all outgoing connections. This revision removes more than it adds: no Compare, no result shelf, no batch files, no combined score |
+| VII. Modern, Clear UI | One purpose and one next action per screen; shared design tokens; responsive, accessible, light and dark; designed empty and error states | PASS: four-step flow with one "what next" line and one primary action each (FR-001); a fixed list of action names, every row and window action a visible button with no "More actions" menu (FR-008); a single token stylesheet with the black-and-red scheme in light and dark, red never the only sign of an error (FR-007, research.md section 30), replaced on 2026-11-16 by stone and forest green in light and dark (research.md, section 33), every status with a word or sign; axe-core and contrast checks in end-to-end tests; designed states for an empty or refused clipboard, an unwritable save file and an empty start. Replaced on 2026-11-17 by Editorial Literary A in light and warm dark (FR-007, research.md section 35): still one token file, every text pair 4.5:1 in both schemes, computed from the file by `tokens.test.ts`; the section labels are hidden from screen readers (SC-049) |
+| VIII. Living Help | Help inside the application, plain language, examples valid against the schemas | PASS: Help is a screen of the application; its examples are the same files that the contract tests validate, so they cannot drift. Each phase writes the Help section of the feature it builds (including pasting from the clipboard, the second opinion per case, the one file with its load question and **Start test run** (T225, T289), "Continue", judges evaluated per case and the supported browsers), and nothing is published before the Help is complete (constitution 3.0.0: the Help may be updated in one pass after an owner trial, T225, and must be complete before the next public release). The Editorial redesign changes no file under `src/ui/help/`; the Help gets the look through the shared styles, and it names no color, so no Help text goes out of date (Clarifications 2026-11-17) |
+| IX. Untrusted Input | Validate and limit data from files, pastes and replies; read keys as own keys; never run data as code or HTML; a CSP on the report; the designed error screen | PASS: the Editorial redesign reads no data and adds no input; the section labels are fixed texts of the code, not data; the CSP of the site and of the report do not change, and no font or style loads from another site (SC-048) |
+| Constraints | English everywhere; simplest solution; no data to third parties | PASS: three runtime dependencies (Preact, Zod, Papa Parse) plus Vite as the build tool, each justified in research.md; the clipboard and the save file use built-in browser features, with no new dependency; a Content Security Policy blocks all outgoing connections. This revision removes more than it adds: no Compare, no result shelf, no batch files, no combined score. The Editorial redesign adds no npm package: ten WOFF2 files (217,208 bytes) and their OFL license texts are copied into `public/fonts/` from Fontsource 5.3.0 (research.md, 35.3); a font sends no user data to a third party |
 
 **Result**: no violations. Complexity Tracking stays empty.
 
@@ -149,7 +155,16 @@ changes to counting live in the pure core and stay deterministic, and a file tha
 defect shows the difference on load instead of changing silently (Principles III and V); the file
 format gains only optional data and limits that every real file meets, with a message that names
 the path (Principle IV); the error panel is a designed error state (Principle VII); no file of the
-Help changes now (Principle VIII); no new dependency (Constraints). No finding.
+Help changes now (Principle VIII); no new dependency (Constraints). No finding. Re-checked on
+2026-11-17 for the Editorial redesign (slice 12), before and after the design: every change starts
+with a failing test, and the five existing assertions that check the old palette (Z1 to Z5 of
+research.md, 35.7) change only with the owner's consent (Principle I, SC-040); the fonts are static
+files of the site and their URLs work from any folder, checked with the Vite of the project
+(Principle II); no data, file or result changes (Principles IV and V); one token file, light and
+dark, 4.5:1 for every text pair, a word or sign on every status, and section labels outside the
+accessibility tree (Principle VII); no file of the Help changes (Principle VIII); no input is added
+and the CSP is the same (Principle IX); no npm package is added, and nothing is fetched from another
+site (Constraints). No finding.
 
 ## Project Structure
 
@@ -204,8 +219,13 @@ src/
 │   ├── help/
 │   ├── components/          # Shared controls, tables, dialogs, the "what next" line, the
 │   │                        # More menu, the JSON box with live problems, empty and error states
-│   └── styles/              # tokens.css (single source of design tokens), base.css
+│   └── styles/              # tokens.css (single source of design tokens and @font-face), base.css,
+│                            # components.css
 └── main.tsx
+
+public/
+├── favicon.svg
+└── fonts/                   # Editorial fonts (WOFF2, latin and latin-ext) and their OFL-<family>.txt
 
 examples/                    # Shipped with the site and used as test fixtures
 ├── demo/                    # test-project.json (the demo of "Load demo…", with its test run),
@@ -484,6 +504,60 @@ evaluation file, finalizing, Run); slice 9 replaces them (research.md, section 3
     **Help**: no file under `src/ui/help/` changes in this slice. The Help texts that name the
     reply box, the limits or the second opinion are brought up to date in the one pass of T225 and
     T269.
+
+12. **Editorial redesign (FR-007, FR-091, FR-092; SC-040, SC-046 to SC-049; Clarifications
+    2026-11-17)**, test first. The values come from research.md, section 35. The redesign changes only
+    how things look, plus one hidden section label above some headings. It changes no data, no file
+    format, no schema, no action, no label and no name of a heading, button or region, so
+    `data-model.md` and `contracts/file-formats.md` stay as they are.
+
+    **Gate (SC-040, SC-049)**: every end-to-end test passes before the first step and after every
+    step, with no change to what it checks, except the assertions Z1 to Z5 of research.md, 35.7.
+    Each of them changes only after the owner's consent, in the step named, before the code changes.
+    Options O1 and O2 apply only if the owner chooses them. Any other failing test is a regression,
+    not a test to adjust.
+
+    The steps, in this order. Each step starts with its failing tests:
+
+    1. **Fonts.** Tests: a new `tests/unit/ui/fonts.test.ts` (the ten WOFF2 files and four OFL texts
+       exist under `public/fonts/`; each file starts with `wOF2`; the CSP line of `index.html` is the
+       same text as before); new checks in `tokens.test.ts` (every `@font-face` names an existing file
+       and has `font-display: swap`). Code: `public/fonts/` (copied from Fontsource 5.3.0, research.md
+       35.3), the `@font-face` rules at the top of `src/ui/styles/tokens.css`.
+    2. **Tokens.** Tests: Z1 to Z4 in `tokens.test.ts` (after consent); new pairs for
+       `--text-secondary` and the `--mark-*-line` tokens; Z5 in `tests/e2e/v13-privacy-a11y.spec.ts`
+       (after consent). Code: `tokens.css` (the light and dark values of 35.1 and 35.2, the font
+       tokens, `--text-xs`, `--text-body`, `--text-3xl`, radii 8 and 12 px, `--content-max: 97.5rem`,
+       the shadow; the navy block goes).
+    3. **Base and shell.** Tests: a new `tests/unit/ui/editorial-styles.test.ts` (the rules of
+       research.md 35.4 for type, tool name, dialog titles, links and the step bar, read from the CSS
+       text); `styles.test.ts` and `shell.test.tsx` pass unchanged (O1 and O2 were not chosen). Code: `src/ui/styles/base.css` (fonts, headings in the display
+       font at weight 400, buttons, inputs, focus ring), `components.css` (header, step bar with "01" to
+       "04" as generated content with empty alternative text, "what next" line, footer, banner at
+       `--text-md`, links underlined). Check `layout-details.spec.ts` (table heads on one line at
+       1280 px) right after the table heads change (research.md, 35.7, "At risk").
+    4. **Section labels.** Tests: a new `tests/unit/ui/eyebrow.test.tsx` (the ten labels of 35.5,
+       each `aria-hidden` right before its heading; the name of each section unchanged). Code: a new
+       `src/ui/components/Eyebrow.tsx`; one `<Eyebrow>` in `PromptSection.tsx`,
+       `SampleReplySection.tsx`, `RulesSection.tsx`, `JudgeStep.tsx`, `CasesStep.tsx`, `RunStep.tsx`,
+       `SummaryView.tsx`, `ErrorAnalysisView.tsx`, `CaseListView.tsx`; the `.eyebrow` style.
+    5. **Views and windows.** Tests: new checks in `tests/unit/ui/editorial-styles.test.ts` (flat
+       sections, status pills, passage marks, the overall result, dialogs and the menu); the existing unit and e2e tests of the four steps, the case
+       window, the test case window and the dialogs pass unchanged. Code: `components.css` only (flat
+       sections, tables, status pills, marks of a passage, case window, Results, dialogs, the More
+       menu). A class is added to a `.tsx` file only where CSS needs a hook; no text, order, role or name
+       changes.
+    6. **SC-048 and SC-049 in the browser.** Tests: a new `tests/e2e/editorial.spec.ts` (requests to
+       other hosts aborted and recorded, and none made; every `.woff2` response from the site; for each
+       family `document.fonts.load('16px "<family>"')` resolves to a face with status `loaded`, not
+       `document.fonts.check`, which is true when no face matches; no label text in the ARIA snapshot of each step; each label visible;
+       `.app-main` at most 1560 px wide at 1440 × 900). Code: none, unless a test finds a gap.
+    7. **Close.** The whole suite (lint, types, unit, build, e2e in Chrome; Chrome and Edge before the
+       commit) passes. SC-046: the demo and the examples give the same numbers as before. The owner
+       does the manual check M5 of quickstart.md once, in both schemes.
+
+    **Help**: no file under `src/ui/help/` changes in this slice (Clarifications 2026-11-17). The Help
+    takes the new look from `components.css`.
 
 ## Complexity Tracking
 

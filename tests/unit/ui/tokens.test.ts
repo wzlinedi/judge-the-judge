@@ -1,7 +1,7 @@
-// T316 (FR-007, FR-091, FR-094, SC-047; research.md, section 33): the design tokens keep the colors of the redesign and every text pair
-// reaches 4.5:1 (focus ring, strong edges and the reply line 3:1) in the light, the dark and the navy sets. The ratios are computed here
+// T316, T430 (FR-007, FR-091, FR-094, SC-047; research.md, sections 33 and 35): the design tokens keep the colors of the Editorial redesign
+// and every text pair reaches 4.5:1 (focus ring, strong edges and the reply line 3:1) in the light and the dark sets. The ratios are computed here
 // from `tokens.css`, so the numbers of research.md cannot drift.
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const css = readFileSync('src/ui/styles/tokens.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
@@ -55,8 +55,6 @@ const find = (predicate: (b: Block) => boolean): Block => {
 const light = find((b) => b.selector === ':root' && !b.inMedia).tokens;
 const darkMedia = find((b) => b.inMedia && b.selector.startsWith(':root:not([data-theme="light"])')).tokens;
 const darkAttribute = find((b) => b.selector === ':root[data-theme="dark"]').tokens;
-const navyOverrides = find((b) => b.selector === ':root[data-palette="navy"]').tokens;
-const navy = { ...light, ...navyOverrides };
 const dark = darkAttribute;
 
 function luminance(hex: string): number {
@@ -78,35 +76,114 @@ const hex = (set: Record<string, string>, name: string): string => {
 };
 
 const SURFACES = ['--bg', '--surface', '--surface-2'] as const;
-const sets = { light, dark, navy } as const;
+const sets = { light, dark } as const;
 
 describe('the colors of FR-007 and research.md, section 33', () => {
-  it('the light set is Stone and forest green', () => {
-    const expected: Record<string, string> = { '--bg': '#F2F3ED', '--surface': '#FBFCF8', '--surface-2': '#E7EAE0', '--border': '#D5DBD1', '--border-strong': '#7C8A7B', '--text': '#202720', '--text-muted': '#5F6A5E', '--accent': '#315D48', '--accent-hover': '#264A39', '--on-accent': '#FFFFFF', '--focus': '#315D48' };
+  it('the light set is Editorial Literary A', () => {
+    const expected: Record<string, string> = { '--bg': '#FAF8F5', '--surface': '#FFFFFF', '--surface-2': '#F3EFEA', '--border': '#E6E4E1', '--border-strong': '#8A847D', '--text': '#1C1917', '--text-muted': '#6F6A64', '--accent': '#1C1917', '--accent-hover': '#3A3531', '--on-accent': '#FAF8F5', '--focus': '#1C1917' };
     for (const [name, value] of Object.entries(expected)) expect(light[name]?.toUpperCase(), name).toBe(value);
   });
 
   it('the dark set follows the system with the same values in the media query and in the data-theme block', () => {
     expect(darkMedia).toEqual(darkAttribute);
-    const expected: Record<string, string> = { '--bg': '#121713', '--surface': '#1A211C', '--surface-2': '#242C26', '--text': '#E6EBE3', '--text-muted': '#A3AEA2', '--accent': '#7DBE9C', '--on-accent': '#0E1A13' };
+    const expected: Record<string, string> = { '--bg': '#1A1816', '--surface': '#2C2824', '--surface-2': '#24211E', '--text': '#EEE9E3', '--text-muted': '#A39C94', '--accent': '#EEE9E3', '--on-accent': '#1A1816' };
     for (const [name, value] of Object.entries(expected)) expect(dark[name]?.toUpperCase(), name).toBe(value);
-  });
-
-  it('the navy set is only a block of tokens that the tool never selects', () => {
-    const expected: Record<string, string> = { '--bg': '#F2F5F8', '--surface': '#FCFDFF', '--text': '#202832', '--text-muted': '#5E6B7A', '--border': '#D6DFE8', '--accent': '#345D86', '--on-accent': '#FFFFFF' };
-    for (const [name, value] of Object.entries(expected)) expect(navyOverrides[name]?.toUpperCase(), name).toBe(value);
-    expect(navyOverrides['--border-strong']).toBeTruthy();
   });
 
   it('defines the tokens of the redesign for the size, the width and the control', () => {
     expect(light['--text-2xl']).toBe('2rem');
-    expect(light['--content-max']).toBe('100rem');
+    expect(light['--content-max']).toBe('97.5rem');
     expect(light['--prose-max']).toBe('72ch');
     expect(light['--control-height']).toBe('2.25rem');
     for (const name of ['--reply-bg', '--reply-line', '--reply-strong-bg', '--border-strong', '--shadow', '--radius', '--radius-lg']) {
       expect(light[name], name).toBeTruthy();
       expect(dark[name] ?? light[name], name).toBeTruthy();
     }
+  });
+});
+
+// T431 (FR-007, FR-091; research.md, 35.1 to 35.4): new checks of the Editorial tokens; no assertion above changes.
+describe('the Editorial tokens (research.md, 35.1 to 35.4)', () => {
+  it('secondary text is 4.5:1 on the background, the surface and the quiet surface in both sets', () => {
+    expect(light['--text-secondary']?.toUpperCase()).toBe('#57534E');
+    expect(dark['--text-secondary']?.toUpperCase()).toBe('#C9C2BA');
+    for (const [setName, set] of Object.entries(sets)) {
+      for (const surface of SURFACES) expect(ratio(hex(set, '--text-secondary'), hex(set, surface)), `${setName}: --text-secondary on ${surface}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('the truth background is rgba(13, 148, 136, 0.11) on the canvas, #E0EDE9 (owner, 2026-11-17), and #24302C in the dark set', () => {
+    expect(light['--success-bg']?.toUpperCase()).toBe('#E0EDE9');
+    expect(dark['--success-bg']?.toUpperCase()).toBe('#24302C');
+  });
+
+  it('the lines under a marked passage are 3:1 on the background in both sets', () => {
+    const expected = { light: ['#D97706', '#0D9488', '#E11D48'], dark: ['#E8A75A', '#5EC4B6', '#F38BA0'] };
+    for (const [setName, set] of Object.entries(sets)) {
+      const names = ['--mark-warning-line', '--mark-success-line', '--mark-error-line'];
+      expect(names.map((name) => set[name]?.toUpperCase()), setName).toEqual(expected[setName as keyof typeof expected]);
+      for (const name of names) expect(ratio(hex(set, name), hex(set, '--bg')), `${setName}: ${name}`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('adds the sizes xs, body and 3xl, keeps --text-2xl at 2rem, and rounds the radii to 8 and 12 px', () => {
+    expect(light['--text-xs']).toBe('0.6875rem');
+    expect(light['--text-body']).toBe('1.125rem');
+    expect(light['--text-3xl']).toBe('3rem');
+    expect(light['--text-2xl']).toBe('2rem');
+    expect(light['--radius']).toBe('8px');
+    expect(light['--radius-lg']).toBe('12px');
+  });
+
+  it('names the four font stacks of research.md 35.3, each starting with its family', () => {
+    expect(light['--font']).toBe('"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif');
+    expect(light['--font-display']).toBe('"Instrument Serif", Georgia, serif');
+    expect(light['--font-body']).toBe('"Newsreader", Georgia, serif');
+    expect(light['--font-mono']).toBe('"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace');
+  });
+
+  it('has no data-palette block left (FR-007 removes navy)', () => {
+    expect(blocks.filter((b) => b.selector.includes('data-palette')).map((b) => b.selector)).toEqual([]);
+  });
+});
+
+// T428 (FR-091, SC-048; research.md, 35.3): the ten @font-face rules come first in tokens.css and name only files of public/fonts.
+describe('the @font-face rules of the Editorial fonts (research.md, 35.3)', () => {
+  const faces = [...css.matchAll(/@font-face\s*\{([^}]*)\}/g)].map((m) => {
+    const body = m[1] as string;
+    const read = (property: string) => body.match(new RegExp(`(?:^|;)\\s*${property}\\s*:\\s*([^;]+);`))?.[1]?.trim();
+    return { family: read('font-family'), style: read('font-style'), weight: read('font-weight'), display: read('font-display'), range: read('unicode-range'), src: read('src') };
+  });
+  const FAMILIES = ['"Inter"', '"Instrument Serif"', '"Newsreader"', '"JetBrains Mono"'];
+
+  it('has ten rules, each for one of the four families, normal style, swap and a unicode-range', () => {
+    expect(faces).toHaveLength(10);
+    for (const face of faces) {
+      expect(FAMILIES, JSON.stringify(face)).toContain(face.family);
+      expect(face.style).toBe('normal');
+      expect(face.display).toBe('swap');
+      expect(face.range, JSON.stringify(face)).toMatch(/^U\+[0-9A-F]/);
+    }
+  });
+
+  it('gives Inter the weights 400 and 600 and every other family only 400', () => {
+    for (const face of faces) expect(face.family === '"Inter"' ? ['400', '600'] : ['400'], JSON.stringify(face)).toContain(face.weight);
+    expect(faces.filter((f) => f.family === '"Inter"').map((f) => f.weight).sort()).toEqual(['400', '400', '600', '600']);
+  });
+
+  it('loads each file from /fonts/ as WOFF2, and each file exists in public/fonts', () => {
+    const present = existsSync('public/fonts') ? readdirSync('public/fonts') : [];
+    for (const face of faces) {
+      const file = face.src?.match(/^url\("\/fonts\/([\w-]+\.woff2)"\) format\("woff2"\)$/)?.[1];
+      expect(file, String(face.src)).toBeTruthy();
+      expect(present, String(face.src)).toContain(file);
+    }
+  });
+
+  it('still finds the light, the dark and the data-theme blocks when the @font-face rules come first', () => {
+    expect(light['--bg']).toBeTruthy();
+    expect(darkMedia['--bg']).toBeTruthy();
+    expect(darkAttribute['--bg']).toBeTruthy();
   });
 });
 

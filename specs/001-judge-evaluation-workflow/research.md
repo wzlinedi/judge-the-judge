@@ -700,6 +700,8 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
 
 ## 33. UI redesign: calm look, wider layout, whole-object mark (2026-11-16)
 
+Section 35 (Editorial redesign, 2026-11-17) replaces 33.1 to 33.4 and the width of 33.5.
+
 This section replaces section 30 (the black-and-red scheme) for colors and look. The rest of
 section 30 stays: one "what next" line per step, one primary action, a word or sign with every
 status. The spec sets the rules (FR-007, FR-055, FR-091 to FR-094, SC-033, SC-040 to SC-047). This
@@ -993,3 +995,357 @@ The decisions that change behaviour are in the Clarifications of 2026-11-16 and 
 - **Development tools (step 1 of the reviews)**: `eslint` 10.15.0, `typescript-eslint` 8.73.0 and
   `@playwright/test` 1.65.1, minor versions only; they remove the moderate `minimatch` finding of
   `npm audit`. TypeScript 7 is a major version and is not part of this slice.
+
+## 35. Editorial redesign (2026-11-17)
+
+This section replaces the colors, the second palette, the type and the radii of section 33 (33.1 to
+33.4). The rest of section 33 stays: the space scale, the 760 px breakpoint, the case window frame,
+the marks of Judge reply and the list of what does not change (33.5 to 33.7). The one value of 33.5
+that changes is the content width: 1560 px instead of 1600 px (FR-092).
+
+The spec sets the rules (FR-007, FR-091, FR-092, SC-048, SC-049; Clarifications, Session
+2026-11-17). The owner accepted the look on the before and after preview of 2026-11-17 (scope B:
+tokens, styles, and markup where a section label needs it). This section sets the values the spec
+left to the plan. The redesign changes no action, label, order of actions, check, confirmation,
+file format or result (SC-040, SC-046, SC-049).
+
+Contrast ratios are computed as in section 33 (WCAG 2.x relative luminance). Every ratio below was
+computed from the hex value on 2026-11-17; `tests/unit/ui/tokens.test.ts` computes them again from
+`tokens.css`.
+
+### 35.1 Colors, light scheme (FR-007)
+
+| Token | Value | Editorial name | Use | Ratio |
+|---|---|---|---|---|
+| `--bg` | `#FAF8F5` | canvas | page, header, footer, case window | – |
+| `--surface` | `#FFFFFF` | raised surface | inputs, dialogs, the More menu | – |
+| `--surface-2` | `#F3EFEA` | surface | quiet buttons, hover, selected row, "what next" line, table head, saved reply | – |
+| `--border` | `#E6E4E1` | hairline, `rgba(28,25,23,0.09)` blended on the canvas | rules between sections and rows (decoration) | 1.20 on `--bg` |
+| `--border-strong` | `#8A847D` | – (the old muted text of the brief) | the edge of an input, a select and a secondary button | 3.49 on `--bg` |
+| `--text` | `#1C1917` | text | body text | 16.50 on `--bg`, 17.49 on `--surface`, 15.28 on `--surface-2` |
+| `--text-secondary` | `#57534E` | secondary text | descriptions, table cells, the details of "what next" | 7.20, 7.63, 6.66 |
+| `--text-muted` | `#6F6A64` | muted text | labels, metadata, section labels | 5.05, 5.36, 4.68 |
+| `--accent` | `#1C1917` | accent | primary button, current step, focus ring, links | 16.50 on `--bg`, 17.49 on `--surface` |
+| `--accent-hover` | `#3A3531` | – | hover of the primary button | 11.43 with `--on-accent` |
+| `--on-accent` | `#FAF8F5` | text on the accent | text of the primary button | 16.50 on `--accent` |
+| `--focus` | `#1C1917` | – | the focus ring | 16.50 on `--bg` (needs 3:1) |
+| `--success` / `--success-bg` | `#0F766E` / `#E0EDE9` | truth | Pass, Found, a clear match | 4.55 on its background, 5.16 on `--bg`, 4.78 on `--surface-2` |
+| `--warning` / `--warning-bg` | `#9A4A08` / `#F6E7D6` | warning | Awaiting verification, partial match, "Unsaved changes" | 5.16, 5.90, 5.46 |
+| `--error` / `--error-bg` | `#BE123C` / `#F7E0E2` | error | Fail, Not found, refusals | 5.00, 5.93, 5.49 |
+| `--mark-warning` / `--mark-success` / `--mark-error` | `#F5E3CF` / `#D9EAE6` / `#F7DCDF` | state backgrounds of a passage | a passage not decided, found, missed | 13.97 / 14.04 / 13.54 with `--text` |
+| `--mark-warning-line` / `--mark-success-line` / `--mark-error-line` | `#D97706` / `#0D9488` / `#E11D48` | state borders | the 2 px line under a marked passage; the dot before the tool name uses `--mark-success-line` | 3.01 / 3.53 / 4.43 on `--bg` (decoration; the number and the word carry the meaning) |
+| `--reply-bg` / `--reply-line` / `--reply-strong-bg` | `#F3EFEA` / `#0D9488` / `#D9EAE6` | – | the marked object in Judge reply, its line, the object pointed at | 15.28 / line 3.53 on `--bg` and 3.27 on `--reply-bg` / 14.04 with `--text` and `--accent` |
+| `--overlay` | `rgb(28 25 23 / 0.45)` | – | behind a dialog | – |
+
+- **Decision**: every color token is an opaque six-digit hex value. A state background of FR-007
+  (for example `rgba(13, 148, 136, 0.11)`) is stored as its blend on the canvas.
+- **Rationale**: `tokens.test.ts` reads six-digit hex values to compute the ratios, and the e2e
+  contrast helper blends a transparent background with what lies beneath. An opaque value gives the
+  same ratio on every surface the test meets. On the canvas the look is the same.
+- **Decision (owner, 2026-11-17)**: the truth background is the blend at 0.11, `#E0EDE9` (4.55:1
+  with `#0F766E`), not at 0.12, `#DEECE8` (4.5009:1). FR-007 is updated to match.
+- **Rationale**: 4.5009 passes by 0.0009. A rounding of one channel by a browser or a later small
+  change would fail it. The difference of 0.01 in opacity is not visible.
+- **Decision**: `--surface` is the raised surface (`#FFFFFF`) and `--surface-2` is the Editorial
+  surface (`#F3EFEA`). A new token `--text-secondary` holds the secondary text.
+- **Rationale**: the existing tokens keep their meaning: `--surface` is what inputs and dialogs sit
+  on, `--surface-2` is hover, a selected row and a quiet button. The muted text is 4.68 on
+  `--surface-2`. A darker hover (`#EAE4DC` in the preview draft) gives 4.24 and is not used.
+- **Decision**: `--border-strong` is `#8A847D`, the muted text of the brief. It is the edge of a
+  form control only. **Rationale**: a control needs a 3:1 edge (WCAG 1.4.11); the hairline is 1.20.
+- **Alternatives considered**: tokens in `rgba()` (the unit test cannot compute them, and the ratio
+  depends on the surface; rejected); keeping 0.12 for the truth background (no margin; rejected
+  by the owner on 2026-11-17).
+
+### 35.2 Colors, dark scheme (follows the system; no switch)
+
+| Token | Value | Ratio |
+|---|---|---|
+| `--bg` / `--surface` / `--surface-2` | `#1A1816` / `#2C2824` / `#24211E` | – |
+| `--border` / `--border-strong` | `#33312F` / `#7A736B` | 1.37 / 3.79 on `--bg` |
+| `--text` | `#EEE9E3` | 14.67 on `--bg`, 12.12 on `--surface`, 13.27 on `--surface-2` |
+| `--text-secondary` | `#C9C2BA` | 10.04, 8.29, 9.08 |
+| `--text-muted` | `#A39C94` | 6.53, 5.39, 5.90 |
+| `--accent` / `--accent-hover` / `--on-accent` / `--focus` | `#EEE9E3` / `#D6CFC7` / `#1A1816` / `#EEE9E3` | accent 14.67 on `--bg`, 12.12 on `--surface`; on-accent 14.67 and 11.47 on hover |
+| `--success` / `--success-bg` | `#5EC4B6` / `#24302C` | 6.55 on its background, 8.47 on `--bg` |
+| `--warning` / `--warning-bg` | `#E8A75A` / `#372C20` | 6.55, 8.52 |
+| `--error` / `--error-bg` | `#F38BA0` / `#382829` | 5.99, 7.60 |
+| `--mark-warning` / `--mark-success` / `--mark-error` | `#533411` / `#163D38` / `#561925` | 9.32 / 9.89 / 11.14 with `--text` |
+| `--mark-*-line` | `#E8A75A` / `#5EC4B6` / `#F38BA0` | 8.52 / 8.47 / 7.60 on `--bg` |
+| `--reply-bg` / `--reply-line` / `--reply-strong-bg` | `#24211E` / `#5EC4B6` / `#293E39` | 13.27 with `--text`; line 8.47 on `--bg`, 7.66 on `--reply-bg`; 9.44 for `--accent` on strong |
+| `--overlay` | `rgb(0 0 0 / 0.65)` | – |
+
+- **Decision**: canvas, surface, the three text colors, the accent and the three state text colors
+  are those of FR-007. The raised surface (`--surface`, `#2C2824`) is lighter than the Editorial
+  surface (`--surface-2`, `#24211E`). The state backgrounds and marks are the light hues blended
+  on the dark canvas (0.14 for a state background, 0.30 for a mark, 0.22 for the strong reply).
+- **Rationale**: in a dark scheme a surface that floats (a dialog, a menu, an input) reads as raised
+  when it is lighter. The values not named in FR-007 are derived, and each passes the pairs of the
+  unit test.
+- **Decision**: the scheme switches with `prefers-color-scheme` and the `data-theme` attribute, as
+  in 33.2. The tool never sets `data-theme`.
+- **Alternatives considered**: a raised surface darker than the canvas (dialogs would look sunken;
+  rejected).
+
+### 35.3 Fonts (FR-091, SC-048; Clarifications 2026-11-17, question 4)
+
+| Family | Role (FR-091) | Weights | Files (latin + latin-ext) | Bytes |
+|---|---|---|---|---|
+| Inter | controls, forms, tables, the step bar, body text | 400, 600 | 4 | 23,664 + 35,000 + 24,452 + 36,260 |
+| Instrument Serif | names of views and sections, title of the case window, the overall result | 400 | 2 | 21,032 + 11,604 |
+| Newsreader | the texts of a case, the "what next" sentence | 400 | 2 | 22,480 + 14,212 |
+| JetBrains Mono | JSON, prompts, ids, small labels, section labels | 400 | 2 | 21,168 + 7,336 |
+
+- **Decision**: ten WOFF2 files, 217,208 bytes in all. A page whose text is only Latin loads the
+  five `latin` files (112,796 bytes). A `latin-ext` file loads only when the page shows a character
+  of its range (for example the Polish letters ą, ć, ę, ł, ń, ś, ź, ż; ó is in `latin`).
+- **Source**: the Fontsource packages, version 5.3.0 (`@fontsource/inter`,
+  `@fontsource/instrument-serif`, `@fontsource/newsreader`, `@fontsource/jetbrains-mono`), files
+  `<family>-<subset>-<weight>-normal.woff2`. The files are copied once into the repository. No npm
+  package is added.
+- **License**: all four are SIL Open Font License 1.1 (Inter: The Inter Project Authors, 2016;
+  Instrument Serif: The Instrument Serif Project Authors, 2022; Newsreader: The Newsreader Project
+  Authors, 2020; JetBrains Mono: The JetBrains Mono Project Authors, 2020). The license text of each
+  family ships next to its files as `OFL-<family>.txt`, as the OFL requires.
+- **Path**: `public/fonts/`. The `@font-face` rules are at the top of `tokens.css` and name
+  `url("/fonts/<file>.woff2")`. Vite rewrites such a URL relative to the built CSS file: checked on
+  2026-11-17 with the Vite of the project and `base: './'`, `url("/fonts/a.woff2")` became
+  `url(../fonts/a.woff2)` in `dist/assets/*.css`, and the file was copied to `dist/fonts/`. So the
+  site still works from any folder of a static host (Constitution, Technology stack).
+- **Loading**: `font-display: swap`; the `unicode-range` of each rule is copied from the Fontsource
+  CSS that loads all subsets of a weight (for example `400.css`; the per-subset files such as
+  `latin-400.css` have no range). No preload. Until a font arrives, the text shows in its fallback.
+- **Fallbacks** (tokens): `--font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+  `--font-display: "Instrument Serif", Georgia, serif`; `--font-body: "Newsreader", Georgia, serif`;
+  `--font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`.
+- **CSP**: unchanged. `font-src 'self'` allows the files; nothing loads from another site.
+- **No italics and no other weights**: no text of the tool is set in italics. Instrument Serif has
+  only the weight 400, so every heading in the display font sets `font-weight: 400`; `base.css`
+  gives h1 to h3 the weight 600, which would make the browser draw a false bold. A passage pointed at
+  (`.fragment-strong`) keeps the weight of its text and is told by its outline and background, so
+  Newsreader needs no bold file.
+- **Rule: weight 400 in the three single-weight fonts**: every element set in `--font-mono`,
+  `--font-body` or `--font-display` has `font-weight: 400`, because the repository has no bold file
+  of these fonts and the browser would draw a false bold. Elements that today get 600 and must be
+  set to 400 when they move to one of these fonts: `th` (bold by browser default), the status marks
+  in a table (`.pass`, `.fail`, `.error`, `.warn` are 600 in `base.css`), the number of the current
+  step (`.step.current .step-number` inherits 600), and the number of a mark (`.fragment sup`, 600
+  inside Newsreader text). The counts of Results (`.count dd`) stay in Inter at 600 (35.4), so the
+  rule does not touch them.
+- **The HTML report** keeps its system font. Its Content Security Policy (`default-src 'none'`) would
+  block the files, and FR-091 does not cover it.
+- **Alternatives considered**: Google Fonts (blocked by the CSP and sends the address of the user to
+  a third party; refused in the Clarifications); the four `@fontsource` packages as dependencies (four
+  new packages for ten static files; a runtime dependency needs a written reason, and copying is
+  simpler); the weight 500 of the preview (two more Inter files, 60,296 bytes (24,272 + 36,024), and a change to
+  `styles.test.ts`; see 35.7, option O1); variable fonts (one file per family, but larger than the
+  two or four static files needed).
+
+### 35.4 Type, shape, space
+
+The rules of `tests/unit/ui/styles.test.ts` stay: weights 400 and 600 only, two radii, the space scale
+of 4 px, one breakpoint, no literal color in `base.css` and `components.css`, h4 and h5 at
+`--text-md` or `--text-sm`. The preview draft broke several of them. This plan keeps the rules and
+rounds the look to them. The visible differences from the preview are listed in each point.
+
+- **Sizes**: `--text-sm` 14 px, `--text-md` 16 px, `--text-lg` 20 px, `--text-xl` 24 px and
+  `--text-2xl` 32 px keep their values. `--text-2xl` is now the size of the display headings (names of
+  views and sections, title of the case window). Three tokens are added: `--text-xs` 0.6875rem (11
+  px: section labels, mono labels of table heads and fields, status pills), `--text-body` 1.125rem
+  (18 px: Newsreader texts of a case and the "what next" sentence) and `--text-3xl` 3rem (48 px: only
+  the overall result). *Why*: the overall result must stay the largest text on Results
+  (`redesign-layout.spec.ts`), so it moves up one size instead of the headings moving down.
+  `tokens.test.ts` checks `--text-2xl` = `2rem`, which stays true. *Difference from the preview*:
+  section headings 32 px instead of 30 px, the overall result 48 px instead of 54 px.
+- **Body text**: the body stays at `--text-md` (16 px) in Inter. Buttons, inputs, tables and metadata
+  use `--text-sm` (14 px). The message banner stays at `--text-md`
+  (`refusals-are-seen.spec.ts` checks at least 16 px). *Difference*: the preview used 13 to 14 px for
+  the banner and body.
+- **Weights**: 400 for text, buttons and display headings; 600 for Inter headings, the primary button
+  and a status word in Inter. A status word in a mono pill is 400 (35.3). *Difference*: the preview used 500 for buttons and section headings (option O1
+  in 35.7).
+- **Radii**: `--radius` 8 px (controls, small boxes, marks of a passage, the number of a mark) and
+  `--radius-lg` 12 px (cards, dialogs, the More menu, table frames, status pills). A status pill is
+  under 24 px high, so 12 px draws a full pill. *Difference*: marks of a passage 8 px instead of 5 px,
+  table frames 12 px instead of 10 px.
+- **Space**: the six steps of 4 px stay. The values of the preview are rounded to them: 17/19 px →
+  `--space-4`; 22 and 24 px → `--space-5`; 30 and 36 px → `--space-6`; a button 7 px 13 px →
+  `--space-2` `--space-3`. The page gutter stays `--space-4` below 760 px and becomes `--space-6`
+  from 760 px (the preview used `clamp(16px, 3vw, 42px)`, which the scale test refuses). The message
+  banner (`.notice-line.has-message`) has the side margin of the content: `--space-4` below 760 px and
+  `--space-6` from 760 px (owner, after M5, 2026-11-17).
+- **Tool name**: `.app-name` (the h1 of the header) is in the display font, `--text-xl` (24 px),
+  weight 400, as in the preview. It stays smaller than the names of views and sections (FR-091).
+- **Dialog titles**: the h2 of a dialog (`.dialog h2`) is Inter, `--text-lg` (20 px), weight 600, as
+  in the Editorial brief (7.1). Some dialogs open from a step and sit inside `.app-main`, so the rule
+  for the display headings of a step excludes them (`.app-main h2:not(.dialog h2)`). All dialog
+  titles then look the same.
+- **Tables**: a table head (`th`) is a small label in JetBrains Mono (the next point). The cells stay
+  in Inter, as FR-091 says for tables.
+- **Labels of fields, table heads, part titles of the case window (h3)**: JetBrains Mono,
+  `--text-xs`, uppercase, letter spacing 0.08em, `--text-muted`. An h4 or h5 keeps its look of
+  section 33.4 (Inter, `--text-sm`, 600, `--text-muted`). *Difference*: the preview drew the h4 of the
+  case window ("Judge reply", "Errors") in mono at 10.5 px (option O2 in 35.7).
+- **Results numbers**: the counts (`.count dd`) are Inter, weight 600, `font-variant-numeric:
+  tabular-nums`. The rates (`.rate dd`) are in the display font, weight 400, `--text-xl` (24 px),
+  below the overall result at `--text-3xl`. *Difference*: the preview drew the counts in mono and
+  the rates at about 26 px.
+- **Shadow**: one token, `--shadow: 0 20px 40px -15px rgb(28 25 23 / 0.12), 0 0 0 1px rgb(28 25 23 /
+  0.06)` (dark: `0 20px 40px -15px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(238 233 227 / 0.08)`), used only by
+  `.dialog` and `.menu`.
+- **Cards become flat sections**: a `.card` on a step has no fill, no side borders and no radius; a
+  hairline at its top separates it from the one before. A case part (`.case-part`) keeps its 1 px
+  hairline frame on all sides (`v4-test-case-window.spec.ts` checks a frame).
+- **Step bar**: the number of a step is shown as "01" to "04" in JetBrains Mono. The leading zero is
+  CSS generated content with empty alternative text (`content: "0" / ""`), so the name of the button
+  stays "1 Judge" for a screen reader (SC-049). The current step has a 2 px accent underline.
+- **Links**: the accent is the color of the text in both schemes, so color alone cannot mark a link.
+  Every link and `.link-button` keeps an underline (WCAG 1.4.1; axe `link-in-text-block` runs in
+  `v13-privacy-a11y.spec.ts`).
+- **Literal colors in `components.css`** of the preview become tokens: `#fff` → `var(--surface)`;
+  the half-white fill of rules and categories → `var(--surface)`; the three passage lines → the
+  `--mark-*-line` tokens; the dot before the tool name → `var(--mark-success-line)`.
+- **Alternatives considered**: relaxing `styles.test.ts` to match the preview pixel for pixel (it
+  changes assertions the owner accepted in phase 23; offered only as O1 and O2); a third radius
+  for pills (FR-091 names two radii; rejected).
+
+### 35.5 Section labels (FR-091, SC-049; Clarifications 2026-11-17, question 5)
+
+A section label is a small mono line in capitals above a section heading. It is markup, written as
+`<p class="eyebrow" aria-hidden="true">` right before the heading, inside the same section. Two
+cases differ: where the heading sits in a `.list-head` with buttons (Test cases, and Cases on Test
+run), the label comes right before the `.list-head`; on Results, where the heading is visually
+hidden, the label is the first child of the view (`.summary-view`, `.analysis-view`,
+`.case-list-view`). One
+component, `src/ui/components/Eyebrow.tsx`, renders it; the texts are one map in that file. The
+texts are not action names, so they are not in `src/ui/labels.ts`.
+
+| View | Component | Heading (unchanged) | Label |
+|---|---|---|---|
+| Judge | `PromptSection.tsx` | Prompt and variables | Step 01 / Instructions |
+| Judge | `SampleReplySection.tsx` | Sample reply and fields | Step 01 / Sample output |
+| Judge | `RulesSection.tsx` | Error rules | Step 01 / Detection logic |
+| Judge | `JudgeStep.tsx` | Preview | Live preview |
+| Test cases | `CasesStep.tsx` | Test cases | Step 02 / Dataset |
+| Test run | `RunStep.tsx` | Progress | Step 03 / Run progress |
+| Test run | `RunStep.tsx` | Cases | Step 03 / Case queue |
+| Results, Summary | `SummaryView.tsx` | Summary (visually hidden) | Step 04 / Verdict |
+| Results, Error analysis | `ErrorAnalysisView.tsx` | Error analysis (visually hidden) | Step 04 / Error analysis |
+| Results, Test case list | `CaseListView.tsx` | Test case list (visually hidden) | Step 04 / Case list |
+
+- **Decision (Results)**: the three views of Results have visually hidden headings, so the label is
+  the first visible line of each view, above the overall result, the first table or the list.
+- **Rationale**: one label per view gives Results the same rhythm as the other steps. "Verdict" names
+  what the Summary shows first, the overall result.
+- **Decision**: no label on "Model details", "Test project", "Error categories", the case window or a
+  dialog. *Why*: the brief and the preview put labels on the main sections of a step only.
+- **Accessibility**: `aria-hidden` keeps the label out of the accessibility tree. A section named
+  with `aria-labelledby` or `aria-label` keeps its name, because the label is not part of it.
+- **Risk to the tests**: the Testing Library queries `getByText`, `queryByText`, `getAllByText`,
+  `findByText` and `toHaveTextContent`, and the Playwright `getByText`, `hasText` and `toContainText`,
+  also find text that is `aria-hidden`. A search on 2026-11-17 of `tests/e2e` and `tests/unit` for
+  `ByText(` and `toHaveTextContent(` found no query that one of the label texts matches, also as a
+  substring (for example "Live preview" against `getByText('Preview')`; `/one verdict for the whole
+  text/i` does not match "Step 04 / Verdict"). A test that fails on a label anyway is a regression
+  of SC-049, not a test to adjust.
+
+### 35.6 Components and files that change
+
+- **Styles**: `src/ui/styles/tokens.css` (all values of 35.1 to 35.4, the `@font-face` rules; the navy
+  block goes), `src/ui/styles/base.css` (fonts, type, buttons, inputs), `src/ui/styles/components.css`
+  (every view).
+- **New files**: `src/ui/components/Eyebrow.tsx`; `public/fonts/` with the ten WOFF2 files and four
+  `OFL-<family>.txt` files.
+- **Markup** (one `<Eyebrow>` each, nothing else): `src/ui/steps/judge/PromptSection.tsx`,
+  `SampleReplySection.tsx`, `RulesSection.tsx`, `JudgeStep.tsx`; `src/ui/steps/cases/CasesStep.tsx`;
+  `src/ui/steps/run/RunStep.tsx`; `src/ui/steps/results/SummaryView.tsx`, `ErrorAnalysisView.tsx`,
+  `CaseListView.tsx`.
+- **A class only where CSS needs a hook**: if a text of a case or the "what next" sentence has no class
+  that CSS can select, a class is added to its element. No text, order, role or name changes.
+- **Not changed**: anything under `src/ui/help/` (0 files; the Help takes the look from
+  `components.css`), `src/ui/labels.ts`, `src/core/`, `src/app/`, `index.html` (the CSP), the
+  file formats, the HTML report.
+
+### 35.7 Tests: what changes and what stays
+
+Each change to an existing assertion needs the owner's consent before it is made (SC-040; the owner's
+instruction of 2026-11-17). The plan asks for each one by its number.
+
+| # | Test | Assertion today | Change | Owner's consent |
+|---|---|---|---|---|
+| Z1 | `tests/unit/ui/tokens.test.ts`, "the light set is Stone and forest green" | the eleven light values of 33.1 | the title and the values of 35.1 | **Needed** |
+| Z2 | `tokens.test.ts`, "the dark set follows the system …" | the seven dark values of 33.2 | the values of 35.2 (the check that the media block equals the `data-theme` block stays) | **Needed** |
+| Z3 | `tokens.test.ts`, "the navy set is only a block of tokens …" and the navy entry of the contrast loop | the navy block exists and passes | removed with the block (FR-007 removes navy); the `find` of the navy block goes | **Needed** |
+| Z4 | `tokens.test.ts`, "defines the tokens of the redesign …" | `--content-max` is `100rem` | `97.5rem` (1560 px, FR-092) | **Needed** |
+| Z5 | `tests/e2e/v13-privacy-a11y.spec.ts`, "the accent is forest green …" | accent `[49, 93, 72]` light and `[125, 190, 156]` dark | title "the accent is near-black on a warm light background …"; accent `[28, 25, 23]` light and `[238, 233, 227]` dark. The luminance checks stay and pass: light background 0.94 (> 0.85), text 0.010 (< 0.03); dark background 0.0093 (< 0.02), text 0.82 (> 0.75) | **Needed** |
+| O1 | `tests/unit/ui/styles.test.ts`, "uses only the weights 400 and 600" | 400, 600 | allow 500 (only if the owner wants the weight of the preview) | Needed only if chosen |
+| O2 | `styles.test.ts`, "gives h4 and h5 the look of an h3 or of a small label …" | `--text-md` or `--text-sm` | allow `--text-xs` (only if the owner wants mono h4 labels) | Needed only if chosen |
+
+**New checks** (added, no existing assertion changes):
+
+- `tokens.test.ts`: `--text-secondary` in the text pairs on the three surfaces; each `--mark-*-line`
+  at 3:1 on `--bg`; the `@font-face` rules name only files that exist under `public/fonts/`, each with
+  `font-display: swap`.
+- A new `tests/unit/ui/fonts.test.ts`: the ten files and four license files exist; each file starts
+  with the WOFF2 signature `wOF2`; the CSP line of `index.html` is the same text as before.
+- A new `tests/unit/ui/editorial-styles.test.ts`: reads `base.css` and `components.css` as text and
+  checks the rules of 35.4 (fonts and weights of headings, the tool name, dialog titles, the body
+  text of a case, table heads, the banner at 16 px, underlined links, the leading zero of a step,
+  flat sections, status pills, passage marks, the overall result, dialogs and the menu). It is a new
+  file, so `styles.test.ts` stays unchanged.
+- A new `tests/unit/ui/eyebrow.test.tsx`: each of the ten labels of 35.5 renders with
+  `aria-hidden="true"` right before its heading; the accessible name of each section is unchanged.
+- A new `tests/e2e/editorial.spec.ts`: SC-048 (every request to another host is aborted and recorded,
+  and none is made while the demo is loaded and each step, Help and the case window are opened; every
+  `.woff2` response comes from the site; for each of the four families,
+  `document.fonts.load('16px "<family>"')` resolves to at least one face whose status is `loaded`.
+  `document.fonts.check` is not used: it is true when no face matches the family, and false for a face
+  the page has not used yet); SC-049 (the ARIA snapshot of each step
+  holds no label text, and each label is visible); the width of `.app-main` at 1440 × 900 is at most
+  1560 px.
+- Phase 33 (after M5, 2026-11-17), in `editorial-styles.test.ts`: the field labels (`.field-label`,
+  `.rule-head label`, `.category label`) are small muted mono labels in capitals like `th`; the input
+  rule of `base.css` sets Inter at `--text-sm` with `text-transform: none` and `letter-spacing: normal`
+  (a label that holds its input must not pass on its capitals); `textarea.json` stays mono at
+  `--text-sm`; `td` is at `--text-sm`; a `@media (min-width: 760px)` block sets the banner margin to
+  `var(--space-2) var(--space-6)`, and outside it the banner keeps `var(--space-2) var(--space-4)` and
+  `--text-md`. In `editorial.spec.ts`: at 1440 × 900 after **Load demo…** the banner's left and right
+  edges match the content edges of `.app-main` within 1 px; at 390 × 844 it keeps its 16 px margins and
+  the page does not scroll sideways.
+
+**Pass unchanged** (checked against the values of this section):
+
+- `redesign-layout.spec.ts`: "at most 1600 px" (1560 passes; it is not tightened, the new check is in
+  `editorial.spec.ts`); "the overall result is the largest text" (48 px against 32 px headings).
+- `refusals-are-seen.spec.ts`: the banner has a border and at least 16 px.
+- `v4-test-case-window.spec.ts`: every case part has a top border.
+- `layout-details.spec.ts`: the gap after the number of a mark stays at least 3 px (the number keeps
+  `margin-right: var(--space-1)`); the disabled **Save case** is not the accent and has opacity 1.
+- Unit tests that read the CSS text, whose rules the redesign keeps: `reply-view.test.tsx`
+  (`.reply-block` has `background: var(--reply-bg)` and `border-left: 2px solid var(--reply-line)`;
+  `.reply-block.fragment-strong` has `var(--reply-strong-bg)`, `border-left: 4px solid var(--accent)`,
+  `outline: none` and weight `normal` or 400), `case-highlights.test.tsx` (`.reply-read` has no
+  `max-height` or `overflow`), `run-step.test.tsx` (every sign rule of `base.css` excludes
+  `.status-mark`), `results-views.test.tsx` (each `.result-*::before` in `components.css` has a sign
+  ✓, ✕ or …). The Editorial changes to these selectors only add declarations or change token values.
+
+**At risk** (expected to pass; checked first in the step that touches them):
+
+- `layout-details.spec.ts`, "the table of test cases at 1280 px": every header cell on one line, the
+  same height and under 50 px. Table heads in uppercase JetBrains Mono with letter spacing are wider
+  than in Inter. If a head wraps, its letter spacing or the column widths change, not the test.
+- `v13-privacy-a11y.spec.ts`: axe and the 4.5:1 check in both schemes; a word or a sign on every
+  status.
+
+Any other test that fails is a regression, not a test to adjust (SC-040).
+
+### 35.8 What does not change
+
+- Labels, actions, the order of actions, checks, confirmations, statuses, results, file formats, the
+  data model and the HTML report (SC-040, SC-046, SC-049). `data-model.md` and
+  `contracts/file-formats.md` are not touched.
+- The 760 px breakpoint, the case window frame with one scroll and a header that stays, and the marks
+  of Judge reply (33.5, 33.6).
+- The Help: no file under `src/ui/help/` changes. It gets the new look only through the shared styles
+  (Clarifications 2026-11-17, question 3). The Help names no color, so no text of it is out of date.
+- Section 33 stays as history, with one pointer to this section.

@@ -330,9 +330,9 @@ say which way was counted before and after.
 connections); nothing remains after the page is closed; automated accessibility checks pass in
 light and dark schemes; every action is reachable by keyboard; the case window stacks its columns
 on a narrow screen; the action row of the second-opinion dialog stays visible; in an unsupported
-browser a notice says the tool supports Chrome and Edge. The accent is forest green on a light
-stone background (light) or a light green on a dark green-black one (dark; UI redesign 2026-11-16,
-research.md section 33); every text pair meets 4.5:1; every error and "Fail" carries a
+browser a notice says the tool supports Chrome and Edge. The accent is near-black on a warm light
+background (light) or a warm light color on a warm dark background (dark; Editorial redesign
+2026-11-17, research.md section 35); every text pair meets 4.5:1; every error and "Fail" carries a
 word or a sign besides its color; each step has exactly one primary action in its "what next"
 line.
 
@@ -357,6 +357,22 @@ and the message names the limit. Step 4 keeps both changes, and the indicator st
 "Unsaved changes" after the save. Step 5 refuses the answer with "The case changed after this
 prompt was copied. Copy the prompt again."; the partly matching finding is listed in the prompt
 with "(partly matches E1)". No step ever shows a blank page.
+
+### V15. Editorial fonts offline and hidden section labels (SC-048, SC-049, plan.md slice 12)
+
+1. Build the site and open it in Chrome with the developer tools open. In Network, block requests to
+   every other host (request blocking, pattern `*://*/*` except `localhost`), or turn the network off
+   after the first load.
+2. Load the demo with **Load demo…** and open Judge, Test cases, Test run, Results and Help, and the
+   case window of one case.
+3. In the Accessibility pane (or with a screen reader), read the headings and regions of each step.
+
+**Expected**: the names of views and sections are in a serif display font, the texts of a case in a
+serif text font, the controls in a sans-serif font, JSON and ids in a monospace font; the Network panel
+shows no request to another host and four font families loaded from the site (`fonts/`). The
+Content Security Policy in `index.html` is the same as before. Each label such as "Step 01 /
+Instructions" is visible but is not in the accessibility tree; the headings, buttons and regions have
+the same names as before. `tests/e2e/editorial.spec.ts` automates this check.
 
 ## Manual checks
 
@@ -459,7 +475,8 @@ the list once more at 1280 × 720 and at 390 × 844 in the dark scheme.
 
 **Expected**:
 
-- At 1440 × 900 the content uses more than 1280 px of the width; nothing is wider than 1600 px.
+- At 1440 × 900 the content uses more than 1280 px of the width; nothing is wider than 1600 px
+  (1560 px since the Editorial redesign, M5).
   Paragraphs stay at about 72 characters (SC-041).
 - At no size does the page scroll sideways. A wide table scrolls in its own frame. Below 760 px every
   view is one column; the steps scroll sideways in their row (SC-041).
@@ -482,6 +499,31 @@ the list once more at 1280 × 720 and at 390 × 844 in the dark scheme.
 - The labels, the actions and the numbers are the same as before the redesign (SC-040, SC-046).
 
 Write what does not match as a note under the closing task of the redesign in `tasks.md`.
+
+### M5. The Editorial look in both schemes (Editorial redesign, SC-046 to SC-049)
+
+Use the built site in Chrome, as in M4. Load the demo. Do the list at 1440 × 900 and at 390 × 844, in
+the light scheme and then in the dark scheme.
+
+1. Open each step, Help, the case window of a case with a reply, the test case window (**Open**), the
+   More menu and **Second opinion…**.
+2. Compare each screen with the accepted preview of 2026-11-17 (scope B).
+
+**Expected**:
+
+- Light: a warm off-white page, near-black text and primary buttons, flat sections divided by thin
+  lines. Dark: a warm near-black page with light text and a light primary button with dark text.
+- Names of views and sections and the overall result are in the serif display font; the texts of a
+  case and the "what next" sentence in the serif text font; JSON, prompts, ids and small labels in
+  monospace.
+- Each section label stands above its heading, in small mono capitals.
+- Status pills show a word or sign (✓ Pass, ✕ Fail, … Awaiting verification) with their color.
+- The content is at most 1560 px wide. Nothing else differs from M4.
+- The known differences from the preview are expected (research.md, 35.4): secondary buttons at weight 400 and the primary button at 600,
+  section headings 32 px, the overall result 48 px, the h4 labels of the case window in sans-serif.
+- The Help has the new fonts and colors, and its text is unchanged.
+
+Write what does not match as a note under the closing task of the Editorial redesign in `tasks.md`.
 
 ## Performance checks
 
