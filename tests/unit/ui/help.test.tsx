@@ -400,3 +400,45 @@ describe('Help follows the tool (T225, T269, T341)', () => {
     expect(help()).toMatch(/opens on the Judge step/);
   });
 });
+
+// Phase 36 (T467-T469): the Help follows what Phases 25-35 changed on the normal path of a user (demo scope).
+describe('Help follows Phases 25-35 (T467-T469)', () => {
+  const help = () => {
+    render(<HelpStep />);
+    return (document.body.textContent ?? '').replace(/\s+/g, ' ');
+  };
+
+  it('Working by hand: the limit of a reply, "case N of M" and the wait for the save of a paste (T467)', () => {
+    const text = help();
+    expect(text).toContain('200,000 characters');
+    expect(text).toContain('the tool keeps replies up to 200,000 characters');
+    expect(text).toMatch(/case \d+ of \d+/);
+    expect(text).toMatch(/Next case, Previous case and Close wait for the save of a reply you just pasted/);
+  });
+
+  it('Marking: when a finding matches an expected error clearly or partly (T468, research.md 10)', () => {
+    const text = help();
+    expect(text).toContain('When a finding matches an expected error');
+    expect(text).toMatch(/as whole words/);
+    expect(text).toContain('(matches E2)');
+    expect(text).toContain('(partly matches E2)');
+    expect(text).toMatch(/Paris/);
+  });
+
+  it('Marking: Not found turns a clearly matching finding into an additional finding, and a missing field marks nothing (T468)', () => {
+    const text = help();
+    expect(text).toMatch(/marked Not found.{0,80}clearly matched it.{0,80}additional finding/);
+    expect(text).toMatch(/field a rule needs is missing.{0,80}nothing is marked automatically/);
+  });
+
+  it('Marking: the preview of the second opinion names a finding that only partly matches an undecided error (T468, T454)', () => {
+    expect(help()).toMatch(/second opinion.{0,900}partly matches an undecided/);
+  });
+
+  it('Files: the limits of a file and of a reply, and a save without results (T469)', () => {
+    const text = help();
+    expect(text).toMatch(/larger than 50 MB.{0,80}not saved/);
+    expect(text).toMatch(/longer than 200,000 characters.{0,120}test_run\.replies\./);
+    expect(text).toContain('without its results');
+  });
+});

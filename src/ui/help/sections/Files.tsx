@@ -49,6 +49,12 @@ export function Files() {
         result with <strong>{labels.saveTestProjectAs}</strong>. Every run then has the same judge version and the same test cases version, the same metric and the same
         thresholds, so the reports differ only in the model details, the replies, your decisions and the results.
       </p>
+      <p>
+        <strong>Limits and a save without results.</strong> The tool reads and saves files up to 50 MB. A test project that would be larger than 50 MB is not saved, and the message says
+        so: &ldquo;The test project would be 52 MB; the tool saves files up to 50 MB. Nothing was saved.&rdquo; A file with a reply longer than 200,000 characters is refused; the message
+        names the place, for example <code>test_run.replies.7.reply</code>. When the results cannot be worked out, the test project is still saved with all your work, without its results,
+        and the message says so; they are worked out again when you load the file.
+      </p>
     </section>
   );
 }

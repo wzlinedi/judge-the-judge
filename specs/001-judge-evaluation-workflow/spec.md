@@ -1098,13 +1098,14 @@ case and confirm the new case has the same fields and expected errors.
   the test size, and any technical term explained where it first appears. It MUST explain what one
   test case is and how many cases and errors a test needs; variables, the reply mapping and error
   rules; making clean cases; preparing cases with injected errors from
-  their JSON, getting a case's JSON back with "Show JSON" and cloning; categories and "Start test run";
+  their JSON; categories and "Start test run";
   the marks of Test run ("Found", "Not found", "False positive", "Genuine error", "Ignored");
   loading test cases
   from a file and loading demo data; the manual copy-paste workflow,
-  including the second opinion from an LLM for one case; the one file (the test project, which
+  including the second opinion from an LLM for one case, "case N of M" in the case window, when a finding matches an expected
+  error clearly or partly, and the limits of a reply (200,000 characters) and of a file (50 MB); the one file (the test project, which
   holds the test run once it has started), loading it with or without the test run, the indicator
-  of unsaved changes and "Continue"; judges that give only a verdict and are evaluated per
+  of unsaved changes, "Continue" and the save without results when they cannot be worked out; judges that give only a verdict and are evaluated per
   case, with a worked example; and how to read and export the results, with
   examples that are valid for the current file formats.
 - **FR-007**: The interface MUST be clear, responsive and accessible, with helpful empty and error

@@ -14,7 +14,8 @@ export function WorkingByHand() {
           <strong>Verify the judge reply</strong>, with <strong>Judge reply</strong> on the left and the errors on the right. In part 3 press <strong>{labels.copyPrompt}</strong>;
           run the prompt in a <strong>new conversation</strong> of your LLM, so that one case cannot influence another; copy the answer; press{' '}
           <strong>{labels.pasteReplyFromClipboard}</strong>. The reply is saved by the paste itself and the marks appear on the right. Then press{' '}
-          <strong>{labels.nextTestCase}</strong>, or Alt + Right on the keyboard; Escape closes the window, and Tab stays inside it. One case takes three actions.
+          <strong>{labels.nextTestCase}</strong>, or Alt + Right on the keyboard; Escape closes the window, and Tab stays inside it. One case takes three actions. The title of the window says where the case is in the list, for example case 3 of 20.{' '}
+          <strong>{labels.nextTestCase}</strong>, <strong>{labels.previousTestCase}</strong> and <strong>{labels.close}</strong> wait for the save of a reply you just pasted, so nothing asks about it.
         </p>
         <p>
           Above the list the Test run step shows one line about the judge being run: its version, the name and version of the test project and the judged text. The prompt and the
@@ -39,7 +40,7 @@ export function WorkingByHand() {
           text changes: it says <em>Readable JSON</em>, or the line and column where the JSON breaks. A reply may be wrapped in other text or a code fence.
         </p>
         <p>
-          Any text is kept. Text that is not JSON shows &ldquo;This is not JSON&rdquo; with the line and column, and <strong>{labels.saveAsTextAnyway}</strong> keeps it. A reply
+          Any text up to 200,000 characters is kept. A longer reply is not saved, and the box says how long it is: &ldquo;The reply is 200,001 characters; the tool keeps replies up to 200,000 characters.&rdquo; Text that is not JSON shows &ldquo;This is not JSON&rdquo; with the line and column, and <strong>{labels.saveAsTextAnyway}</strong> keeps it. A reply
           that is not JSON, or that lacks a field a rule needs, is saved with the problem shown; nothing is marked automatically and the case waits for you to mark its items
           or to press <strong>{labels.noMoreFindings}</strong>.
         </p>
