@@ -37,7 +37,7 @@ export function WorkingByHand() {
         <p>
           A case without a reply shows the box for the reply. If your browser does not let the page read the clipboard, or the clipboard is empty, the window says so
           and nothing changes; then paste the reply into the box with Ctrl + V. A reply that is readable JSON is saved at once, with no button. The box is checked as the
-          text changes: it says <em>Readable JSON</em>, or the line and column where the JSON breaks. A reply may be wrapped in other text or a code fence.
+          text changes: it shows the line and column where the JSON breaks. A reply may be wrapped in other text or a code fence.
         </p>
         <p>
           Any text up to 200,000 characters is kept. A longer reply is not saved, and the box says how long it is: &ldquo;The reply is 200,001 characters; the tool keeps replies up to 200,000 characters.&rdquo; Text that is not JSON shows &ldquo;This is not JSON&rdquo; with the line and column, and <strong>{labels.saveAsTextAnyway}</strong> keeps it. A reply

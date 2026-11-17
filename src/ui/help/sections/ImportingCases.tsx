@@ -18,12 +18,12 @@ export function ImportingCases() {
         <strong>The CSV.</strong> A spreadsheet is the easy way to bring in many clean cases. It has an optional <code>name</code> column and one column{' '}
         <code>field:&lt;variable&gt;</code> for each variable of your judge prompt; every row becomes a clean case. Any other column is ignored and named in the summary.
         Cells may hold commas, quotes, line breaks and Polish or other characters; the file may be UTF-8 (with or without a byte order mark), or Windows-1250, which is
-        then said in the summary. <strong>{labels.downloadExampleFile}</strong> in the import window gives you this file with the variables of your current prompt:
+        then said in the summary. The file may be up to 50 MB; a bigger one is refused before it is read and nothing changes. <strong>{labels.downloadExampleFile}</strong> in the import window gives you this file with the variables of your current prompt:
       </p>
       <pre class="example">{csvExample.replace(/^﻿/, '').trimEnd()}</pre>
       <p>
         <strong>The JSON.</strong> Cases with expected errors come in as JSON, in the layout the cases have inside a test project file. <code>id</code> and{' '}
-        <code>base</code> are optional: an identifier that is already used is replaced by a new one and a <code>base</code> follows it. A name that is already used is kept
+        <code>base</code> are optional: an identifier that appears twice in the file makes that row invalid, and the summary says which case first used it; an identifier the test project already uses is replaced by a new one and a <code>base</code> follows it. A name that is already used is kept
         and both cases show a warning. A test project file can be imported too, through its cases.
       </p>
       <pre class="example">{jsonExample.trimEnd()}</pre>

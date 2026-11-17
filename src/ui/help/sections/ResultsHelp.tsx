@@ -16,6 +16,11 @@ export function ResultsHelp() {
           update at once. They are the check rules, and they are saved with the test project, so every run of one test counts the same way.
         </p>
         <p>
+          Every measure has a threshold from the start, so a new test project needs no setup. When a judge is evaluated per case, its two rates, the case detection rate and the
+          clean-case false-positive rate, start at 80% and 10% (at least 80%, at most 10%), like the two rates per expected error. Details shows the same thresholds that decide the
+          overall result, for the way your judge is counted, and a change there is saved with the test project.
+        </p>
+        <p>
           Details also shows the 95% interval of each rate. The errors of one case are judged together, so they are not fully independent, and the interval is somewhat optimistic when each case carries many errors. A rate is <em>borderline</em> when its interval contains its threshold: with this many cases the judge could be on either side, so add
           cases before you decide. It shows, as information, how many cases had at least one false positive and how many of the clean cases did.
         </p>

@@ -1,3 +1,5 @@
+import { labels } from '../../labels';
+
 export function Privacy() {
   return (
     <section aria-labelledby="help-privacy">
@@ -14,6 +16,11 @@ export function Privacy() {
       <p>
         Saving to a file you choose needs Chrome or Edge. In other browsers the tool shows a notice and cannot save. The first time you save to a file you
         opened, the browser asks for permission to write to it; allow it, or choose <strong>Save test project as</strong> to pick a new file.
+      </p>
+      <p>
+        <strong>When something goes wrong.</strong> If the tool meets an error it did not expect, it shows the panel &ldquo;Something went wrong&rdquo; with the text of the error and two
+        buttons: <strong>{labels.saveTestProjectAs}</strong> and <strong>Reload</strong>. Your work is still in the page until you reload, so save it to a new file first; the save in the
+        panel never overwrites a good copy.
       </p>
       <p>
         The page keeps nothing for you. Close it, or reload it, and any change you did not save is gone, so save often: the tool warns you before leaving the

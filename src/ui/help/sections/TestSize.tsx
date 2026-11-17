@@ -5,7 +5,7 @@ export function TestSize() {
     <section aria-labelledby="help-size">
       <h3 id="help-size">How big a test needs to be</h3>
       <p>
-        A small test can look good by luck. For a final answer the tool needs at least {MINIMUM_SAMPLE.expected_errors} injected errors and{' '}
+        A small test can look good by luck. For a reliable answer the tool needs at least {MINIMUM_SAMPLE.expected_errors} injected errors and{' '}
         {MINIMUM_SAMPLE.clean_cases} clean cases. Until then the overall result is <strong>Inconclusive</strong>, and the Summary says how many are missing.
       </p>
       <p>

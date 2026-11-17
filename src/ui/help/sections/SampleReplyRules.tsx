@@ -23,6 +23,8 @@ export function SampleReplyRules() {
       <p>
         The tool does not propose a rule, and a rule can only use fields the sample reply contains. A rule on a list is checked for each item, and each item
         for which it holds is one finding. If a new sample reply loses a field a rule needs, the rule is marked broken and does not count until you fix it.
+        A sample reply that lacks the field a rule needs turns the rule off, and a rule that is off counts in the judge version. A change of the sample that breaks or repairs a rule
+        changes the judge version, and then the result says that the rules were corrected after the replies were received; a cosmetic change does not.
       </p>
       <p>
         When replies cannot be read automatically (no sample, no rule, a broken rule, or no field marked as the text of a finding) the step warns you. Every

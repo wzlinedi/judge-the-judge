@@ -14,7 +14,7 @@ interface Format {
 const FORMATS: readonly Format[] = [
   { what: 'Test project', format: 'judge-the-judge-test-project', schema: 'test-project.schema.json', example: 'examples/demo/test-project.json', use: labels.loadTestProject },
   { what: 'Test cases', format: 'judge-the-judge-test-cases', schema: 'test-cases.schema.json', example: 'examples/files/test-cases-example.json', use: labels.importTestCases },
-  { what: 'One test case', format: '', schema: 'case.schema.json', example: 'examples/files/case-example.json', use: 'Paste JSON' },
+  { what: 'One test case', format: '', schema: 'case.schema.json', example: 'examples/files/case-example.json', use: labels.pasteJson },
   { what: 'Metric definition', format: 'judge-the-judge-metric', schema: 'metric.schema.json', example: 'examples/metrics/bias-example.json', use: labels.loadTestProject, note: ', as the metric of a test project file (docs/how-to-add-a-metric.md)' },
 ];
 
@@ -58,6 +58,12 @@ export function FileFormats() {
         message says &ldquo;Keys the tool does not use were ignored&rdquo;, with their names. When a file is not valid, the message says where: the line and column for text that is not
         readable JSON, or the name of the field, such as <code>fields.summary</code> or <code>expected_errors[2].description</code>. A load never half-applies: either the whole file is
         read or nothing changes.
+      </p>
+      <p>
+        <strong>What a load refuses besides that.</strong> A file larger than 50 MB is refused before it is read and nothing changes; the message says how big the file is. JSON nested more
+        than 100 levels deep is refused with &ldquo;The JSON is nested more than 100 levels deep&rdquo; and the line and column; a pasted reply that deep shows &ldquo;This is not JSON&rdquo;
+        and can be kept as text. A file in which two test cases, or two expected errors of one case, have the same id is refused; the message names the place, for example{' '}
+        <code>dataset.cases[7].id</code>. An id such as <code>constructor</code> works like any other id.
       </p>
     </section>
   );

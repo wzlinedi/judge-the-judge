@@ -442,3 +442,66 @@ describe('Help follows Phases 25-35 (T467-T469)', () => {
     expect(text).toContain('without its results');
   });
 });
+
+// Phase 37 (T472-T476): the five sections left out in Phase 36 follow what Phases 25-35 changed (demo scope, final Help).
+describe('Help, the final version (T472-T476)', () => {
+  const help = () => {
+    render(<HelpStep />);
+    return (document.body.textContent ?? '').replace(/\s+/g, ' ');
+  };
+
+  it('Files and their formats: what a load refuses for size, depth and repeated ids (T472; S4, S3, R7, S1)', () => {
+    const text = help();
+    expect(text).toMatch(/larger than 50 MB.{0,120}nothing changes/);
+    expect(text).toContain('nested more than 100 levels deep');
+    expect(text).toMatch(/same id.{0,160}dataset\.cases\[7\]\.id/);
+    expect(text).toMatch(/id such as constructor works like any other id/);
+  });
+
+  it('Importing test cases: an identifier used twice in the file, and the size of the file (T473)', () => {
+    const text = help();
+    expect(text).toMatch(/identifier that appears twice in the file makes that row invalid/);
+    expect(text).toMatch(/identifier the test project already uses is replaced by a new one/);
+    expect(text).toMatch(/file may be up to 50 MB/);
+  });
+
+  it('Sample reply: a rule that the sample turns off counts in the judge version (T474; R3, FR-075)', () => {
+    const text = help();
+    expect(text).toMatch(/turns the rule off.{0,200}judge version/);
+    expect(text).toMatch(/breaks or repairs a rule.{0,200}rules were corrected after the replies were received/);
+    expect(text).toMatch(/cosmetic change does not/);
+  });
+
+  it('Overall result: every measure has a threshold from the start, and Details shows the ones that decide (T475; T414, FR-068)', () => {
+    const text = help();
+    expect(text).toMatch(/Every measure has a threshold from the start/);
+    expect(text).toMatch(/Details shows the same thresholds that decide the overall result/);
+    expect(text).toMatch(/per case.{0,200}80%.{0,120}10%/);
+  });
+
+  it('Privacy: the panel "Something went wrong", its two actions, and that the work is still in the page (T476; S3)', () => {
+    const text = help();
+    expect(text).toContain('Something went wrong');
+    expect(text).toMatch(/Something went wrong.{0,300}Save test project as….{0,200}Reload/);
+    expect(text).toMatch(/work is still in the page until you reload/);
+  });
+
+  it('T477 review: the Help says "reliable answer", as the screen and the report do, and no longer "final answer"', () => {
+    const text = help();
+    expect(text).toMatch(/For a reliable answer the tool needs at least 30 injected errors/);
+    expect(text).toMatch(/and a reliable answer needs at least 30 decided cases/);
+    expect(text).not.toMatch(/final answer/);
+  });
+
+  it('T477 review: a test case is pasted with "From JSON", the name of the button, not "Paste JSON"', () => {
+    const text = help();
+    expect(text).toMatch(/One test case: no format key, it is the case itself, opened with From JSON/);
+    expect(text).not.toMatch(/Paste JSON/);
+  });
+
+  it('T477 review: the reply box shows only the place where the JSON breaks, it never says "Readable JSON"', () => {
+    const text = help();
+    expect(text).not.toMatch(/Readable JSON/);
+    expect(text).toMatch(/The box is checked as the text changes: it shows the line and column where the JSON breaks/);
+  });
+});

@@ -1105,7 +1105,10 @@ case and confirm the new case has the same fields and expected errors.
   including the second opinion from an LLM for one case, "case N of M" in the case window, when a finding matches an expected
   error clearly or partly, and the limits of a reply (200,000 characters) and of a file (50 MB); the one file (the test project, which
   holds the test run once it has started), loading it with or without the test run, the indicator
-  of unsaved changes, "Continue" and the save without results when they cannot be worked out; judges that give only a verdict and are evaluated per
+  of unsaved changes, "Continue" and the save without results when they cannot be worked out; what a load refuses (a file over
+  50 MB, JSON nested more than 100 levels, repeated ids), which of two identifiers an import replaces and which makes a row invalid,
+  how the sample reply turns a rule off and so changes the judge version, the default threshold of every measure, and the panel
+  "Something went wrong"; judges that give only a verdict and are evaluated per
   case, with a worked example; and how to read and export the results, with
   examples that are valid for the current file formats.
 - **FR-007**: The interface MUST be clear, responsive and accessible, with helpful empty and error

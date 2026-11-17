@@ -20,7 +20,7 @@ export function VerdictJudges() {
       <p>
         The Summary then counts cases, not errors, because the judge does not say which error it found. Its two rates are the <strong>Case detection rate</strong> (decided cases with errors
         that the judge flagged) and the <strong>Clean-case false-positive rate</strong> (decided clean cases that it flagged). Error analysis counts a case once in each category and difficulty
-        its errors have, with counts only. The thresholds of these two rates are in <strong>Details</strong>, and a final answer needs at least 30 decided cases with errors and 10 clean cases.
+        its errors have, with counts only. The thresholds of these two rates are in <strong>Details</strong>, and a reliable answer needs at least 30 decided cases with errors and 10 clean cases.
       </p>
       <p>
         <strong>Worked example.</strong> 30 biased texts, 27 flagged: 90%. 10 neutral texts, 1 flagged: 10%. With the thresholds at least 80% and at most 10%, the judge works. If you correct a rule after
