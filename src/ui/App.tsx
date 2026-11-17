@@ -99,13 +99,14 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     setRefused(refusal && message !== undefined);
   };
 
-  const save = async (as: boolean): Promise<boolean> => {
+  const save = async (as: boolean): Promise<{ saved: boolean; message: string | undefined }> => {
     const action = as ? saveTestProjectAs : saveTestProject;
     const result = await action(stateRef.current, portsRef.current, fileEnv);
     // the work may have changed while the file was written: apply only what the save changed (R1)
     setState((current) => (result.apply ? result.apply(current) : current));
-    say(result.message ?? (result.outcome === 'saved' ? 'The test project was saved.' : result.outcome === 'cancelled' ? 'Nothing was saved.' : undefined));
-    return result.outcome === 'saved';
+    const message = result.message ?? (result.outcome === 'saved' ? 'The test project was saved.' : result.outcome === 'cancelled' ? 'Nothing was saved.' : undefined);
+    say(message, result.outcome === 'too_large');
+    return { saved: result.outcome === 'saved', message };
   };
 
   const show = (result: Awaited<ReturnType<typeof loadTestProject>>) => {
@@ -195,7 +196,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   if ('error' in computed) {
     return (
       <div class="app">
-        <ErrorPanel error={computed.error} onSave={async () => void (await save(true))} />
+        <ErrorPanel error={computed.error} onSave={async () => (await save(true)).message} />
       </div>
     );
   }
@@ -221,7 +222,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
 
   return (
     <div class="app">
-      <ErrorBoundary onSave={async () => void (await save(true))}>
+      <ErrorBoundary onSave={async () => (await save(true)).message}>
       <div class="app-page" inert={windowOpen}>
       {browserSupported(browser) ? null : <BrowserNotice />}
       <Header state={state} onGo={go} onFileAction={onFile} />
@@ -396,7 +397,7 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
               class="primary"
               onClick={async () => {
                 const action = pending;
-                if (action && (await save(false))) {
+                if (action && (await save(false)).saved) {
                   setPending(null);
                   perform(action);
                 }

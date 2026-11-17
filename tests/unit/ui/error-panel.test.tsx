@@ -172,3 +172,17 @@ describe('App when reading the cases throws (T411, Constitution IX, FR-084)', ()
     expect(written.dataset.cases).toHaveLength(project.dataset.cases.length);
   });
 });
+
+describe('the save of the error panel says what happened (T416)', () => {
+  it('shows the message the save returns, for example that the file would be too large', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const refusal = 'The test project would be 96 MB; the tool saves files up to 50 MB. Nothing was saved. Remove test cases or shorten long texts, then save again.';
+    render(
+      <ErrorBoundary onSave={async () => refusal} onReload={() => {}}>
+        <Thrower />
+      </ErrorBoundary>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Save test project as…' }));
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Nothing was saved'));
+  });
+});

@@ -34,3 +34,8 @@ export function replyTooLongMessage(length: number): string | null {
 export function promptTooLongMessage(length: number): string {
   return `The prompt for this case is ${grouped(length)} characters; the tool keeps prompts up to ${grouped(MAX_PROMPT_LENGTH)} characters. Shorten the judge's prompt or the fields of the case.`;
 }
+
+/** "The test project would be 96 MB; the tool saves files up to 50 MB. …" The size is rounded up, as in the read message (T416). */
+export function saveTooLargeMessage(bytes: number): string {
+  return `The test project would be ${Math.ceil(bytes / (1024 * 1024))} MB; the tool saves files up to ${MAX_FILE_BYTES / (1024 * 1024)} MB. Nothing was saved. Remove test cases or shorten long texts, then save again.`;
+}

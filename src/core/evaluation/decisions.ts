@@ -59,11 +59,11 @@ export function applyDecisions(review: CaseReview, decisions: CaseDecisions | un
   });
   const stateOf = new Map(expected.map((e) => [e.id, e.state]));
 
-  // Findings that only partly resembled an error: they wait while any such error is undecided,
+  // Findings that matched an error, partly or clearly (T417): they wait while any such error is undecided,
   // count as correct when one is found, and become additional findings otherwise.
   const moved: EffectiveAdditional[] = [];
-  for (const finding of review.partialOnly) {
-    const resembled = review.expected.filter((e) => e.partial.includes(finding.key)).map((e) => stateOf.get(e.id));
+  for (const finding of [...review.partialOnly, ...(review.matched ?? [])]) {
+    const resembled = review.expected.filter((e) => e.partial.includes(finding.key) || e.clear.includes(finding.key)).map((e) => stateOf.get(e.id));
     if (resembled.some((s) => s === 'undecided' || s === 'found')) continue;
     moved.push({ ...undecidedFinding(finding), moved: true, ...applyStored(finding.key, stored) });
   }

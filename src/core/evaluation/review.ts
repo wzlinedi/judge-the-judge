@@ -21,6 +21,8 @@ export interface CaseReview {
   additional: Finding[];
   /** Findings with only partial matches: they wait with the expected errors they resemble. */
   partialOnly: Finding[];
+  /** Findings with at least one clear match: correct findings, or additional ones once their errors are all marked Not found (T417). */
+  matched?: Finding[];
   unknown: string[];
   reason?: string;
   /** For a judge evaluated per case: whether the text was flagged by at least one rule (FR-061). */
@@ -82,7 +84,8 @@ export function reviewCase(
     return { id: error.id, state: 'missed', clear, partial };
   });
 
-  return withMissingField({ readable: true, needsApproval: false, expected, additional, partialOnly, unknown: result.unknown }, result);
+  const matched = result.findings.filter((f) => hasClear(f.key));
+  return withMissingField({ readable: true, needsApproval: false, expected, additional, partialOnly, matched, unknown: result.unknown }, result);
 }
 
 const missingFieldReason = (unknown: readonly string[]) => `A rule could not be checked because the reply has no usable ${unknown.join(', ')}, so decide it by hand.`;
@@ -118,6 +121,7 @@ function reviewPerCase(testCase: Pick<TestCase, 'expected_errors'>, result: Find
     expected: testCase.expected_errors.map((e) => (flagged ? { id: e.id, state: 'found' as const, clear: ['reply'], partial: [] } : { id: e.id, state: 'missed' as const, clear: [], partial: [] })),
     additional: whole !== undefined && testCase.expected_errors.length === 0 ? [whole] : [],
     partialOnly: [],
+    matched: whole !== undefined && testCase.expected_errors.length > 0 ? [whole] : [],
     unknown: result.unknown,
   };
 }

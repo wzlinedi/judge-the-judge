@@ -5,6 +5,7 @@ import type { CheckConfiguration, TestProject } from '../core/model';
 import checksDefaults from '../core/metrics/builtin/checks.default.json';
 import type { Difference } from '../core/evaluation/recompute';
 import type { Ports, SaveResult, SaveTarget } from './ports/types';
+import { isFileTooLarge, saveTooLargeMessage } from '../core/schemas/limits';
 
 export type StepId = 'judge' | 'cases' | 'run' | 'results' | 'help';
 
@@ -87,7 +88,8 @@ export type Serializer = (state: AppState) => string | Promise<string>;
 
 export interface ActionResult {
   state: AppState;
-  outcome: SaveResult['status'];
+  /** `too_large`: the file would be over the limit of the reader, so nothing was written (T416). */
+  outcome: SaveResult['status'] | 'too_large';
   /** Said to the user when there is something to say. */
   message?: string;
   /**
@@ -104,7 +106,11 @@ async function write(target: SaveTarget, text: string, saveAs: boolean): Promise
 }
 
 async function saveTestProjectWith(state: AppState, ports: Ports, serialize: Serializer, saveAs: boolean): Promise<ActionResult> {
-  const result = await write(ports.testProjectTarget, await serialize(state), saveAs);
+  const text = await serialize(state);
+  // a file the tool could not read back is not written; the work stays in the page (Clarifications 2026-11-17, T416)
+  const bytes = new TextEncoder().encode(text).length;
+  if (isFileTooLarge(bytes)) return { state, outcome: 'too_large', message: saveTooLargeMessage(bytes) };
+  const result = await write(ports.testProjectTarget, text, saveAs);
   if (result.status === 'saved') {
     // The file holds all the work, with its test run when there is one: one indicator, one count (FR-051, FR-059).
     const saved = { ...state, unsaved: false, repliesSinceSave: 0, testProjectFile: result.fileName, hasFile: true };

@@ -251,7 +251,8 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
     attached to those expected errors and waits with them. A finding with no match at all, or with
     no text, is an **additional finding** and is never decided automatically.
   - When the user decides that an expected error was missed, the findings that only partly
-    resembled it become additional findings and need their own decision. When the user decides it
+    resembled it, and also the ones that clearly matched it (T417, 2026-11-17), become additional
+    findings and need their own decision. When the user decides it
     was found, they count as correct findings.
   - A reply that cannot be read gives no findings; the user (or an LLM opinion) marks each expected
     error and adds findings by hand, and the case awaits verification until the user approves it.

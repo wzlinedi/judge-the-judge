@@ -2,8 +2,11 @@ import type { ComponentChildren } from 'preact';
 import { useEffect, useErrorBoundary, useState } from 'preact/hooks';
 
 export interface ErrorBoundaryProps {
-  /** Opens "Save test project as…" for the work held in the state; the page below it is gone, the work is not. */
-  onSave: () => Promise<void> | void;
+  /**
+   * Opens "Save test project as…" for the work held in the state; the page below it is gone, the work is not.
+   * What it returns is said in the panel, for example that the file would be too large (T416).
+   */
+  onSave: () => Promise<string | void> | string | void;
   onReload?: () => void;
   children?: ComponentChildren;
 }
@@ -11,19 +14,21 @@ export interface ErrorBoundaryProps {
 /** What the user sees instead of a white page when something throws while the page is drawn (code review S3). */
 export function ErrorPanel({ error, onSave, onReload }: { error: unknown } & Pick<ErrorBoundaryProps, 'onSave' | 'onReload'>) {
   const text = error instanceof Error ? error.message : String(error);
+  const [said, setSaid] = useState('');
   return (
     <div class="error-panel" role="alert">
       <h1>Something went wrong</h1>
       <p>{text}</p>
       <p>Your work is still in the page. Save it to a file before you reload.</p>
       <div class="error-panel-actions">
-        <button type="button" class="primary" onClick={() => void onSave()}>
+        <button type="button" class="primary" onClick={() => void Promise.resolve(onSave()).then((message) => setSaid(message ?? ''))}>
           Save test project as…
         </button>
         <button type="button" onClick={onReload ?? (() => globalThis.location.reload())}>
           Reload
         </button>
       </div>
+      {said ? <p role="status">{said}</p> : null}
     </div>
   );
 }
