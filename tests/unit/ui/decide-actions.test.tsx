@@ -114,6 +114,16 @@ describe('Add finding…', () => {
   });
 });
 
+describe('a clean case whose reply lacks a field a rule needs (T413)', () => {
+  it('shows the reason and offers No more findings; the case awaits until it is pressed', () => {
+    const e = withRun(demo, { replies: { ...demo.testRun!.replies, '1': { prompt: 'p', reply: '{"claims":[{"text":"Jane Austen published Pride and Prejudice in 1813."}]}' } } });
+    open('1', e);
+    expect(win().textContent).toContain('claims[].verdict');
+    expect(within(win()).getByRole('button', { name: 'No more findings' })).toBeTruthy();
+    expect(reviewEvaluation(e, accuracyMetric).find((r) => r.testCase.id === '1')?.status).toBe('awaiting');
+  });
+});
+
 describe('the note of a case', () => {
   it('has no Note button or box in the window, and a note a file holds is kept', () => {
     const e = structuredClone(demo);

@@ -74,3 +74,32 @@ export function unknownKeysNote(value: Record<string, unknown>, known: readonly 
 export function failure<T>(message: string, extra: Partial<Problem> = {}): ReadResult<T> {
   return { ok: false, problems: [{ message, ...extra }] };
 }
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+/**
+ * The paths of the keys inside a file that reading dropped: keys of `raw` that the parsed value no longer has (FR-005, T419).
+ * Records keep every key, so only the keys of fixed layouts are found. `skip` holds paths already reported by a note of their own,
+ * written with `[]` for any array index (for example `expected_errors[].field`).
+ */
+export function droppedKeys(raw: unknown, parsed: unknown, path: string, skip: readonly string[] = []): string[] {
+  const general = path.replace(/\[\d+\]/g, '[]');
+  if (skip.includes(general)) return [];
+  if (Array.isArray(raw) && Array.isArray(parsed)) {
+    return raw.flatMap((item, index) => (index < parsed.length ? droppedKeys(item, parsed[index], `${path}[${index}]`, skip) : []));
+  }
+  if (!isPlainObject(raw) || !isPlainObject(parsed)) return [];
+  return Object.keys(raw).flatMap((key) => {
+    const at = path === '' ? key : `${path}.${key}`;
+    if (!Object.hasOwn(parsed, key)) return skip.includes(at.replace(/\[\d+\]/g, '[]')) ? [] : [at];
+    return droppedKeys(raw[key], parsed[key], at, skip);
+  });
+}
+
+/** One note naming the dropped keys inside a file, at most ten of them, or undefined when there are none. */
+export function droppedKeysNote(paths: readonly string[]): string | undefined {
+  if (paths.length === 0) return undefined;
+  const shown = paths.slice(0, 10).join(', ');
+  const more = paths.length > 10 ? ` and ${paths.length - 10} more` : '';
+  return `Keys inside the file that the tool does not use were ignored: ${shown}${more}.`;
+}

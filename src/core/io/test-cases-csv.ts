@@ -22,21 +22,27 @@ const FIELD_PREFIX = /^field:/i;
 const QUOTE_FIX =
   'A cell has a quote inside it that is not doubled, so the reader cannot tell where the cell ends. Write each quote that belongs to the text twice (for example "He said ""hi"""), or fix the cell in your spreadsheet program and save the file again.';
 
+const QUOTE_UNCLOSED =
+  'A cell starts with a quote that is never closed, so the rest of the file reads as one cell. Close the quote at the end of the cell, and write each quote that belongs to the text twice (for example "He said ""hi""").';
+
 /**
  * One line per place in the file, not one per message of the reader: it repeats a message for every quote in a row. A quote error names the
  * row (the position in the file, the header being row 1) and the name of the case there, and says what to write instead.
  */
 function fatalProblems(errors: readonly Papa.ParseError[], data: readonly Record<string, string>[]): Array<{ message: string }> {
-  const lines = new Set<string>();
+  const lines = new Map<string, string>();
   for (const e of errors) {
     // Papa Parse counts the header line in the row of a quote error, and not in the row of any other error
-    const position = e.row === undefined ? undefined : e.code === 'InvalidQuotes' ? e.row + 1 : e.row + 2;
-    const record = e.row === undefined ? undefined : data[e.code === 'InvalidQuotes' ? e.row - 1 : e.row];
+    const quote = e.code === 'InvalidQuotes' || e.code === 'MissingQuotes';
+    const position = e.row === undefined ? undefined : quote ? e.row + 1 : e.row + 2;
+    const record = e.row === undefined ? undefined : data[quote ? e.row - 1 : e.row];
     const name = Object.entries(record ?? {}).find(([column]) => column.toLowerCase() === 'name')?.[1]?.trim();
     const where = position === undefined ? '' : `Row ${position}${name ? ` (${name})` : ''}: `;
-    lines.add(`${where}${e.code === 'InvalidQuotes' ? QUOTE_FIX : e.message}`);
+    // one line per row: a quote that is not doubled also leaves the cell unclosed, which is the same problem (T424)
+    const key = position === undefined ? e.message : `row ${position}`;
+    if (!lines.has(key)) lines.set(key, `${where}${e.code === 'InvalidQuotes' ? QUOTE_FIX : e.code === 'MissingQuotes' ? QUOTE_UNCLOSED : e.message}`);
   }
-  return [...lines].map((message) => ({ message }));
+  return [...lines.values()].map((message) => ({ message }));
 }
 
 export function readTestCasesCsv(text: string, variables: readonly string[]): ReadResult<CsvRead> {

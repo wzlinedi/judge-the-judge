@@ -7,7 +7,7 @@ import { decisionsOf, ownValue, setOwn, updateTestRun, withoutReply } from '../.
 import type { TestProject, Problem } from '../../core/model';
 import { pastedReplySource } from '../../sources/pasted-reply';
 import type { ReplyBatch } from '../../sources/types';
-import { replyTooLongMessage } from '../../core/schemas/limits';
+import { MAX_PROMPT_LENGTH, MAX_REPLY_LENGTH, promptTooLongMessage, replyTooLongMessage } from '../../core/schemas/limits';
 import type { Ports } from '../ports/types';
 import { edit, recordReplySaved, type AppState } from '../store';
 
@@ -58,10 +58,22 @@ export function attachReplies(evaluation: TestProject, batch: ReplyBatch, option
       result.problems.push({ message: `There is no test case ${item.case_id}.` });
       continue;
     }
-    // a reply that is valid JSON is kept formatted (T292): the same data, other spaces
-    const text = formatIfWholeJson(item.reply);
+    // what is stored must fit the limits the loader uses, so the saved file always opens again (S4, T412)
+    const tooLong = replyTooLongMessage(item.reply.length);
+    if (tooLong !== null) {
+      result.problems.push({ message: tooLong });
+      continue;
+    }
+    const prompt = composePrompt(evaluation.judge_set.prompt, testCase).text;
+    if (prompt.length > MAX_PROMPT_LENGTH) {
+      result.problems.push({ message: promptTooLongMessage(prompt.length) });
+      continue;
+    }
+    // a reply that is valid JSON is kept formatted (T292): the same data, other spaces; kept as given when the spaces would pass the limit
+    const formatted = formatIfWholeJson(item.reply);
+    const text = formatted.length <= MAX_REPLY_LENGTH ? formatted : item.reply;
     const had = ownValue(replies, item.case_id)?.reply;
-    if (had !== undefined && formatIfWholeJson(had) === text) {
+    if (had !== undefined && formatIfWholeJson(had) === formatted) {
       result.unchanged.push(item.case_id);
       continue;
     }
@@ -70,7 +82,7 @@ export function attachReplies(evaluation: TestProject, batch: ReplyBatch, option
       result.needsConfirmation.push({ caseId: item.case_id, count: question.count });
       continue;
     }
-    setOwn(replies, item.case_id, { prompt: composePrompt(evaluation.judge_set.prompt, testCase).text, reply: text });
+    setOwn(replies, item.case_id, { prompt, reply: text });
     delete decisions[item.case_id];
     result.saved.push(item.case_id);
   }

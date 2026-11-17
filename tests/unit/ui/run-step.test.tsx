@@ -382,3 +382,17 @@ describe('the table of Test run (T324)', () => {
     for (const index of [3, 4, 5, 7]) expect(cells[index]?.classList.contains('num'), `column ${index}`).toBe(true);
   });
 });
+
+describe('Add test case… at the limit of 500 cases after the start (T423, Constitution VII)', () => {
+  it('says why the button is disabled', () => {
+    const base = noReplies();
+    const [first] = base.dataset.cases;
+    const cases = Array.from({ length: 500 }, (_, i) => ({ ...first!, id: String(i + 1), name: `c${i + 1}` }));
+    const e = { ...base, dataset: { ...base.dataset, cases } };
+    render(<RunStep evaluation={e} reviewed={reviewEvaluation(e, accuracyMetric)} repliesSinceSave={0} onOpen={vi.fn()} onAdd={vi.fn()} onModelDetails={vi.fn()} />);
+    const cards = screen.getByRole('region', { name: 'Cases' });
+    expect((within(cards).getByRole('button', { name: 'Add test case…' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(cards.textContent).toContain('The limit of 500 test cases is reached');
+    expect(cards.textContent).not.toContain('Start the test run first');
+  });
+});

@@ -116,7 +116,9 @@ describe('load and continue', () => {
     open(ports, saver.testProjectTarget.lastText!);
     const loaded = await loadWith(createState(), ports);
     expect(loaded.state.project.metric).toEqual(original.metric);
-    expect(loaded.state.project.checks).toEqual(original.checks);
+    // the file's own threshold is kept; a measure with no rule gets the bundled default (T414, owner 2026-11-17)
+    expect(loaded.state.project.checks.rules.find((r) => r.measure === 'detection_rate')).toEqual(original.checks.rules[0]);
+    expect(loaded.state.project.checks.rules.map((r) => r.measure).sort()).toEqual(['case_detection_rate', 'clean_case_false_positive_rate', 'detection_rate', 'false_positive_rate']);
   });
 
   it('an invalid file leaves the current work and the remembered file unchanged and says what is wrong', async () => {

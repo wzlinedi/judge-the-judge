@@ -41,9 +41,10 @@ describe('reviewCase per case', () => {
     expect(r.flagged).toBe(false);
   });
 
-  it('trusts a flag even when another rule could not be checked', () => {
+  it('marks nothing automatically, not even after a flag, when another rule could not be checked (T413, owner 2026-11-17)', () => {
     const r = review([{ id: 'e1' }], { ...flagged, unknown: ['kind'] });
-    expect(r.expected[0]?.state).toBe('found');
+    expect(r.expected[0]?.state).toBe('undecided');
+    expect(r.expected[0]?.reason).toContain('kind');
   });
 
   it('on a clean case makes a flag an additional finding left to the user, and no flag gives Pass', () => {

@@ -100,4 +100,18 @@ describe('the shortened CSV', () => {
       expect(line).not.toMatch(/Trailing quote on quoted field is malformed/);
     }
   });
+  it('names one quote problem with the right row, not a second line with a row that does not exist (T424)', () => {
+    const found = problems('name,field:a\n"bad "quote" here,x\n');
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatch(/^Row 2\b/);
+    expect(found.join(' ')).not.toMatch(/Quoted field unterminated|Row 3/);
+  });
+
+  it('names a quote that is never closed with its row and the fix, not the reader\'s own words (T424)', () => {
+    const found = problems('name,field:a\nok,y\n"unterminated,x\nmore,z\n');
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatch(/^Row 3\b/);
+    expect(found[0]).toMatch(/quote/i);
+    expect(found[0]).not.toMatch(/Quoted field unterminated/);
+  });
 });

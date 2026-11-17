@@ -7,7 +7,17 @@ import { createFakePorts } from '../../../src/app/ports/fakes';
 import { createState } from '../../../src/app/store';
 import { sampleProject } from '../../helpers/fixtures';
 
-const flag = vi.hoisted(() => ({ boom: false }));
+const flag = vi.hoisted(() => ({ boom: false, review: false }));
+vi.mock('../../../src/core/evaluation/results', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../../../src/core/evaluation/results')>();
+  return {
+    ...original,
+    reviewEvaluation: (...args: Parameters<typeof original.reviewEvaluation>) => {
+      if (flag.review) throw new Error('The cases could not be read');
+      return original.reviewEvaluation(...args);
+    },
+  };
+});
 vi.mock('../../../src/ui/steps/judge/JudgeStep', async (importOriginal) => {
   const original = await importOriginal<typeof import('../../../src/ui/steps/judge/JudgeStep')>();
   return {
@@ -21,6 +31,7 @@ vi.mock('../../../src/ui/steps/judge/JudgeStep', async (importOriginal) => {
 
 afterEach(() => {
   flag.boom = false;
+  flag.review = false;
   cleanup();
 });
 
@@ -142,6 +153,22 @@ describe('App with a step that throws', () => {
     await waitFor(() => expect(ports.testProjectTarget.lastText).not.toBeNull());
     const written = JSON.parse(ports.testProjectTarget.lastText as string);
     expect(written.dataset.name).toBe(project.dataset.name);
+    expect(written.dataset.cases).toHaveLength(project.dataset.cases.length);
+  });
+});
+
+describe('App when reading the cases throws (T411, Constitution IX, FR-084)', () => {
+  it('shows the panel instead of a white page, and "Save test project as…" writes the work held in the state', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    flag.review = true;
+    const ports = createFakePorts();
+    const project = sampleProject();
+    render(<App ports={ports} env={{ showSaveFilePicker: vi.fn(), navigator: { clipboard: { readText: vi.fn() } } }} initialState={{ ...createState(), project, unsaved: true, step: 'run' }} />);
+    expect(screen.getByRole('alert').textContent).toContain('Something went wrong');
+    expect(screen.getByRole('alert').textContent).toContain('The cases could not be read');
+    fireEvent.click(screen.getByRole('button', { name: 'Save test project as…' }));
+    await waitFor(() => expect(ports.testProjectTarget.lastText).not.toBeNull());
+    const written = JSON.parse(ports.testProjectTarget.lastText as string);
     expect(written.dataset.cases).toHaveLength(project.dataset.cases.length);
   });
 });

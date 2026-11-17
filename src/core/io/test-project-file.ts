@@ -10,13 +10,14 @@ import { findVariables, proposeJudgedText } from '../judge/variables';
 import { resultsForFile, rulesCorrectedAfterReplies } from '../evaluation/recompute';
 import { MINIMUM_SAMPLE, type Results } from '../evaluation/results';
 import type { MinimumSample } from '../evaluation/overall';
-import { checkEnvelope } from '../schemas/common';
+import { checkEnvelope, droppedKeys, droppedKeysNote } from '../schemas/common';
 import { zodProblems } from '../schemas/messages';
 import { safeParseOwnKeys } from '../schemas/own-record';
 import { cleanJudgeSet } from '../schemas/judge-set';
 import { joinCategoryExamples } from '../cases/catalog';
 import { assignExpectedIds, ignoredFieldNote, storedCase } from '../schemas/test-case';
 import { TEST_PROJECT_FORMAT, TEST_PROJECT_KEYS, TEST_PROJECT_SCHEMA_VERSION, testProjectSchema } from '../schemas/test-project';
+import { withDefaultRules } from '../metrics/checks';
 
 export interface TestProjectMeta {
   /** The date and time of the save, passed in: the core has no clock. */
@@ -131,8 +132,19 @@ export function readTestProject(text: string, isMetricLoaded: (id: string) => bo
   }
   const fieldNote = ignoredFieldNote((envelope.value['dataset'] as { cases?: unknown } | undefined)?.cases);
   if (fieldNote) notes.push(fieldNote);
+  // keys inside the file that reading dropped, besides the ones the notes above already name (T419)
+  const inside = (['judge_set', 'dataset', 'metric', 'checks', 'test_run'] as const).flatMap((key) =>
+    droppedKeys(envelope.value[key], (parsed.data as Record<string, unknown>)[key], key, ['checks.minimum_sample', 'dataset.cases[].expected_errors[].field']),
+  );
+  const insideNote = droppedKeysNote(inside);
+  if (insideNote) notes.push(insideNote);
 
   const p = parsed.data;
+  // a measure with no threshold rule gets the bundled default, never no check at all (FR-068, T414)
+  const completed = withDefaultRules(p.checks);
+  if (completed.added.length > 0) {
+    notes.push(`The file has no threshold for ${completed.added.join(', ')}. The default threshold was added; you can change it in Details on the Results step.`);
+  }
   const judgeSet = { ...p.judge_set, error_catalog: joinCategoryExamples(p.judge_set.error_catalog) };
   const variables = findVariables(judgeSet.prompt);
   const proposal = proposeJudgedText(variables, judgeSet.judged_text);
@@ -173,7 +185,7 @@ export function readTestProject(text: string, isMetricLoaded: (id: string) => bo
     judge_set: judgeSet,
     dataset: { name: p.dataset.name, ...(p.dataset.version !== undefined ? { version: p.dataset.version } : {}), cases: assignExpectedIds(p.dataset.cases) },
     metric: p.metric as MetricRef,
-    checks: p.checks,
+    checks: completed.checks,
     ...(testRun !== undefined ? { testRun } : {}),
   };
   const stored: StoredTestRun | undefined =

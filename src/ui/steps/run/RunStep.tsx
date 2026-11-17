@@ -41,8 +41,10 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
   const [show, setShow] = useState<Show>('all');
   const versions = useVersions(evaluation);
   const started = isStarted(evaluation);
-  const full = testProjectFeedback(evaluation).capacity.full;
+  const { capacity } = testProjectFeedback(evaluation);
   const reason = started ? null : <span class="muted">Start the test run first</span>;
+  // a disabled button says why: before the start, or at the limit of cases (Constitution VII, T423)
+  const addReason = !started ? reason : capacity.full ? <span class="muted">{`The limit of ${capacity.limit} test cases is reached.`}</span> : null;
   const decided = reviewed.filter((r) => r.status === 'pass' || r.status === 'fail').length;
   const received = reviewed.filter((r) => r.status !== 'not_run').length;
   const toDecide = reviewed.reduce((sum, r) => sum + itemsToDecide(r), 0);
@@ -83,10 +85,10 @@ export function RunStep({ evaluation, reviewed, repliesSinceSave, onOpen, onAdd,
       <section class="card" aria-label="Cases">
         <div class="list-head">
           <h2>Cases</h2>
-          <button type="button" onClick={onAdd} disabled={full || !started}>
+          <button type="button" onClick={onAdd} disabled={capacity.full || !started}>
             {labels.addTestCase}
           </button>
-          {reason}
+          {addReason}
           <label>
             Show{' '}
             <select value={show} onChange={(event) => setShow((event.currentTarget as HTMLSelectElement).value as Show)}>

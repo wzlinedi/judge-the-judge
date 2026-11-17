@@ -149,7 +149,8 @@ export function DecideBar({ reviewed, effective, onAddFinding, onSecondOpinion }
 
 /** The right column of part 3: the errors of the case in two groups, expected and additional, each with its marks (T252). */
 export function ErrorsPane({ reviewed, effective, onExpected, onAdditional, onApprove, onShowInText, judged, onRemove, pointed = null, onHighlight }: ErrorsPaneProps) {
-  const unreadable = reviewed.review !== null && !reviewed.review.readable;
+  // an unreadable reply, or a clean case whose reply lacks a field a rule needs (T413): the user confirms with No more findings
+  const unreadable = reviewed.review !== null && (!reviewed.review.readable || reviewed.review.needsApproval);
   const awaiting = reviewed.status === 'awaiting';
   // the words of the judge that match each expected error (FR-077, T258): the list "Findings in the reply" is gone
   const marks = markFindings(reviewed);

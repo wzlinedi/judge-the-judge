@@ -114,7 +114,7 @@ export function ReadOnlyCaseView({ evaluation, reviewed, caseId, onNavigate, onC
                     const sides = a.text === '' ? [] : errorSides(testCase, judged, { fragment: a.text });
                     return (
                       <li key={a.key} class="decide-item" data-additional={a.key}>
-                        <ErrorCard title={a.text === '' ? 'A finding about the whole reply' : 'Found by the judge'} facts={[a.category, a.difficulty].filter((x): x is NonNullable<typeof x> => !!x)} sides={sides} onShow={() => show(showTargetOf(sides))}>
+                        <ErrorCard title={a.text === '' ? 'A finding about the whole reply' : 'Found by the judge'} facts={[a.rules.length > 0 ? `Rule: ${a.rules.join(', ')}` : undefined, a.category, a.difficulty].filter((x): x is string => !!x)} sides={sides} onShow={() => show(showTargetOf(sides))}>
                           <p class="error-state">{STATE_LABELS[a.state]}</p>
                           {a.state !== 'undecided' ? <p class="source muted">{SOURCE_LABELS[a.source]}</p> : null}
                         </ErrorCard>

@@ -2,12 +2,12 @@
 import { z } from 'zod';
 import type { ExpectedError, ReadResult, TestCase } from '../model';
 import { extractJson } from '../judge/extract-json';
-import { checkEnvelope } from '../schemas/common';
+import { checkEnvelope, droppedKeys, droppedKeysNote } from '../schemas/common';
 import { zodProblems } from '../schemas/messages';
 import { safeParseOwnKeys } from '../schemas/own-record';
 import { assignExpectedIds, ignoredFieldNote, storedCase, testCaseSchema } from '../schemas/test-case';
 import { TEST_CASES_FORMAT, TEST_CASES_KEYS, TEST_CASES_SCHEMA_VERSION } from '../schemas/test-cases';
-import { TEST_PROJECT_FORMAT } from '../schemas/test-project';
+import { TEST_PROJECT_FORMAT, TEST_PROJECT_KEYS, TEST_PROJECT_SCHEMA_VERSION } from '../schemas/test-project';
 
 /** A case as it comes from a file: the identifier may be missing, and nothing is checked against a test project yet. */
 export type DraftCase = Omit<TestCase, 'id' | 'expected_errors'> & { id?: string; expected_errors: Array<Omit<ExpectedError, 'id'> & { id?: string }> };
@@ -64,7 +64,13 @@ export function readTestCasesJson(text: string): ReadResult<ParsedCases> {
   let notes: string[] = [];
   let name: string | undefined;
   let rawCases: unknown;
+  let casesPath = 'cases';
   if (kind === TEST_PROJECT_FORMAT && isObject(raw)) {
+    // the same format and version check as "Load test project…" (file-formats.md, Common rules; T415)
+    const envelope = checkEnvelope(raw, { format: TEST_PROJECT_FORMAT, schemaVersion: TEST_PROJECT_SCHEMA_VERSION, knownKeys: TEST_PROJECT_KEYS });
+    if (!envelope.ok) return envelope;
+    notes = [...envelope.notes];
+    casesPath = 'dataset.cases';
     const dataset = raw['dataset'];
     rawCases = isObject(dataset) ? dataset['cases'] : undefined;
     if (isObject(dataset) && typeof dataset['name'] === 'string') name = dataset['name'];
@@ -78,12 +84,19 @@ export function readTestCasesJson(text: string): ReadResult<ParsedCases> {
   if (!Array.isArray(rawCases)) return { ok: false, problems: [{ message: 'The file has no list of "cases".', path: 'cases' }] };
   if (rawCases.length === 0) return { ok: false, problems: [{ message: 'The file holds no test case.', path: 'cases' }] };
 
+  // `id` is on all cases or on none (file-formats.md, section 3; T418)
+  const withId = rawCases.filter((item) => isObject(item) && Object.hasOwn(item, 'id') && item['id'] !== undefined).length;
+  if (withId > 0 && withId < rawCases.length) {
+    return { ok: false, problems: [{ message: `${withId} of ${rawCases.length} cases have an "id". Give every case an "id", or none.`, path: 'cases' }] };
+  }
+
   const fieldNote = ignoredFieldNote(rawCases);
   if (fieldNote) notes.push(fieldNote);
 
   const drafts: DraftRow[] = [];
   const invalid: InvalidRow[] = [];
   const seen = new Map<string, number>();
+  const dropped: string[] = [];
   rawCases.forEach((item, index) => {
     const position = index + 1;
     const label = isObject(item) && typeof item['name'] === 'string' && item['name'] !== '' ? item['name'] : `Case ${position}`;
@@ -96,6 +109,7 @@ export function readTestCasesJson(text: string): ReadResult<ParsedCases> {
       invalid.push({ position, label, reason });
       return;
     }
+    dropped.push(...droppedKeys(prepared, parsed.data, `${casesPath}[${index}]`, [`${casesPath}[].expected_errors[].field`]));
     const id = parsed.data.id;
     if (id !== undefined) {
       const first = seen.get(id);
@@ -107,5 +121,8 @@ export function readTestCasesJson(text: string): ReadResult<ParsedCases> {
     }
     drafts.push({ position, draft: draftFrom(parsed.data) });
   });
+  // keys inside the cases that reading dropped, named once (T419)
+  const droppedNote = droppedKeysNote(dropped);
+  if (droppedNote) notes.push(droppedNote);
   return { ok: true, value: { ...(name !== undefined ? { name } : {}), drafts, invalid }, notes };
 }

@@ -237,6 +237,10 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
 ## 11. Automatic decisions, status and counting
 
 - **Decision** (FR-061, FR-064), per case with a reply:
+  - A reply that lacks a field a rule needs is not guessed (T413, 2026-11-17): no expected error
+    is marked automatically, not even one a finding clearly matches or a per-case flag covers.
+    Each waits with the reason that names the field, and a clean case waits for **No more
+    findings** with the same reason. The rules below apply only when every rule could be checked.
   - An expected error with at least one clear-match finding is **found** (automatic).
   - An expected error with no fragment, or whose best match is partial, stays **undecided**, with
     the reason shown.

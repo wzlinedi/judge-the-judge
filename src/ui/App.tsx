@@ -20,7 +20,7 @@ import { createState, goToStep, recomputeDifferences, startNewTestProject, type 
 import { computeResults, reviewEvaluation } from '../core/evaluation/results';
 import type { TestProject, Problem } from '../core/model';
 import { Dialog } from './components/Dialog';
-import { ErrorBoundary } from './components/ErrorPanel';
+import { ErrorBoundary, ErrorPanel } from './components/ErrorPanel';
 import { ErrorMessage } from './components/ErrorMessage';
 import type { FileAction } from './components/shell/FileMenu';
 import { BrowserNotice } from './components/shell/BrowserNotice';
@@ -81,8 +81,14 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
   }, []);
 
   const metric = metricFor(state.project.metric.id);
-  const reviewed = useMemo(() => reviewEvaluation(state.project, metric), [state.project, metric]);
-  const results = useMemo(() => computeResults(state.project, metric), [state.project, metric]);
+  // computed here, above the ErrorBoundary: a throw is caught and shows the same panel, never a blank page (Constitution IX, T411)
+  const computed = useMemo(() => {
+    try {
+      return { reviewed: reviewEvaluation(state.project, metric), results: computeResults(state.project, metric) };
+    } catch (error) {
+      return { error };
+    }
+  }, [state.project, metric]);
 
   const go = (step: StepId) => setState((s) => goToStep(s, step));
   const change = (next: TestProject) => setState((s) => ({ ...s, project: next, unsaved: true }));
@@ -185,6 +191,15 @@ export function App({ ports, env, initialState, fileEnv = REAL_FILE_ENV, onFileA
     setState((s) => loadExample(s, demoProject, portsRef.current));
     say('The demo was loaded. It opens on the Judge step.');
   };
+
+  if ('error' in computed) {
+    return (
+      <div class="app">
+        <ErrorPanel error={computed.error} onSave={async () => void (await save(true))} />
+      </div>
+    );
+  }
+  const { reviewed, results } = computed;
 
   const windowOpen = (state.step === 'run' && state.openCase !== null) || (state.step === 'results' && viewCase !== null) || testWindow !== null;
   const gate = stepGate(state, state.step);

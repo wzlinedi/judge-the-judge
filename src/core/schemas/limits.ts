@@ -29,3 +29,8 @@ export function replyTooLongMessage(length: number): string | null {
   if (length <= MAX_REPLY_LENGTH) return null;
   return `The reply is ${grouped(length)} characters; the tool keeps replies up to ${grouped(MAX_REPLY_LENGTH)} characters.`;
 }
+
+/** "The prompt for this case is 1,000,010 characters; the tool keeps prompts up to 1,000,000 characters." */
+export function promptTooLongMessage(length: number): string {
+  return `The prompt for this case is ${grouped(length)} characters; the tool keeps prompts up to ${grouped(MAX_PROMPT_LENGTH)} characters. Shorten the judge's prompt or the fields of the case.`;
+}

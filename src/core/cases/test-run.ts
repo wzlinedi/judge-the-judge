@@ -1,8 +1,9 @@
 // The test run part of a test project: whether it has started, what it holds, and the test project without it (data-model.md, TestRun).
 import type { CaseDecisions, Reply, TestProject, TestRun } from '../model';
 
-const NO_REPLIES: Readonly<Record<string, Reply>> = Object.freeze({});
-const NO_DECISIONS: Readonly<Record<string, CaseDecisions>> = Object.freeze({});
+// no prototype: before the start a case id such as `constructor` finds nothing here either (S1, T410)
+const NO_REPLIES: Readonly<Record<string, Reply>> = Object.freeze(Object.create(null) as Record<string, Reply>);
+const NO_DECISIONS: Readonly<Record<string, CaseDecisions>> = Object.freeze(Object.create(null) as Record<string, CaseDecisions>);
 
 /** True once "Start test run" was pressed: the test run is present, also before the first reply (FR-053). */
 export function isStarted(project: Pick<TestProject, 'testRun'>): boolean {

@@ -154,3 +154,13 @@ describe('help for a category where it is chosen', () => {
     expect(within(win).queryByText(/Example:/)).toBeNull();
   });
 });
+
+describe('the Test cases step with no case (T422, ui-flow.md Step 2 States)', () => {
+  it('points to Add test case, the More menu and the Judge step', () => {
+    step(stateOf(draft({ dataset: { name: 'x', cases: [] } })));
+    const text = document.querySelector('.cases-step')!.textContent ?? '';
+    expect(text).toContain('There are no test cases yet');
+    expect(text).toContain('More menu');
+    expect(text).toContain('Judge step');
+  });
+});

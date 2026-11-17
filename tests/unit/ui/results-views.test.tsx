@@ -254,6 +254,15 @@ describe('the read-only case view', () => {
     expect(win.textContent).toMatch(/factual-error · obvious/);
   });
 
+  it('shows the rule of an additional finding, as the Test run window does (T421)', () => {
+    const base = sampleProject();
+    const reply = JSON.stringify({ claims: [{ text: 'The shop is closed on Sundays.', verdict: 'unsupported', reason: 'x' }] });
+    const e = withRun(base, { replies: { ...base.testRun!.replies, '1': { prompt: 'p1', reply } } });
+    render(<ReadOnlyCaseView evaluation={e} reviewed={reviewEvaluation(e, accuracyMetric)} caseId="1" onNavigate={vi.fn()} onClose={vi.fn()} onOpenOnTestRun={vi.fn()} />);
+    const item = screen.getByRole('list', { name: 'Additional errors' });
+    expect(item.textContent).toContain('Rule: Contradicted or unsupported claim');
+  });
+
   it('offers no action that changes the case: only Previous, Next, Open on Test run, Close and Show the issue (T256)', () => {
     view('2');
     const names = within(screen.getByRole('dialog')).getAllByRole('button').map((b) => b.textContent);

@@ -46,7 +46,7 @@ export function reviewCase(
     };
   }
 
-  if (mode === 'per_case') return reviewPerCase(testCase, result);
+  if (mode === 'per_case') return withMissingField(reviewPerCase(testCase, result), result);
 
   const level = new Map<string, Map<string, 'clear' | 'partial'>>(); // finding key -> expected id -> level
   for (const finding of result.findings) {
@@ -68,6 +68,7 @@ export function reviewCase(
   const expected: ExpectedReview[] = testCase.expected_errors.map((error) => {
     const clear = result.findings.filter((f) => level.get(f.key)?.get(error.id) === 'clear').map((f) => f.key);
     const partial = result.findings.filter((f) => level.get(f.key)?.get(error.id) === 'partial').map((f) => f.key);
+    if (result.unknown.length > 0) return { id: error.id, state: 'undecided', clear, partial, reason: missingFieldReason(result.unknown) };
     if (clear.length > 0) return { id: error.id, state: 'found', clear, partial };
     if (!error.fragment) {
       return { id: error.id, state: 'undecided', clear, partial, reason: 'This expected error has no fragment to match, so decide it by hand.' };
@@ -75,16 +76,30 @@ export function reviewCase(
     if (partial.length > 0) {
       return { id: error.id, state: 'undecided', clear, partial, reason: 'A finding only partly matches this fragment, so decide it by hand.' };
     }
-    if (result.unknown.length > 0) {
-      return { id: error.id, state: 'undecided', clear, partial, reason: `A rule could not be checked because the reply has no usable ${result.unknown.join(', ')}, so decide it by hand.` };
-    }
     if (additional.length > 0) {
       return { id: error.id, state: 'undecided', clear, partial, reason: 'The judge reported findings that match no expected error; one of them may be this error in other words.' };
     }
     return { id: error.id, state: 'missed', clear, partial };
   });
 
-  return { readable: true, needsApproval: false, expected, additional, partialOnly, unknown: result.unknown };
+  return withMissingField({ readable: true, needsApproval: false, expected, additional, partialOnly, unknown: result.unknown }, result);
+}
+
+const missingFieldReason = (unknown: readonly string[]) => `A rule could not be checked because the reply has no usable ${unknown.join(', ')}, so decide it by hand.`;
+
+/**
+ * A reply that lacks a field a rule needs: the tool does not guess (FR-061, T413). No expected error is marked automatically,
+ * each waits with the reason, and a case with no expected error waits for "No more findings" with the same reason.
+ */
+function withMissingField(review: CaseReview, result: FindingsResult): CaseReview {
+  if (result.unknown.length === 0) return review;
+  const reason = missingFieldReason(result.unknown);
+  return {
+    ...review,
+    expected: review.expected.map((e) => ({ ...e, state: 'undecided' as const, reason })),
+    needsApproval: review.expected.length === 0,
+    reason,
+  };
 }
 
 /**
@@ -95,11 +110,7 @@ export function reviewCase(
 function reviewPerCase(testCase: Pick<TestCase, 'expected_errors'>, result: FindingsResult): CaseReview {
   const whole = result.findings.find((f) => f.key === 'reply');
   const flagged = whole !== undefined;
-
-  if (!flagged && result.unknown.length > 0) {
-    const reason = `A rule could not be checked because the reply has no usable ${result.unknown.join(', ')}, so decide it by hand.`;
-    return { readable: true, needsApproval: false, flagged, expected: testCase.expected_errors.map((e) => ({ id: e.id, state: 'undecided' as const, clear: [], partial: [], reason })), additional: [], partialOnly: [], unknown: result.unknown };
-  }
+  // a missing field is handled by the caller (withMissingField): nothing is then marked automatically
   return {
     readable: true,
     needsApproval: false,
