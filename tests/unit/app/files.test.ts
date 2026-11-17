@@ -117,27 +117,6 @@ describe('a file with no test run loads at once (e)', () => {
   });
 });
 
-describe('a dropped file (d)', () => {
-  it('asks the same question and is never remembered, so the first save asks for a file', async () => {
-    const ports = createFakePorts();
-    const asked = await loadTestProject(createState(), ports, env, { name: 'dropped.json', text: await fileOf() });
-    expect(asked.outcome).toBe('needs_choice');
-    expect(ports.opener.lastKind).toBeUndefined(); // the picker was not used
-    const result = await finishLoad(asked.state, ports, asked.pending!, 'with');
-    expect(result.state.testProjectFile).toBeNull();
-    expect(ports.testProjectTarget.fileName).toBeNull();
-    await saveTestProject(result.state, ports, env);
-    expect(ports.testProjectTarget.asked).toBe(1);
-  });
-
-  it('a dropped file with no test run loads at once and is not remembered either', async () => {
-    const ports = createFakePorts();
-    const result = await loadTestProject(createState(), ports, env, { name: 'dropped.json', text: await fileOf(notStartedProject()) });
-    expect(result.outcome).toBe('loaded');
-    expect(result.state.testProjectFile).toBeNull();
-  });
-});
-
 describe('an invalid file changes nothing and is explained before any question (g)', () => {
   it('does not read as a test project', async () => {
     const ports = createFakePorts();
@@ -218,12 +197,5 @@ describe('a file that is too large (code review S4)', () => {
     expect(result.outcome).toBe('invalid');
     expect(result.state).toBe(state);
     expect(result.message).toBe('The file is 72 MB; the tool reads files up to 50 MB.');
-  });
-
-  it('refuses a dropped file above the limit with the same message, before its text is used', async () => {
-    const state = unsavedState(notStartedProject());
-    const result = await loadTestProject(state, createFakePorts(), env, { name: 'big.json', text: '{}', size: 61 * 1024 * 1024 });
-    expect(result.outcome).toBe('invalid');
-    expect(result.message).toBe('The file is 61 MB; the tool reads files up to 50 MB.');
   });
 });

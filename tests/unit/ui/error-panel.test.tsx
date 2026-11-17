@@ -186,3 +186,25 @@ describe('the save of the error panel says what happened (T416)', () => {
     await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Nothing was saved'));
   });
 });
+
+describe('the save of the error panel when the save itself fails (T452, code review finding 1)', () => {
+  it('shows "The test project could not be saved: …" and leaves no promise unhandled', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => unhandled.push(reason);
+    process.on('unhandledRejection', onUnhandled);
+    try {
+      render(
+        <ErrorBoundary onSave={async () => { throw new Error('The disk is full'); }} onReload={() => {}}>
+          <Thrower />
+        </ErrorBoundary>,
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Save test project as…' }));
+      await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('The test project could not be saved: The disk is full'));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(unhandled).toEqual([]);
+    } finally {
+      process.off('unhandledRejection', onUnhandled);
+    }
+  });
+});

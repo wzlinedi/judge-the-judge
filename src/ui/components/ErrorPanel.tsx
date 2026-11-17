@@ -21,7 +21,16 @@ export function ErrorPanel({ error, onSave, onReload }: { error: unknown } & Pic
       <p>{text}</p>
       <p>Your work is still in the page. Save it to a file before you reload.</p>
       <div class="error-panel-actions">
-        <button type="button" class="primary" onClick={() => void Promise.resolve(onSave()).then((message) => setSaid(message ?? ''))}>
+        <button type="button" class="primary" onClick={() => {
+            // a save that fails is said here; the panel is the last place to catch it (code review finding 1)
+            const failed = (error: unknown) => setSaid(`The test project could not be saved: ${error instanceof Error ? error.message : String(error)}`);
+            try {
+              void Promise.resolve(onSave()).then((message) => setSaid(message ?? ''), failed);
+            } catch (error) {
+              failed(error);
+            }
+          }}
+        >
           Save test project as…
         </button>
         <button type="button" onClick={onReload ?? (() => globalThis.location.reload())}>

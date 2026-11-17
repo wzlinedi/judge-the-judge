@@ -291,3 +291,52 @@ test('the case window of Test run is one page: the fields, the actions row, then
   const body = win.locator('.case-window-body');
   expect(await body.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
 });
+
+// T453 (code review finding 2; FR-055, FR-056): a readable JSON typed one key at a time is saved when the box loses the focus. Leaving the
+// case at that moment (Next case, Close or Escape) waits for that save and does not ask about a reply that is being saved.
+for (const leaveBy of ['Next case', 'Close', 'Escape'] as const) {
+  test(`T453: a readable JSON typed by hand is saved when the case is left with ${leaveBy}, and nothing asks`, async ({ page }) => {
+    await openRunWithoutReplies(page);
+    await next(page).getByRole('button', { name: 'Continue' }).click();
+    const win = caseWindow(page);
+    await expect(win).toBeVisible();
+    const id = /^Case (\S+) /.exec((await win.getAttribute('aria-label')) ?? (await win.locator('h2, h1').first().innerText()))?.[1];
+    expect(id, 'the id of the open case').toBeTruthy();
+    await box(page).click();
+    await box(page).pressSequentially('{"claims": []}');
+    if (leaveBy === 'Escape') await page.keyboard.press('Escape');
+    // the box loses the focus and the button is pressed in one task: the click comes before the save of the blur has ended
+    else await win.getByRole('button', { name: leaveBy, exact: true }).evaluate((button) => {
+      (document.activeElement as HTMLElement).blur();
+      (button as HTMLElement).click();
+    });
+    await expect(page.getByRole('dialog', { name: 'The reply in the box is not saved' })).toHaveCount(0);
+    if (leaveBy === 'Next case') {
+      await expect(win).not.toHaveAccessibleName(new RegExp(`^Case ${id} `));
+      await win.getByRole('button', { name: 'Previous case', exact: true }).click();
+    } else {
+      await expect(win).toHaveCount(0);
+      await page.getByRole('row').filter({ has: page.getByRole('cell', { name: id!, exact: true }) }).getByRole('button', { name: 'Open' }).click();
+    }
+    await expect(win).toHaveAccessibleName(new RegExp(`^Case ${id} `));
+    await expect(shown(page)).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'The reply in the box is not saved' })).toHaveCount(0);
+  });
+}
+
+test('T453: text that is not JSON still asks before Next case, and "Discard reply" leaves no reply', async ({ page }) => {
+  await openRunWithoutReplies(page);
+  await next(page).getByRole('button', { name: 'Continue' }).click();
+  const win = caseWindow(page);
+  await expect(win).toBeVisible();
+  await box(page).click();
+  await box(page).pressSequentially('half a reply');
+  await win.getByRole('button', { name: 'Next case', exact: true }).click();
+  const ask = page.getByRole('dialog', { name: 'The reply in the box is not saved' });
+  await expect(ask).toBeVisible();
+  await ask.getByRole('button', { name: 'Discard reply' }).click();
+  await expect(ask).toHaveCount(0);
+  await win.getByRole('button', { name: 'Previous case', exact: true }).click();
+  await expect(box(page)).toHaveValue('');
+  await expect(shown(page)).toHaveCount(0);
+});

@@ -53,6 +53,8 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   /** The change that waits for the answer to "Change the judge’s reply?": a text typed into the box, or a paste. */
   const [pending, setPending] = useState<{ kind: 'type'; value: string } | { kind: 'paste' } | { kind: 'remove' } | null>(null);
   const [leaving, setLeaving] = useState<(() => void) | null>(null);
+  /** The save that the box started when it lost the focus, until it ends. */
+  const saving = useRef<Promise<ReplyOutcome> | null>(null);
   const [adding, setAdding] = useState(false);
   const [opinionOpen, setOpinionOpen] = useState(false);
   const { strong, shown, show: showInText } = useShowIssue(textRef);
@@ -109,7 +111,15 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
     if (!typedByKey && reply === undefined && value.trim() !== '' && extractJson(value).ok) void saveText(value);
   };
   const boxLeft = () => {
-    if (reply === undefined && !isEditing && text.trim() !== '' && extractJson(text).ok) void saveText(text);
+    if (reply === undefined && !isEditing && text.trim() !== '' && extractJson(text).ok) {
+      // kept so that leaving the case waits for it instead of asking about a reply that is being saved (code review finding 2)
+      const save = saveText(text);
+      saving.current = save;
+      const done = () => {
+        if (saving.current === save) saving.current = null;
+      };
+      void save.then(done, done);
+    }
   };
   const pasted = async () => {
     const outcome = await replyActions.paste(caseId, reply !== undefined);
@@ -169,8 +179,23 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   };
   const handMarks = replaceNeedsQuestion(evaluation, caseId).count;
 
-  /** Moving or closing with a reply that was typed and not saved asks first (FR-055). */
+  /**
+   * Moving or closing with a reply that was typed and not saved asks first (FR-055). Leaving takes the focus out of the box, so a readable
+   * JSON typed there is saved as on blur (FR-056); leaving waits for that save and goes on when it saved the text (code review finding 2).
+   */
   const leave = (go: () => void) => {
+    const focused = document.activeElement;
+    if (focused instanceof HTMLTextAreaElement && partRef.current?.contains(focused)) boxLeft();
+    const save = saving.current;
+    if (save !== null) {
+      const ask = () => setLeaving(() => go);
+      void save.then((outcome) => {
+        if (outcome.status !== 'saved' && outcome.status !== 'unchanged') return ask();
+        setMessage('');
+        go();
+      }, ask);
+      return;
+    }
     if (changed && text.trim() !== '') setLeaving(() => go);
     else {
       clearDraft();

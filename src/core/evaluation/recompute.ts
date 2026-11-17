@@ -21,6 +21,24 @@ export function rulesCorrectedAfterReplies(replyJudgeVersion: string | undefined
   return replyJudgeVersion !== undefined && replyJudgeVersion !== currentJudgeVersion;
 }
 
+/**
+ * A file saved before the rules turned off by the sample reply were part of the judge version stored the version without them
+ * (code review R3). Such a stored version agrees: it is read as the current one, in `reply_judge_version` and in the stored
+ * `judge_version` (Clarifications 2026-11-17, finding 8; FR-075). Any other version is kept as it is.
+ */
+export function acceptEarlierJudgeVersion(loaded: LoadedTestProject, current: string, earlier: string): LoadedTestProject {
+  if (earlier === current) return loaded;
+  const run = loaded.project.testRun;
+  const replyOld = run?.reply_judge_version === earlier;
+  const storedOld = loaded.stored?.judgeVersion === earlier;
+  if (!replyOld && !storedOld) return loaded;
+  return {
+    ...loaded,
+    project: replyOld && run ? { ...loaded.project, testRun: { ...run, reply_judge_version: current } } : loaded.project,
+    stored: storedOld && loaded.stored ? { ...loaded.stored, judgeVersion: current } : loaded.stored,
+  };
+}
+
 /** The results as the `test_run` section stores them; empty until a case is decided. */
 export function resultsForFile(results: Results | null): Record<string, unknown> {
   if (!results || results.counters.cases_decided === 0) return {};

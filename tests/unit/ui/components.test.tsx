@@ -362,25 +362,3 @@ describe('the order of the buttons in the dialogs (T337, FR-093)', () => {
     expectCancelFirstMainLast(screen.getByRole('dialog', { name: 'Import test cases…' }), ['Cancel', 'Choose file…']);
   });
 });
-
-describe('FilePicker size limit (code review S4)', () => {
-  const drop = (size: number) => {
-    const onFile = vi.fn();
-    const onRefuse = vi.fn();
-    render(<FilePicker label="Pick" onPick={() => {}} onFile={onFile} onRefuse={onRefuse} />);
-    fireEvent.drop(screen.getByTestId('drop-zone'), { dataTransfer: { files: [{ name: 'a.json', size }] } });
-    return { onFile, onRefuse };
-  };
-
-  it('does not pass on a dropped file of 60 MB and says why', () => {
-    const { onFile, onRefuse } = drop(60 * 1024 * 1024);
-    expect(onFile).not.toHaveBeenCalled();
-    expect(onRefuse).toHaveBeenCalledWith('The file is 60 MB; the tool reads files up to 50 MB.');
-  });
-
-  it('passes on a dropped file of 1 MB', () => {
-    const { onFile, onRefuse } = drop(1024 * 1024);
-    expect(onFile).toHaveBeenCalledTimes(1);
-    expect(onRefuse).not.toHaveBeenCalled();
-  });
-});

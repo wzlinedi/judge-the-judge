@@ -39,10 +39,11 @@ export function verificationPrompt(evaluation: TestProject, reviewed: ReviewedCa
   parts.push('', 'ADDITIONAL FINDINGS: findings of the judge that match no expected error. For each one, is it a real error in the data (real: true) or a false positive (real: false)?');
   if (additional.length === 0 && waiting.length === 0) parts.push('There are no additional findings.');
   additional.forEach((a, i) => parts.push(`A${i + 1}. ${a.text === '' ? 'A finding about the whole reply' : `"${a.text}"`}${a.rules.length > 0 ? ` (rule: ${a.rules.join(', ')})` : ''}`));
-  // findings that only partly match an expected error that is not decided yet follow, numbered on (code review R8)
-  waiting.forEach((w, i) =>
-    parts.push(`A${additional.length + i + 1}. ${w.text === '' ? 'A finding about the whole reply' : `"${w.text}"`}${w.rules.length > 0 ? ` (rule: ${w.rules.join(', ')})` : ''} (partly matches ${w.resembles.join(', ')})`),
-  );
+  // findings that match an expected error that is not decided yet, partly or clearly, follow, numbered on (code review R8, finding 4)
+  waiting.forEach((w, i) => {
+    const matches = [...(w.matches.length > 0 ? [`matches ${w.matches.join(', ')}`] : []), ...(w.resembles.length > 0 ? [`partly matches ${w.resembles.join(', ')}`] : [])];
+    parts.push(`A${additional.length + i + 1}. ${w.text === '' ? 'A finding about the whole reply' : `"${w.text}"`}${w.rules.length > 0 ? ` (rule: ${w.rules.join(', ')})` : ''} (${matches.join('; ')})`);
+  });
 
   parts.push('', 'THE REPLY OF THE JUDGE:', fence(reply));
   if (review && !review.readable) parts.push('The reply could not be read automatically, so the list of additional findings above may be incomplete.');

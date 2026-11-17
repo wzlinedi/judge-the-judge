@@ -28,3 +28,15 @@ export function judgeVersion(judgeSet: JudgeSet): Promise<string> {
     ...(unusable.length > 0 ? { unusable_rules: unusable } : {}),
   });
 }
+
+/**
+ * The judge version as it was worked out before the rules turned off by the sample reply were part of it (code review R3). A file
+ * saved then stored this version; a load accepts it as the current one (Clarifications 2026-11-17, finding 8; FR-075).
+ */
+export function judgeVersionWithoutUnusable(judgeSet: JudgeSet): Promise<string> {
+  return contentVersion({
+    prompt: judgeSet.prompt,
+    finding_text: judgeSet.reply_mapping?.finding_text ?? {},
+    error_rules: judgeSet.error_rules ?? [],
+  });
+}

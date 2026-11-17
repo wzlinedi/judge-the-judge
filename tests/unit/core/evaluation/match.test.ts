@@ -68,3 +68,18 @@ describe('matchLevel: containment on whole words', () => {
   });
 });
 
+
+// T457 (Clarifications 2026-11-17, finding 7, answer A; FR-075): a one-word fragment is a clear match when the finding holds it as a whole
+// word. The two-word rule of R4 is only for a finding that is the shorter text.
+describe('a one-word fragment (T457)', () => {
+  it('is a clear match when the finding holds it as a whole word', () => {
+    expect(matchLevel('The year 1889 is wrong', '1889')).toBe('clear');
+    expect(matchLevel('He lives in Warszawa now', 'Warszawa')).toBe('clear');
+  });
+
+  it('keeps the two-word rule for a shorter finding, and needs the whole word', () => {
+    expect(matchLevel('he', 'the hero rejects the proposal')).not.toBe('clear');
+    expect(matchLevel('No comparison is given', 'Paris')).not.toBe('clear');
+    expect(matchLevel('The Parisian hotel is closed', 'Paris')).not.toBe('clear');
+  });
+});

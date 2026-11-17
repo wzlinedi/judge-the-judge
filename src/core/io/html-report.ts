@@ -170,7 +170,11 @@ function testCase(evaluation: TestProject, r: ReviewedCase): string {
         additional.map((a) => [a.text === '' ? 'A finding about the whole reply' : a.text, a.category ?? '', a.difficulty ?? '', STATE_LABELS[a.state] ?? a.state, a.state === 'undecided' ? '' : SOURCE_LABELS[a.source]]),
       ),
     );
-    if (r.effective?.needsApproval) out.push(`<p>The reply could not be read automatically. ${r.effective.approved ? 'The user approved the case.' : 'The case waits for approval.'}</p>`);
+    if (r.effective?.needsApproval) {
+      // a readable reply that lacks a field a rule needs waits for its own reason (code review finding 5, FR-064)
+      const why = r.review && r.review.readable && r.review.reason ? r.review.reason : 'The reply could not be read automatically.';
+      out.push(`<p>${esc(why)} ${r.effective.approved ? 'The user approved the case.' : 'The case waits for approval.'}</p>`);
+    }
   } else out.push('<p>No reply yet.</p>');
   if (decisions?.note) out.push(`<p>Note: ${esc(decisions.note)}</p>`);
   out.push('</article>');

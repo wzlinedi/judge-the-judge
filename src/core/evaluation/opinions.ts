@@ -22,6 +22,8 @@ export interface PlannedMark {
   replacesOpinion: boolean;
   reason?: string;
   fragment?: string;
+  /** A waiting finding whose errors stay undecided after the opinion: its mark counts once these are decided Not found (T417). */
+  waitsFor?: string[];
 }
 
 export interface PlannedNew {
@@ -118,6 +120,8 @@ export function opinionPlan(testCase: Pick<TestCase, 'expected_errors'>, effecti
     });
   });
 
+  // the errors this opinion decides; a waiting finding of an error it leaves undecided keeps waiting
+  const decidedHere = new Set(marks.filter((m) => m.kind === 'expected').map((m) => m.label));
   waiting.forEach((item, i) => {
     const label = `A${effective.additional.length + i + 1}`;
     const entries = opinion.additional.filter((e) => e.index === effective.additional.length + i + 1);
@@ -127,17 +131,23 @@ export function opinionPlan(testCase: Pick<TestCase, 'expected_errors'>, effecti
       unanswered.push({ label, undecided: true, reason: entries.length === 0 ? 'The opinion has no entry with this number.' : 'Its entry has no true or false for "real".' });
       return;
     }
+    // the mark it already has, by hand or from an earlier opinion, is where the change starts (code review finding 4)
+    const from = item.stored ?? { state: 'undecided', source: 'automatic' as const };
+    const to: AdditionalState = answer.real ? 'real_error' : 'false_positive';
+    const same = from.state === to;
+    const waitsFor = [...item.matches, ...item.resembles].filter((e) => !decidedHere.has(e));
     marks.push({
       label,
       kind: 'additional',
       target: item.key,
-      from: { state: 'undecided', source: 'automatic' },
-      to: answer.real ? 'real_error' : 'false_positive',
-      change: 'set',
-      replacesHand: false,
-      replacesOpinion: false,
+      from,
+      to,
+      change: same ? 'same' : 'set',
+      replacesHand: !same && from.source === 'manual',
+      replacesOpinion: !same && from.source === 'llm-approved',
       ...(answer.reason ? { reason: answer.reason } : {}),
       ...(answer.fragment ? { fragment: answer.fragment } : {}),
+      ...(waitsFor.length > 0 ? { waitsFor } : {}),
     });
   });
 

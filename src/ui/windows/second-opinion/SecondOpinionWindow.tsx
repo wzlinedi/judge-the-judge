@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'preact/hooks';
+import { decisionsOf } from '../../../core/cases/test-run';
 import { opinionItems } from '../../../core/evaluation/opinion-items';
 import { NO_ANSWER, opinionPlan, type OpinionPlan, type PlannedMark } from '../../../core/evaluation/opinions';
 import type { ReviewedCase } from '../../../core/evaluation/results';
@@ -28,15 +29,19 @@ const STATE_LABELS: Record<string, string> = {
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
-function Mark({ mark }: { mark: PlannedMark }) {
+/** A waiting finding counts once its errors are decided Not found (T417); the preview says so when the opinion leaves them undecided (T454). */
+const waitNote = (waitsFor: readonly string[] | undefined) =>
+  waitsFor && waitsFor.length > 0 ? ` (counts when ${waitsFor.join(' and ')} ${waitsFor.length === 1 ? 'is' : 'are'} ${labels.issueMissed})` : '';
+
+export function Mark({ mark }: { mark: PlannedMark }) {
   const now = STATE_LABELS[mark.from.state];
   const next = STATE_LABELS[mark.to];
   return (
     <li>
       {mark.change === 'same' ? (
-        <strong>{`${mark.label} ${next} — no change`}</strong>
+        <strong>{`${mark.label} ${next} — no change${waitNote(mark.waitsFor)}`}</strong>
       ) : (
-        <strong>{`${mark.label} ${now} → ${next}${mark.replacesHand ? ' (replaces a mark set by hand)' : mark.replacesOpinion ? ' (replaces a mark from an earlier opinion)' : ''}`}</strong>
+        <strong>{`${mark.label} ${now} → ${next}${mark.replacesHand ? ' (replaces a mark set by hand)' : mark.replacesOpinion ? ' (replaces a mark from an earlier opinion)' : ''}${waitNote(mark.waitsFor)}`}</strong>
       )}
       {mark.reason ? <p class="muted">{mark.reason}</p> : null}
       {mark.fragment ? <p class="muted">{`Fragment: “${mark.fragment}”`}</p> : null}
@@ -51,7 +56,8 @@ export function SecondOpinionWindow({ evaluation, reviewed, onApply, onClose }: 
   const [text, setText] = useState('');
   const prompt = useMemo(() => verificationPrompt(evaluation, reviewed), [evaluation, reviewed]);
   const read = useMemo(() => (text.trim() === '' ? null : readOpinion(text, caseId)), [text, caseId]);
-  const items = useMemo(() => opinionItems(reviewed), [reviewed]);
+  const decisions = decisionsOf(evaluation)[caseId];
+  const items = useMemo(() => opinionItems(reviewed, decisions), [reviewed, decisions]);
   const plan = useMemo(() => (read?.ok && effective ? opinionPlan(reviewed.testCase, effective, read.value, items.waiting) : null), [read, effective, reviewed.testCase, items]);
   if (!effective) return null;
 

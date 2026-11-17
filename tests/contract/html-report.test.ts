@@ -164,3 +164,27 @@ describe('print', () => {
 function escape(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+// T455 (code review finding 5; FR-064, FR-078): a clean case whose reply is readable JSON but lacks a field a rule needs waits for approval
+// for that reason, not because the reply could not be read.
+describe('the reason of a clean case that waits for approval (T455)', () => {
+  const article = (html: string, id: string) => html.slice(at(html, `<article class="case" id="case-${id}">`), html.indexOf('</article>', at(html, `<article class="case" id="case-${id}">`)));
+  const withReply = (text: string): TestProject => {
+    const e = sampleProject();
+    e.testRun!.replies['1'] = { prompt: 'p1', reply: text };
+    delete e.testRun!.decisions['1'];
+    return e;
+  };
+
+  it('says the reply lacks the field and the case waits for approval', () => {
+    const html = article(report(withReply(JSON.stringify({ claims: [{ text: 'Anna is a baker.', reason: 'because' }] }))), '1');
+    expect(html).toContain('A rule could not be checked because the reply has no usable claims[].verdict, so decide it by hand.');
+    expect(html).toContain('The case waits for approval.');
+    expect(html).not.toContain('The reply could not be read automatically.');
+  });
+
+  it('keeps "The reply could not be read automatically." for a reply that is not readable', () => {
+    const html = article(report(withReply('no JSON here')), '1');
+    expect(html).toContain('The reply could not be read automatically. The case waits for approval.');
+  });
+});

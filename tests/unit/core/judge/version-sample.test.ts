@@ -1,6 +1,6 @@
 // R3 (code review 2026-11-16; research.md 14): the sample reply counts in the judge version only through the rules it turns off.
 import { describe, expect, it } from 'vitest';
-import { judgeVersion } from '../../../../src/core/judge/version';
+import { judgeVersion, judgeVersionWithoutUnusable } from '../../../../src/core/judge/version';
 import type { JudgeSet } from '../../../../src/core/model';
 
 const rules = [{ name: 'Bad', match: 'any' as const, conditions: [{ field: 'claims[].verdict', comparison: 'equals' as const, value: 'bad' }] }];
@@ -31,5 +31,17 @@ describe('judgeVersion and the sample reply', () => {
     const works = await judgeVersion(set('{"claims": [{"text": "a", "verdict": "bad"}]}'));
     const without = await judgeVersion({ ...set(''), sample_reply: undefined } as JudgeSet);
     expect(without).toBe(works);
+  });
+});
+
+// T459 (Clarifications 2026-11-17, finding 8, answer A; FR-075): files saved before R3 stored the version worked out without the list of
+// rules turned off; the helper gives that version, so a load can accept it.
+describe('judgeVersionWithoutUnusable (T459)', () => {
+  it('differs from the version when the sample reply turns a rule off, and equals it otherwise', async () => {
+    const broken = set('{"claims": [{"text": "a"}]}');
+    const works = set('{"claims": [{"text": "a", "verdict": "bad"}]}');
+    expect(await judgeVersionWithoutUnusable(broken)).not.toBe(await judgeVersion(broken));
+    expect(await judgeVersionWithoutUnusable(broken)).toBe(await judgeVersion(works));
+    expect(await judgeVersionWithoutUnusable(works)).toBe(await judgeVersion(works));
   });
 });

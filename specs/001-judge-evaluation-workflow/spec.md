@@ -240,6 +240,10 @@ the steps, actions, labels, checks, confirmations, file formats and results stay
 - Q: (Editorial redesign 2026-11-17) Where do the fonts of the brief (Instrument Serif, Newsreader, Inter, JetBrains Mono) come from, when the CSP allows fonts only from the app itself? → A: From the app: WOFF2 files in the repository under the SIL Open Font License, with the license text, Latin and Latin Extended characters (texts of cases may be Polish) and `font-display: swap`, with Georgia, the system sans and the system monospace as fallbacks. The CSP does not change and nothing is loaded from Google (FR-091, SC-048).
 - Q: (Editorial redesign 2026-11-17) How are the small labels over the section headings ("Step 01 / Instructions") made, which the preview added with a script? → A: As an element in the markup of the component, before the heading, hidden from screen readers (`aria-hidden`), so the names of the headings and the end-to-end checks do not change. The labels are those of the preview; the labels of Results are set in the plan (FR-091, SC-049).
 - Q: (Editorial redesign 2026-11-17, after the plan) Which of the open choices of research.md 35.1 and 35.7 apply? → A: The truth background is `rgba(13, 148, 136, 0.11)`, stored as `#E0EDE9` (4.55:1 with `#0F766E`), not 0.12 (4.5009:1); FR-007 says so. The assertion changes Z1 to Z5 (`tokens.test.ts`: light, dark, navy, `--content-max`; `v13-privacy-a11y.spec.ts`: the accent) are approved. Option O1 (weight 500) and option O2 (mono h4 labels) are not taken, so `styles.test.ts` stays unchanged.
+- Q: (Code review 2026-11-17, origin/main..HEAD, finding 7) Does a one-word fragment of an expected error (for example "1889" or "Warszawa") match a judge finding clearly when the finding holds that word as a whole word? → A: Yes. The two-word rule of R4 applies only when the finding is the shorter text: a one-word fragment that occurs in the finding as a whole word is a clear match (the numbers of the fragment must still occur in the finding), and a one-word finding such as "he" still gets no clear match by containment ("he" does not match "the hero"). This replaces the part of R4 that left every one-word fragment to the user (FR-075, research.md 10).
+- Q: (Code review 2026-11-17, finding 6) What happens to a judge finding that matched an expected error, clearly or partly, when the user marks that error "Ignored"? → A: It is left out with the error: it does not become an additional finding and counts nowhere, as long as one error it matched is "Ignored" or "Found" (or still undecided, when it waits). Only when every error it matched is "Not found" does it become an additional finding (T417). Marking the error "Found" or "Not found" again works as before (FR-062, FR-067).
+- Q: (Code review 2026-11-17, finding 8) A test project saved before R3 that has a rule the sample reply turns off and a test run: does it show "The rules were corrected after the replies were received" on load, although nothing was changed? → A: No. The judge version stored with the replies also agrees when it equals the version worked out the earlier way, without the list of rules the sample turns off; then the note is not shown. A real change of the prompt, the reply mapping or the rules still gives the note. Files in which every rule works are not affected (FR-075, Clarifications 2026-11-16, R3).
+- Q: (Code review 2026-11-17, finding 3) A test project file holds a reply of the judge longer than 200,000 characters (possible with a version before S4): what happens on load? → A: The file is rejected, as a file with a stored prompt over 1,000,000 characters is: nothing changes, and the message names the place (for example `test_run.replies.7.reply`) and the limit. The limit of S4 stays for files too; the user can shorten the reply in the file and load it again (FR-084, Clarifications 2026-11-16, S4).
 
 ## Glossary
 
@@ -934,7 +938,9 @@ case and confirm the new case has the same fields and expected errors.
   with "Save test project as…" and "Reload", instead of a blank page (Clarifications 2026-11-16, S3).
 - A file bigger than 50 MB, a reply longer than 200,000 characters, or a stored prompt longer than
   1,000,000 characters: the file is rejected, or the reply is not saved, with a message that names
-  the size and the limit (Clarifications 2026-11-16, S4).
+  the size and the limit (Clarifications 2026-11-16, S4). A file that holds a stored reply over
+  200,000 characters is rejected as a whole and the message names the place of the reply
+  (Clarifications 2026-11-17, finding 3).
 - The test project is too large for one file (for example 500 cases with long fields and replies): the
   save refuses with the size and the 50 MB limit, nothing is written, and the work stays in the
   page (Clarifications 2026-11-17, T416).
@@ -1644,7 +1650,9 @@ case and confirm the new case has the same fields and expected errors.
   and a difficulty (obvious or subtle), shown with the finding in the case window, the Test case
   list of Results and the report, and counted in the table of additional findings of FR-070. A finding added by hand MUST have "Remove", which removes it
   with its mark; a finding read from the reply MUST NOT have one. An item
-  marked "Ignored" MUST be left out of every count and listed as ignored in the report. An
+  marked "Ignored" MUST be left out of every count and listed as ignored in the report; a judge finding
+  that matched an expected error marked "Ignored" is left out with it and does not become an additional
+  finding (Clarifications 2026-11-17, finding 6). An
   additional finding marked "Genuine error" (a true error that was not planned) is counted on its own
   (FR-066); it MUST NOT be added to the expected errors of the case (T259, which undoes T253): it stays in "Additional errors", and
   Results › Summary MUST list every such finding with its case and **Open** under "Genuine errors the test cases missed", so the
@@ -1660,8 +1668,8 @@ case and confirm the new case has the same fields and expected errors.
   box for the LLM's answer, checked as soon as it is pasted and whenever it changes (FR-084); a
   preview of every change the opinion makes; and "Apply opinion" and "Cancel". The prompt MUST
   contain the case's fields, the numbered expected errors, the numbered additional findings
-  followed by the findings that only partly match an undecided expected error (marked "(partly
-  matches E2)", counted among the M additional findings of the first line and among the N items
+  followed by the findings that match an undecided expected error, partly or clearly (marked "(partly
+  matches E2)" or "(matches E2)", counted among the M additional findings of the first line and among the N items
   of "classifies none of the N items"), a short code of this list of items that the answer must repeat, and
   the received reply, and ask for a fixed JSON opinion: for each expected error whether the judge
   found it, and for each additional finding whether it is a real error or a false positive, each
@@ -1804,7 +1812,9 @@ case and confirm the new case has the same fields and expected errors.
   corrected after replies were received, or the sample reply was changed so that a rule stops or
   starts working, the judge version changes, the replies and decisions
   are kept, and the result, the Results step and the report MUST note this and name the judge
-  version in force when the replies were received. When test cases were added or expected errors corrected after the first reply (FR-053), the
+  version in force when the replies were received. A version stored by a file saved before the rules turned
+  off by the sample reply were part of it agrees when it equals the version without them (Clarifications
+  2026-11-17, finding 8). When test cases were added or expected errors corrected after the first reply (FR-053), the
   result, the Results step and the report MUST say so and name those cases. Because evaluation per case (FR-061) follows
   from the shape of the error rules, a correction of the rules can switch between counting per
   expected error and counting per case; when it does, the result, the Results step and the report
@@ -2301,8 +2311,9 @@ case and confirm the new case has the same fields and expected errors.
 - The reply mapping and the error rules are used only for automatic decisions. A finding points at
   an expected fragment when the two share their key content after ignoring letter case, spacing
   and rephrasing; the exact rule, and the line between a clear and a partial match, are set in
-  planning; containment gives a clear match only on whole words, and the shorter text must have
-  at least two words (Clarifications 2026-11-16, R4). A false positive is an additional finding, in any case clean or not, that the user
+  planning; containment gives a clear match only on whole words, and a shorter finding must have
+  at least two words, while a one-word fragment matches clearly when the finding holds it as a whole
+  word (Clarifications 2026-11-16, R4; 2026-11-17, finding 7). A false positive is an additional finding, in any case clean or not, that the user
   has confirmed as not being an error.
 - The 95% confidence level is the default for confidence intervals, which are shown only in the
   "Details" section; the method may be refined in planning.

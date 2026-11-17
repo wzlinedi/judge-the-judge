@@ -214,6 +214,9 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
      text, with a space on each side, occurs in the longer one with a space on each side) and the
      shorter text has at least two words. A one-word text never matches clearly by containment; it
      goes to step 3 (code review 2026-11-16, R4: "Paris" matched "comparison" and "he" matched "the hero").
+     The two-word rule holds only when the finding is the shorter text: a finding that holds a
+     one-word fragment as a whole word ("Paris" in "the capital is Paris") is a clear match
+     (Clarifications 2026-11-17, finding 7, T457).
   3. Otherwise compare words longer than three characters: let *hits* be the number of such words
      of the fragment that also occur in the finding, and *share* be hits divided by the fragment's
      word count. **Clear match** when hits ≥ 2 and share ≥ 0.6. **Partial match** when hits ≥ 1 and
@@ -338,7 +341,10 @@ ignoring letter case, spacing and rephrasing, and leaves the exact rule to plann
   was in force when the first reply was saved. When the current judge version differs and the
   prompt is the same, the Results step, the evaluation file and the report say that the rules,
   the mapping, or the sample reply (when it turned a rule on or off, R3) were corrected after
-  replies were received and name both versions.
+  replies were received and name both versions. A file saved before R3 stored the version worked
+  out without the list of rules turned off; on load such a stored version still agrees with the
+  current judge set and is replaced by the current version, so no correction is reported
+  (Clarifications 2026-11-17, finding 8, T459).
 - **Consequence**: Editing expected errors after finalizing (allowed by FR-053) changes the dataset
   version. A result always records the version at the moment it was saved.
 - **Rationale**: Principle V and FR-034: identical content always gives the same version, on any

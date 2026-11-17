@@ -132,9 +132,11 @@ export function readTestProject(text: string, isMetricLoaded: (id: string) => bo
   }
   const fieldNote = ignoredFieldNote((envelope.value['dataset'] as { cases?: unknown } | undefined)?.cases);
   if (fieldNote) notes.push(fieldNote);
-  // keys inside the file that reading dropped, besides the ones the notes above already name (T419)
+  // keys inside the file that reading dropped, besides the ones the notes above already name (T419); the upgrade from version 1
+  // drops `dataset.finalized` on purpose and says so in its own note (code review finding 9)
+  const named = ['checks.minimum_sample', 'dataset.cases[].expected_errors[].field', ...(envelope.value['schema_version'] === 1 ? ['dataset.finalized'] : [])];
   const inside = (['judge_set', 'dataset', 'metric', 'checks', 'test_run'] as const).flatMap((key) =>
-    droppedKeys(envelope.value[key], (parsed.data as Record<string, unknown>)[key], key, ['checks.minimum_sample', 'dataset.cases[].expected_errors[].field']),
+    droppedKeys(envelope.value[key], (parsed.data as Record<string, unknown>)[key], key, named),
   );
   const insideNote = droppedKeysNote(inside);
   if (insideNote) notes.push(insideNote);

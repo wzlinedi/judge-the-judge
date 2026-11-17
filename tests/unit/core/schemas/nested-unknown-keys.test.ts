@@ -45,3 +45,31 @@ describe('unknown keys inside a test cases file (T419)', () => {
     expect(notes[0]).toContain('cases[0].expected_errors[0].bar');
   });
 });
+
+// T456 (code review finding 9; T419): a version 1 file has `dataset.finalized`, which the upgrade drops on purpose and names in its own note.
+describe('a version 1 test project file (T456)', () => {
+  const v1 = (extra: (file: typeof demo) => void = () => {}) => {
+    const file = structuredClone(demo);
+    delete file.test_run;
+    file.schema_version = 1;
+    file.dataset.finalized = true;
+    extra(file);
+    const read = readTestProject(JSON.stringify(file));
+    if (!read.ok) throw new Error(read.problems.map((p) => p.message).join('; '));
+    return read.notes;
+  };
+
+  it('loads with the upgrade note and does not name dataset.finalized as an ignored key', () => {
+    const notes = v1();
+    expect(notes.join(' ')).toMatch(/schema version 1/);
+    expect(notes.join(' ')).not.toContain('dataset.finalized');
+    expect(ignored(notes)).toEqual([]);
+  });
+
+  it('still names a key that is really unknown', () => {
+    const notes = ignored(v1((file) => (file.dataset.zzz = 1)));
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toContain('dataset.zzz');
+    expect(notes[0]).not.toContain('dataset.finalized');
+  });
+});

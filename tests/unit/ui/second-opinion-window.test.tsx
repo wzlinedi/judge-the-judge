@@ -6,6 +6,7 @@ import { reviewEvaluation } from '../../../src/core/evaluation/results';
 import { verificationPrompt } from '../../../src/core/generation/verification-prompt';
 import { readTestProject } from '../../../src/core/io/test-project-file';
 import type { TestProject } from '../../../src/core/model';
+import { Mark } from '../../../src/ui/windows/second-opinion/SecondOpinionWindow';
 import { CaseWindowHarness } from '../../helpers/case-window-harness';
 import { accuracyMetric } from '../../helpers/fixtures';
 import { expectCancelFirstMainLast } from '../../helpers/dialog-actions';
@@ -197,5 +198,20 @@ describe('the second-opinion window: the code of the list (R8)', () => {
       paste(opinionText(id));
       expect(apply().disabled).toBe(false);
     }
+  });
+});
+
+// T454 (code review finding 4; FR-063): the preview line of a waiting finding whose error the opinion leaves undecided.
+describe('the preview line of a waiting finding (T454)', () => {
+  it('says the mark counts only when its error is decided Not found', () => {
+    const mark = { label: 'A3', kind: 'additional' as const, target: 'c#1', from: { state: 'undecided', source: 'automatic' as const }, to: 'false_positive' as const, change: 'set' as const, replacesHand: false, replacesOpinion: false };
+    render(<ul><Mark mark={{ ...mark, waitsFor: ['E1'] }} /></ul>);
+    expect(screen.getByRole('listitem').textContent).toBe('A3 undecided → False positive (counts when E1 is Not found)');
+    cleanup();
+    render(<ul><Mark mark={{ ...mark, waitsFor: ['E1', 'E2'] }} /></ul>);
+    expect(screen.getByRole('listitem').textContent).toBe('A3 undecided → False positive (counts when E1 and E2 are Not found)');
+    cleanup();
+    render(<ul><Mark mark={mark} /></ul>);
+    expect(screen.getByRole('listitem').textContent).toBe('A3 undecided → False positive');
   });
 });

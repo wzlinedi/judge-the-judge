@@ -19,11 +19,15 @@ export function normalizeText(text: string): string {
     .trim();
 }
 
-/** One text holds the other on whole words, and the shorter has at least two words (code review R4): "he" is not in "the hero". */
+/**
+ * One text holds the other on whole words. A finding shorter than the fragment needs at least two words (code review R4): "he" is not
+ * in "the hero". A fragment, even of one word, is held by a finding that has it as a whole word: "1889" in "The year 1889 is wrong"
+ * (Clarifications 2026-11-17, finding 7).
+ */
 function contains(finding: string, wanted: string): boolean {
   if (finding === wanted) return true;
-  const [shorter, longer] = finding.length <= wanted.length ? [finding, wanted] : [wanted, finding];
-  return shorter.includes(' ') && ` ${longer} `.includes(` ${shorter} `);
+  if (finding.length <= wanted.length) return finding.includes(' ') && ` ${wanted} `.includes(` ${finding} `);
+  return ` ${finding} `.includes(` ${wanted} `);
 }
 
 export function matchLevel(findingText: string, fragment: string, parameters: Partial<MatchParameters> = {}): MatchLevel {
