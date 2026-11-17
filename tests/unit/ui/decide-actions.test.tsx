@@ -171,7 +171,7 @@ describe('only the cases that await verification', () => {
   it('limits Next case to them when the box of the window is ticked', () => {
     open('3');
     fireEvent.click(within(win()).getByLabelText('Only cases awaiting verification'));
-    expect(within(win()).getByText('1 of 5')).toBeTruthy();
+    expect(within(win()).getByText('case 1 of 5')).toBeTruthy();
     fireEvent.click(within(win()).getByRole('button', { name: 'Next case' }));
     expect(screen.getByRole('dialog', { name: /^Case 10 / })).toBeTruthy();
   });

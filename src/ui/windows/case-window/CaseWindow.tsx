@@ -68,7 +68,7 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   const inList = list.findIndex((r) => r.testCase.id === caseId);
   const previous = [...reviewed.slice(0, position)].reverse().find((r) => !onlyAwaiting || r.status === 'awaiting');
   const next = reviewed.slice(position + 1).find((r) => !onlyAwaiting || r.status === 'awaiting');
-  const positionLabel = inList >= 0 ? `${inList + 1} of ${list.length}` : `${position + 1} of ${reviewed.length}`;
+  const positionLabel = inList >= 0 ? `case ${inList + 1} of ${list.length}` : `case ${position + 1} of ${reviewed.length}`;
 
   const { testCase, effective } = current;
   const reply = repliesOf(evaluation)[caseId];

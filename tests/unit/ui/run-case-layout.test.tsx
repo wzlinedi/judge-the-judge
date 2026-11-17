@@ -238,7 +238,7 @@ describe('the layout of the case window (T330)', () => {
     const items = [
       within(header).getByRole('heading', { name: /^Case 12 · Moby-Dick \+ 3 errors$/ }),
       within(header).getByRole('button', { name: 'Previous case' }),
-      within(header).getByText(/^\d+ of \d+$/),
+      within(header).getByText(/^case \d+ of \d+$/),
       within(header).getByRole('button', { name: 'Next case' }),
       within(header).getByRole('checkbox', { name: 'Only cases awaiting verification' }),
       within(header).getByText(/^\d+ not saved$/),

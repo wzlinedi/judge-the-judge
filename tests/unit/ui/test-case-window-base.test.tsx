@@ -111,7 +111,7 @@ describe('the read-only view (Open)', () => {
     show();
     open('Anna + 2 errors');
     const view = screen.getByRole('dialog', { name: /Anna \+ 2 errors/ });
-    expect(within(view).getByText('2 of 2')).toBeTruthy();
+    expect(within(view).getByText('case 2 of 2')).toBeTruthy();
     expect(within(view).getAllByRole('listitem').length).toBeGreaterThanOrEqual(2);
     expect(within(view).getByRole('button', { name: 'Previous case' })).toBeTruthy();
     expect(within(view).queryByRole('textbox', { name: 'Complete judge prompt' })).toBeNull();

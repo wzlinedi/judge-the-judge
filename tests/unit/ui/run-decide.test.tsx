@@ -158,9 +158,9 @@ describe('case window of Run, with a reply', () => {
 
   it('moves between cases with Previous and Next, and can be limited to cases awaiting verification', () => {
     render(<Window caseId="3" />);
-    expect(screen.getByText('3 of 20')).toBeTruthy();
+    expect(screen.getByText('case 3 of 20')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Next case' }));
-    expect(screen.getByText('4 of 20')).toBeTruthy();
+    expect(screen.getByText('case 4 of 20')).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Only cases awaiting verification'));
     fireEvent.click(screen.getByRole('button', { name: 'Next case' }));
     expect(screen.getByText(/of 5/)).toBeTruthy();

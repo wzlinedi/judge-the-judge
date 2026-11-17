@@ -64,7 +64,7 @@ export function CaseWindowFrame({ title, index, total, left, right, page, onPrev
           <button type="button" onClick={onPrevious} disabled={first}>
             {labels.previousTestCase}
           </button>
-          <span class="case-window-position">{positionLabel ?? `${index + 1} of ${total}`}</span>
+          <span class="case-window-position">{positionLabel ?? `case ${index + 1} of ${total}`}</span>
           <button type="button" onClick={onNext} disabled={last}>
             {labels.nextTestCase}
           </button>

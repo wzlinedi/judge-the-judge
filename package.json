@@ -10,6 +10,7 @@
     "build": "tsx scripts/generate-json-schemas.ts && tsc --noEmit && vite build",
     "preview": "vite preview --port 4173 --strictPort",
     "e2e": "playwright test",
+    "test:e2e:chrome": "playwright test --project=chromium",
     "lint": "eslint .",
     "demo": "tsx scripts/make-demo.ts",
     "samples": "tsx scripts/make-samples.ts",

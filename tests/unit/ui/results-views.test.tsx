@@ -272,7 +272,7 @@ describe('the read-only case view', () => {
 
   it('moves with Previous case and Next case, shows the position, and stops at the ends', () => {
     const h = view('1');
-    expect(screen.getByText('1 of 2')).toBeTruthy();
+    expect(screen.getByText('case 1 of 2')).toBeTruthy();
     expect((screen.getByRole('button', { name: 'Previous case' }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Next case' }));
     expect(h.onNavigate).toHaveBeenCalledWith('2');

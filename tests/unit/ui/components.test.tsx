@@ -89,7 +89,7 @@ describe('CaseWindowFrame', () => {
 
   it('shows the position and a header with Previous, Next and Close', () => {
     frame();
-    expect(screen.getByText('2 of 3')).toBeTruthy();
+    expect(screen.getByText('case 2 of 3')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Previous case' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Next case' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();

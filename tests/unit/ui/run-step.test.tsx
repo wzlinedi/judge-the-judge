@@ -170,7 +170,7 @@ describe('the case window of Run, without a reply', () => {
     const win = windowOf();
     for (const name of ['Previous case', 'Next case']) expect(within(win).getByRole('button', { name })).toBeTruthy();
     expect(within(win).queryByRole('button', { name: /^Save evaluation/ })).toBeNull();
-    expect(within(win).getByText('1 of 2')).toBeTruthy();
+    expect(within(win).getByText('case 1 of 2')).toBeTruthy();
     expect(within(win).getByText(/Not run/)).toBeTruthy();
     expect(within(win).getByText('0 not saved')).toBeTruthy();
   });
