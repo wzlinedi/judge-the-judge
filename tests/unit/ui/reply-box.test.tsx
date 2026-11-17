@@ -134,6 +134,8 @@ describe('typing a reply by hand (R10)', () => {
 
   it('asks before leaving the case with text that is readable JSON and not saved yet (FR-055)', () => {
     open(noReplies());
+    // typed one key at a time: a change in one piece is a paste, saved at once, and leaving waits for it (T464, owner's choice 2026-11-17)
+    type('{');
     type('{}');
     fireEvent.click(within(win()).getByRole('button', { name: 'Next case' }));
     expect(screen.getByRole('dialog', { name: 'The reply in the box is not saved' })).toBeTruthy();

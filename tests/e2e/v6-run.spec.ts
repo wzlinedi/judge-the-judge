@@ -340,3 +340,47 @@ test('T453: text that is not JSON still asks before Next case, and "Discard repl
   await expect(box(page)).toHaveValue('');
   await expect(shown(page)).toHaveCount(0);
 });
+
+// T464 (code review 2026-11-17 of Phase 34, finding 6; FR-055, FR-056): a readable JSON that comes into the box in one change (a paste) is
+// saved at once. Leaving the case in the same moment waits for that save: nothing asks, the reply is kept, and nothing of that save is said
+// in the next case.
+test('T464: a reply pasted into the box and the case left at once is saved, and nothing asks', async ({ page }) => {
+  await openRunWithoutReplies(page);
+  await next(page).getByRole('button', { name: 'Continue' }).click();
+  const win = caseWindow(page);
+  await expect(win).toBeVisible();
+  const id = /^Case (\S+) /.exec((await win.getAttribute('aria-label')) ?? '')?.[1];
+  expect(id, 'the id of the open case').toBeTruthy();
+  await box(page).click();
+  // the paste and the press of Next case in one task: the click comes before the save of the paste has ended
+  await win.getByRole('button', { name: 'Next case', exact: true }).evaluate((button, value) => {
+    const area = document.activeElement as HTMLTextAreaElement;
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(area, value);
+    area.dispatchEvent(new Event('input', { bubbles: true }));
+    (button as HTMLElement).click();
+  }, replyOf(id!));
+  await expect(page.getByRole('dialog', { name: 'The reply in the box is not saved' })).toHaveCount(0);
+  await expect(win).not.toHaveAccessibleName(new RegExp(`^Case ${id} `));
+  await expect(box(page)).toHaveValue('');
+  await expect(win.getByRole('status').filter({ hasText: /\S/ })).toHaveCount(0);
+  await win.getByRole('button', { name: 'Previous case', exact: true }).click();
+  await expect(win).toHaveAccessibleName(new RegExp(`^Case ${id} `));
+  await expect(shown(page)).toBeVisible();
+});
+
+// T464: a reply pasted into the box with the focus in it is saved once; the box that goes away with the saved reply does not save it again.
+test('T464: a reply pasted into the box is saved once, and the window does not say "Nothing changed"', async ({ page }) => {
+  await openRunWithoutReplies(page);
+  await next(page).getByRole('button', { name: 'Continue' }).click();
+  const win = caseWindow(page);
+  await expect(win).toBeVisible();
+  const id = /^Case (\S+) /.exec((await win.getAttribute('aria-label')) ?? '')?.[1];
+  await box(page).click();
+  await box(page).evaluate((area, value) => {
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(area, value);
+    area.dispatchEvent(new Event('input', { bubbles: true }));
+  }, replyOf(id!));
+  await expect(shown(page)).toBeVisible();
+  await page.waitForTimeout(300);
+  await expect(win.getByText('This is the reply already saved. Nothing changed.')).toHaveCount(0);
+});

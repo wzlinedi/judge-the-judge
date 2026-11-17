@@ -53,8 +53,10 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
   /** The change that waits for the answer to "Change the judge’s reply?": a text typed into the box, or a paste. */
   const [pending, setPending] = useState<{ kind: 'type'; value: string } | { kind: 'paste' } | { kind: 'remove' } | null>(null);
   const [leaving, setLeaving] = useState<(() => void) | null>(null);
-  /** The save that the box started when it lost the focus, until it ends. */
+  /** The save that the box started, when it lost the focus or got a paste, until it ends. */
   const saving = useRef<Promise<ReplyOutcome> | null>(null);
+  /** Leaving waits for that save; a second leave meanwhile does nothing (code review 2026-11-17 of Phase 34, finding 7). */
+  const waiting = useRef(false);
   const [adding, setAdding] = useState(false);
   const [opinionOpen, setOpinionOpen] = useState(false);
   const { strong, shown, show: showInText } = useShowIssue(textRef);
@@ -102,24 +104,29 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
     return outcome;
   };
   /**
+   * Keeps a save of the box (on blur, or of a paste) until it ends, so that leaving the case waits for it instead of asking about a reply
+   * that is being saved (code review finding 2; code review 2026-11-17 of Phase 34, finding 6).
+   */
+  const track = (save: Promise<ReplyOutcome>) => {
+    saving.current = save;
+    const done = () => {
+      if (saving.current === save) saving.current = null;
+    };
+    void save.then(done, done);
+  };
+  /**
    * A case without a reply: a readable JSON that comes in one change (a paste or a drop) is saved as soon as it is in the box (FR-056).
    * Text typed one character at a time is saved when the box loses the focus, so a first "{}" or "1" does not save an empty reply (R10).
    */
   const typed = (value: string) => {
     const typedByKey = Math.abs(value.length - text.length) <= 1;
     setText(value);
-    if (!typedByKey && reply === undefined && value.trim() !== '' && extractJson(value).ok) void saveText(value);
+    if (!typedByKey && reply === undefined && value.trim() !== '' && extractJson(value).ok) track(saveText(value));
   };
   const boxLeft = () => {
-    if (reply === undefined && !isEditing && text.trim() !== '' && extractJson(text).ok) {
-      // kept so that leaving the case waits for it instead of asking about a reply that is being saved (code review finding 2)
-      const save = saveText(text);
-      saving.current = save;
-      const done = () => {
-        if (saving.current === save) saving.current = null;
-      };
-      void save.then(done, done);
-    }
+    // a save already running (of a paste) is that text: the box that goes away with the saved reply loses the focus and must not save it again
+    if (saving.current !== null) return;
+    if (reply === undefined && !isEditing && text.trim() !== '' && extractJson(text).ok) track(saveText(text));
   };
   const pasted = async () => {
     const outcome = await replyActions.paste(caseId, reply !== undefined);
@@ -188,9 +195,16 @@ export function CaseWindow({ evaluation, reviewed, caseId, onChange, onNavigate,
     if (focused instanceof HTMLTextAreaElement && partRef.current?.contains(focused)) boxLeft();
     const save = saving.current;
     if (save !== null) {
-      const ask = () => setLeaving(() => go);
+      // a second Next, Previous or Close while it waits is ignored: the window goes on once, to the first target (finding 7)
+      if (waiting.current) return;
+      waiting.current = true;
+      const ask = () => {
+        waiting.current = false;
+        setLeaving(() => go);
+      };
       void save.then((outcome) => {
         if (outcome.status !== 'saved' && outcome.status !== 'unchanged') return ask();
+        waiting.current = false;
         setMessage('');
         go();
       }, ask);
