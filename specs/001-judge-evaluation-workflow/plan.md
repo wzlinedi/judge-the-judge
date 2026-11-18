@@ -2,33 +2,7 @@
 
 **Branch**: `001-judge-evaluation-workflow` | **Date**: 2026-11-13 | **Spec**: [spec.md](./spec.md)
 
-**Input**: Feature specification from `/specs/001-judge-evaluation-workflow/spec.md`, as revised
-after the reviews of prototypes v7 to v12. Updated on 2026-11-12 for the review of v9 (four
-steps, the test case window, the judged text), then for the review of v10 (Chrome and Edge only,
-pasting from the clipboard, the second opinion per case, saving to one chosen file, a read-only
-Results step; a closing step was considered and dropped) and the findings of both consistency
-analyses, then for the reviews of v11 and v12 (two files, the test set and the evaluation, with all
-file actions in the header; a black-and-red interface with one "what next" line per step,
-"Continue" after a load and fewer buttons; judges that give one verdict for the whole text,
-evaluated per case). Updated on 2026-11-13 for the reviews of v13 to v17: one user file named the
-**test project** (the word "dataset" and "test set" are gone from the interface); the error
-catalog as a collapsible "Error categories" section of the Test cases step; no clean-case section
-on the Judge step and no welcome section; every test case made from one **case JSON** (From JSON,
-Clean case, Case with errors in three parts), never edited after saving, with a
-read-only **Open** and **Edit expected errors**; adding and importing
-after finalizing; "Save evaluation" only on Run; on Run an always-visible reply box,
-**Add finding** with optional category and difficulty and **Remove**, and the second opinion as its
-own window with a preview and **Apply opinion**. Prototype v17 is now the reference. Updated on
-2026-11-15 for the owner trial (T288, T289): one file, the test project, which holds the test run
-once it has started; **Start test run** in place of finalizing, with no way back; the load question
-**Load with the test run** or **Load the test project only** in place of "Run again with a new
-judge…"; the step "Run" is named "Test run". Updated on 2026-11-16 for the UI redesign (slice 10;
-research.md, section 33): a calm look in stone and forest green, a wider layout at four screen sizes,
-and the whole JSON object marked in Judge reply until the next pointing. The redesign changes no
-data, no file format, no action and no label. Updated on 2026-11-17 for the Editorial redesign
-(slice 12; research.md, section 35): the Editorial Literary A palette in light and warm dark, four
-fonts served by the site, section labels hidden from screen readers, and a content width of 1560 px.
-It changes no data, no file format, no action, no label and no name of a heading, button or region.
+**Input**: Feature specification from `/specs/001-judge-evaluation-workflow/spec.md`. This plan describes the tool as it is now. There are four steps (Judge, Test cases, Test run, Results) and Help. The user has one file, the **test project**, which holds the test run once it has started. **Start test run** fixes the judge prompt and the fields of the cases, with no way back. A file with a test run is loaded with the question **Load with the test run** or **Load the test project only**. There is one **Save test project** in the header. The error catalog is the "Error categories" section of the Test cases step. Every test case is made from one case JSON (**From JSON**, **Clean case**, **Case with errors**), and has a read-only **Open** and **Edit expected errors**. On Test run the reply box is always visible, **Add finding** takes an optional category and difficulty, **Remove** removes a finding that was added by hand, and the second opinion is its own window with a preview and **Apply opinion**. A judge that gives one verdict for the whole text is evaluated per case. The tool supports Chrome and Edge only. The look is Editorial Literary A in a light and a warm dark scheme (FR-091, FR-092; research.md, sections 33 and 35). The hardening is in research.md, section 34. How the plan got here (the reviews of prototypes v7 to v17, the owner trials, the two redesigns and the hardening) is in the git history and in the Clarifications of `spec.md`.
 
 ## Summary
 
@@ -131,7 +105,7 @@ setting (Principles IV and V); the per-case measures need no code in metric file
 light and dark schemes both remain (Principle VII). Re-checked on 2026-11-13 after the reviews of
 v13 to v17: one case JSON layout for every way of adding a case adds no file format (Principle
 IV); the cases added or corrected after the first reply, the added findings with category and
-difficulty, and an applied LLM opinion are all stored in the evaluation file and recomputed on load
+difficulty, and an applied LLM opinion are all stored in the test project file and recomputed on load
 (Principles IV and V); an LLM opinion still changes nothing until the user applies it after a
 preview of every change (Principle V, SC-028); the second opinion and **Load demo…** are two
 small dialogs, and every action of a row or window is a visible button (Principle VII); prototypes
@@ -259,15 +233,14 @@ demo data offered in the tool and the fixture set for tests (Principle IV).
 
 A suggested order for `/speckit-tasks`; each slice is usable on its own. The first working slice
 runs on the demo data, so the core value (reading replies and judging the judge) is proven before
-any editing screen exists. Slices 1 to 8 are built and keep the names of their time (the
-evaluation file, finalizing, Run); slice 9 replaces them (research.md, section 32).
+any editing screen exists. Slices 1 to 9 are built and describe the tool as it is now.
 
-1. **Foundation**: project setup, design tokens (black and red, light and dark), application
-   shell with the four steps, the header with the unsaved-changes indicator, the More menu and
-   **Load demo…** (no save button: **Save evaluation** is on Run), the "what next" line, schemas and file identity (`format`,
-   `schema_version`), demo data files, removal of the answered prototypes.
-2. **Read and judge on demo data (User Stories 1 and 6, part of 8 and 9)**: load and save an evaluation file,
-   opening the first step with unfinished work and **Continue**,
+1. **Foundation**: project setup, design tokens (light and dark), application shell with the four
+   steps, the header with the unsaved-changes indicator and **Save test project**, the More menu
+   and **Load demo…**, the "what next" line, schemas and file identity (`format`,
+   `schema_version`), demo data files.
+2. **Read and judge on demo data (User Stories 1 and 6, part of 8 and 9)**: load and save a test
+   project file, opening the first step with unfinished work and **Continue**,
    variables and prompt composition, reading JSON from a reply, error rules and findings, matching,
    automatic decisions, case status, measures, overall result, the three result views.
 3. **Judge step (User Stories 2, 14)**: prompt, detected variables and the judged text, sample reply read as
@@ -280,39 +253,39 @@ evaluation file, finalizing, Run); slice 9 replaces them (research.md, section 3
    **Case with errors** in three parts, the case view with **Show the issue** and the check
    line, the read-only **Open** with **Edit expected errors**), one case JSON
    check with line and column or field path, **Import test cases** (adding, also after
-   finalizing) and **Export test cases**, feedback and test-size summary, finalize, and **Edit test
-   cases** before the first reply.
-5. **Run with decisions (User Stories 7, 8, 9)**: the two-column case window with Previous and
-   Next, the always-visible reply box and "Paste reply" with the reset of the case,
-   the judge summary and the multi-line model details, marks right after each reply, **Add
-   finding** with optional category and difficulty and **Remove**, the **Second opinion** window
-   (prompt, one box, preview, **Apply opinion**), **Approve**, the count of unsaved replies with
-   reminders, **Save evaluation** and **Save evaluation as** on Run, and the complete Results
-   views (with additional findings per category and difficulty): read-only, with the read-only
-   case view, and the HTML report.
+   the test run has started) and **Export test cases**, feedback and test-size summary, and
+   **Start test run** with its summary.
+5. **Test run with decisions (User Stories 7, 8, 9)**: the case window, one page of three numbered
+   parts, with Previous case and Next case ("case N of M"), the always-visible reply box and
+   **Paste reply** with the reset of the case, the judge summary and the multi-line model details,
+   marks right after each reply, **Add finding** with optional category and difficulty and
+   **Remove**, the **Second opinion** window (prompt, one box, preview, **Apply opinion**), the
+   count of unsaved replies with reminders, and the complete Results views (with additional
+   findings per category and difficulty): read-only, with the read-only case view, and the HTML
+   report.
 6. **Versions and audit (User Stories 12, 13)**: judge and test cases versions, the note when rules
-   were corrected after replies, the cases added or corrected after the first reply, "Edit the
-   judge and run again" (forgetting both files), running a loaded test project again with another
-   LLM, recomputation on load.
+   were corrected after replies, the cases added or corrected after the first reply, testing
+   another version of the judge by loading the test project without its test run (**Load the test
+   project only**), which forgets the remembered file, running a loaded test project again with
+   another LLM, recomputation on load.
 7. **Judges evaluated per case (User Story 14)**: the counting mode, the per-case review, the
    case-level counters, measures, Error analysis and test size, the note when a correction switches
    the mode, the verdict example metric and its Help section.
 8. **Finish**: Help review, accessibility and contrast pass, deployment workflow (only once Help is
-   complete), removal of prototype v17 once the production tool covers its flows.
+   complete).
 9. **One file and the start of the test run (T288, T289; User Stories 6, 11, 12)**, test first:
-   - the test project schema version 2 with the optional `test_run` section, the upgrade of
-     version 1, and the removal of the evaluation format, its reader, writer, schema, JSON Schema
-     file and save target;
+   - the test project schema version 2 with the optional `test_run` section and the upgrade of
+     version 1;
    - `withoutTestRun`, the load question and the remembered file of each answer;
    - **Start test run** with its summary, the disabled actions of Test run before it, and the lock
      notice of the Judge step with **Load test project…**;
    - one **Save test project** in the header, the trimmed More menu, **New test project**, one
      indicator rule and the reminder text;
-   - the labels and the step name "Test run", **Open on Test run**, no **Run again with a new
-     judge…** and no **Reopen test cases**;
-   - the demo regenerated as one test project with its test run, and the end-to-end scenarios
-     rewritten (quickstart V5, V9, V10, V11).
-   The Help follows in the one pass of T225.
+   - the labels and the step name "Test run", **Open on Test run**;
+   - the demo as one test project with its test run, and the end-to-end scenarios (quickstart V5,
+     V9, V10, V11).
+   Slices 1 to 8 were first built with two files (an evaluation file) and finalizing; this slice
+   replaced them (git history; research.md, section 32).
 10. **UI redesign (FR-007, FR-055, FR-091 to FR-094; SC-033, SC-040 to SC-047)**, test first. The
     values come from research.md, section 33; the layout of each view from contracts/ui-flow.md,
     "Layout of each view". The redesign changes only how things look and where they sit. It changes no
