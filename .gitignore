@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+*.local
 *.pem
 *.key
 
@@ -20,10 +21,21 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Local Claude Code settings (shared skills stay in .claude/skills/)
+.claude/settings.local.json
+
 # Build and test output
 dist/
 test-results/
 playwright-report/
+blob-report/
+playwright/.cache/
+coverage/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
 
 # Files made by scripts for trying the tool by hand
 tmp/
